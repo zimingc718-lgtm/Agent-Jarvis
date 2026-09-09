@@ -19,16 +19,26 @@ export async function PATCH(request: Request, context: Context) {
   }
 
   const { id } = await context.params;
-  const body = await request.json().catch(() => null);
-  if (!body || typeof (body as Record<string, unknown>).enabled !== "boolean") {
-    return NextResponse.json({ message: "`enabled` (boolean) is required." }, { status: 400 });
+  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+
+  // CR-20260909: the same endpoint carries the priority reorder (up/down).
+  if (body && (body.direction === "up" || body.direction === "down")) {
+    const moved = getStore().reorderProvider(auth.userId, id, body.direction);
+    if (!moved) {
+      return NextResponse.json({ message: "Provider not found or already at the edge." }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, direction: body.direction });
   }
 
-  const updated = getStore().setProviderEnabled(auth.userId, id, (body as { enabled: boolean }).enabled);
+  if (!body || typeof body.enabled !== "boolean") {
+    return NextResponse.json({ message: "`enabled` (boolean) or `direction` ('up'|'down') is required." }, { status: 400 });
+  }
+
+  const updated = getStore().setProviderEnabled(auth.userId, id, body.enabled);
   if (!updated) {
     return NextResponse.json({ message: "Provider not found." }, { status: 404 });
   }
-  return NextResponse.json({ ok: true, enabled: (body as { enabled: boolean }).enabled });
+  return NextResponse.json({ ok: true, enabled: body.enabled });
 }
 
 export async function DELETE(_request: Request, context: Context) {

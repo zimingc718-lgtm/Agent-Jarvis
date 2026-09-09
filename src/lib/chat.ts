@@ -19,7 +19,11 @@ type ProviderStreamInput = {
 type RunChatTurnInput = {
   store: Store;
   userId: string;
-  providerId: string;
+  /**
+   * Optional override (CR-20260909). When omitted, the turn uses the highest-priority
+   * connected provider via `store.resolveActiveProvider`.
+   */
+  providerId?: string;
   message: string;
   /** Continue an existing conversation; when omitted a new one is created. */
   conversationId?: string;
@@ -52,7 +56,9 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
 
   let provider: ProviderRuntimeConfig | null;
   try {
-    provider = input.store.getProviderForUser(input.userId, input.providerId);
+    provider = input.providerId
+      ? input.store.getProviderForUser(input.userId, input.providerId)
+      : input.store.resolveActiveProvider(input.userId);
   } catch (error) {
     if (error instanceof ProviderSecretError) {
       throw new ChatServiceError(
@@ -63,7 +69,9 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     throw error;
   }
   if (!provider) {
-    throw new ChatServiceError(404, "Selected model provider is not connected.");
+    throw input.providerId
+      ? new ChatServiceError(404, "Selected model provider is not connected.")
+      : new ChatServiceError(409, "没有可用的模型 Provider。请在「配置」中启用一个并通过连接测试。");
   }
 
   let conversationId: string;

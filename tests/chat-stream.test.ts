@@ -178,4 +178,102 @@ describe("runChatTurn", () => {
     ).rejects.toMatchObject({ status: 404, message: "Selected model provider is not connected." });
     expect(store.listRecentConversations(user.id)).toHaveLength(0);
   });
+
+  // CR-20260909 — TASK-022 / TEST-025 / TEST-026
+  it("resolves the highest-priority connected provider when the turn names none", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    const first = store.saveProvider(user.id, {
+      name: "Primary",
+      kind: "local",
+      authMode: "local",
+      baseUrl: "http://127.0.0.1:1/v1",
+      defaultModel: "primary-model",
+      enabled: true,
+    }).id;
+    store.saveProvider(user.id, {
+      name: "Secondary",
+      kind: "local",
+      authMode: "local",
+      baseUrl: "http://127.0.0.1:2/v1",
+      defaultModel: "secondary-model",
+      enabled: true,
+    });
+
+    let sentModel = "";
+    const stream = await runChatTurn({
+      store,
+      userId: user.id,
+      message: "hi",
+      providerStream: async function* (input) {
+        sentModel = input.provider.defaultModel;
+        yield { type: "delta", text: "ok" };
+      },
+    });
+    await readSse(stream);
+    expect(sentModel).toBe("primary-model");
+
+    // Raising the second provider makes it the resolved one.
+    store.reorderProvider(user.id, first, "down");
+    let secondModel = "";
+    const stream2 = await runChatTurn({
+      store,
+      userId: user.id,
+      message: "hi again",
+      providerStream: async function* (input) {
+        secondModel = input.provider.defaultModel;
+        yield { type: "delta", text: "ok" };
+      },
+    });
+    await readSse(stream2);
+    expect(secondModel).toBe("secondary-model");
+  });
+
+  it("falls through to the next provider when the top one is not connected", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    // api_key provider with no secret -> not connected; must be skipped.
+    store.saveProvider(user.id, {
+      name: "Broken",
+      kind: "openai",
+      authMode: "api_key",
+      baseUrl: "http://127.0.0.1:1/v1",
+      defaultModel: "broken-model",
+      enabled: true,
+    });
+    store.saveProvider(user.id, {
+      name: "Working",
+      kind: "local",
+      authMode: "local",
+      baseUrl: "http://127.0.0.1:2/v1",
+      defaultModel: "working-model",
+      enabled: true,
+    });
+
+    let used = "";
+    const stream = await runChatTurn({
+      store,
+      userId: user.id,
+      message: "hi",
+      providerStream: async function* (input) {
+        used = input.provider.defaultModel;
+        yield { type: "delta", text: "ok" };
+      },
+    });
+    await readSse(stream);
+    expect(used).toBe("working-model");
+  });
+
+  it("rejects with 409 and creates no conversation when nothing is connected", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    store.saveProvider(user.id, {
+      name: "Disabled",
+      kind: "local",
+      authMode: "local",
+      baseUrl: "http://127.0.0.1:1/v1",
+      defaultModel: "m",
+      enabled: false,
+    });
+
+    await expect(runChatTurn({ store, userId: user.id, message: "hi" })).rejects.toMatchObject({ status: 409 });
+    expect(store.listRecentConversations(user.id)).toHaveLength(0);
+  });
 });

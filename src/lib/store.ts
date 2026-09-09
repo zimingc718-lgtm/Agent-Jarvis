@@ -53,7 +53,14 @@ export type Store = {
   saveProvider(userId: string, input: ProviderInput): SaveProviderResult;
   setProviderEnabled(userId: string, providerId: string, enabled: boolean): boolean;
   deleteProvider(userId: string, providerId: string): boolean;
+  /** Swap this provider's priority with its neighbour in the given direction. CR-20260909. */
+  reorderProvider(userId: string, providerId: string, direction: "up" | "down"): boolean;
   listProviders(userId: string): ProviderSummary[];
+  /**
+   * The provider a chat turn should use when the request names none (CR-20260909):
+   * the highest-priority provider that is both enabled and connected, or null.
+   */
+  resolveActiveProvider(userId: string): ProviderRuntimeConfig | null;
   getProviderForUser(userId: string, providerId: string): ProviderRuntimeConfig | null;
   revealProviderSecret(userId: string, providerId: string): string | null;
   dumpProviderSecretsForTest(): Array<{ id: string; encryptedSecret: string | null }>;
@@ -74,6 +81,7 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
 
   const db = new DatabaseSync(databasePath);
   migrate(db);
+  migrateProviderPriority(db);
 
   function readProviderRow(userId: string, providerId: string) {
     return db
@@ -161,10 +169,14 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
 
       const id = randomUUID();
       const encryptedSecret = input.secret ? encryptSecret(input.secret, encryptionKey) : null;
+      const nextPriority =
+        ((db.prepare("SELECT MAX(priority) AS max FROM providers WHERE user_id = ?").get(userId) as
+          | { max: number | null }
+          | undefined)?.max ?? -1) + 1;
       db.prepare(
         `INSERT INTO providers
-          (id, user_id, name, kind, auth_mode, base_url, default_model, enabled, encrypted_secret, secret_preview)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          (id, user_id, name, kind, auth_mode, base_url, default_model, enabled, encrypted_secret, secret_preview, priority)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         id,
         userId,
@@ -175,7 +187,8 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
         input.defaultModel,
         input.enabled ? 1 : 0,
         encryptedSecret,
-        maskSecret(input.secret)
+        maskSecret(input.secret),
+        nextPriority
       );
       return { id, created: true };
     },
@@ -187,6 +200,25 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
       return result.changes > 0;
     },
 
+    reorderProvider(userId, providerId, direction) {
+      const ordered = db
+        .prepare("SELECT id, priority FROM providers WHERE user_id = ? ORDER BY priority ASC, created_at DESC")
+        .all(userId) as Array<{ id: string; priority: number }>;
+      const index = ordered.findIndex((row) => row.id === providerId);
+      if (index < 0) {
+        return false;
+      }
+      const neighbour = direction === "up" ? ordered[index - 1] : ordered[index + 1];
+      if (!neighbour) {
+        return false;
+      }
+      const current = ordered[index];
+      const swap = db.prepare("UPDATE providers SET priority = ? WHERE id = ? AND user_id = ?");
+      swap.run(neighbour.priority, current.id, userId);
+      swap.run(current.priority, neighbour.id, userId);
+      return true;
+    },
+
     deleteProvider(userId, providerId) {
       const result = db.prepare("DELETE FROM providers WHERE id = ? AND user_id = ?").run(providerId, userId);
       return result.changes > 0;
@@ -196,10 +228,10 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
       const rows = db
         .prepare(
           `SELECT id, name, kind, auth_mode AS authMode, base_url AS baseUrl, default_model AS defaultModel,
-                  enabled, encrypted_secret AS encryptedSecret, secret_preview AS secretPreview
+                  enabled, priority, encrypted_secret AS encryptedSecret, secret_preview AS secretPreview
              FROM providers
             WHERE user_id = ?
-            ORDER BY created_at DESC`
+            ORDER BY priority ASC, created_at DESC`
         )
         .all(userId) as Array<
         Omit<ProviderSummary, "connected" | "enabled" | "note"> & {
@@ -233,10 +265,26 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
           defaultModel: row.defaultModel,
           enabled: Boolean(row.enabled),
           connected,
+          priority: row.priority,
           secretPreview: row.secretPreview,
           note,
         };
       });
+    },
+
+    resolveActiveProvider(userId) {
+      // Same "connected" notion as listProviders (secret decryptable / local),
+      // walked in priority order so a broken top provider falls through.
+      for (const summary of this.listProviders(userId)) {
+        if (!summary.enabled || !summary.connected) {
+          continue;
+        }
+        const runtime = this.getProviderForUser(userId, summary.id);
+        if (runtime) {
+          return runtime;
+        }
+      }
+      return null;
     },
 
     getProviderForUser(userId, providerId) {
@@ -347,6 +395,30 @@ function ensureUserRecord(db: DatabaseSync, userId: string): void {
   db.prepare("INSERT OR IGNORE INTO users (id, email, name) VALUES (?, ?, ?)").run(userId, userId, userId);
 }
 
+/**
+ * CR-20260909: providers gain a `priority` column (lower = used first). `node:sqlite`
+ * has no migration framework, so add the column only when absent and backfill existing
+ * rows per user in creation order (older = higher priority) — an accepted initial order
+ * the user can then reorder.
+ */
+function migrateProviderPriority(db: DatabaseSync): void {
+  const columns = db.prepare("PRAGMA table_info(providers)").all() as Array<{ name: string }>;
+  if (columns.some((column) => column.name === "priority")) {
+    return;
+  }
+  db.exec("ALTER TABLE providers ADD COLUMN priority INTEGER NOT NULL DEFAULT 1000000");
+  const rows = db
+    .prepare("SELECT id, user_id AS userId FROM providers ORDER BY user_id ASC, created_at ASC, rowid ASC")
+    .all() as Array<{ id: string; userId: string }>;
+  const seen = new Map<string, number>();
+  const update = db.prepare("UPDATE providers SET priority = ? WHERE id = ?");
+  for (const row of rows) {
+    const next = seen.get(row.userId) ?? 0;
+    update.run(next, row.id);
+    seen.set(row.userId, next + 1);
+  }
+}
+
 function migrate(db: DatabaseSync): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -366,6 +438,7 @@ function migrate(db: DatabaseSync): void {
       enabled INTEGER NOT NULL,
       encrypted_secret TEXT,
       secret_preview TEXT,
+      priority INTEGER NOT NULL DEFAULT 1000000,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     );

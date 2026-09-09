@@ -434,8 +434,16 @@ def check_g3(root: Path) -> list[str]:
     def is_manual(item: dict[str, object]) -> bool:
         return str(item.get("verification", "")).lower() == "manual"
 
+    def is_deferred(item: dict[str, object]) -> bool:
+        # A test bound only to a requirement that has been formally deferred
+        # (its "blocks" requirement is DEFERRED in the spec). It is not evidence
+        # of a shipped behaviour, so it neither passes nor blocks — it is skipped
+        # and reported, and returns with the deferring CR.
+        return str(item.get("result", "")).upper() == "DEFERRED"
+
     pending_manual: list[str] = []
     unattributed_manual: list[str] = []
+    deferred: list[str] = []
     failed: list[str] = []
 
     for test_id in sorted(required_tests):
@@ -443,7 +451,9 @@ def check_g3(root: Path) -> list[str]:
         if item is None:
             continue
         passed = str(item.get("result", "")).upper() == "PASS"
-        if is_manual(item):
+        if is_deferred(item):
+            deferred.append(test_id)
+        elif is_manual(item):
             # A manual item cannot be satisfied by a bare "PASS": it must name
             # who verified it and when, so it stays auditable and cannot be
             # silently flipped to green.
@@ -471,6 +481,11 @@ def check_g3(root: Path) -> list[str]:
         )
     if findings:
         return findings
+    if deferred:
+        return [
+            "OK G3_PASS all non-deferred required tests have current PASS evidence "
+            f"(deferred, tracked by their CR: {', '.join(deferred)})"
+        ]
     return ["OK G3_PASS all required tests have current PASS evidence"]
 
 

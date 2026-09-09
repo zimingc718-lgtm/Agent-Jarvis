@@ -74,7 +74,7 @@ python tools/governance.py snapshot --actor <name>
 任一情况存在时不得发布：
 
 - 用户未确认产品需求。
-- MUST 需求没有当前通过证据。
+- MUST 需求没有当前通过证据（例外：需求状态为 `DEFERRED` 时，其唯一绑定测试可在 `test-results.json` 标 `result: "DEFERRED"`；`gate g3` 不将其计入阻断，但会在输出中列出，且必须随恢复该需求的 CR 一并恢复为 `PENDING`）。
 - 架构、模块或测试与需求不一致。
 - 阻塞变更或重要反馈未关闭。
 - 真实入口冒烟测试未执行或失败。

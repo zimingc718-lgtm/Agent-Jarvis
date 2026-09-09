@@ -134,6 +134,30 @@ describe("/api/providers", () => {
     });
     expect(missing.status).toBe(404);
   });
+
+  // CR-20260909 — TASK-021 / TEST-025
+  it("reorders provider priority via PATCH { direction } and rejects an edge move", async () => {
+    const first = await createProvider({ name: "First", secret: "sk-1" });
+    const second = await createProvider({ name: "Second", secret: "sk-2" });
+
+    let list = await (await providersRoute.GET()).json();
+    expect(list.providers.map((p: { name: string }) => p.name)).toEqual(["First", "Second"]);
+
+    const moved = await providerIdRoute.PATCH(post("http://test", { direction: "down" }), {
+      params: Promise.resolve({ id: first }),
+    });
+    expect(moved.status).toBe(200);
+    expect((await moved.json()).direction).toBe("down");
+
+    list = await (await providersRoute.GET()).json();
+    expect(list.providers.map((p: { name: string }) => p.name)).toEqual(["Second", "First"]);
+
+    // "Second" is now at the top — moving it up is a no-op 404.
+    const edge = await providerIdRoute.PATCH(post("http://test", { direction: "up" }), {
+      params: Promise.resolve({ id: second }),
+    });
+    expect(edge.status).toBe(404);
+  });
 });
 
 describe("/api/providers/test", () => {

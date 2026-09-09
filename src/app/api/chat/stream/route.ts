@@ -18,7 +18,9 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const providerId = typeof body.providerId === "string" ? body.providerId : "";
+  // CR-20260909: the floating console sends no provider — the server resolves the
+  // highest-priority connected one. A providerId is still honoured as an override.
+  const providerId = typeof body.providerId === "string" && body.providerId.trim() ? body.providerId.trim() : undefined;
   const conversationId =
     typeof body.conversationId === "string" && body.conversationId.trim() ? body.conversationId.trim() : undefined;
   const model = typeof body.model === "string" && body.model.trim() ? body.model.trim() : undefined;

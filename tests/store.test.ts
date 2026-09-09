@@ -51,6 +51,49 @@ describe("local SQLite store", () => {
     expect(JSON.stringify(providers)).not.toContain("sk-live-secret");
   });
 
+  // CR-20260909 — TASK-021 / TEST-025
+  it("assigns increasing priority to new providers and reorders them by neighbour swap", () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    const a = store.saveProvider(user.id, {
+      name: "A", kind: "local", authMode: "local", baseUrl: "http://a/v1", defaultModel: "a", enabled: true,
+    }).id;
+    const b = store.saveProvider(user.id, {
+      name: "B", kind: "local", authMode: "local", baseUrl: "http://b/v1", defaultModel: "b", enabled: true,
+    }).id;
+    const c = store.saveProvider(user.id, {
+      name: "C", kind: "local", authMode: "local", baseUrl: "http://c/v1", defaultModel: "c", enabled: true,
+    }).id;
+
+    expect(store.listProviders(user.id).map((p) => p.name)).toEqual(["A", "B", "C"]);
+    expect(store.listProviders(user.id).map((p) => p.priority)).toEqual([0, 1, 2]);
+
+    expect(store.reorderProvider(user.id, c, "up")).toBe(true);
+    expect(store.listProviders(user.id).map((p) => p.name)).toEqual(["A", "C", "B"]);
+
+    // Already at the edge -> no-op, returns false.
+    expect(store.reorderProvider(user.id, a, "up")).toBe(false);
+    // Another user's provider -> false.
+    const other = store.upsertUser({ email: "other@example.com", name: "Other" });
+    expect(store.reorderProvider(other.id, b, "down")).toBe(false);
+  });
+
+  it("resolveActiveProvider returns the highest-priority connected provider and falls through", () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    // Top priority but not connected (api_key, no secret).
+    store.saveProvider(user.id, {
+      name: "Broken", kind: "openai", authMode: "api_key", baseUrl: "http://x/v1", defaultModel: "broken", enabled: true,
+    });
+    store.saveProvider(user.id, {
+      name: "Local", kind: "local", authMode: "local", baseUrl: "http://y/v1", defaultModel: "local-model", enabled: true,
+    });
+
+    expect(store.resolveActiveProvider(user.id)?.defaultModel).toBe("local-model");
+
+    // Nothing enabled -> null.
+    const empty = store.upsertUser({ email: "empty@example.com", name: "Empty" });
+    expect(store.resolveActiveProvider(empty.id)).toBeNull();
+  });
+
   it("updates a provider in place instead of creating a duplicate, keeping the stored secret", () => {
     const user = store.upsertUser({ email: "user@example.com", name: "User" });
     const first = store.saveProvider(user.id, {

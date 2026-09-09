@@ -10,6 +10,8 @@ export type ProviderSummary = {
   defaultModel: string;
   enabled: boolean;
   connected: boolean;
+  /** Lower runs first. Rows are returned already sorted by this (CR-20260909). */
+  priority: number;
   secretPreview: string | null;
   /** Human-readable reason the provider is not usable, or null when it is fine. */
   note: string | null;

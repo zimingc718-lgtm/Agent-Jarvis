@@ -376,6 +376,20 @@ class GovernanceCliTests(unittest.TestCase):
         self.assertEqual(code, 0, output)
         self.assertIn("G3_PASS", output)
 
+    def test_g3_passes_but_reports_a_deferred_test(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_manual_test(
+                root, {"id": "TEST-022", "result": "DEFERRED", "verification": "manual"}
+            )
+
+            code, output = governance.run(["gate", "g3", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("G3_PASS", output)
+        self.assertIn("deferred", output)
+        self.assertIn("TEST-022", output)
+
 
 if __name__ == "__main__":
     unittest.main()
