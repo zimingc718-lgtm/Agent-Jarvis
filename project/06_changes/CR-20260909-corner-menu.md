@@ -2,12 +2,12 @@
 
 - 级别: L2
 - 提出人: user（"配置，账号登录两个入口放在左下角的悬浮选项" → 参考 Next dev 浮层 → 决策：☰ 触发器、主题内联、dev 指示器挪右、混合菜单 → 角色评审 → 决策：「配置」改名「模型」、Next 指示器挪 bottom-right、浮层机制留 P3 → "评审意见一致后，开始按流程执行开发"）
-- 状态: APPROVED
+- 状态: CLOSED（P1-P4 完成：TASK-031 DONE、TEST-032 PASS、g1-g4 全绿、TEST-019/021 + appearance/account e2e 回归通过）
 - 影响需求: REQ-F-015（验收重写：header 两按钮 → 左下角 ☰ 菜单）、REQ-F-014（新控件视觉约束）；REQ-F-015 澄清「主题开关位于弹窗外观分区」作废
 - 影响模块: MOD-SETTINGS-UI（新增 `CornerMenu`、`ThemeToggle` 迁宿主、`SettingsDialog` 瘦身）
 - 影响任务: 新增 TASK-031
 - 影响测试: 新增 TEST-032；TEST-019（主题持久化）、TEST-021（首页布局 + 弹窗）、appearance e2e 需重写为回归门；e2e `saveProviderThroughSettingsDialog` / account 流程改为经 ☰
-- 当前证据: `project/05_evidence/EV-2026-09-09-corner-menu-requirements.md`（需求讨论 + 角色评审）；实现证据待 P3/P4
+- 当前证据: `project/05_evidence/EV-2026-09-09-corner-menu-requirements.md`（需求讨论 + 角色评审）、`project/05_evidence/EV-2026-09-09-corner-menu-impl.md`（三角色逐 CP 方案 + P3/P4 验证）
 - 方案选项:
   - A. 左下角散放两个按钮
   - B. 左下角 ☰ 触发器 + 浮层菜单（主题内联，模型/账号启动弹窗）

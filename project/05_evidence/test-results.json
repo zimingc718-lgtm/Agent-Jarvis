@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-09T20:30:00Z",
+  "generated_at": "2026-09-09T21:30:00Z",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
@@ -227,6 +227,13 @@
       "command": "npm run test:floating-chat && npm run test:e2e",
       "real_entry": true,
       "evidence": "component (7 sub-assertions): collapse control renders only once a transcript exists; collapsing removes .floating-chat__messages from the DOM while conversationId is retained, jarvis:chat-session-ended stays unset, and the next send reuses the same conversationId; expanding restores the same messages; while collapsed the light stays --busy during streaming then pulses --done and settles to --ready after 1.2s (fake timers); sending while collapsed auto-expands and clears localStorage['jarvis:chat-collapsed']; the stored preference is honoured across a remount; preference=collapsed with no transcript shows just the input bar with no control (no empty middle state). e2e 'collapsing the panel keeps the conversation and survives a reload': real 收起对话 button -> .floating-chat__messages hidden -> page.reload() -> still hidden + 展开对话 button -> sending re-expands and the mock echoes ctx=4 (same conversation continued)."
+    },
+    {
+      "id": "TEST-032",
+      "result": "PASS",
+      "command": "npm run test:auth-ui && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "component (tests/corner-menu.test.tsx): ☰ trigger has aria-haspopup=menu + aria-expanded; menu items are unmounted until opened; open -> role=menu with inline ThemeToggle + 模型 + 账号登录; Esc closes and returns focus to the trigger; mousedown outside closes; clicking 深色 sets data-theme=dark + localStorage['jarvis-theme'] with NO dialog[open]; 模型 opens the Model Providers dialog, 账号登录 opens the account dialog. SettingsDialog (tests/home-dialogs.test.tsx) trigger is 「模型」, dialog holds only provider settings (no 外观 group). e2e: home header exposes only the ☰ trigger (no 配置/模型/账号 buttons); appearance toggle now lives in the ☰ menu, switches without opening a dialog, and persists across page.reload(); the ☰ menu stays reachable while the chat panel is expanded (z-index 30 > 20)."
     }
   ],
   "executed_commands": [
@@ -300,8 +307,8 @@
     },
     {
       "id": "CR-20260909-corner-menu",
-      "status": "P1/P2 APPROVED, P3 pending",
-      "detail": "REQ-F-015 rewrite (header buttons -> bottom-left ☰ menu), 配置->模型 rename, theme toggle inlined into the menu. TASK-031 TODO. TEST-032 defined but not implemented -> gate g3 will list it missing until P3. TEST-019/021 + appearance/account e2e to be re-verified after TASK-031."
+      "status": "P1/P2/P3 complete",
+      "detail": "Implemented in TASK-031: new CornerMenu (fixed bottom-left ☰ non-modal disclosure, Esc/outside-click close + focus return); page.tsx header = title only; ThemeToggle rehosted from SettingsDialog into the menu; SettingsDialog trimmed (外观 section removed) + trigger renamed 配置->模型; next.config.mjs devIndicators.position=bottom-right; ui-contract +LB-08. TEST-032 PASS; TEST-019/021 + appearance/account e2e re-verified; smoke home assertion updated. 124 unit tests, 47 ui-contract rules, 8 e2e, smoke, build:verify all green."
     }
   ]
 }
