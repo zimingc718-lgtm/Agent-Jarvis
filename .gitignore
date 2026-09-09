@@ -1,0 +1,31 @@
+# Secrets — never commit. See .env.local.example / docs/LOCAL_CONFIGURATION.md
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Next.js build output (interactive + the isolated dirs used by smoke/e2e/verify)
+.next/
+.next-*/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Local runtime data (SQLite store, dev logs, smoke/e2e scratch dirs)
+.data/
+
+# Test artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Python tooling
+__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+Thumbs.db

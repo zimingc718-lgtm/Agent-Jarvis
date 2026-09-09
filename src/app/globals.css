@@ -1,0 +1,472 @@
+/* Theme-aware tokens: light is the default palette on :root; dark is applied
+   either by the OS preference (unless the user forced light) or by an explicit
+   data-theme="dark" set by the appearance toggle.
+   Spacing follows a 0.25rem (4px) scale. */
+:root {
+  color-scheme: light;
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --text: #1b1f24;
+  --muted: #56606b;
+  --line: #858e9a;
+  --line-soft: #e4e6ea;
+  --accent: #0e7490;
+  --ok: #15803d;
+  --danger: #b42318;
+  --radius: 6px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0f1319;
+    --surface: #171d26;
+    --text: #e7edf3;
+    --muted: #9aa7b3;
+    --line: #5b6672;
+    --line-soft: #2b333d;
+    --accent: #38bdf8;
+    --ok: #4ade80;
+    --danger: #f87171;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1319;
+  --surface: #171d26;
+  --text: #e7edf3;
+  --muted: #9aa7b3;
+  --line: #5b6672;
+  --line-soft: #2b333d;
+  --accent: #38bdf8;
+  --ok: #4ade80;
+  --danger: #f87171;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  line-height: 1.5;
+  background: var(--bg);
+  color: var(--text);
+  /* CJK-capable stack: the UI mixes Chinese labels with Latin provider names. */
+  font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB",
+    Roboto, Helvetica, Arial, sans-serif;
+}
+
+button,
+input,
+select,
+textarea,
+a {
+  font: inherit;
+}
+
+button,
+a {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text);
+  background: var(--surface);
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a {
+  color: var(--accent);
+}
+
+button[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+input,
+select,
+textarea {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text);
+  background: var(--surface);
+  padding: 0.75rem;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 2.75rem;
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Home ---------- */
+
+.home {
+  min-height: 100vh;
+  padding: 2rem;
+  padding-bottom: 9rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.home__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.home__title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.home__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.home__hint {
+  margin-top: 2rem;
+  color: var(--muted);
+}
+
+.auth-config-warning {
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  color: var(--danger);
+}
+
+/* ---------- Dialog ---------- */
+
+.dialog {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  padding: 0;
+  max-width: min(680px, calc(100vw - 2rem));
+  width: 100%;
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+}
+
+.dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog::backdrop {
+  background: rgba(15, 19, 25, 0.45);
+}
+
+.dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--line-soft);
+  flex: none;
+}
+
+.dialog__head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.dialog__body {
+  padding: 1rem;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.dialog__section {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.dialog__section h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.dialog__note {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.theme-toggle button[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---------- Settings ---------- */
+
+.settings-page {
+  margin: 3rem auto;
+  max-width: 980px;
+  padding: 2rem;
+}
+
+.settings-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.provider-card,
+.provider-form,
+.settings-page__panel {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 1rem;
+}
+
+.provider-card h2 {
+  margin-top: 0;
+}
+
+.settings-page__panel,
+.provider-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.provider-form label {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.provider-form__mode {
+  margin: 0;
+  color: var(--muted);
+}
+
+.provider-list {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.provider-list li,
+.provider-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.provider-list__note {
+  color: var(--danger);
+}
+
+.provider-form__checkbox {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+/* ---------- Floating chat ---------- */
+
+.floating-chat {
+  position: fixed;
+  left: 50%;
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 20;
+  width: min(920px, calc(100vw - 2rem));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 6px 24px rgba(15, 19, 25, 0.12);
+}
+
+.floating-chat--expanded {
+  min-height: 16rem;
+  max-height: 65vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.floating-chat__status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.floating-chat__light {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ok);
+}
+
+.floating-chat__chip {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.25rem 0.5rem;
+  color: var(--text);
+  background: var(--bg);
+  max-width: 60%;
+}
+
+.floating-chat__state {
+  margin-left: auto;
+  overflow-wrap: anywhere;
+}
+
+.floating-chat__messages {
+  display: grid;
+  gap: 0.75rem;
+  overflow: auto;
+  padding: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.floating-chat__message {
+  max-width: 82%;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  overflow-wrap: anywhere;
+  background: var(--bg);
+}
+
+.floating-chat__message--user {
+  justify-self: end;
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+.floating-chat__flag {
+  color: var(--danger);
+  font-size: 0.9rem;
+}
+
+.floating-chat__form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  padding: 0.75rem;
+}
+
+.floating-chat__model {
+  grid-column: 1 / -1;
+}
+
+.floating-chat__settings {
+  display: inline-block;
+  margin: 0.75rem;
+}
+
+/* ---------- Markdown ---------- */
+
+.md > :first-child {
+  margin-top: 0;
+}
+
+.md > :last-child {
+  margin-bottom: 0;
+}
+
+.md p {
+  margin: 0.5rem 0;
+}
+
+.md h3,
+.md h4,
+.md h5 {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 1rem;
+}
+
+.md ul,
+.md ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.md code {
+  background: var(--line-soft);
+  border-radius: 4px;
+  padding: 0.125rem 0.25rem;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.9em;
+}
+
+.md__code {
+  margin: 0.5rem 0;
+  padding: 0.75rem;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+
+.md__code code {
+  background: none;
+  padding: 0;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 640px) {
+  .home {
+    padding: 1rem;
+    padding-bottom: 9rem;
+  }
+
+  .home__bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .floating-chat__form {
+    grid-template-columns: 1fr;
+  }
+
+  .floating-chat__chip {
+    max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

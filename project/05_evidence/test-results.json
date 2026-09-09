@@ -1,0 +1,240 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-09T11:10:00Z",
+  "source_documents": [
+    "project/01_specification/产品需求说明书.md",
+    "project/02_solution/架构设计说明书.md",
+    "project/03_modules/模块任务开发说明书.md",
+    "project/04_tests/测试说明书.md"
+  ],
+  "change_records": [
+    "project/06_changes/CR-20260908-floating-llm-chat.md",
+    "project/06_changes/CR-20260908-ui-standard-process.md",
+    "project/06_changes/CR-20260908-floating-chat-functional-fixes.md",
+    "project/06_changes/CR-20260908-ui-light-theme-minimal-home.md",
+    "project/06_changes/CR-20260909-config-preflight-and-manual-auth.md",
+    "project/06_changes/CR-20260909-next-build-dir-isolation.md"
+  ],
+  "tests": [
+    {
+      "id": "TEST-001",
+      "result": "PASS",
+      "command": "npm run test:auth && npm run test:auth-config",
+      "evidence": "NEGATIVE path only: unauthenticated access returns 401; production rejects the JARVIS_TEST_USER_ID bypass; no fake Google provider is created without real OAuth env. Does NOT cover a successful Google sign-in — see TEST-022."
+    },
+    {
+      "id": "TEST-002",
+      "result": "PASS",
+      "command": "npm run test:auth-ui && npm run test:e2e",
+      "evidence": "Config-blocked state names the missing variables instead of offering sign-in; sign-in link shown once OAuth is configured; authenticated UI reached via the test bypass. Does NOT cover the real Google authorization redirect — see TEST-022."
+    },
+    {
+      "id": "TEST-003",
+      "result": "PASS",
+      "command": "npm run test:crypto",
+      "evidence": "provider secret encryption and masking verified"
+    },
+    {
+      "id": "TEST-004",
+      "result": "PASS",
+      "command": "npm run test:store",
+      "evidence": "user-isolated conversations/messages; getConversationForUser ownership resolves"
+    },
+    {
+      "id": "TEST-005",
+      "result": "PASS",
+      "command": "npm run test:providers",
+      "evidence": "OpenAI/DeepSeek/local auth modes and sanitized UI state; unsupported blocked"
+    },
+    {
+      "id": "TEST-006",
+      "result": "PASS",
+      "command": "npm run test:provider-test",
+      "real_entry": true,
+      "evidence": "POST /api/providers/test route handler actually calls {baseUrl}/models; returns Connection OK / 'Authentication failed — check the API key.' / unreachable; smoke hits the mock /models"
+    },
+    {
+      "id": "TEST-007",
+      "result": "PASS",
+      "command": "npm run test:adapters",
+      "evidence": "all kinds routed through /chat/completions; system prompt forwarded; HTTP error body normalized to '(401): invalid api key'; user abort -> stopped"
+    },
+    {
+      "id": "TEST-008",
+      "result": "PASS",
+      "command": "npm run test:chat-stream",
+      "evidence": "chat turn streams SSE start/delta/done and persists user/assistant messages"
+    },
+    {
+      "id": "TEST-009",
+      "result": "PASS",
+      "command": "npm run test:chat-stop && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "abort persists partial text with status=stopped; e2e 'Stop halts the stream server-side' clicks the real Stop button and asserts the persisted assistant turn status is 'stopped'"
+    },
+    {
+      "id": "TEST-010",
+      "result": "PASS",
+      "command": "npm run test:settings-ui && npm run test:provider-crud && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "settings UI create/edit(no dup)/enable/disable/delete/test; e2e fills+saves provider, runs Test connection ('Connection OK.')"
+    },
+    {
+      "id": "TEST-011",
+      "result": "PASS",
+      "command": "npm run test:floating-chat",
+      "evidence": "bottom input default+expand; separate assistant bubbles per turn; conversationId reused; provider switcher rendered with >1 provider and selection sent"
+    },
+    {
+      "id": "TEST-012",
+      "result": "PASS",
+      "command": "npm run test:visual",
+      "evidence": "scripts/ui-contract.mjs static tier: 45 rules, 0 FAIL, 0 WARN — tokens, AA contrast for BOTH the light and dark palettes, focus, reflow, semantics, DEC-005 layout, expanded-panel height cap (RF-09), session continuity"
+    },
+    {
+      "id": "TEST-013",
+      "result": "PASS",
+      "command": "npm run test:smoke",
+      "real_entry": true,
+      "evidence": "real Next.js server: home renders the title plus the 配置 / 账号登录 dialog buttons -> settings deep link -> provider save -> edit (1 row, name changed) -> /models test -> chat ctx=2 -> follow-up ctx=4 -> /api/conversations/[id]/messages restore (user,assistant,user,assistant) -> disable drops input -> delete Runs in an isolated .next-smoke build dir (NEXT_DIST_DIR) so it cannot corrupt a developer's .next."
+    },
+    {
+      "id": "TEST-014",
+      "result": "PASS",
+      "command": "npm run test:chat-stream",
+      "evidence": "runChatTurn reuses conversationId, replays history + system prompt as model context, rejects non-owner conversation with 404"
+    },
+    {
+      "id": "TEST-015",
+      "result": "PASS",
+      "command": "npm run test:conversations",
+      "real_entry": true,
+      "evidence": "GET /api/conversations/[id]/messages route: owner gets messages, other user 404; recent list scoped to caller"
+    },
+    {
+      "id": "TEST-016",
+      "result": "PASS",
+      "command": "npm run test:provider-crud",
+      "real_entry": true,
+      "evidence": "POST upsert (created:false, single row), PATCH enable/disable, DELETE 200/404, OAuth save rejected 400, unauthenticated 401 — all through the route handlers"
+    },
+    {
+      "id": "TEST-017",
+      "result": "PASS",
+      "command": "npm run test:store",
+      "evidence": "createStore throws without JARVIS_SECRET_KEY; rotated key -> listProviders connected:false + note, getProviderForUser throws ProviderSecretError"
+    },
+    {
+      "id": "TEST-018",
+      "result": "PASS",
+      "command": "npm run test:ui-contract:live",
+      "real_entry": true,
+      "evidence": "scripts/ui-contract.mjs --live against a real dev server: 63 passed / 0 failed. No horizontal scroll at 320/390/1280px on / and /settings/models, computed AA contrast in light AND dark (LV-CONTRAST, LV-CONTRAST-DARK), no dark-theme reflow, visible focus on every reachable control, targets >=24px, reduced-motion honoured, one main/one h1 (axe-core skipped: not installed)"
+    },
+    {
+      "id": "TEST-019",
+      "result": "PASS",
+      "command": "npm run test:theme && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "component: defaults to light, dark writes data-theme + localStorage, unknown stored value ignored, bootstrap script applies stored theme. e2e: toggling dark in the settings dialog applies immediately and survives a page reload; switching back to light applies."
+    },
+    {
+      "id": "TEST-020",
+      "result": "PASS",
+      "command": "npm run test:markdown && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "renderer: fenced code (incl. unclosed fence while streaming), inline code, bold, italic, ul/ol, h3-h5 only, http/https/mailto links only (javascript: left literal), raw model HTML escaped (no <img>/<b> emitted). e2e: assistant bubble renders <code>npm test</code>, <strong>ship</strong> and 2 <li>, and never shows literal **ship**."
+    },
+    {
+      "id": "TEST-021",
+      "result": "PASS",
+      "command": "npm run test:auth-ui && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "component: both dialogs start closed and open/close on their buttons; settings dialog exposes the appearance group + Model Providers and adds no second h1 / nested main; account dialog covers signed-in, signed-out and missing-OAuth states. e2e: home shows only the h1 plus the two dialog buttons with no dialog open; provider is saved through the settings dialog; account dialog shows the 账号 ≠ 模型授权 boundary."
+    },
+    {
+      "id": "TEST-022",
+      "result": "PENDING",
+      "verification": "manual",
+      "command": "human: configure real Google OAuth in .env.local, unset JARVIS_TEST_USER_ID, sign in through the account dialog",
+      "blocks": [
+        "REQ-F-001"
+      ],
+      "evidence": "NOT YET VERIFIED. REQ-F-001's positive acceptance (a user actually signs in with Google) has never been exercised: every automated suite uses the JARVIS_TEST_USER_ID bypass. A human must complete the flow and record verified_by / verified_at here; `governance.py gate g3` blocks until then."
+    },
+    {
+      "id": "TEST-023",
+      "result": "PASS",
+      "command": "npm run test:config",
+      "real_entry": true,
+      "evidence": "check-config.mjs distinguishes unset / shadowed-by-ambient-env / `missing-` placeholder, and is immune to NODE_ENV=test and the __NEXT_PROCESSED_ENV cache marker; storageUnavailable() returns a 503 naming JARVIS_SECRET_KEY, and GET /api/providers, GET /api/conversations/recent and POST /api/chat/stream all answer 503 instead of throwing when the key is absent."
+    },
+    {
+      "id": "TEST-024",
+      "result": "PASS",
+      "command": "npm run test:smoke && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "smoke asserts /api/auth/csrf -> 200 + csrfToken and /api/auth/providers exposes the google provider; e2e asserts /api/auth/signin -> 200 (not 500). Regression guard for .next build-dir corruption (vendor-chunks/jose.js MODULE_NOT_FOUND) that the JARVIS_TEST_USER_ID bypass otherwise hides. Verified: a `npm run build:verify` (into .next-verify) run against a live interactive dev server no longer breaks that server's /api/auth/* or /."
+    }
+  ],
+  "executed_commands": [
+    {
+      "command": "npx tsc --noEmit",
+      "result": "PASS",
+      "summary": "no type errors"
+    },
+    {
+      "command": "npm test",
+      "result": "PASS",
+      "summary": "21 test files, 99 tests passed"
+    },
+    {
+      "command": "npm run config:check",
+      "result": "EXPECTED_FAIL",
+      "summary": "reports GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET as the only missing values (user must paste them); exit 1 by design"
+    },
+    {
+      "command": "npm run test:smoke",
+      "result": "PASS",
+      "summary": "real-entry HTTP smoke"
+    },
+    {
+      "command": "npm run test:e2e",
+      "result": "PASS",
+      "summary": "4 Chromium workflows"
+    },
+    {
+      "command": "node scripts/ui-contract.mjs",
+      "result": "PASS",
+      "summary": "45 rules, 0 FAIL, 0 WARN"
+    },
+    {
+      "command": "npm run build",
+      "result": "PASS",
+      "summary": "Next.js production build"
+    },
+    {
+      "command": "python -m unittest tests.test_governance -v",
+      "result": "PASS",
+      "summary": "16 governance CLI tests passed"
+    },
+    {
+      "command": "python tools/governance.py gate g3",
+      "result": "BLOCKED",
+      "summary": "honestly blocked: TEST-022 manual verification pending"
+    },
+    {
+      "command": "npm run build:verify (with interactive next dev live)",
+      "result": "PASS",
+      "summary": "isolated .next-verify; dev server /api/auth/csrf stayed 200 before and after"
+    }
+  ],
+  "known_warnings": [
+    "Node.js reports node:sqlite as experimental during tests and build.",
+    "npm audit reports dependency vulnerabilities; no force upgrade applied.",
+    "ui-contract --live LV-AXE skipped: axe-core is not a dependency; install `axe-core` (devDep) to enable the full automated audit.",
+    "The Markdown renderer covers the common LLM subset only; tables, images and inline HTML render as literal text by design.",
+    "gate g3 is intentionally red until TEST-022 (real Google login) is verified by a human and attributed in this file.",
+    "next build and next dev must not share a build dir: use npm run build:verify / the NEXT_DIST_DIR-isolated smoke and e2e servers. See docs/WORKFLOW.md."
+  ]
+}

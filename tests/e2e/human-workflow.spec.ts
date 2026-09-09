@@ -1,0 +1,214 @@
+import { createServer, type Server } from "node:http";
+import { expect, test, type Page } from "@playwright/test";
+
+const mockModelPort = Number(process.env.JARVIS_E2E_MODEL_PORT ?? 3321);
+let mockServer: Server;
+
+/** Reply echoes how many messages the server sent, so multi-turn context is observable. */
+function streamingMock(reply: (count: number) => string[]) {
+  return createServer((request, response) => {
+    if (request.method === "GET" && request.url === "/v1/models") {
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify({ data: [{ id: "human-model" }] }));
+      return;
+    }
+    if (request.method === "POST" && request.url === "/v1/chat/completions") {
+      let raw = "";
+      request.on("data", (chunk) => (raw += chunk));
+      request.on("end", () => {
+        let count = 0;
+        try {
+          count = JSON.parse(raw).messages?.length ?? 0;
+        } catch {
+          /* ignore */
+        }
+        response.writeHead(200, {
+          "content-type": "text/event-stream; charset=utf-8",
+          "cache-control": "no-cache",
+        });
+        for (const chunk of reply(count)) {
+          response.write(`data: {"choices":[{"delta":{"content":${JSON.stringify(chunk)}}}]}\n\n`);
+        }
+        response.write("data: [DONE]\n\n");
+        response.end();
+      });
+      return;
+    }
+    response.writeHead(404, { "content-type": "application/json" });
+    response.end(JSON.stringify({ message: "not found" }));
+  });
+}
+
+async function saveProviderThroughSettingsDialog(page: Page, name: string, baseUrl: string, model: string) {
+  await page.getByRole("button", { name: "配置" }).click();
+  const dialog = page.locator("dialog[open]");
+  await expect(dialog.getByRole("heading", { name: "Model Providers" })).toBeVisible();
+
+  await dialog.getByLabel("Provider type").selectOption("local");
+  await dialog.getByLabel("Provider name").fill(name);
+  await dialog.getByLabel("Base URL").fill(baseUrl);
+  await dialog.getByLabel("Model", { exact: true }).fill(model);
+
+  const saved = page.waitForResponse(
+    (response) => response.url().endsWith("/api/providers") && response.request().method() === "POST"
+  );
+  await dialog.getByRole("button", { name: "Save provider" }).click();
+  expect((await saved).status()).toBe(201);
+  await expect(dialog.getByRole("status").first()).toContainText("Provider saved.");
+  return dialog;
+}
+
+test.beforeAll(async () => {
+  mockServer = streamingMock((count) => ["Human ", `ctx=${count}`, "\n\nUse `npm test` and **ship**.\n\n- one\n- two"]);
+  await new Promise<void>((resolve, reject) => {
+    mockServer.once("error", reject);
+    mockServer.listen(mockModelPort, "127.0.0.1", () => resolve());
+  });
+});
+
+test.afterAll(async () => {
+  await new Promise<void>((resolve) => mockServer.close(() => resolve()));
+});
+
+test("human workflow: clean home, settings dialog, multi-turn chat with markdown, refresh restore", async ({ page }) => {
+  await page.goto("/");
+
+  // The home page is just the title plus the two dialog buttons.
+  await expect(page.getByRole("heading", { name: "Agent-Jarvis", level: 1 })).toBeVisible();
+  await expect(page.getByRole("button", { name: "配置" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "账号登录" })).toBeVisible();
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
+
+  const dialog = await saveProviderThroughSettingsDialog(
+    page,
+    "Human Local",
+    `http://127.0.0.1:${mockModelPort}/v1`,
+    "human-model"
+  );
+
+  await dialog.getByRole("button", { name: "Test connection" }).click();
+  await expect(dialog.getByRole("status").first()).toContainText("Connection OK.");
+
+  await dialog.getByRole("button", { name: "关闭" }).click();
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
+
+  // Turn 1 — the model sees system + user.
+  await page.goto("/");
+  await page.getByPlaceholder("Ask Agent-Jarvis").fill("First question");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(page.getByText("Human ctx=2")).toBeVisible();
+  await expect(page.getByText("Complete")).toBeVisible();
+
+  // Markdown is rendered, not shown as raw syntax.
+  const transcript = page.locator(".floating-chat__messages");
+  await expect(transcript.locator("code").first()).toHaveText("npm test");
+  await expect(transcript.locator("strong").first()).toHaveText("ship");
+  await expect(transcript.locator("li")).toHaveCount(2);
+  await expect(transcript).not.toContainText("**ship**");
+
+  // Turn 2 — prior turns are replayed, so the echoed context count grows.
+  await page.getByPlaceholder("Ask Agent-Jarvis").fill("Second question");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(page.getByText("Human ctx=4")).toBeVisible();
+
+  const recent = await (await page.request.get("/api/conversations/recent")).json();
+  expect(recent.conversations).toHaveLength(1);
+  expect(recent.conversations[0].title).toBe("First question");
+
+  // Refresh — the transcript comes back.
+  await page.reload();
+  await expect(page.getByText("First question")).toBeVisible();
+  await expect(page.getByText("Second question")).toBeVisible();
+  await expect(page.getByText("Restored")).toBeVisible();
+});
+
+test("human workflow: appearance toggle switches and persists the dark theme", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("html")).not.toHaveAttribute("data-theme", "dark");
+
+  await page.getByRole("button", { name: "配置" }).click();
+  const dialog = page.locator("dialog[open]");
+  await dialog.getByRole("button", { name: "深色" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+  await page.getByRole("button", { name: "配置" }).click();
+  await page.locator("dialog[open]").getByRole("button", { name: "浅色" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+});
+
+test("human workflow: the account dialog separates Agent-Jarvis login from model authorization", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "账号登录" }).click();
+
+  const dialog = page.locator("dialog[open]");
+  await expect(dialog).toContainText("Agent-Jarvis 账号 ≠ 模型授权");
+  await dialog.getByRole("button", { name: "关闭" }).click();
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
+});
+
+test("human workflow: the NextAuth route handler is actually loadable", async ({ page }) => {
+  // A corrupted .next build breaks /api/auth/* with a module-resolution 500 that
+  // the JARVIS_TEST_USER_ID bypass hides from every other test.
+  const csrf = await page.request.get("/api/auth/csrf");
+  expect(csrf.status()).toBe(200);
+  expect((await csrf.json()).csrfToken).toBeTruthy();
+
+  const signin = await page.request.get("/api/auth/signin");
+  expect(signin.status()).toBe(200);
+});
+
+test("human workflow: Stop halts the stream server-side", async ({ page }) => {
+  const slowPort = mockModelPort + 5;
+  const slow = createServer((request, response) => {
+    if (request.url === "/v1/models") {
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end("{}");
+      return;
+    }
+    response.writeHead(200, { "content-type": "text/event-stream; charset=utf-8" });
+    response.write('data: {"choices":[{"delta":{"content":"partial"}}]}\n\n');
+    let i = 0;
+    const timer = setInterval(() => {
+      if (i++ > 20 || response.writableEnded) {
+        clearInterval(timer);
+        try {
+          response.end();
+        } catch {
+          /* already closed */
+        }
+        return;
+      }
+      response.write(`data: {"choices":[{"delta":{"content":" more${i}"}}]}\n\n`);
+    }, 200);
+    request.on("close", () => clearInterval(timer));
+  });
+  await new Promise<void>((resolve) => slow.listen(slowPort, "127.0.0.1", () => resolve()));
+
+  try {
+    await page.goto("/");
+    const dialog = await saveProviderThroughSettingsDialog(page, "Slow Local", `http://127.0.0.1:${slowPort}/v1`, "slow");
+    await dialog.getByRole("button", { name: "关闭" }).click();
+
+    await page.goto("/");
+    await page.getByLabel("Model provider").selectOption({ label: "Slow Local / slow" });
+    await page.getByPlaceholder("Ask Agent-Jarvis").fill("stream forever");
+    await page.getByRole("button", { name: "Send" }).click();
+
+    await expect(page.getByText("partial")).toBeVisible();
+    await page.getByRole("button", { name: "Stop" }).click();
+    await expect(page.getByText("Stopped")).toBeVisible();
+
+    // The persisted assistant turn is marked stopped, not complete.
+    const recent = await (await page.request.get("/api/conversations/recent")).json();
+    const conversationId = recent.conversations[0].id;
+    const messages = await (await page.request.get(`/api/conversations/${conversationId}/messages`)).json();
+    const assistant = messages.messages.at(-1);
+    expect(assistant.role).toBe("assistant");
+    expect(assistant.status).toBe("stopped");
+  } finally {
+    await new Promise<void>((resolve) => slow.close(() => resolve()));
+  }
+});
