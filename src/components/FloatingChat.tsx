@@ -29,13 +29,14 @@ export type ChatStreamRequest = {
 /** Raised when the request fails before any reply text arrives (REQ-F-016 request-level error). */
 export class PreStreamError extends Error {}
 
-type LightState = "checking" | "off" | "ready" | "busy";
+type LightState = "checking" | "off" | "ready" | "busy" | "done";
 
 const LIGHT_LABEL: Record<LightState, string> = {
   checking: "正在检测模型连接",
   off: "没有可用的模型",
   ready: "模型就绪",
   busy: "正在生成回复",
+  done: "回复已就绪",
 };
 
 type FloatingChatProps = {
@@ -49,6 +50,7 @@ type FloatingChatProps = {
 };
 
 const SESSION_ENDED_KEY = "jarvis:chat-session-ended";
+const COLLAPSED_KEY = "jarvis:chat-collapsed";
 
 function sessionEnded(): boolean {
   try {
@@ -67,6 +69,27 @@ function markSessionEnded(ended: boolean): void {
     }
   } catch {
     /* private mode / disabled storage — the in-memory state still holds for this view */
+  }
+}
+
+/** REQ-F-019 / DEC-013: the collapse preference persists per browser in localStorage. */
+function chatCollapsed(): boolean {
+  try {
+    return localStorage.getItem(COLLAPSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeChatCollapsed(collapsed: boolean): void {
+  try {
+    if (collapsed) {
+      localStorage.setItem(COLLAPSED_KEY, "1");
+    } else {
+      localStorage.removeItem(COLLAPSED_KEY);
+    }
+  } catch {
+    /* storage unavailable — the in-memory state still holds for this view */
   }
 }
 
@@ -153,9 +176,10 @@ export function FloatingChat({
   const restored = !sessionEnded() && initialMessages.length > 0;
 
   const [input, setInput] = useState("");
-  const [expanded, setExpanded] = useState(restored);
+  const [userCollapsed, setUserCollapsed] = useState(() => chatCollapsed());
   const [isStreaming, setIsStreaming] = useState(false);
-  const [probeState, setProbeState] = useState<Exclude<LightState, "busy">>(
+  const [justFinished, setJustFinished] = useState(false);
+  const [probeState, setProbeState] = useState<Exclude<LightState, "busy" | "done">>(
     hasEnabledProvider ? "checking" : "off"
   );
   const [errorLine, setErrorLine] = useState<string | null>(null);
@@ -167,6 +191,29 @@ export function FloatingChat({
   const abortRef = useRef<AbortController | null>(null);
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
+  const finishTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // DEC-013: `expanded` is derived, not stored. The transcript shows when there is
+  // one AND the user has not collapsed the panel.
+  const hasTranscript = messages.length > 0;
+  const showTranscript = hasTranscript && !userCollapsed;
+
+  // Keep the in-memory flag and the persisted preference in lockstep; the ref lets
+  // async stream handlers read the current value without a stale closure.
+  const userCollapsedRef = useRef(userCollapsed);
+  userCollapsedRef.current = userCollapsed;
+  function applyCollapsed(collapsed: boolean) {
+    setUserCollapsed(collapsed);
+    writeChatCollapsed(collapsed);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (finishTimerRef.current) {
+        clearTimeout(finishTimerRef.current);
+      }
+    };
+  }, []);
 
   // REQ-F-018 / DEC-012: probe on mount (off the first-paint path) and again
   // whenever the settings dialog reports a provider change or the tab regains
@@ -202,7 +249,7 @@ export function FloatingChat({
     }
   }, [messages]);
 
-  const lightState: LightState = isStreaming ? "busy" : probeState;
+  const lightState: LightState = isStreaming ? "busy" : justFinished ? "done" : probeState;
 
   function endSession() {
     setConversationId(null);
@@ -210,8 +257,8 @@ export function FloatingChat({
   }
 
   function handleNewConversation() {
+    // Clearing the messages collapses the panel on its own (hasTranscript -> false).
     setMessages([]);
-    setExpanded(false);
     setErrorLine(null);
     endSession();
   }
@@ -230,7 +277,9 @@ export function FloatingChat({
     let receivedText = false;
 
     setErrorLine(null);
-    setExpanded(true);
+    // Sending is an implicit "show me the conversation" — expand and persist it (REQ-F-019 ⑤⑥).
+    applyCollapsed(false);
+    setJustFinished(false);
     setInput("");
     setIsStreaming(true);
     setMessages((current) => [
@@ -240,11 +289,8 @@ export function FloatingChat({
     ]);
 
     const rollbackOptimistic = () => {
-      setMessages((current) => {
-        const remaining = current.filter((item) => item.id !== userId && item.id !== assistantId);
-        setExpanded(remaining.length > 0);
-        return remaining;
-      });
+      // showTranscript follows `messages`, so removing the optimistic turn collapses on its own.
+      setMessages((current) => current.filter((item) => item.id !== userId && item.id !== assistantId));
     };
 
     try {
@@ -296,6 +342,15 @@ export function FloatingChat({
     } finally {
       setIsStreaming(false);
       abortRef.current = null;
+      // REQ-F-019 ④: if the user collapsed the panel mid-reply, give a brief
+      // light pulse when it finishes — they never saw the transcript.
+      if (userCollapsedRef.current) {
+        setJustFinished(true);
+        if (finishTimerRef.current) {
+          clearTimeout(finishTimerRef.current);
+        }
+        finishTimerRef.current = setTimeout(() => setJustFinished(false), 1200);
+      }
     }
   }
 
@@ -321,15 +376,29 @@ export function FloatingChat({
   const hasInput = input.trim().length > 0;
 
   return (
-    <section className={`floating-chat ${expanded ? "floating-chat--expanded" : ""}`} aria-label="Agent-Jarvis chat">
+    <section
+      className={`floating-chat ${showTranscript ? "floating-chat--expanded" : ""}`}
+      aria-label="Agent-Jarvis chat"
+    >
       <div className="floating-chat__status">
         <span className={`floating-chat__light floating-chat__light--${lightState}`} aria-hidden="true" />
         <span className="floating-chat__sr" role="status">
           {LIGHT_LABEL[lightState]}
         </span>
+        {hasTranscript ? (
+          <button
+            type="button"
+            className="floating-chat__toggle"
+            aria-expanded={showTranscript}
+            aria-label={showTranscript ? "收起对话" : "展开对话"}
+            onClick={() => applyCollapsed(showTranscript)}
+          >
+            <span aria-hidden="true" className="floating-chat__toggle-icon" />
+          </button>
+        ) : null}
       </div>
 
-      {expanded ? (
+      {showTranscript ? (
         <div className="floating-chat__messages" ref={transcriptRef} aria-live="polite">
           {messages.map((message) => (
             <article className={`floating-chat__message floating-chat__message--${message.role}`} key={message.id}>

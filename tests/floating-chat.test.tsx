@@ -15,6 +15,7 @@ const readyProbe = () => Promise.resolve(true);
 beforeEach(() => {
   try {
     sessionStorage.clear();
+    localStorage.clear();
   } catch {
     /* jsdom always has it, but stay defensive */
   }
@@ -277,6 +278,148 @@ describe("FloatingChat", () => {
     connected = true;
     window.dispatchEvent(new Event("jarvis:providers-changed"));
     await waitFor(() => expect(light().className).toContain("floating-chat__light--ready"));
+  });
+
+  // CR-20260909-collapsible-panel — REQ-F-019 / TEST-031
+  describe("collapse panel", () => {
+    async function* answer(): AsyncIterable<ChatStreamEvent> {
+      yield { type: "start", conversationId: "conv-c" };
+      yield { type: "delta", text: "the answer" };
+      yield { type: "done" };
+    }
+
+    it("shows the collapse control only once a transcript exists (TEST-031 ①)", async () => {
+      render(<FloatingChat hasEnabledProvider probeProviders={readyProbe} onStream={answer} />);
+      expect(screen.queryByRole("button", { name: /收起对话|展开对话/ })).not.toBeInTheDocument();
+
+      const input = screen.getByPlaceholderText("Ask Agent-Jarvis");
+      fireEvent.change(input, { target: { value: "q" } });
+      fireEvent.submit(input.closest("form")!);
+      await screen.findByText("the answer");
+      expect(screen.getByRole("button", { name: "收起对话" })).toBeInTheDocument();
+    });
+
+    it("collapsing hides the transcript but keeps the conversation (TEST-031 ②③)", async () => {
+      const requests: ChatStreamRequest[] = [];
+      async function* onStream(r: ChatStreamRequest) {
+        requests.push(r);
+        yield { type: "start", conversationId: "conv-keep" } as ChatStreamEvent;
+        yield { type: "delta", text: "kept answer" } as ChatStreamEvent;
+        yield { type: "done" } as ChatStreamEvent;
+      }
+      const { container } = render(
+        <FloatingChat hasEnabledProvider probeProviders={readyProbe} onStream={onStream} />
+      );
+      const input = screen.getByPlaceholderText("Ask Agent-Jarvis");
+      fireEvent.change(input, { target: { value: "one" } });
+      fireEvent.submit(input.closest("form")!);
+      await screen.findByText("kept answer");
+
+      fireEvent.click(screen.getByRole("button", { name: "收起对话" }));
+      expect(container.querySelector(".floating-chat__messages")).toBeNull();
+      expect(screen.queryByText("kept answer")).not.toBeInTheDocument();
+      expect(sessionStorage.getItem("jarvis:chat-session-ended")).toBeNull();
+      expect(localStorage.getItem("jarvis:chat-collapsed")).toBe("1");
+
+      // Expand restores the same messages.
+      fireEvent.click(screen.getByRole("button", { name: "展开对话" }));
+      expect(screen.getByText("kept answer")).toBeInTheDocument();
+
+      // Collapse again, then send: reuses conv-keep (session never ended).
+      fireEvent.click(screen.getByRole("button", { name: "收起对话" }));
+      fireEvent.change(input, { target: { value: "two" } });
+      fireEvent.submit(input.closest("form")!);
+      await waitFor(() => expect(requests).toHaveLength(2));
+      expect(requests[1].conversationId).toBe("conv-keep");
+    });
+
+    it("stays collapsed while streaming, then pulses 'done' and settles (TEST-031 ④)", async () => {
+      vi.useFakeTimers();
+      try {
+        let release: () => void = () => {};
+        async function* slow(): AsyncIterable<ChatStreamEvent> {
+          yield { type: "start", conversationId: "c" };
+          yield { type: "delta", text: "partial" };
+          await new Promise<void>((r) => (release = r));
+          yield { type: "done" };
+        }
+        const { container } = render(
+          <FloatingChat hasEnabledProvider probeProviders={readyProbe} onStream={slow} />
+        );
+        const input = screen.getByPlaceholderText("Ask Agent-Jarvis");
+        fireEvent.change(input, { target: { value: "q" } });
+        fireEvent.submit(input.closest("form")!);
+        await vi.waitFor(() => expect(screen.getByText("partial")).toBeInTheDocument());
+
+        fireEvent.click(screen.getByRole("button", { name: "收起对话" }));
+        const light = () => container.querySelector(".floating-chat__light")!;
+        expect(light().className).toContain("floating-chat__light--busy");
+        expect(container.querySelector(".floating-chat__messages")).toBeNull();
+
+        release();
+        await vi.waitFor(() => expect(light().className).toContain("floating-chat__light--done"));
+        vi.advanceTimersByTime(1300);
+        await vi.waitFor(() => expect(light().className).toContain("floating-chat__light--ready"));
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("sending while collapsed auto-expands and clears the stored preference (TEST-031 ⑤)", async () => {
+      localStorage.setItem("jarvis:chat-collapsed", "1");
+      const { container } = render(
+        <FloatingChat
+          hasEnabledProvider
+          probeProviders={readyProbe}
+          initialConversationId="conv-r"
+          initialMessages={[{ id: "m1", role: "assistant", content: "old", status: "complete" }]}
+          onStream={answer}
+        />
+      );
+      // Restored but collapsed -> transcript hidden.
+      expect(container.querySelector(".floating-chat__messages")).toBeNull();
+
+      const input = screen.getByPlaceholderText("Ask Agent-Jarvis");
+      fireEvent.change(input, { target: { value: "hi" } });
+      fireEvent.submit(input.closest("form")!);
+      await screen.findByText("the answer");
+      expect(container.querySelector(".floating-chat__messages")).not.toBeNull();
+      expect(localStorage.getItem("jarvis:chat-collapsed")).toBeNull();
+    });
+
+    it("honours the stored collapse preference across a remount, with no empty middle state (TEST-031 ⑥⑦)", async () => {
+      const { unmount, container } = render(
+        <FloatingChat hasEnabledProvider probeProviders={readyProbe} onStream={answer} />
+      );
+      const input = screen.getByPlaceholderText("Ask Agent-Jarvis");
+      fireEvent.change(input, { target: { value: "q" } });
+      fireEvent.submit(input.closest("form")!);
+      await screen.findByText("the answer");
+      fireEvent.click(screen.getByRole("button", { name: "收起对话" }));
+      expect(localStorage.getItem("jarvis:chat-collapsed")).toBe("1");
+      unmount();
+
+      // Remount with a restored conversation: preference = collapsed -> transcript hidden.
+      const remount = render(
+        <FloatingChat
+          hasEnabledProvider
+          probeProviders={readyProbe}
+          initialConversationId="conv-c"
+          initialMessages={[{ id: "m1", role: "assistant", content: "the answer", status: "complete" }]}
+          onStream={answer}
+        />
+      );
+      expect(remount.container.querySelector(".floating-chat__messages")).toBeNull();
+      expect(screen.getByRole("button", { name: "展开对话" })).toBeInTheDocument();
+      remount.unmount();
+
+      // Preference = collapsed but NO transcript -> control hidden, just the input bar.
+      localStorage.setItem("jarvis:chat-collapsed", "1");
+      const bare = render(<FloatingChat hasEnabledProvider probeProviders={readyProbe} onStream={answer} />);
+      expect(bare.container.querySelector(".floating-chat__messages")).toBeNull();
+      expect(screen.queryByRole("button", { name: /收起对话|展开对话/ })).not.toBeInTheDocument();
+      void container;
+    });
   });
 
   it("streamChatDeltas parses SSE frames and omits provider fields from the body", async () => {

@@ -144,6 +144,37 @@ test("human workflow: 新对话 clears the transcript and a refresh stays empty"
   await expect(page.getByText("kept?")).toBeHidden();
 });
 
+test("human workflow: collapsing the panel keeps the conversation and survives a reload (REQ-F-019)", async ({ page }) => {
+  await page.goto("/");
+  await saveProviderThroughSettingsDialog(
+    page,
+    "Collapse Local",
+    `http://127.0.0.1:${mockModelPort}/v1`,
+    "human-model"
+  );
+  await page.locator("dialog[open]").getByRole("button", { name: "关闭" }).click();
+
+  await page.goto("/");
+  await page.getByPlaceholder("Ask Agent-Jarvis").fill("collapse turn one");
+  await page.getByRole("button", { name: "发送" }).click();
+  await expect(page.getByText("Human ctx=2")).toBeVisible();
+
+  // Collapse — transcript hidden, but the session is still active.
+  await page.getByRole("button", { name: "收起对话" }).click();
+  await expect(page.locator(".floating-chat__messages")).toBeHidden();
+
+  await page.reload();
+  await expect(page.locator(".floating-chat__messages")).toBeHidden();
+  await expect(page.getByRole("button", { name: "展开对话" })).toBeVisible();
+
+  // Sending while collapsed re-expands and continues the SAME conversation:
+  // the echoed context count grows to 4 (system + turn1 user/assistant + turn2 user).
+  await page.getByPlaceholder("Ask Agent-Jarvis").fill("collapse turn two");
+  await page.getByRole("button", { name: "发送" }).click();
+  await expect(page.locator(".floating-chat__messages")).toBeVisible();
+  await expect(page.getByText("Human ctx=4")).toBeVisible();
+});
+
 test("human workflow: appearance toggle switches and persists the dark theme", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("html")).not.toHaveAttribute("data-theme", "dark");

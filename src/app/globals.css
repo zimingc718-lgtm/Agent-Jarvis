@@ -354,6 +354,12 @@ textarea {
   animation: floating-chat-pulse 1s ease-in-out infinite;
 }
 
+/* REQ-F-019 ④: a brief acknowledgement when a reply finishes while collapsed. */
+.floating-chat__light--done {
+  background: var(--ok);
+  animation: floating-chat-pulse 0.55s ease-in-out 2;
+}
+
 @keyframes floating-chat-pulse {
   0%,
   100% {
@@ -362,6 +368,35 @@ textarea {
   50% {
     opacity: 0.4;
   }
+}
+
+/* REQ-F-019: collapse / expand the transcript. Real <button>, ≥ 24px hit area. */
+.floating-chat__toggle {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.floating-chat__toggle-icon {
+  display: block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-0.1rem) rotate(45deg);
+}
+
+.floating-chat__toggle[aria-expanded="false"] .floating-chat__toggle-icon {
+  transform: translateY(0.12rem) rotate(-135deg);
 }
 
 .floating-chat__sr {

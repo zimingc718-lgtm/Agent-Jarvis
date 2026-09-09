@@ -1001,22 +1001,30 @@ const CONTRACT = [
       },
       {
         id: "LB-03",
-        ref: "REQ-F-003",
+        ref: "REQ-F-003 (CR-20260909-collapsible-panel)",
         req: "REQ-F-003",
         title: "Sending expands the bar into a panel",
-        guidance: "An --expanded modifier grows the height, and the component toggles it on submit.",
+        guidance:
+          "An --expanded modifier grows the height. Since CR-20260909-collapsible-panel the expanded state is derived (showTranscript = hasTranscript && !userCollapsed); the panel is collapsed with no transcript and shows once a message exists.",
         check(ctx) {
           const rule = ctx.rule(/\.floating-chat--expanded|\.floating-chat\.is-expanded/);
           const src = ctx.files["FloatingChat.tsx"] ?? "";
-          const toggles = /setExpanded\(true\)/.test(src) || /expanded:\s*true/.test(src);
-          // Collapsed by default, or expanded only because a stored conversation was restored.
-          const initial = src.match(/expanded[^;]*useState\(([^)]*)\)/)?.[1] ?? "false";
-          const startsCollapsed = /^\s*false\s*$/.test(initial) || /initialMessages|restored|history/i.test(initial);
+          // Legacy explicit toggle OR the derived model.
+          const derives = /showTranscript\s*=\s*hasTranscript\s*&&\s*!\s*userCollapsed/.test(src);
+          const drivesClass = /floating-chat--expanded[^`"']*\$\{?\s*(showTranscript|expanded)/.test(src) ||
+            /(showTranscript|expanded)\s*\?\s*["'`]floating-chat--expanded/.test(src);
+          const toggles = /setExpanded\(true\)/.test(src) || (derives && drivesClass);
+          // With the derived model "collapsed by default" == hasTranscript starts false
+          // (messages initialised to [] or from a restored conversation only).
+          const startsCollapsed =
+            derives ||
+            /^\s*false\s*$/.test(src.match(/expanded[^;]*useState\(([^)]*)\)/)?.[1] ?? "") ||
+            /messages[^;]*useState[^;]*restored\s*\?\s*initialMessages\s*:\s*\[\]/.test(src);
           if (!rule) return FAIL("no .floating-chat--expanded style");
-          if (!toggles) return FAIL("component never sets expanded = true on send");
-          if (!startsCollapsed) return WARN(`panel may not start collapsed (initial state: ${initial.trim()})`);
+          if (!toggles) return FAIL("sending does not drive the expanded panel (no setExpanded(true) and no derived showTranscript)");
+          if (!startsCollapsed) return WARN("panel may not start collapsed");
           const grows = decl(rule.body, "min-height") || decl(rule.body, "height");
-          return grows ? PASS(`expands to ${grows}`) : WARN("--expanded exists but does not change height");
+          return grows ? PASS(`expands to ${grows}${derives ? " (derived)" : ""}`) : WARN("--expanded exists but does not change height");
         },
       },
       {
@@ -1050,6 +1058,27 @@ const CONTRACT = [
             offenders.push("unconditional providerId in request body");
           }
           return offenders.length ? FAIL(`console still has provider selection: ${offenders.join(", ")}`) : PASS("no in-console provider selection");
+        },
+      },
+      {
+        id: "LB-07",
+        ref: "REQ-F-019 (CR-20260909-collapsible-panel)",
+        req: "REQ-F-019",
+        title: "The transcript has a collapse/expand control",
+        guidance:
+          "A real <button> with aria-expanded that toggles userCollapsed, rendered only when a transcript exists; no height transition on the expanded panel (v1).",
+        check(ctx) {
+          const src = ctx.files["FloatingChat.tsx"] ?? "";
+          const hasButton = /floating-chat__toggle/.test(src) && /<button[^>]*floating-chat__toggle/.test(src);
+          const hasAria = /floating-chat__toggle[\s\S]{0,200}aria-expanded=/.test(src);
+          const gated = /hasTranscript\s*\?\s*[\s\S]{0,120}floating-chat__toggle/.test(src);
+          const expandedRule = ctx.rule(/\.floating-chat--expanded/);
+          const noTween = !expandedRule || !/transition[^;]*(max-height|min-height|height)/.test(expandedRule.body);
+          if (!hasButton) return FAIL("no .floating-chat__toggle <button>");
+          if (!hasAria) return FAIL("collapse control missing aria-expanded");
+          if (!gated) return WARN("collapse control may render without a transcript");
+          if (!noTween) return FAIL("expanded panel animates its height — v1 is an instant toggle (DEC-013)");
+          return PASS("collapse control: <button> + aria-expanded, transcript-gated, no height animation");
         },
       },
       {
