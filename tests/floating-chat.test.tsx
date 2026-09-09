@@ -253,9 +253,30 @@ describe("FloatingChat", () => {
     await waitFor(() => expect(light().className).toContain("floating-chat__light--ready"));
   });
 
-  it("light is 'off' when no provider is enabled", () => {
-    const { container } = render(<FloatingChat hasEnabledProvider={false} onStream={async function* () {}} />);
-    expect(container.querySelector(".floating-chat__light")!.className).toContain("floating-chat__light--off");
+  it("light is 'off' when the probe reports nothing connected", async () => {
+    const { container } = render(
+      <FloatingChat hasEnabledProvider={false} probeProviders={() => Promise.resolve(false)} onStream={async function* () {}} />
+    );
+    const light = () => container.querySelector(".floating-chat__light")!;
+    expect(light().className).toContain("floating-chat__light--off");
+    await waitFor(() => expect(light().className).toContain("floating-chat__light--off"));
+  });
+
+  it("re-probes when providers change (jarvis:providers-changed)", async () => {
+    let connected = false;
+    const { container } = render(
+      <FloatingChat
+        hasEnabledProvider={false}
+        probeProviders={() => Promise.resolve(connected)}
+        onStream={async function* () {}}
+      />
+    );
+    const light = () => container.querySelector(".floating-chat__light")!;
+    await waitFor(() => expect(light().className).toContain("floating-chat__light--off"));
+
+    connected = true;
+    window.dispatchEvent(new Event("jarvis:providers-changed"));
+    await waitFor(() => expect(light().className).toContain("floating-chat__light--ready"));
   });
 
   it("streamChatDeltas parses SSE frames and omits provider fields from the body", async () => {

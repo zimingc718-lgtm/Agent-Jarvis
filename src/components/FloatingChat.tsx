@@ -168,21 +168,32 @@ export function FloatingChat({
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
 
-  // REQ-F-018 / DEC-012: probe once on mount, off the first-paint path.
+  // REQ-F-018 / DEC-012: probe on mount (off the first-paint path) and again
+  // whenever the settings dialog reports a provider change or the tab regains
+  // focus — the console must not stay stale after the user configures a provider.
   useEffect(() => {
-    if (!hasEnabledProvider) {
-      return;
-    }
     let cancelled = false;
-    probeProviders().then((anyConnected) => {
-      if (!cancelled) {
-        setProbeState(anyConnected ? "ready" : "off");
+    const runProbe = (recheck: boolean) => {
+      if (recheck) {
+        setProbeState("checking");
       }
-    });
+      probeProviders().then((anyConnected) => {
+        if (!cancelled) {
+          setProbeState(anyConnected ? "ready" : "off");
+        }
+      });
+    };
+
+    runProbe(false);
+    const onChange = () => runProbe(true);
+    window.addEventListener("focus", onChange);
+    window.addEventListener("jarvis:providers-changed", onChange);
     return () => {
       cancelled = true;
+      window.removeEventListener("focus", onChange);
+      window.removeEventListener("jarvis:providers-changed", onChange);
     };
-  }, [hasEnabledProvider, probeProviders]);
+  }, [probeProviders]);
 
   useEffect(() => {
     const el = transcriptRef.current;

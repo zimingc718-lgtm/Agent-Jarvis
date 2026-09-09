@@ -41,6 +41,12 @@
 - **TASK-024 探测不阻塞首屏**：`page.tsx` SSR 只传 `hasEnabledProvider`，不做探测；灯首帧 `检测中`，`useEffect` 补探测。e2e 与 smoke 均验证首页立即返回。
 - **DEC-011 选型**：`sessionStorage['jarvis:chat-session-ended']`，读取点在 `useState` 初值处，SSR 首帧即生效，无闪现（见 §1 TASK-025）。
 
+## 3.1 P6 反馈修复（同会话）
+
+用户配好 Provider 后状态灯仍为白色。根因：`FloatingChat` 的探测 `useEffect` 原本以 `hasEnabledProvider`（SSR 时的快照）为门——用户在设置弹窗里配置 Provider 后不刷新页面，浮窗仍认为无 Provider，`probeState` 停在 `off`（透明 = 视觉上白）。
+
+修复：①探测 effect 去掉 `hasEnabledProvider` 门，改为 mount 必探一次；②新增 `window` 的 `focus` 与自定义事件 `jarvis:providers-changed` 触发重探（重探时先回 `检测中`）；③`ModelSettings.refreshProviders()` 在每次 save/启停/删除/排序后 `dispatchEvent(new Event("jarvis:providers-changed"))`。`hasEnabledProvider` 仅保留为初始态（避免已知有 Provider 时闪一下「检测中」）。新增组件测试「re-probes when providers change」。
+
 ## 4. 已知取舍
 
 - `resolveActiveProvider` 的 `connected` 用**存储态**（secret 可解密 / local），非实时网络探测——避免每次发送都打网络。实时探测只驱动状态灯。最高优先 Provider 网络当场不可用时表现为「请求级错误红字」，不是静默 fallthrough（fallthrough 只在存储态不可用时发生）。已在 REQ-F-006 澄清与 DEC-010 记录。

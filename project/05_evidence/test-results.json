@@ -196,7 +196,7 @@
       "result": "PASS",
       "command": "npm run test:floating-chat && npm run test:visual && npm run test:e2e",
       "real_entry": true,
-      "evidence": "component: light class is floating-chat__light--checking until the (mocked) probe resolves, then --ready; --busy while streaming; --off with hasEnabledProvider=false. ui-contract LB-06 asserts all four states are rendered and styled. No real network in vitest (probe is a test seam). e2e exercises the real probe via the mock model server."
+      "evidence": "component: light class is floating-chat__light--checking until the (mocked) probe resolves, then --ready; --busy while streaming; --off with hasEnabledProvider=false. ui-contract LB-06 asserts all four states are rendered and styled. No real network in vitest (probe is a test seam). e2e exercises the real probe via the mock model server. P6 fix: the probe effect no longer gates on the SSR hasEnabledProvider snapshot — it probes on mount and re-probes on window focus / a jarvis:providers-changed event that ModelSettings dispatches after every save/toggle/delete/reorder, so the light turns green right after a provider is configured without a reload (test: 're-probes when providers change')."
     },
     {
       "id": "TEST-028",

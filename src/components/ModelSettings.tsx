@@ -100,6 +100,10 @@ export function ModelSettings({ templates, providers }: ModelSettingsProps) {
     if (!response.ok) return;
     const body = (await response.json()) as { providers?: ProviderSummary[] };
     setSavedProviders(body.providers ?? []);
+    // Tell the floating console to re-probe its status light (REQ-F-018).
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("jarvis:providers-changed"));
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
