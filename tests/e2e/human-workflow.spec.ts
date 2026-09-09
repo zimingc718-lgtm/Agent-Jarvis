@@ -39,8 +39,16 @@ function streamingMock(reply: (count: number) => string[]) {
   });
 }
 
+async function openCornerMenu(page: Page) {
+  const trigger = page.getByRole("button", { name: "打开菜单" });
+  if (await trigger.count()) {
+    await trigger.click();
+  }
+}
+
 async function saveProviderThroughSettingsDialog(page: Page, name: string, baseUrl: string, model: string) {
-  await page.getByRole("button", { name: "配置" }).click();
+  await openCornerMenu(page);
+  await page.getByRole("button", { name: "模型" }).click();
   const dialog = page.locator("dialog[open]");
   await expect(dialog.getByRole("heading", { name: "Model Providers" })).toBeVisible();
 
@@ -73,10 +81,16 @@ test.afterAll(async () => {
 test("human workflow: clean home, settings dialog, multi-turn chat with markdown, refresh restore", async ({ page }) => {
   await page.goto("/");
 
-  // The home page is just the title plus the two dialog buttons.
+  // The home page is just the title; entries live in the bottom-left ☰ menu.
   await expect(page.getByRole("heading", { name: "Agent-Jarvis", level: 1 })).toBeVisible();
-  await expect(page.getByRole("button", { name: "配置" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "配置" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "打开菜单" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "模型" })).toHaveCount(0);
+  await page.getByRole("button", { name: "打开菜单" }).click();
+  await expect(page.getByRole("button", { name: "模型" })).toBeVisible();
   await expect(page.getByRole("button", { name: "账号登录" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "模型" })).toHaveCount(0);
   await expect(page.locator("dialog[open]")).toHaveCount(0);
 
   const dialog = await saveProviderThroughSettingsDialog(
@@ -175,25 +189,48 @@ test("human workflow: collapsing the panel keeps the conversation and survives a
   await expect(page.getByText("Human ctx=4")).toBeVisible();
 });
 
-test("human workflow: appearance toggle switches and persists the dark theme", async ({ page }) => {
+test("human workflow: appearance toggle (in the ☰ menu) switches and persists the dark theme", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("html")).not.toHaveAttribute("data-theme", "dark");
 
-  await page.getByRole("button", { name: "配置" }).click();
-  const dialog = page.locator("dialog[open]");
-  await dialog.getByRole("button", { name: "深色" }).click();
+  await page.getByRole("button", { name: "打开菜单" }).click();
+  await page.getByRole("button", { name: "深色" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  // Switching theme opens no dialog.
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
 
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 
-  await page.getByRole("button", { name: "配置" }).click();
-  await page.locator("dialog[open]").getByRole("button", { name: "浅色" }).click();
+  await page.getByRole("button", { name: "打开菜单" }).click();
+  await page.getByRole("button", { name: "浅色" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+});
+
+test("human workflow: the ☰ menu stays reachable while the chat panel is expanded (TEST-032 ⑦)", async ({ page }) => {
+  await page.goto("/");
+  await saveProviderThroughSettingsDialog(
+    page,
+    "Menu Local",
+    `http://127.0.0.1:${mockModelPort}/v1`,
+    "human-model"
+  );
+  await page.locator("dialog[open]").getByRole("button", { name: "关闭" }).click();
+
+  await page.goto("/");
+  await page.getByPlaceholder("Ask Agent-Jarvis").fill("expand the panel");
+  await page.getByRole("button", { name: "发送" }).click();
+  await expect(page.locator(".floating-chat__messages")).toBeVisible();
+
+  // With the panel expanded, the ☰ trigger still opens its menu.
+  await page.getByRole("button", { name: "打开菜单" }).click();
+  await expect(page.getByRole("menu", { name: "Agent-Jarvis 菜单" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "模型" })).toBeVisible();
 });
 
 test("human workflow: the account dialog separates Agent-Jarvis login from model authorization", async ({ page }) => {
   await page.goto("/");
+  await openCornerMenu(page);
   await page.getByRole("button", { name: "账号登录" }).click();
 
   const dialog = page.locator("dialog[open]");

@@ -71,7 +71,7 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
   if (!provider) {
     throw input.providerId
       ? new ChatServiceError(404, "Selected model provider is not connected.")
-      : new ChatServiceError(409, "没有可用的模型 Provider。请在「配置」中启用一个并通过连接测试。");
+      : new ChatServiceError(409, "没有可用的模型 Provider。请在「模型」中启用一个并通过连接测试。");
   }
 
   let conversationId: string;

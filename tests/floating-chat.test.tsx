@@ -190,7 +190,7 @@ describe("FloatingChat", () => {
         hasEnabledProvider
         probeProviders={readyProbe}
         onStream={async function* () {
-          throw new PreStreamError("没有可用的模型 Provider。请在「配置」中启用一个并通过连接测试。");
+          throw new PreStreamError("没有可用的模型 Provider。请在「模型」中启用一个并通过连接测试。");
         }}
       />
     );

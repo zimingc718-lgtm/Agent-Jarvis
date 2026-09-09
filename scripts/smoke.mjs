@@ -80,7 +80,12 @@ try {
 
   const home = await fetchText(`http://127.0.0.1:${appPort}/`);
   assert(home.includes("Agent-Jarvis"), "home page must render the application shell");
-  assert(home.includes("配置") && home.includes("账号登录"), "home page must expose the settings and account dialog buttons");
+  // CR-20260909-corner-menu: entries moved into the bottom-left ☰ menu, whose
+  // panel is not in the SSR markup until opened — assert the trigger is there.
+  assert(
+    home.includes("corner-menu__trigger") && home.includes("打开菜单"),
+    "home page must expose the bottom-left ☰ menu trigger"
+  );
 
   // The NextAuth route handler must actually load — a corrupted build makes it
   // 500 with "Cannot find module './vendor-chunks/jose.js'", which no other

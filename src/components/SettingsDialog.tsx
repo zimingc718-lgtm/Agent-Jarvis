@@ -4,7 +4,6 @@ import { useState } from "react";
 import { ConfigWarning } from "./ConfigWarning";
 import { Dialog } from "./Dialog";
 import { ModelSettings } from "./ModelSettings";
-import { ThemeToggle } from "./ThemeToggle";
 import type { ProviderTemplate } from "@/lib/providers";
 import { STORAGE_CONFIG_HINT, type RuntimeConfigStatus } from "@/lib/runtime-config";
 import type { ProviderSummary } from "@/lib/types";
@@ -23,13 +22,9 @@ export function SettingsDialog({ templates, providers, storage }: SettingsDialog
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}>
-        配置
+        模型
       </button>
-      <Dialog open={open} title="设置" onClose={() => setOpen(false)}>
-        <section className="dialog__section" aria-label="外观">
-          <h3>外观</h3>
-          <ThemeToggle />
-        </section>
+      <Dialog open={open} title="模型 Provider" onClose={() => setOpen(false)}>
         {storageBlocked ? (
           <ConfigWarning title="本地存储未配置，无法保存 Provider" missing={storage!.missing} hint={STORAGE_CONFIG_HINT} />
         ) : (

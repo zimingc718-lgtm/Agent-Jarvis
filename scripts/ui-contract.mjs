@@ -274,6 +274,7 @@ function buildContext() {
     "ModelSettings.tsx": read("src/components/ModelSettings.tsx"),
     "SettingsDialog.tsx": read("src/components/SettingsDialog.tsx"),
     "AccountDialog.tsx": read("src/components/AccountDialog.tsx"),
+    "CornerMenu.tsx": read("src/components/CornerMenu.tsx"),
     "ThemeToggle.tsx": read("src/components/ThemeToggle.tsx"),
     "markdown.tsx": read("src/lib/markdown.tsx"),
   };
@@ -1058,6 +1059,35 @@ const CONTRACT = [
             offenders.push("unconditional providerId in request body");
           }
           return offenders.length ? FAIL(`console still has provider selection: ${offenders.join(", ")}`) : PASS("no in-console provider selection");
+        },
+      },
+      {
+        id: "LB-08",
+        ref: "REQ-F-015 (CR-20260909-corner-menu)",
+        req: "REQ-F-015",
+        title: "Home entries live in a bottom-left ☰ menu, not the header",
+        guidance:
+          "page.tsx header holds only the title; CornerMenu is a fixed bottom-left disclosure (real <button> with aria-haspopup + aria-expanded, z-index above the chat).",
+        check(ctx) {
+          const page = ctx.files["page.tsx"] ?? "";
+          const menuSrc = ctx.files["CornerMenu.tsx"] ?? "";
+          if (!/CornerMenu/.test(page)) return FAIL("page.tsx does not render <CornerMenu>");
+          const header = page.match(/<header[\s\S]*?<\/header>/)?.[0] ?? "";
+          if (/home__actions/.test(page) || /<(SettingsDialog|AccountDialog)\b/.test(header)) {
+            return FAIL("header still carries the config/account buttons");
+          }
+          // The two dialog launchers must be inside <CornerMenu>.
+          const menuBlock = page.match(/<CornerMenu[\s\S]*?<\/CornerMenu>/)?.[0] ?? "";
+          if (!/<SettingsDialog\b/.test(menuBlock) || !/<AccountDialog\b/.test(menuBlock)) {
+            return FAIL("SettingsDialog / AccountDialog are not inside <CornerMenu>");
+          }
+          const hasTrigger = /<button[^>]*corner-menu__trigger/.test(menuSrc) || /corner-menu__trigger[\s\S]{0,120}<button/.test(menuSrc);
+          const hasAria = /aria-haspopup=/.test(menuSrc) && /aria-expanded=/.test(menuSrc);
+          if (!hasTrigger || !hasAria) return FAIL("CornerMenu trigger missing (real <button> + aria-haspopup + aria-expanded)");
+          const menu = ctx.rule(".corner-menu");
+          const z = menu && parseInt(decl(menu.body, "z-index") ?? "", 10);
+          if (!(z >= 21)) return FAIL(`.corner-menu z-index (${z}) is not above the floating chat (20)`);
+          return PASS(`CornerMenu: header clean, trigger + aria, z-index ${z}`);
         },
       },
       {
