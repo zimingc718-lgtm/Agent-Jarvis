@@ -106,7 +106,14 @@
 - `package.json`：移除未使用的 `openai` 依赖（`package-lock.json` 已同步）。
 - `test-results.json`：TEST-025..030 = PASS；TEST-022 = DEFERRED。
 - **CONDITIONAL 全部满足**：TASK-025 分 2 次提交（数据层 / UI 层）；TASK-024 首屏 `检测中` + `useEffect` 探测不阻塞 SSR；TASK-021 迁移 `ALTER TABLE ... NOT NULL DEFAULT 1000000` + rowid 回填。
-- **门禁**：`verify`/`ui`/`check-changes`/`g1`/`g2`/`g3`/`g3.5`/`g4` 全 PASS（g3+ 首次转绿——此前长期因 TEST-022 为红）。`npm test` 114、`ui-contract` 45/0/0、smoke、6 e2e、`build:verify`、17 治理单测全通过。
+- **门禁**：`verify`/`ui`/`check-changes`/`g1`/`g2`/`g3`/`g3.5`/`g4` 全 PASS（g3+ 首次转绿——此前长期因 TEST-022 为红）。`npm test` 115、`ui-contract` 45/0/0、smoke、6 e2e、`build:verify`、17 治理单测全通过。
+
+## P6 复盘（同会话运行反馈 → 固化控制）
+
+| 观察 | 根因 | 固化控制 |
+|---|---|---|
+| 配好 Provider 后状态灯仍白 | `FloatingChat` 探测门控在 SSR 快照 `hasEnabledProvider` 上，弹窗内配置后无重探信号——这是「新增前端能力缺少『配置变更→UI 反应』闭环」 | 探测改为 mount 必探 + `focus`/`jarvis:providers-changed` 重探；`ModelSettings` 每次写操作派发事件。测试「re-probes when providers change」。 |
+| 用户指出重写后旧代码/样式未清 | 无强制机制阻止新旧实现并存（如 `.floating-chat__light` 残留 `box-shadow`、`--muted` 兜底） | 新增 AI_STANDARD 原则 16「无残留旧代码原则」；`tsconfig.json` 开 `noUnusedLocals`/`noUnusedParameters`，`test:typecheck` 对未使用局部/导入/参数报错。已清理本 CR 全部残留。 |
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 

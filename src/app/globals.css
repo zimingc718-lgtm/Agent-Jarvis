@@ -326,14 +326,13 @@ textarea {
 }
 
 /* REQ-F-018: four distinguishable light states, no accompanying visible text.
-   Each state also carries a non-colour cue via .floating-chat__sr (WCAG 1.4.1). */
+   Each state also carries a non-colour cue via .floating-chat__sr (WCAG 1.4.1).
+   Every render sets exactly one --state class, so the base rule has no colour. */
 .floating-chat__light {
   width: 0.5rem;
   height: 0.5rem;
   flex: none;
   border-radius: 50%;
-  background: var(--muted);
-  box-shadow: 0 0 0 3px transparent;
 }
 
 .floating-chat__light--checking {
