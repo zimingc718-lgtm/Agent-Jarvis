@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-09T15:30:00Z",
+  "generated_at": "2026-09-09T16:30:00Z",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
@@ -84,13 +84,13 @@
       "id": "TEST-011",
       "result": "PASS",
       "command": "npm run test:floating-chat",
-      "evidence": "bottom input default+expand; separate assistant bubbles per turn; conversationId reused; provider switcher rendered with >1 provider and selection sent"
+      "evidence": "CR-20260909: bottom input default + expand; separate assistant bubbles per turn; conversationId reused across turns. No provider <select>/chip/model field; the chat request carries no providerId/model (server resolves by priority)."
     },
     {
       "id": "TEST-012",
       "result": "PASS",
       "command": "npm run test:visual",
-      "evidence": "scripts/ui-contract.mjs static tier: 45 rules, 0 FAIL, 0 WARN — tokens, AA contrast for BOTH the light and dark palettes, focus, reflow, semantics, DEC-005 layout, expanded-panel height cap (RF-09), session continuity"
+      "evidence": "scripts/ui-contract.mjs static tier: 45 rules, 0 FAIL, 0 WARN. Tokens, AA contrast for BOTH light and dark palettes (single blue accent #2563eb / #60a5fa), focus, reflow, semantics, DEC-005 layout, expanded-panel height cap RF-09 <=50vh (CR-20260909), status-light four-state rule LB-06, no-in-console-switcher rule LB-05, session continuity."
     },
     {
       "id": "TEST-013",
@@ -155,20 +155,20 @@
     },
     {
       "id": "TEST-022",
-      "result": "PENDING",
+      "result": "DEFERRED",
       "verification": "manual",
       "command": "human: configure real Google OAuth in .env.local, unset JARVIS_TEST_USER_ID, sign in through the account dialog",
       "blocks": [
         "REQ-F-001"
       ],
-      "evidence": "NOT YET VERIFIED. REQ-F-001's positive acceptance (a user actually signs in with Google) has never been exercised: every automated suite uses the JARVIS_TEST_USER_ID bypass. A human must complete the flow and record verified_by / verified_at here; `governance.py gate g3` blocks until then."
+      "evidence": "DEFERRED with REQ-F-001 (CR-20260909-minimal-floating-chat): the current version runs as a single local admin, so real Google sign-in is out of scope. gate g3 reports this as a deferred requirement, not a pending manual run. The CR that restores Google login must restore this test."
     },
     {
       "id": "TEST-023",
       "result": "PASS",
       "command": "npm run test:config",
       "real_entry": true,
-      "evidence": "check-config.mjs distinguishes unset / shadowed-by-ambient-env / `missing-` placeholder, and is immune to NODE_ENV=test and the __NEXT_PROCESSED_ENV cache marker; storageUnavailable() returns a 503 naming JARVIS_SECRET_KEY, and GET /api/providers, GET /api/conversations/recent and POST /api/chat/stream all answer 503 instead of throwing when the key is absent."
+      "evidence": "check-config.mjs distinguishes unset / shadowed-by-ambient-env / `missing-` placeholder, and is immune to NODE_ENV=test and the __NEXT_PROCESSED_ENV cache marker; storageUnavailable() returns a 503 naming JARVIS_SECRET_KEY, and GET /api/providers, GET /api/conversations/recent and POST /api/chat/stream all answer 503 instead of throwing when the key is absent. CR-20260909: with JARVIS_TEST_USER_ID set the OAuth/NextAuth vars report as 暂缓 (not 缺失) and do not affect the exit code; JARVIS_SECRET_KEY stays required (exit 1 when absent)."
     },
     {
       "id": "TEST-024",
@@ -176,6 +176,48 @@
       "command": "npm run test:smoke && npm run test:e2e",
       "real_entry": true,
       "evidence": "smoke asserts /api/auth/csrf -> 200 + csrfToken and /api/auth/providers exposes the google provider; e2e asserts /api/auth/signin -> 200 (not 500). Regression guard for .next build-dir corruption (vendor-chunks/jose.js MODULE_NOT_FOUND) that the JARVIS_TEST_USER_ID bypass otherwise hides. Verified: a `npm run build:verify` (into .next-verify) run against a live interactive dev server no longer breaks that server's /api/auth/* or /."
+    },
+    {
+      "id": "TEST-025",
+      "result": "PASS",
+      "command": "npm run test:providers && npm run test:chat-stream && npm run test:provider-crud",
+      "real_entry": true,
+      "evidence": "store: new providers get increasing priority 0,1,2; reorderProvider swaps with the neighbour and returns false at an edge / for another user. resolveActiveProvider walks priority order and skips a not-connected (api_key, no secret) top provider. runChatTurn with no providerId uses the resolved provider; reordering changes which model is sent. Route: PATCH /api/providers/[id] {direction} returns 200 and reorders, 404 at an edge. smoke: GET /api/providers/probe reports anyConnected; a provider-less /api/chat/stream turn resolves and completes."
+    },
+    {
+      "id": "TEST-026",
+      "result": "PASS",
+      "command": "npm run test:chat-stream && npm run test:smoke",
+      "real_entry": true,
+      "evidence": "runChatTurn with nothing enabled rejects with status 409 and creates no conversation (listRecentConversations stays empty). smoke: after disabling the only provider, POST /api/chat/stream returns 409 and the home HTML renders .floating-chat__light--off."
+    },
+    {
+      "id": "TEST-027",
+      "result": "PASS",
+      "command": "npm run test:floating-chat && npm run test:visual && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "component: light class is floating-chat__light--checking until the (mocked) probe resolves, then --ready; --busy while streaming; --off with hasEnabledProvider=false. ui-contract LB-06 asserts all four states are rendered and styled. No real network in vitest (probe is a test seam). e2e exercises the real probe via the mock model server."
+    },
+    {
+      "id": "TEST-028",
+      "result": "PASS",
+      "command": "npm run test:floating-chat",
+      "real_entry": false,
+      "evidence": "a PreStreamError (thrown before any delta) renders role=alert above the input with the sanitized message, removes the optimistic user+assistant bubbles, and does NOT set jarvis:chat-session-ended. A mid-stream {type:error} instead flags the assistant bubble (（生成失败）) with no alert."
+    },
+    {
+      "id": "TEST-029",
+      "result": "PASS",
+      "command": "npm run test:chat-stop && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "component: clicking 停止 aborts the stream, marks the last assistant bubble （已停止）, sets jarvis:chat-session-ended, and the next submit sends conversationId=undefined (new conversation). e2e 'Stop halts the stream server-side': real 停止 button; persisted assistant status is 'stopped'."
+    },
+    {
+      "id": "TEST-030",
+      "result": "PASS",
+      "command": "npm run test:floating-chat && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "component: button reads 新对话 while the input is empty (with or without history); clicking clears the transcript DOM, drops conversationId, sets jarvis:chat-session-ended; the next send has conversationId=undefined and no row is created before it. A session flagged ended does not hydrate initialMessages. e2e '新对话 clears the transcript and a refresh stays empty': after 新对话 the sent message is hidden and a page.reload() stays empty. RF-09 asserts .floating-chat--expanded max-height <=50vh."
     }
   ],
   "executed_commands": [
@@ -239,8 +281,8 @@
     "next build and next dev must not share a build dir: use npm run build:verify / the NEXT_DIST_DIR-isolated smoke and e2e servers. See docs/WORKFLOW.md.",
     {
       "id": "CR-20260909-minimal-floating-chat",
-      "status": "P1/P2 APPROVED, P3 pending",
-      "detail": "TEST-025..030 defined in 测试说明书 but not yet implemented; gate g3 will list them as missing PASS evidence until the implementation CR. TEST-011/012 assertions rewritten (no floating switcher; panel <=50vh). TEST-022 deferred together with REQ-F-001."
+      "status": "P1/P2/P3 complete",
+      "detail": "Implemented in TASK-021..029: provider priority + resolveActiveProvider + fallthrough, FloatingChat collapse (no chip/state/model field), four-state status light with client probe, stop-ends-session + 新对话 + session-ended sessionStorage flag, request-level red line, 50vh, single blue accent, ui-contract LB-05/LB-06/CC-04/RF-09, check-config single-admin. TEST-025..030 PASS. TEST-022 deferred with REQ-F-001."
     }
   ]
 }
