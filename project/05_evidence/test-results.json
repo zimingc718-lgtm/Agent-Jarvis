@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-09T19:30:00Z",
+  "generated_at": "2026-09-09T20:30:00Z",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
@@ -15,7 +15,8 @@
     "project/06_changes/CR-20260909-config-preflight-and-manual-auth.md",
     "project/06_changes/CR-20260909-next-build-dir-isolation.md",
     "project/06_changes/CR-20260909-minimal-floating-chat.md",
-    "project/06_changes/CR-20260909-collapsible-panel.md"
+    "project/06_changes/CR-20260909-collapsible-panel.md",
+    "project/06_changes/CR-20260909-corner-menu.md"
   ],
   "tests": [
     {
@@ -296,6 +297,11 @@
       "id": "CR-20260909-collapsible-panel",
       "status": "P1/P2/P3 complete",
       "detail": "REQ-F-019 + REQ-F-003 relaxation implemented in TASK-030: FloatingChat expanded -> hasTranscript + userCollapsed (derived showTranscript), localStorage['jarvis:chat-collapsed'] via chatCollapsed/writeChatCollapsed, collapse <button> in the status row, --done light pulse on collapsed completion, send auto-expands. ui-contract LB-03 updated + new LB-07. TEST-031 PASS; TEST-030 and the send/新对话/Stop e2e re-verified. 120 unit tests, 46 ui-contract rules, 7 e2e, smoke, build:verify all green."
+    },
+    {
+      "id": "CR-20260909-corner-menu",
+      "status": "P1/P2 APPROVED, P3 pending",
+      "detail": "REQ-F-015 rewrite (header buttons -> bottom-left ☰ menu), 配置->模型 rename, theme toggle inlined into the menu. TASK-031 TODO. TEST-032 defined but not implemented -> gate g3 will list it missing until P3. TEST-019/021 + appearance/account e2e to be re-verified after TASK-031."
     }
   ]
 }
