@@ -1,8 +1,10 @@
 import { getServerSession } from "next-auth";
 import { AccountDialog } from "@/components/AccountDialog";
 import { ConfigWarning } from "@/components/ConfigWarning";
+import { CornerMenu } from "@/components/CornerMenu";
 import { FloatingChat, type FloatingMessage } from "@/components/FloatingChat";
 import { SettingsDialog } from "@/components/SettingsDialog";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { authOptions, getGoogleOAuthConfig } from "@/lib/auth";
 import { requireUserId } from "@/lib/auth-guard";
 import { getDefaultProviderTemplates } from "@/lib/providers";
@@ -40,11 +42,13 @@ export default async function HomePage() {
     <main className="home">
       <header className="home__bar">
         <h1 className="home__title">Agent-Jarvis</h1>
-        <div className="home__actions">
-          <SettingsDialog templates={templates} providers={savedProviders} storage={storage} />
-          <AccountDialog authenticated={auth.ok} googleOAuth={googleOAuth} />
-        </div>
       </header>
+
+      <CornerMenu>
+        <ThemeToggle />
+        <SettingsDialog templates={templates} providers={savedProviders} storage={storage} />
+        <AccountDialog authenticated={auth.ok} googleOAuth={googleOAuth} />
+      </CornerMenu>
 
       {auth.ok && !storage.configured ? (
         <ConfigWarning title="本地存储未配置" missing={storage.missing} hint={STORAGE_CONFIG_HINT} />

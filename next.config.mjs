@@ -11,6 +11,11 @@
  */
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || ".next",
+  // CR-20260909-corner-menu: the app owns the bottom-left corner (☰ menu), so move
+  // the dev-only Next.js indicator out of the way. No effect on production builds.
+  devIndicators: {
+    position: "bottom-right",
+  },
 };
 
 export default nextConfig;
