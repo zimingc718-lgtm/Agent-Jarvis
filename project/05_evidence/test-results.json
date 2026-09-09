@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-09T11:10:00Z",
+  "generated_at": "2026-09-09T15:30:00Z",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
@@ -13,7 +13,8 @@
     "project/06_changes/CR-20260908-floating-chat-functional-fixes.md",
     "project/06_changes/CR-20260908-ui-light-theme-minimal-home.md",
     "project/06_changes/CR-20260909-config-preflight-and-manual-auth.md",
-    "project/06_changes/CR-20260909-next-build-dir-isolation.md"
+    "project/06_changes/CR-20260909-next-build-dir-isolation.md",
+    "project/06_changes/CR-20260909-minimal-floating-chat.md"
   ],
   "tests": [
     {
@@ -235,6 +236,11 @@
     "ui-contract --live LV-AXE skipped: axe-core is not a dependency; install `axe-core` (devDep) to enable the full automated audit.",
     "The Markdown renderer covers the common LLM subset only; tables, images and inline HTML render as literal text by design.",
     "gate g3 is intentionally red until TEST-022 (real Google login) is verified by a human and attributed in this file.",
-    "next build and next dev must not share a build dir: use npm run build:verify / the NEXT_DIST_DIR-isolated smoke and e2e servers. See docs/WORKFLOW.md."
+    "next build and next dev must not share a build dir: use npm run build:verify / the NEXT_DIST_DIR-isolated smoke and e2e servers. See docs/WORKFLOW.md.",
+    {
+      "id": "CR-20260909-minimal-floating-chat",
+      "status": "P1/P2 APPROVED, P3 pending",
+      "detail": "TEST-025..030 defined in 测试说明书 but not yet implemented; gate g3 will list them as missing PASS evidence until the implementation CR. TEST-011/012 assertions rewritten (no floating switcher; panel <=50vh). TEST-022 deferred together with REQ-F-001."
+    }
   ]
 }
