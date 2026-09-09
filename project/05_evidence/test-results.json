@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-09T16:30:00Z",
+  "generated_at": "2026-09-09T18:00:00Z",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
@@ -14,7 +14,8 @@
     "project/06_changes/CR-20260908-ui-light-theme-minimal-home.md",
     "project/06_changes/CR-20260909-config-preflight-and-manual-auth.md",
     "project/06_changes/CR-20260909-next-build-dir-isolation.md",
-    "project/06_changes/CR-20260909-minimal-floating-chat.md"
+    "project/06_changes/CR-20260909-minimal-floating-chat.md",
+    "project/06_changes/CR-20260909-collapsible-panel.md"
   ],
   "tests": [
     {
@@ -283,6 +284,11 @@
       "id": "CR-20260909-minimal-floating-chat",
       "status": "P1/P2/P3 complete",
       "detail": "Implemented in TASK-021..029: provider priority + resolveActiveProvider + fallthrough, FloatingChat collapse (no chip/state/model field), four-state status light with client probe, stop-ends-session + 新对话 + session-ended sessionStorage flag, request-level red line, 50vh, single blue accent, ui-contract LB-05/LB-06/CC-04/RF-09, check-config single-admin. TEST-025..030 PASS. TEST-022 deferred with REQ-F-001."
+    },
+    {
+      "id": "CR-20260909-collapsible-panel",
+      "status": "P1/P2 APPROVED, P3 pending",
+      "detail": "REQ-F-019 (collapse panel) + REQ-F-003 acceptance relaxation approved; TASK-030 TODO. TEST-031 defined but not implemented -> gate g3 will list it as missing PASS evidence until P3 ('按开发流程执行'). TEST-030 and the 'send expands' e2e must be re-verified after the expanded->showTranscript refactor."
     }
   ]
 }
