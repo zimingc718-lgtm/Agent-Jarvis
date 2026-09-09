@@ -1,14 +1,7 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import { Markdown } from "@/lib/markdown";
-
-type FloatingProvider = {
-  id: string;
-  name: string;
-  defaultModel: string;
-  connected: boolean;
-};
 
 export type FloatingMessage = {
   id: string;
@@ -26,18 +19,56 @@ export type ChatStreamEvent =
 
 export type ChatStreamRequest = {
   message: string;
-  providerId: string;
-  model?: string;
   conversationId?: string;
+  /** Optional override; the console never sends one (CR-20260909 — server resolves by priority). */
+  providerId?: string;
+  model?: string;
   signal?: AbortSignal;
 };
 
+/** Raised when the request fails before any reply text arrives (REQ-F-016 request-level error). */
+export class PreStreamError extends Error {}
+
+type LightState = "checking" | "off" | "ready" | "busy";
+
+const LIGHT_LABEL: Record<LightState, string> = {
+  checking: "正在检测模型连接",
+  off: "没有可用的模型",
+  ready: "模型就绪",
+  busy: "正在生成回复",
+};
+
 type FloatingChatProps = {
-  providers: FloatingProvider[];
+  /** At least one provider is enabled — sets the light to「检测中」until the probe resolves. */
+  hasEnabledProvider?: boolean;
   initialConversationId?: string | null;
   initialMessages?: FloatingMessage[];
   onStream?: (request: ChatStreamRequest) => AsyncIterable<ChatStreamEvent>;
+  /** Test seam: resolves to whether any enabled provider answered the probe. */
+  probeProviders?: () => Promise<boolean>;
 };
+
+const SESSION_ENDED_KEY = "jarvis:chat-session-ended";
+
+function sessionEnded(): boolean {
+  try {
+    return sessionStorage.getItem(SESSION_ENDED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markSessionEnded(ended: boolean): void {
+  try {
+    if (ended) {
+      sessionStorage.setItem(SESSION_ENDED_KEY, "1");
+    } else {
+      sessionStorage.removeItem(SESSION_ENDED_KEY);
+    }
+  } catch {
+    /* private mode / disabled storage — the in-memory state still holds for this view */
+  }
+}
 
 export async function* streamChatDeltas(request: ChatStreamRequest): AsyncIterable<ChatStreamEvent> {
   const response = await fetch("/api/chat/stream", {
@@ -45,19 +76,19 @@ export async function* streamChatDeltas(request: ChatStreamRequest): AsyncIterab
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       message: request.message,
-      providerId: request.providerId,
-      model: request.model,
       conversationId: request.conversationId,
+      ...(request.providerId ? { providerId: request.providerId } : {}),
+      ...(request.model ? { model: request.model } : {}),
     }),
     signal: request.signal,
   });
 
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(body?.message ?? "Chat request failed.");
+    throw new PreStreamError(body?.message ?? "对话请求失败。");
   }
   if (!response.body) {
-    throw new Error("No response body returned.");
+    throw new PreStreamError("服务端没有返回响应流。");
   }
 
   const reader = response.body.getReader();
@@ -99,36 +130,59 @@ export async function* streamChatDeltas(request: ChatStreamRequest): AsyncIterab
   }
 }
 
+async function probeViaApi(): Promise<boolean> {
+  try {
+    const response = await fetch("/api/providers/probe", { headers: { accept: "application/json" } });
+    if (!response.ok) {
+      return false;
+    }
+    const body = (await response.json()) as { anyConnected?: boolean };
+    return Boolean(body.anyConnected);
+  } catch {
+    return false;
+  }
+}
+
 export function FloatingChat({
-  providers,
+  hasEnabledProvider = false,
   initialConversationId = null,
   initialMessages = [],
   onStream = streamChatDeltas,
+  probeProviders = probeViaApi,
 }: FloatingChatProps) {
-  const availableProviders = useMemo(() => providers.filter((provider) => provider.connected), [providers]);
+  const restored = !sessionEnded() && initialMessages.length > 0;
 
-  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(availableProviders[0]?.id ?? null);
-  const selectedProvider =
-    availableProviders.find((provider) => provider.id === selectedProviderId) ?? availableProviders[0] ?? null;
-
-  const [model, setModel] = useState<string>(selectedProvider?.defaultModel ?? "");
   const [input, setInput] = useState("");
-  const [expanded, setExpanded] = useState(initialMessages.length > 0);
+  const [expanded, setExpanded] = useState(restored);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [status, setStatus] = useState(initialMessages.length > 0 ? "Restored" : "Ready");
-  const [messages, setMessages] = useState<FloatingMessage[]>(initialMessages);
-  const [conversationId, setConversationId] = useState<string | null>(initialConversationId);
+  const [probeState, setProbeState] = useState<Exclude<LightState, "busy">>(
+    hasEnabledProvider ? "checking" : "off"
+  );
+  const [errorLine, setErrorLine] = useState<string | null>(null);
+  const [messages, setMessages] = useState<FloatingMessage[]>(restored ? initialMessages : []);
+  const [conversationId, setConversationId] = useState<string | null>(
+    restored ? initialConversationId : null
+  );
 
   const abortRef = useRef<AbortController | null>(null);
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
 
-  // Keep the model field in sync when the user switches provider.
+  // REQ-F-018 / DEC-012: probe once on mount, off the first-paint path.
   useEffect(() => {
-    if (selectedProvider) {
-      setModel(selectedProvider.defaultModel);
+    if (!hasEnabledProvider) {
+      return;
     }
-  }, [selectedProvider?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+    let cancelled = false;
+    probeProviders().then((anyConnected) => {
+      if (!cancelled) {
+        setProbeState(anyConnected ? "ready" : "off");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hasEnabledProvider, probeProviders]);
 
   useEffect(() => {
     const el = transcriptRef.current;
@@ -137,58 +191,96 @@ export function FloatingChat({
     }
   }, [messages]);
 
-  const selectedLabel = selectedProvider ? `${selectedProvider.name} / ${model || selectedProvider.defaultModel}` : "No model connected";
+  const lightState: LightState = isStreaming ? "busy" : probeState;
+
+  function endSession() {
+    setConversationId(null);
+    markSessionEnded(true);
+  }
+
+  function handleNewConversation() {
+    setMessages([]);
+    setExpanded(false);
+    setErrorLine(null);
+    endSession();
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const message = input.trim();
-    if (!message || !selectedProvider || isStreaming) {
+    if (!message || isStreaming) {
       return;
     }
 
     const controller = new AbortController();
     abortRef.current = controller;
+    const userId = crypto.randomUUID();
     const assistantId = crypto.randomUUID();
+    let receivedText = false;
 
+    setErrorLine(null);
     setExpanded(true);
     setInput("");
     setIsStreaming(true);
-    setStatus("Streaming");
     setMessages((current) => [
       ...current,
-      { id: crypto.randomUUID(), role: "user", content: message },
+      { id: userId, role: "user", content: message },
       { id: assistantId, role: "assistant", content: "" },
     ]);
+
+    const rollbackOptimistic = () => {
+      setMessages((current) => {
+        const remaining = current.filter((item) => item.id !== userId && item.id !== assistantId);
+        setExpanded(remaining.length > 0);
+        return remaining;
+      });
+    };
 
     try {
       for await (const chunk of onStream({
         message,
-        providerId: selectedProvider.id,
-        model: model.trim() || undefined,
         conversationId: conversationId ?? undefined,
         signal: controller.signal,
       })) {
         if (chunk.type === "start") {
           setConversationId(chunk.conversationId);
+          markSessionEnded(false);
         } else if (chunk.type === "delta") {
+          receivedText = true;
           setMessages((current) =>
-            current.map((item) => (item.id === assistantId ? { ...item, content: `${item.content}${chunk.text}` } : item))
+            current.map((item) =>
+              item.id === assistantId ? { ...item, content: `${item.content}${chunk.text}` } : item
+            )
           );
         } else if (chunk.type === "stopped") {
-          setStatus("Stopped");
+          setMessages((current) =>
+            current.map((item) => (item.id === assistantId ? { ...item, status: "stopped" } : item))
+          );
+          endSession();
           break;
         } else if (chunk.type === "error") {
-          setStatus(chunk.message);
+          // In-stream failure: the reply had already started, so it stays as a flagged bubble.
+          setMessages((current) =>
+            current.map((item) => (item.id === assistantId ? { ...item, status: "error" } : item))
+          );
           break;
-        } else if (chunk.type === "done") {
-          setStatus("Complete");
         }
       }
     } catch (error) {
       if (controller.signal.aborted) {
-        setStatus("Stopped");
+        setMessages((current) =>
+          current.map((item) => (item.id === assistantId ? { ...item, status: "stopped" } : item))
+        );
+        endSession();
+      } else if (error instanceof PreStreamError || !receivedText) {
+        // REQ-F-016: request-level error — nothing was persisted, so drop the optimistic
+        // turn, show a red line above the input, and leave the session untouched.
+        rollbackOptimistic();
+        setErrorLine(error instanceof Error ? error.message : "对话请求失败。");
       } else {
-        setStatus(error instanceof Error ? error.message : "Chat failed");
+        setMessages((current) =>
+          current.map((item) => (item.id === assistantId ? { ...item, status: "error" } : item))
+        );
       }
     } finally {
       setIsStreaming(false);
@@ -200,7 +292,12 @@ export function FloatingChat({
     abortRef.current?.abort();
     abortRef.current = null;
     setIsStreaming(false);
-    setStatus("Stopped");
+    setMessages((current) =>
+      current.map((item, index) =>
+        index === current.length - 1 && item.role === "assistant" ? { ...item, status: "stopped" } : item
+      )
+    );
+    endSession();
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -210,27 +307,15 @@ export function FloatingChat({
     }
   }
 
+  const hasInput = input.trim().length > 0;
+
   return (
     <section className={`floating-chat ${expanded ? "floating-chat--expanded" : ""}`} aria-label="Agent-Jarvis chat">
       <div className="floating-chat__status">
-        <span className="floating-chat__light" aria-hidden="true" />
-        {availableProviders.length > 1 ? (
-          <select
-            className="floating-chat__chip"
-            aria-label="Model provider"
-            value={selectedProvider?.id ?? ""}
-            onChange={(event) => setSelectedProviderId(event.target.value)}
-          >
-            {availableProviders.map((provider) => (
-              <option key={provider.id} value={provider.id}>
-                {provider.name} / {provider.defaultModel}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <span className="floating-chat__chip">{selectedLabel}</span>
-        )}
-        <span className="floating-chat__state">{status}</span>
+        <span className={`floating-chat__light floating-chat__light--${lightState}`} aria-hidden="true" />
+        <span className="floating-chat__sr" role="status">
+          {LIGHT_LABEL[lightState]}
+        </span>
       </div>
 
       {expanded ? (
@@ -246,45 +331,40 @@ export function FloatingChat({
               ) : (
                 message.content
               )}
-              {message.status === "error" ? <span className="floating-chat__flag"> (generation failed)</span> : null}
-              {message.status === "stopped" ? <span className="floating-chat__flag"> (stopped)</span> : null}
+              {message.status === "error" ? <span className="floating-chat__flag"> （生成失败）</span> : null}
+              {message.status === "stopped" ? <span className="floating-chat__flag"> （已停止）</span> : null}
             </article>
           ))}
         </div>
       ) : null}
 
-      {selectedProvider ? (
-        <form className="floating-chat__form" ref={formRef} onSubmit={handleSubmit}>
-          {expanded ? (
-            <input
-              className="floating-chat__model"
-              aria-label="Model"
-              value={model}
-              placeholder={selectedProvider.defaultModel}
-              onChange={(event) => setModel(event.target.value)}
-            />
-          ) : null}
-          <textarea
-            aria-label="Message"
-            placeholder="Ask Agent-Jarvis"
-            rows={1}
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          {isStreaming ? (
-            <button type="button" onClick={handleStop}>
-              Stop
-            </button>
-          ) : (
-            <button type="submit">Send</button>
-          )}
-        </form>
-      ) : (
-        <a className="floating-chat__settings" href="/settings/models">
-          Open model settings
-        </a>
-      )}
+      {errorLine ? (
+        <p className="floating-chat__error" role="alert">
+          {errorLine}
+        </p>
+      ) : null}
+
+      <form className="floating-chat__form" ref={formRef} onSubmit={handleSubmit}>
+        <textarea
+          aria-label="Message"
+          placeholder="Ask Agent-Jarvis"
+          rows={1}
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+        {isStreaming ? (
+          <button type="button" onClick={handleStop}>
+            停止
+          </button>
+        ) : hasInput ? (
+          <button type="submit">发送</button>
+        ) : (
+          <button type="button" onClick={handleNewConversation}>
+            新对话
+          </button>
+        )}
+      </form>
     </section>
   );
 }

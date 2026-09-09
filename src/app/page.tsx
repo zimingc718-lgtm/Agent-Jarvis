@@ -22,12 +22,7 @@ export default async function HomePage() {
   const storeReady = auth.ok && storage.configured;
 
   const savedProviders = storeReady ? getStore().listProviders(auth.userId) : [];
-  const providers = savedProviders.map((provider) => ({
-    id: provider.id,
-    name: provider.name,
-    defaultModel: provider.defaultModel,
-    connected: provider.connected && provider.enabled,
-  }));
+  const hasEnabledProvider = savedProviders.some((provider) => provider.enabled);
 
   let initialConversationId: string | null = null;
   let initialMessages: FloatingMessage[] = [];
@@ -57,7 +52,7 @@ export default async function HomePage() {
 
       {storeReady ? (
         <FloatingChat
-          providers={providers}
+          hasEnabledProvider={hasEnabledProvider}
           initialConversationId={initialConversationId}
           initialMessages={initialMessages}
         />

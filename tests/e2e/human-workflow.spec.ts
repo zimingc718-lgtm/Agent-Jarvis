@@ -92,12 +92,12 @@ test("human workflow: clean home, settings dialog, multi-turn chat with markdown
   await dialog.getByRole("button", { name: "关闭" }).click();
   await expect(page.locator("dialog[open]")).toHaveCount(0);
 
-  // Turn 1 — the model sees system + user.
+  // Turn 1 — the model sees system + user. The console sends no provider; the
+  // server resolves the only enabled one.
   await page.goto("/");
   await page.getByPlaceholder("Ask Agent-Jarvis").fill("First question");
-  await page.getByRole("button", { name: "Send" }).click();
+  await page.getByRole("button", { name: "发送" }).click();
   await expect(page.getByText("Human ctx=2")).toBeVisible();
-  await expect(page.getByText("Complete")).toBeVisible();
 
   // Markdown is rendered, not shown as raw syntax.
   const transcript = page.locator(".floating-chat__messages");
@@ -108,18 +108,40 @@ test("human workflow: clean home, settings dialog, multi-turn chat with markdown
 
   // Turn 2 — prior turns are replayed, so the echoed context count grows.
   await page.getByPlaceholder("Ask Agent-Jarvis").fill("Second question");
-  await page.getByRole("button", { name: "Send" }).click();
+  await page.getByRole("button", { name: "发送" }).click();
   await expect(page.getByText("Human ctx=4")).toBeVisible();
 
   const recent = await (await page.request.get("/api/conversations/recent")).json();
   expect(recent.conversations).toHaveLength(1);
   expect(recent.conversations[0].title).toBe("First question");
 
-  // Refresh — the transcript comes back.
+  // Refresh — the active conversation comes back (REQ-F-013).
   await page.reload();
   await expect(page.getByText("First question")).toBeVisible();
   await expect(page.getByText("Second question")).toBeVisible();
-  await expect(page.getByText("Restored")).toBeVisible();
+});
+
+test("human workflow: 新对话 clears the transcript and a refresh stays empty", async ({ page }) => {
+  await page.goto("/");
+  await saveProviderThroughSettingsDialog(
+    page,
+    "Fresh Local",
+    `http://127.0.0.1:${mockModelPort}/v1`,
+    "human-model"
+  );
+  await page.locator("dialog[open]").getByRole("button", { name: "关闭" }).click();
+
+  await page.goto("/");
+  await page.getByPlaceholder("Ask Agent-Jarvis").fill("kept?");
+  await page.getByRole("button", { name: "发送" }).click();
+  await expect(page.getByText("kept?")).toBeVisible();
+
+  // Empty input -> the action button is 「新对话」.
+  await page.getByRole("button", { name: "新对话" }).click();
+  await expect(page.getByText("kept?")).toBeHidden();
+
+  await page.reload();
+  await expect(page.getByText("kept?")).toBeHidden();
 });
 
 test("human workflow: appearance toggle switches and persists the dark theme", async ({ page }) => {
@@ -189,17 +211,23 @@ test("human workflow: Stop halts the stream server-side", async ({ page }) => {
 
   try {
     await page.goto("/");
+    // Isolate: the console has no switcher, so "Slow Local" must be the only
+    // provider for the server to resolve to it (REQ-F-006).
+    const existing = await (await page.request.get("/api/providers")).json();
+    for (const provider of existing.providers ?? []) {
+      await page.request.delete(`/api/providers/${provider.id}`);
+    }
+
     const dialog = await saveProviderThroughSettingsDialog(page, "Slow Local", `http://127.0.0.1:${slowPort}/v1`, "slow");
     await dialog.getByRole("button", { name: "关闭" }).click();
 
     await page.goto("/");
-    await page.getByLabel("Model provider").selectOption({ label: "Slow Local / slow" });
     await page.getByPlaceholder("Ask Agent-Jarvis").fill("stream forever");
-    await page.getByRole("button", { name: "Send" }).click();
+    await page.getByRole("button", { name: "发送" }).click();
 
     await expect(page.getByText("partial")).toBeVisible();
-    await page.getByRole("button", { name: "Stop" }).click();
-    await expect(page.getByText("Stopped")).toBeVisible();
+    await page.getByRole("button", { name: "停止" }).click();
+    await expect(page.getByText(/已停止/)).toBeVisible();
 
     // The persisted assistant turn is marked stopped, not complete.
     const recent = await (await page.request.get("/api/conversations/recent")).json();

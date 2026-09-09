@@ -52,6 +52,9 @@ export function ModelSettings({ templates, providers }: ModelSettingsProps) {
     [form.kind, templates]
   );
 
+  // REQ-F-006: reorder controls appear only when more than one provider is enabled.
+  const showReorder = savedProviders.filter((provider) => provider.enabled).length > 1;
+
   function selectTemplate(kind: ProviderKind) {
     const template = templates.find((item) => item.kind === kind) ?? templates[0];
     const previousDefaults = templateDefaults.current;
@@ -144,6 +147,20 @@ export function ModelSettings({ templates, providers }: ModelSettingsProps) {
     await refreshProviders();
   }
 
+  // REQ-F-006 (CR-20260909): the saved list is priority-ordered; ↑/↓ swap with the neighbour.
+  async function reorder(provider: ProviderSummary, direction: "up" | "down") {
+    setBusy(true);
+    setStatus(direction === "up" ? "Raising priority..." : "Lowering priority...");
+    const response = await fetch(`/api/providers/${provider.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ direction }),
+    });
+    setBusy(false);
+    setStatus(response.ok ? "Priority updated." : "Reorder failed.");
+    await refreshProviders();
+  }
+
   async function deleteProvider(provider: ProviderSummary) {
     setBusy(true);
     setStatus(`Deleting "${provider.name}"...`);
@@ -174,8 +191,8 @@ export function ModelSettings({ templates, providers }: ModelSettingsProps) {
       <header className="settings-page__header">
         <h2>Model Providers</h2>
         <p className="dialog__note">
-          Connect model providers for Agent-Jarvis. Google login protects Agent-Jarvis; model provider credentials are
-          configured separately.
+          Connect model providers for Agent-Jarvis. When more than one is enabled, the floating console uses the
+          highest-priority connected provider.
         </p>
       </header>
 
@@ -198,9 +215,12 @@ export function ModelSettings({ templates, providers }: ModelSettingsProps) {
 
       <section className="settings-page__panel" aria-label="Saved providers">
         <h2>Saved providers</h2>
+        {showReorder ? (
+          <p className="dialog__note">优先级从上到下递减；对话自动使用最靠上、连接有效的 Provider。</p>
+        ) : null}
         {savedProviders.length > 0 ? (
-          <ul className="provider-list">
-            {savedProviders.map((provider) => (
+          <ol className="provider-list">
+            {savedProviders.map((provider, index) => (
               <li key={provider.id}>
                 <span>{provider.name}</span>
                 <span>{provider.defaultModel}</span>
@@ -208,6 +228,26 @@ export function ModelSettings({ templates, providers }: ModelSettingsProps) {
                 <span>{provider.enabled ? "Enabled" : "Disabled"}</span>
                 {provider.secretPreview ? <span>{provider.secretPreview}</span> : null}
                 {provider.note ? <span className="provider-list__note">{provider.note}</span> : null}
+                {showReorder ? (
+                  <>
+                    <button
+                      type="button"
+                      aria-label={`Raise ${provider.name} priority`}
+                      onClick={() => reorder(provider, "up")}
+                      disabled={busy || index === 0}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Lower ${provider.name} priority`}
+                      onClick={() => reorder(provider, "down")}
+                      disabled={busy || index === savedProviders.length - 1}
+                    >
+                      ↓
+                    </button>
+                  </>
+                ) : null}
                 <button type="button" onClick={() => editProvider(provider)} disabled={busy}>
                   Edit
                 </button>
@@ -219,7 +259,7 @@ export function ModelSettings({ templates, providers }: ModelSettingsProps) {
                 </button>
               </li>
             ))}
-          </ul>
+          </ol>
         ) : (
           <p>No model provider saved yet.</p>
         )}

@@ -150,6 +150,10 @@ try {
   const connectedHome = await fetchText(`http://127.0.0.1:${appPort}/`);
   assert(connectedHome.includes("Ask Agent-Jarvis"), "home page must render the floating chat entry after provider setup");
 
+  // CR-20260909: the live probe the console light uses.
+  const probe = await fetchJson(`http://127.0.0.1:${appPort}/api/providers/probe`);
+  assert(probe.anyConnected === true, `probe must report the mock provider connected, got ${JSON.stringify(probe)}`);
+
   // Turn 1 — new conversation.
   const chatResponse = await fetch(`http://127.0.0.1:${appPort}/api/chat/stream`, {
     method: "POST",
@@ -185,6 +189,15 @@ try {
     `restored transcript must contain both turns, got ${restoredRoles.join(",")}`
   );
 
+  // CR-20260909: the console sends no providerId — the server resolves by priority.
+  const resolvedTurn = await fetch(`http://127.0.0.1:${appPort}/api/chat/stream`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ message: "Resolve me" })
+  });
+  assert(resolvedTurn.ok, `provider-less chat must resolve and return 2xx, got ${resolvedTurn.status}`);
+  assert((await resolvedTurn.text()).includes("event: done"), "provider-less chat must complete");
+
   // Disable then delete through the real id route.
   const disable = await fetch(`http://127.0.0.1:${appPort}/api/providers/${providerId}`, {
     method: "PATCH",
@@ -193,7 +206,17 @@ try {
   });
   assert(disable.status === 200, `provider disable must return 200, got ${disable.status}`);
   const disabledHome = await fetchText(`http://127.0.0.1:${appPort}/`);
-  assert(disabledHome.includes("Open model settings"), "disabled provider must drop the chat input");
+  assert(
+    disabledHome.includes("floating-chat__light--off"),
+    "with no enabled provider the console light must render the 'off' state"
+  );
+  // With no provider, a send is a request-level error and creates no conversation (REQ-F-006 ⑥).
+  const blockedTurn = await fetch(`http://127.0.0.1:${appPort}/api/chat/stream`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ message: "should be blocked" })
+  });
+  assert(blockedTurn.status === 409, `chat with no connected provider must return 409, got ${blockedTurn.status}`);
 
   const del = await fetch(`http://127.0.0.1:${appPort}/api/providers/${providerId}`, { method: "DELETE" });
   assert(del.status === 200, `provider delete must return 200, got ${del.status}`);

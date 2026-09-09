@@ -17,6 +17,7 @@ function savedOpenAI(overrides: Partial<ProviderSummary> = {}): ProviderSummary 
     defaultModel: "gpt-5",
     enabled: true,
     connected: true,
+    priority: 0,
     secretPreview: "sk-s...cret",
     note: null,
     ...overrides,
@@ -98,6 +99,31 @@ describe("ModelSettings", () => {
 
     expect(calls).toContain("PATCH /api/providers/provider-1");
     expect(calls).toContain("DELETE /api/providers/provider-1");
+  });
+
+  // CR-20260909 — TASK-021 / TEST-025
+  it("hides reorder controls with a single enabled provider", () => {
+    render(<ModelSettings templates={templates} providers={[savedOpenAI({ id: "p1", name: "Primary" })]} />);
+    expect(screen.queryByRole("button", { name: "Raise Primary priority" })).not.toBeInTheDocument();
+  });
+
+  it("reorders priority via PATCH { direction } when more than one provider is enabled", async () => {
+    const one = savedOpenAI({ id: "p1", name: "Primary", priority: 0 });
+    const two = savedOpenAI({ id: "p2", name: "Backup", priority: 1 });
+    const calls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
+        calls.push(`${init?.method ?? "GET"} ${String(url)} ${String(init?.body ?? "")}`);
+        if (String(url) === "/api/providers") return new Response(JSON.stringify({ providers: [one, two] }));
+        return new Response(JSON.stringify({ ok: true }));
+      })
+    );
+
+    render(<ModelSettings templates={templates} providers={[one, two]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Lower Primary priority" }));
+    await screen.findByText("Priority updated.");
+    expect(calls.some((c) => c.startsWith("PATCH /api/providers/p1") && c.includes('"direction":"down"'))).toBe(true);
   });
 
   it("shows the provider connectivity result from the test endpoint", async () => {

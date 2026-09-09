@@ -16,7 +16,21 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = process.cwd();
 
-const REQUIRED = [
+/** Same rule the app uses: empty/whitespace and `missing-` placeholders do not count. */
+function isRealValue(value) {
+  if (!value || !String(value).trim()) return false;
+  return !String(value).startsWith("missing-");
+}
+
+/**
+ * CR-20260909: when JARVIS_TEST_USER_ID is set the app runs as a single local admin
+ * (REQ-F-001 / REQ-NF-002 deferred), so the Google OAuth + NextAuth variables are not
+ * required — they are reported as「暂缓」and do not affect the exit code. Only
+ * JARVIS_SECRET_KEY stays required in every mode.
+ */
+const SINGLE_ADMIN = isRealValue(process.env.JARVIS_TEST_USER_ID);
+
+const AUTH_VARS = [
   {
     name: "NEXTAUTH_URL",
     why: "Agent-Jarvis 登录回调地址；必须与实际运行端口一致，并与 Google 控制台的 redirect URI 匹配。",
@@ -24,6 +38,10 @@ const REQUIRED = [
   { name: "NEXTAUTH_SECRET", why: "NextAuth 会话签名密钥。", secret: true },
   { name: "GOOGLE_CLIENT_ID", why: "Google OAuth client ID（Google Cloud > Credentials > Web application）。" },
   { name: "GOOGLE_CLIENT_SECRET", why: "Google OAuth client secret。", secret: true },
+].map((v) => ({ ...v, deferred: SINGLE_ADMIN }));
+
+const REQUIRED = [
+  ...AUTH_VARS,
   {
     name: "JARVIS_SECRET_KEY",
     why: "加密保存 Provider 凭据；缺失时登录成功后仍无法打开本地存储。",
@@ -34,12 +52,6 @@ const REQUIRED = [
 const OPTIONAL = [
   { name: "JARVIS_DB_PATH", why: "SQLite 存储路径，默认 .data/agent-jarvis.sqlite。" },
 ];
-
-/** Same rule the app uses: empty/whitespace and `missing-` placeholders do not count. */
-function isRealValue(value) {
-  if (!value || !String(value).trim()) return false;
-  return !String(value).startsWith("missing-");
-}
 
 function mask(value) {
   const s = String(value);
@@ -94,14 +106,15 @@ function parseEnvFile(path) {
 
 const fileValues = parseEnvFile(envFile);
 
-const results = [...REQUIRED.map((v) => ({ ...v, required: true })), ...OPTIONAL.map((v) => ({ ...v, required: false }))].map(
-  (v) => {
-    const raw = process.env[v.name];
-    const ok = isRealValue(raw);
-    const shadowed = !ok && isRealValue(fileValues[v.name]);
-    return { ...v, ok, shadowed, shown: ok ? (v.secret ? mask(raw) : String(raw)) : null };
-  }
-);
+const results = [
+  ...REQUIRED.map((v) => ({ ...v, required: !v.deferred })),
+  ...OPTIONAL.map((v) => ({ ...v, required: false })),
+].map((v) => {
+  const raw = process.env[v.name];
+  const ok = isRealValue(raw);
+  const shadowed = !ok && isRealValue(fileValues[v.name]);
+  return { ...v, ok, shadowed, shown: ok ? (v.secret ? mask(raw) : String(raw)) : null };
+});
 
 const missingRequired = results.filter((r) => r.required && !r.ok);
 const shadowed = results.filter((r) => r.shadowed);
@@ -147,12 +160,22 @@ if (loaderError) {
 }
 
 for (const r of results) {
-  const tag = r.ok ? `${G}OK  ${X}` : r.shadowed ? `${Y}遮蔽${X}` : r.required ? `${R}缺失${X}` : `${Y}未设${X}`;
+  const tag = r.ok
+    ? `${G}OK  ${X}`
+    : r.shadowed
+      ? `${Y}遮蔽${X}`
+      : r.deferred
+        ? `${D}暂缓${X}`
+        : r.required
+          ? `${R}缺失${X}`
+          : `${Y}未设${X}`;
   const note = r.ok
     ? `${D}${r.shown}${X}`
     : r.shadowed
       ? `${Y}.env.local 里有值，但被同名环境变量（可能是空值）覆盖${X}`
-      : `${D}${r.why}${X}`;
+      : r.deferred
+        ? `${D}单管理员模式下不需要（REQ-F-001 暂缓）${X}`
+        : `${D}${r.why}${X}`;
   process.stdout.write(`  ${tag} ${r.name.padEnd(22)} ${note}\n`);
 }
 
@@ -171,6 +194,11 @@ if (isRealValue(process.env.JARVIS_TEST_USER_ID)) {
 }
 
 if (missingRequired.length === 0) {
+  if (SINGLE_ADMIN) {
+    process.stdout.write(`\n  ${G}配置完整（单管理员模式）${X}。JARVIS_SECRET_KEY 已就绪，可直接 npm run dev。\n`);
+    process.stdout.write(`  ${D}要恢复 Google 登录：取消 JARVIS_TEST_USER_ID，填入 GOOGLE_CLIENT_ID/SECRET 后重跑本检查。${X}\n\n`);
+    process.exit(0);
+  }
   const url = process.env.NEXTAUTH_URL;
   process.stdout.write(`\n  ${G}配置完整${X}。Google 控制台需要放行：\n`);
   process.stdout.write(`    Authorized origin       ${url}\n`);

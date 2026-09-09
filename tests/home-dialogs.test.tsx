@@ -16,6 +16,7 @@ const saved: ProviderSummary = {
   defaultModel: "llama",
   enabled: true,
   connected: true,
+  priority: 0,
   secretPreview: null,
   note: null,
 };

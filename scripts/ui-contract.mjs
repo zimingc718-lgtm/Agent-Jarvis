@@ -506,15 +506,19 @@ const CONTRACT = [
       {
         id: "CC-04",
         ref: "WCAG 1.4.1 Use of Color",
-        req: "REQ-F-014",
+        req: "REQ-F-018",
         title: "State is never signalled by the status light colour alone",
-        guidance: "The 状态灯 must be paired with text (Ready / Streaming / Stopped / error) so colour-blind users get the state.",
+        guidance:
+          "REQ-F-018 removes the visible status text, so the 状态灯 must pair with a non-colour cue: a visually-hidden role=status label naming the state, or an aria-label on the light.",
         check(ctx) {
           const src = ctx.files["FloatingChat.tsx"] ?? "";
           const hasLight = /floating-chat__light/.test(src);
-          const hasText = /\{status\}/.test(src) || /setStatus\(/.test(src);
-          if (hasLight && !hasText) return FAIL("status light present but no adjacent status text");
-          return PASS(hasLight ? "light + textual status" : "no colour-only indicator found");
+          if (!hasLight) return PASS("no colour-only indicator found");
+          const srLabel = /floating-chat__sr[\s\S]*role=["']status["']|role=["']status["'][\s\S]*floating-chat__sr/.test(src);
+          const ariaLabel = /floating-chat__light[^>]*aria-label=/.test(src);
+          const namesStates = /LIGHT_LABEL|检测|就绪|生成|未连接|没有可用/.test(src);
+          if ((srLabel || ariaLabel) && namesStates) return PASS("light + non-colour state label");
+          return FAIL("status light present but state is not exposed as text for AT");
         },
       },
     ],
@@ -768,7 +772,7 @@ const CONTRACT = [
         req: "REQ-F-003",
         title: "The expanded console never takes over the screen",
         guidance:
-          "The composer expands into a bottom panel, not a full-screen chat. Cap the expanded height (≈65vh) so the page behind stays visible and the product does not read as a chat clone.",
+          "The composer expands into a bottom panel, not a full-screen chat. Cap the expanded height at 50vh (CR-20260909, was 65vh) so the page behind stays visible and the product does not read as a chat clone.",
         check(ctx) {
           const expanded = ctx.rule(/\.floating-chat--expanded|\.floating-chat\.is-expanded/);
           if (!expanded) return SKIP("no expanded-state rule");
@@ -776,9 +780,9 @@ const CONTRACT = [
           if (!maxH) return FAIL("expanded console has no max-height — it can grow to full screen");
           const vh = maxH.match(/^(\d+(?:\.\d+)?)vh$/);
           if (!vh) return PASS(`max-height: ${maxH}`);
-          return Number(vh[1]) <= 75
+          return Number(vh[1]) <= 55
             ? PASS(`max-height: ${maxH}`)
-            : FAIL(`expanded console max-height ${maxH} is effectively full-screen (want ≤ 75vh)`);
+            : FAIL(`expanded console max-height ${maxH} exceeds the 50vh cap (CR-20260909)`);
         },
       },
     ],
@@ -931,7 +935,9 @@ const CONTRACT = [
         check(ctx) {
           const chat = ctx.files["FloatingChat.tsx"] ?? "";
           const settings = ctx.files["ModelSettings.tsx"] ?? "";
-          const chatEmpty = /No model connected|Open model settings|settings\/models/.test(chat);
+          // CR-20260909: no provider is surfaced by the「off」light + the request-level
+          // red line on send (「没有可用的模型 Provider」), not an in-console settings link.
+          const chatEmpty = /floating-chat__error|floating-chat__light--off|没有可用|LIGHT_LABEL/.test(chat);
           const settingsEmpty = /No .*(provider|model).*(yet|saved)/i.test(settings);
           if (chatEmpty && settingsEmpty) return PASS();
           return WARN(`missing empty-state copy: ${[!chatEmpty && "chat", !settingsEmpty && "settings"].filter(Boolean).join(", ")}`);
@@ -1021,38 +1027,46 @@ const CONTRACT = [
         guidance: "Placeholder text present, input visible before any interaction.",
         check(ctx) {
           const src = ctx.files["FloatingChat.tsx"] ?? "";
-          return /placeholder=["'][^"']+["']/.test(src) && /<input\b/.test(src)
+          return /placeholder=["'][^"']+["']/.test(src) && /<(input|textarea)\b/.test(src)
             ? PASS()
             : FAIL("no default text input with a placeholder in the console");
         },
       },
       {
         id: "LB-05",
-        ref: "REQ-F-006",
+        ref: "REQ-F-006 (CR-20260909)",
         req: "REQ-F-006",
-        title: "The current model is always visible (模型芯片)",
-        guidance: "Show provider / model in the console header so the user knows what they are talking to.",
+        title: "The floating console carries no provider/model selection",
+        guidance:
+          "CR-20260909 moved provider choice to 「配置」 (priority list). The console must not render a <select>, model chip, or editable model field — it sends no provider parameter.",
         check(ctx) {
           const src = ctx.files["FloatingChat.tsx"] ?? "";
-          const showsModel = /defaultModel/.test(src) && /floating-chat__status|floating-chat__chip|floating-chat__model/.test(src);
-          if (!showsModel) return FAIL("console does not display the active provider/model");
-          const hasChip = /floating-chat__chip|floating-chat__model/.test(ctx.css);
-          return hasChip ? PASS("model chip styled and rendered") : WARN("model label is shown but has no distinct chip styling (REQ-F-014 模型芯片)");
+          const offenders = [];
+          if (/<select\b/.test(src)) offenders.push("<select>");
+          if (/floating-chat__chip|floating-chat__model|floating-chat__state/.test(src)) offenders.push("chip/model/state node");
+          if (/setSelectedProviderId|selectedProvider\b/.test(src)) offenders.push("provider-selection state");
+          // A providerId may still be threaded through as an optional override, but only guarded.
+          if (/providerId:\s*request\.providerId\s*[,}]/.test(src) && !/request\.providerId\s*\?/.test(src)) {
+            offenders.push("unconditional providerId in request body");
+          }
+          return offenders.length ? FAIL(`console still has provider selection: ${offenders.join(", ")}`) : PASS("no in-console provider selection");
         },
       },
       {
         id: "LB-06",
-        ref: "REQ-F-006",
-        req: "REQ-F-006",
-        title: "A provider/model switcher is present",
-        guidance: "REQ-F-006 requires switching between enabled providers — render a <select>, not just providers[0].",
+        ref: "REQ-F-018 (CR-20260909)",
+        req: "REQ-F-018",
+        title: "The status light has four distinguishable states",
+        guidance:
+          "checking / off / ready / busy must each map to a distinct class and CSS rule, and the light stays decorative (state is also exposed as text for AT).",
         check(ctx) {
           const src = ctx.files["FloatingChat.tsx"] ?? "";
-          const hasSwitcher = /<select\b/.test(src) || /role=["']listbox["']/.test(src) || /onProviderChange|setSelectedProvider|setProviderId/.test(src);
-          const pinsFirst = /providers\[0\]|availableProviders\[0\]/.test(src);
-          if (hasSwitcher) return PASS("switcher control present");
-          if (pinsFirst) return WARN("console hard-codes providers[0] — no way to switch provider/model (REQ-F-006 gap)");
-          return WARN("no provider switcher detected");
+          const states = ["checking", "off", "ready", "busy"];
+          const inJsx = states.every((s) => new RegExp(`floating-chat__light--${s}|["']${s}["']`).test(src));
+          const inCss = states.every((s) => new RegExp(`\\.floating-chat__light--${s}\\b`).test(ctx.css));
+          if (!inJsx) return FAIL("FloatingChat does not render all four light states");
+          if (!inCss) return FAIL("globals.css does not style all four .floating-chat__light--* states");
+          return PASS("four light states rendered and styled");
         },
       },
     ],

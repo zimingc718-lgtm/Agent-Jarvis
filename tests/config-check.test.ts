@@ -5,7 +5,16 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const SCRIPT = join(process.cwd(), "scripts", "check-config.mjs");
-const VARS = ["NEXTAUTH_URL", "NEXTAUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "JARVIS_SECRET_KEY", "JARVIS_DB_PATH"];
+const VARS = [
+  "NEXTAUTH_URL",
+  "NEXTAUTH_SECRET",
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+  "JARVIS_SECRET_KEY",
+  "JARVIS_DB_PATH",
+  // Stripped by default so tests are deterministic; a test opts in via extraEnv.
+  "JARVIS_TEST_USER_ID",
+];
 
 type Report = {
   envFilePresent: boolean;
@@ -110,5 +119,21 @@ describe("scripts/check-config.mjs", () => {
     writeFileSync(join(dir, ".env.local"), "NEXTAUTH_URL=http://localhost:3000\n", "utf8");
     const { report } = runIn(dir);
     expect(report.shadowedByEnvironment).toEqual([]);
+  });
+
+  // CR-20260909 — TASK-029 / TEST-023
+  it("single-admin mode: OAuth vars are deferred, only JARVIS_SECRET_KEY is required", () => {
+    writeFileSync(join(dir, ".env.local"), "JARVIS_SECRET_KEY=key\n", "utf8");
+    const { code, report } = runIn(dir, { JARVIS_TEST_USER_ID: "admin" });
+    expect(report.missing).toEqual([]);
+    expect(report.ok).toBe(true);
+    expect(code).toBe(0);
+  });
+
+  it("single-admin mode still fails when JARVIS_SECRET_KEY is missing", () => {
+    writeFileSync(join(dir, ".env.local"), "NEXTAUTH_URL=http://localhost:3000\n", "utf8");
+    const { code, report } = runIn(dir, { JARVIS_TEST_USER_ID: "admin" });
+    expect(report.missing).toEqual(["JARVIS_SECRET_KEY"]);
+    expect(code).toBe(1);
   });
 });
