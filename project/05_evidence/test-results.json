@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-09T18:00:00Z",
+  "generated_at": "2026-09-09T19:30:00Z",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
@@ -218,7 +218,14 @@
       "result": "PASS",
       "command": "npm run test:floating-chat && npm run test:e2e",
       "real_entry": true,
-      "evidence": "component: button reads 新对话 while the input is empty (with or without history); clicking clears the transcript DOM, drops conversationId, sets jarvis:chat-session-ended; the next send has conversationId=undefined and no row is created before it. A session flagged ended does not hydrate initialMessages. e2e '新对话 clears the transcript and a refresh stays empty': after 新对话 the sent message is hidden and a page.reload() stays empty. RF-09 asserts .floating-chat--expanded max-height <=50vh."
+      "evidence": "component: button reads 新对话 while the input is empty (with or without history); clicking clears the transcript DOM, drops conversationId, sets jarvis:chat-session-ended; the next send has conversationId=undefined and no row is created before it. A session flagged ended does not hydrate initialMessages. e2e '新对话 clears the transcript and a refresh stays empty': after 新对话 the sent message is hidden and a page.reload() stays empty. RF-09 asserts .floating-chat--expanded max-height <=50vh. CR-20260909-collapsible-panel: re-verified PASS after the expanded->showTranscript refactor (DEC-013); handleNewConversation no longer calls setExpanded, showTranscript follows messages."
+    },
+    {
+      "id": "TEST-031",
+      "result": "PASS",
+      "command": "npm run test:floating-chat && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "component (7 sub-assertions): collapse control renders only once a transcript exists; collapsing removes .floating-chat__messages from the DOM while conversationId is retained, jarvis:chat-session-ended stays unset, and the next send reuses the same conversationId; expanding restores the same messages; while collapsed the light stays --busy during streaming then pulses --done and settles to --ready after 1.2s (fake timers); sending while collapsed auto-expands and clears localStorage['jarvis:chat-collapsed']; the stored preference is honoured across a remount; preference=collapsed with no transcript shows just the input bar with no control (no empty middle state). e2e 'collapsing the panel keeps the conversation and survives a reload': real 收起对话 button -> .floating-chat__messages hidden -> page.reload() -> still hidden + 展开对话 button -> sending re-expands and the mock echoes ctx=4 (same conversation continued)."
     }
   ],
   "executed_commands": [
@@ -287,8 +294,8 @@
     },
     {
       "id": "CR-20260909-collapsible-panel",
-      "status": "P1/P2 APPROVED, P3 pending",
-      "detail": "REQ-F-019 (collapse panel) + REQ-F-003 acceptance relaxation approved; TASK-030 TODO. TEST-031 defined but not implemented -> gate g3 will list it as missing PASS evidence until P3 ('按开发流程执行'). TEST-030 and the 'send expands' e2e must be re-verified after the expanded->showTranscript refactor."
+      "status": "P1/P2/P3 complete",
+      "detail": "REQ-F-019 + REQ-F-003 relaxation implemented in TASK-030: FloatingChat expanded -> hasTranscript + userCollapsed (derived showTranscript), localStorage['jarvis:chat-collapsed'] via chatCollapsed/writeChatCollapsed, collapse <button> in the status row, --done light pulse on collapsed completion, send auto-expands. ui-contract LB-03 updated + new LB-07. TEST-031 PASS; TEST-030 and the send/新对话/Stop e2e re-verified. 120 unit tests, 46 ui-contract rules, 7 e2e, smoke, build:verify all green."
     }
   ]
 }

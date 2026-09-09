@@ -1,13 +1,13 @@
 # CR-20260909-collapsible-panel
 
 - 级别: L2
-- 提出人: user（"产品说明书，需求讨论。对话框支持折叠。" → 决策 1-5 + B/D 讨论 → "进入角色agent角色评审" → "将意见反馈到产品经理agent，继续修正" → 决策 B 选「甲」）
-- 状态: APPROVED
+- 提出人: user（"对话框支持折叠" → 决策 1-5 + B/D 讨论 → "进入角色评审" → "反馈到产品经理，继续修正" → 决策 B「甲」 → "按开发流程执行" + 要求三角色逐变化点严格响应）
+- 状态: CLOSED（P1-P4 完成：TASK-030 DONE、TEST-031 PASS、g1-g4 全绿、回归 e2e 通过）
 - 影响需求: REQ-F-003（验收放宽）、REQ-F-014（新控件视觉约束）、REQ-F-018（显示表现补充，不改验收）；新增 REQ-F-019
 - 影响模块: MOD-CHAT-UI（`expanded` 状态解耦 + 折叠控件 + 持久化）
 - 影响任务: 新增 TASK-030
 - 影响测试: 新增 TEST-031；TEST-030 与 REQ-F-003 的 e2e 需在实现后重验（行为相邻重构守卫）
-- 当前证据: `project/05_evidence/EV-2026-09-09-collapsible-panel-requirements.md`（需求讨论与角色评审）；实现证据待 P3/P4
+- 当前证据: `project/05_evidence/EV-2026-09-09-collapsible-panel-requirements.md`（需求讨论与角色评审）、`project/05_evidence/EV-2026-09-09-collapsible-panel-impl.md`（架构/模块/测试逐变化点方案 + P3/P4 验证）
 - 方案选项:
   - A. 一级折叠（展开 ⇄ 收起为输入条，会话不变）
   - B. 两级折叠（+ 最小化为角落图标，输入条也隐藏 —— 与 REQ-F-002「输入条常驻」冲突，需同改）
@@ -72,10 +72,16 @@
 | 派生矩阵 | 新增行：TASK-030 → TEST-031 + TEST-030 重验 + REQ-F-003 e2e 重验 |
 | 复盘迭代 | 新增本 CR 评审小节 |
 
-### P3/P4（不在本 CR）
+### P3/P4（已完成 —— 详见 EV-2026-09-09-collapsible-panel-impl）
 
-- `src/components/FloatingChat.tsx`：状态重构 + 折叠控件；`src/app/globals.css`：控件样式；`scripts/ui-contract.mjs` 视需要加控件规则；`docs/UI_STANDARD.md` 图标形态。
-- `test-results.json`：TEST-031 回填 PASS；TEST-030 / REQ-F-003 e2e 重验记录。
+三角色逐变化点响应见 `架构设计说明书 · CR-20260909-collapsible-panel 方案` / `模块任务开发说明书 · 技术设计` / `测试说明书 · 测试设计` 三张表（CP-1..CP-8 全覆盖）。
+
+- `src/components/FloatingChat.tsx`：`expanded` → `hasTranscript` + `userCollapsed`（派生 `showTranscript`）；`chatCollapsed`/`writeChatCollapsed`/`applyCollapsed` helper；`justFinished` + `finishTimerRef` → `--done` 一次性脉冲；状态栏 `.floating-chat__toggle`；发送首行 `applyCollapsed(false)`。删除全部 `setExpanded`。
+- `src/app/globals.css`：`.floating-chat__toggle` / `--toggle-icon` / `.floating-chat__light--done`；`.floating-chat--expanded` 无 `transition`（v1 瞬时）。
+- `scripts/ui-contract.mjs`：LB-03 改判派生模型；新增 LB-07（折叠控件 = 真实 button + `aria-expanded` + transcript-gated + 无高度动画）。46 规则 0/0/0。
+- `test-results.json`：TEST-031 = PASS；TEST-030 补回归说明。
+- **验证**：`npm test` 120（含 TEST-031 的 5 个折叠组件用例）、`ui-contract` 46/0/0、smoke、**7** Playwright e2e（新增「collapsing the panel keeps the conversation and survives a reload」）、`build:verify`、17 治理单测；`verify`/`ui`/`check-changes`/`g1`/`g2`/`g3`/`g3.5`/`g4` 全 PASS。
+- **零部署 / 零后端 / 零数据库变更**（架构角色裁决），无新依赖。
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
