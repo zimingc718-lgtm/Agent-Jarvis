@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-09T21:30:00Z",
+  "generated_at": "2026-09-09T22:00:00Z",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
@@ -309,6 +309,11 @@
       "id": "CR-20260909-corner-menu",
       "status": "P1/P2/P3 complete",
       "detail": "Implemented in TASK-031: new CornerMenu (fixed bottom-left ☰ non-modal disclosure, Esc/outside-click close + focus return); page.tsx header = title only; ThemeToggle rehosted from SettingsDialog into the menu; SettingsDialog trimmed (外观 section removed) + trigger renamed 配置->模型; next.config.mjs devIndicators.position=bottom-right; ui-contract +LB-08. TEST-032 PASS; TEST-019/021 + appearance/account e2e re-verified; smoke home assertion updated. 124 unit tests, 47 ui-contract rules, 8 e2e, smoke, build:verify all green."
+    },
+    {
+      "id": "config-check-single-admin-eval-order",
+      "status": "known, user decided not to fix (2026-09-09)",
+      "detail": "scripts/check-config.mjs computes SINGLE_ADMIN = isRealValue(process.env.JARVIS_TEST_USER_ID) at module top, before loadEnv() reads .env.local. So when JARVIS_TEST_USER_ID lives in .env.local (not the shell), `npm run config:check` still reports GOOGLE_CLIENT_ID/SECRET as 缺少 instead of 暂缓 and exits 1. TEST-023 passes because it injects JARVIS_TEST_USER_ID into the child process env directly. Cosmetic only — the dev server's JARVIS_TEST_USER_ID bypass (auth-guard.ts, read per-request after Next loads .env.local) is unaffected. Fix would be: move the SINGLE_ADMIN computation after loadEnv() + add a TEST-023 case that goes through .env.local."
     }
   ]
 }
