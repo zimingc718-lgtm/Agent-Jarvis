@@ -2,6 +2,17 @@
 
 import { ChangeEvent, DragEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import { DISPLAY_CHANGED_EVENT, SKILLS_CHANGED_EVENT } from "@/lib/ui-events";
+import {
+  ChevronDown,
+  FileArchive,
+  FolderUp,
+  MessageSquarePlus,
+  SendHorizontal,
+  Square,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { Markdown } from "@/lib/markdown";
 
 export type FloatingMessage = {
@@ -45,6 +56,16 @@ const LIGHT_LABEL: Record<LightState, string> = {
   busy: "正在生成回复",
   done: "回复已就绪",
 };
+
+/** Each state gets its own hue so the light is distinguishable without the label. */
+const LIGHT_TONE: Record<LightState, string> = {
+  checking: "bg-muted-foreground/50 animate-pulse",
+  off: "bg-muted-foreground/40",
+  ready: "bg-primary",
+  busy: "bg-primary animate-pulse",
+  done: "bg-emerald-500",
+};
+
 
 type FloatingChatProps = {
   /** At least one provider is enabled — sets the light to「检测中」until the probe resolves. */
@@ -515,9 +536,12 @@ export function FloatingChat({
 
   return (
     <section
-      className={`floating-chat ${showTranscript ? "floating-chat--expanded" : ""} ${
-        dragActive ? "floating-chat--drag" : ""
-      }`}
+      className={cn(
+        // pb clears the iOS home indicator (env(safe-area-inset-bottom)).
+        "floating-chat fixed inset-x-0 bottom-0 z-20 mx-auto flex w-full max-w-3xl flex-col gap-2 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:p-4 sm:pb-[calc(1rem+env(safe-area-inset-bottom,0px))]",
+        showTranscript && "floating-chat--expanded",
+        dragActive && "floating-chat--drag"
+      )}
       aria-label="Agent-Jarvis chat"
       onDragOver={(event) => {
         if ([...(event.dataTransfer?.types ?? [])].includes("Files")) {
@@ -532,97 +556,161 @@ export function FloatingChat({
       }}
       onDrop={handleDrop}
     >
-      <div className="floating-chat__status">
-        <span className={`floating-chat__light floating-chat__light--${lightState}`} aria-hidden="true" />
-        <span className="floating-chat__sr" role="status">
-          {LIGHT_LABEL[lightState]}
-        </span>
-
-        {/* REQ-F-020 ①: an explicit intake path next to the drop target — drag-and-drop
-            of directories is uneven across browsers, and a keyboard user has no drop. */}
-        <input
-          ref={folderInputRef}
-          type="file"
-          hidden
-          aria-label="选择技能文件夹"
-          onChange={handleFolderPicked}
-          {...({ webkitdirectory: "", directory: "" } as Record<string, string>)}
-        />
-        <input
-          ref={archiveInputRef}
-          type="file"
-          hidden
-          aria-label="选择技能 zip 压缩包"
-          accept=".zip,application/zip"
-          onChange={handleArchivePicked}
-        />
-        <button type="button" className="floating-chat__upload" onClick={() => folderInputRef.current?.click()}>
-          上传文件夹
-        </button>
-        <button type="button" className="floating-chat__upload" onClick={() => archiveInputRef.current?.click()}>
-          上传 zip
-        </button>
-
-        {hasTranscript ? (
-          <button
-            type="button"
-            className="floating-chat__toggle"
-            aria-expanded={showTranscript}
-            aria-label={showTranscript ? "收起对话" : "展开对话"}
-            onClick={() => applyCollapsed(showTranscript)}
-          >
-            <span aria-hidden="true" className="floating-chat__toggle-icon" />
-          </button>
-        ) : null}
-      </div>
-
-      {showTranscript ? (
-        <div className="floating-chat__messages" ref={transcriptRef} aria-live="polite">
-          {messages.map((message) => (
-            <article className={`floating-chat__message floating-chat__message--${message.role}`} key={message.id}>
-              {message.role === "assistant" ? (
-                message.content ? (
-                  <Markdown text={message.content} />
-                ) : (
-                  "..."
-                )
-              ) : (
-                message.content
-              )}
-              {message.status === "error" ? <span className="floating-chat__flag"> （生成失败）</span> : null}
-              {message.status === "stopped" ? <span className="floating-chat__flag"> （已停止）</span> : null}
-            </article>
-          ))}
-        </div>
-      ) : null}
-
-      {errorLine ? (
-        <p className="floating-chat__error" role="alert">
-          {errorLine}
-        </p>
-      ) : null}
-
-      <form className="floating-chat__form" ref={formRef} onSubmit={handleSubmit}>
-        <textarea
-          aria-label="Message"
-          placeholder="Ask Agent-Jarvis"
-          rows={1}
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-        {isStreaming ? (
-          <button type="button" onClick={handleStop}>
-            停止
-          </button>
-        ) : hasInput ? (
-          <button type="submit">发送</button>
-        ) : (
-          <button type="button" onClick={handleNewConversation}>
-            新对话
-          </button>
+      <div
+        className={cn(
+          "flex flex-col gap-2 rounded-xl border border-border bg-card/95 p-2 text-card-foreground shadow-lg backdrop-blur",
+          dragActive && "border-primary ring-2 ring-ring"
         )}
-      </form>
+      >
+        <div className="floating-chat__status flex flex-wrap items-center gap-2 px-1">
+          <span
+            className={cn(
+              "floating-chat__light size-2.5 shrink-0 rounded-full",
+              `floating-chat__light--${lightState}`,
+              LIGHT_TONE[lightState]
+            )}
+            aria-hidden="true"
+          />
+          <span className="floating-chat__sr sr-only" role="status">
+            {LIGHT_LABEL[lightState]}
+          </span>
+
+          {/* REQ-F-020 ①: an explicit intake path next to the drop target — drag-and-drop
+              of directories is uneven across browsers, and a keyboard user has no drop. */}
+          <input
+            ref={folderInputRef}
+            type="file"
+            hidden
+            aria-label="选择技能文件夹"
+            onChange={handleFolderPicked}
+            {...({ webkitdirectory: "", directory: "" } as Record<string, string>)}
+          />
+          <input
+            ref={archiveInputRef}
+            type="file"
+            hidden
+            aria-label="选择技能 zip 压缩包"
+            accept=".zip,application/zip"
+            onChange={handleArchivePicked}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="floating-chat__upload gap-1.5"
+            onClick={() => folderInputRef.current?.click()}
+          >
+            <FolderUp aria-hidden="true" className="size-4" />
+            上传文件夹
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="floating-chat__upload gap-1.5"
+            onClick={() => archiveInputRef.current?.click()}
+          >
+            <FileArchive aria-hidden="true" className="size-4" />
+            上传 zip
+          </Button>
+
+          {hasTranscript ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="floating-chat__toggle ml-auto"
+              aria-expanded={showTranscript}
+              aria-label={showTranscript ? "收起对话" : "展开对话"}
+              onClick={() => applyCollapsed(showTranscript)}
+            >
+              <ChevronDown
+                aria-hidden="true"
+                className={cn(
+                  "floating-chat__toggle-icon size-4 transition-transform",
+                  !showTranscript && "rotate-180"
+                )}
+              />
+            </Button>
+          ) : null}
+        </div>
+
+        {showTranscript ? (
+          <div
+            className="floating-chat__messages flex max-h-[50vh] flex-col gap-3 overflow-y-auto overscroll-contain px-1 py-1"
+            ref={transcriptRef}
+            aria-live="polite"
+          >
+            {messages.map((message) => (
+              <article
+                className={cn(
+                  "floating-chat__message max-w-[85%] break-words rounded-lg px-3 py-2 text-sm",
+                  `floating-chat__message--${message.role}`,
+                  message.role === "user"
+                    ? "self-end bg-primary text-primary-foreground"
+                    : "self-start bg-muted text-foreground"
+                )}
+                key={message.id}
+              >
+                {message.role === "assistant" ? (
+                  message.content ? (
+                    <Markdown text={message.content} />
+                  ) : (
+                    "..."
+                  )
+                ) : (
+                  message.content
+                )}
+                {message.status === "error" ? (
+                  <span className="floating-chat__flag text-xs opacity-80"> （生成失败）</span>
+                ) : null}
+                {message.status === "stopped" ? (
+                  <span className="floating-chat__flag text-xs opacity-80"> （已停止）</span>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        ) : null}
+
+        {errorLine ? (
+          <p className="floating-chat__error px-1 text-sm text-destructive" role="alert">
+            {errorLine}
+          </p>
+        ) : null}
+
+        <form className="floating-chat__form flex items-end gap-2" ref={formRef} onSubmit={handleSubmit}>
+          <Textarea
+            aria-label="Message"
+            placeholder="Ask Agent-Jarvis"
+            rows={1}
+            className="max-h-40 min-h-11 flex-1 resize-y"
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+          {isStreaming ? (
+            <Button type="button" variant="outline" className="min-h-11 gap-1.5" onClick={handleStop}>
+              <Square aria-hidden="true" className="size-4" />
+              停止
+            </Button>
+          ) : hasInput ? (
+            <Button type="submit" className="min-h-11 gap-1.5">
+              <SendHorizontal aria-hidden="true" className="size-4" />
+              发送
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11 gap-1.5"
+              onClick={handleNewConversation}
+            >
+              <MessageSquarePlus aria-hidden="true" className="size-4" />
+              新对话
+            </Button>
+          )}
+        </form>
+      </div>
     </section>
   );
 }

@@ -33,13 +33,14 @@
   "include": [
     ".next-e2e/types/**/*.ts",
     ".next-smoke/types/**/*.ts",
+    ".next-verify/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "tests/**/*.ts",
     "tests/**/*.tsx",
-    ".next-verify/types/**/*.ts"
+    ".next-live/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

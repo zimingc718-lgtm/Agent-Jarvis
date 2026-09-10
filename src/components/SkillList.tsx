@@ -52,16 +52,16 @@ export function SkillList({ initialSkills = [], fetchSkills = fetchSkillsFromApi
   }, [fetchSkills]);
 
   return (
-    <section className="skill-list" aria-label="已注册技能">
-      <h3 className="skill-list__title">技能</h3>
+    <section className="skill-list flex flex-col gap-1.5 rounded-md border border-border p-2" aria-label="已注册技能">
+      <h3 className="skill-list__title text-xs font-semibold uppercase tracking-wide text-muted-foreground">技能</h3>
       {skills.length === 0 ? (
-        <p className="skill-list__empty">尚未注册技能</p>
+        <p className="skill-list__empty text-sm text-muted-foreground">尚未注册技能</p>
       ) : (
-        <ul className="skill-list__items">
+        <ul className="skill-list__items flex flex-col gap-1">
           {skills.map((skill) => (
-            <li key={skill.id} className="skill-list__item">
-              <span className="skill-list__name">{skill.name}</span>
-              <span className="skill-list__description">{skill.description}</span>
+            <li key={skill.id} className="skill-list__item flex flex-col">
+              <span className="skill-list__name text-sm font-medium">{skill.name}</span>
+              <span className="skill-list__description text-xs text-muted-foreground">{skill.description}</span>
             </li>
           ))}
         </ul>

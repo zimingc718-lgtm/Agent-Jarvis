@@ -70,6 +70,10 @@ function parseRules(css) {
       const tidy = selector.replace(/\s*\n\s*/g, " ").replace(/\s{2,}/g, " ");
       if (tidy.startsWith("@media")) {
         rules.push({ type: "media", query: tidy.replace(/^@media\s*/, "").trim(), children: parseRules(inner) });
+      } else if (/^@layer\b/.test(tidy) && inner.includes("{")) {
+        // Tailwind v4 wraps base styles in `@layer base { … }`; the rules inside
+        // are ordinary rules and every check below expects to see them.
+        rules.push({ type: "layer", children: parseRules(inner) });
       } else if (tidy.startsWith("@")) {
         rules.push({ type: "at", selector: tidy, body: inner });
       } else {
@@ -89,6 +93,7 @@ function flatten(rules, media = null) {
   for (const r of rules) {
     if (r.type === "rule") out.push({ ...r, media });
     else if (r.type === "media") out.push(...flatten(r.children, r.query));
+    else if (r.type === "layer") out.push(...flatten(r.children, media));
   }
   return out;
 }
@@ -148,6 +153,34 @@ function parseColor(input) {
       g: Number(parts[1]),
       b: Number(parts[2]),
       a: parts[3] === undefined ? 1 : Number(parts[3]),
+    };
+  }
+  // hsl()/hsla(), and the bare `H S% L%` triplet the DEC-019 tokens store so
+  // Tailwind can wrap them itself as hsl(var(--token)).
+  m = s.match(/^hsla?\(([^)]+)\)$/) || s.match(/^(-?[\d.]+(?:deg)?\s+[\d.]+%\s+[\d.]+%(?:\s*[/,]\s*[\d.]+%?)?)$/);
+  if (m) {
+    const parts = m[1].split(/[,/]/).map((x) => x.trim()).flatMap((x) => x.split(/\s+/)).filter(Boolean);
+    const h = ((Number(String(parts[0]).replace("deg", "")) % 360) + 360) % 360;
+    const sat = Number(String(parts[1]).replace("%", "")) / 100;
+    const li = Number(String(parts[2]).replace("%", "")) / 100;
+    if ([h, sat, li].some((v) => Number.isNaN(v))) return null;
+    const a = parts[3] === undefined ? 1 : Number(String(parts[3]).replace("%", "")) / (String(parts[3]).includes("%") ? 100 : 1);
+    const c = (1 - Math.abs(2 * li - 1)) * sat;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const mm = li - c / 2;
+    const seg = [
+      [c, x, 0],
+      [x, c, 0],
+      [0, c, x],
+      [0, x, c],
+      [x, 0, c],
+      [c, 0, x],
+    ][Math.floor(h / 60) % 6];
+    return {
+      r: Math.round((seg[0] + mm) * 255),
+      g: Math.round((seg[1] + mm) * 255),
+      b: Math.round((seg[2] + mm) * 255),
+      a,
     };
   }
   return null;
@@ -265,6 +298,25 @@ function buildContext() {
     return results;
   }
 
+  /**
+   * Utilities applied to the element carrying a structural hook class.
+   * DEC-019 moved layout out of globals.css and into className strings, so a
+   * rule that used to read a CSS declaration reads the utility list instead.
+   */
+  function utilitiesFor(hook, fileNames) {
+    const out = [];
+    for (const name of fileNames) {
+      const src = filesRef[name];
+      if (!src) continue;
+      // Any className={...} / className="..." run mentioning the hook, including
+      // cn(...) calls spanning several lines.
+      const re = new RegExp(`className=(?:\\{)?[\\s\\S]{0,600}?${hook}[\\s\\S]{0,600}?(?:\\}|/>|>)`, "g");
+      for (const m of src.matchAll(re)) out.push(m[0]);
+    }
+    return out.join("\n");
+  }
+
+  const filesRef = {};
   const files = {
     "globals.css": cssRaw,
     "layout.tsx": read("src/app/layout.tsx"),
@@ -279,6 +331,7 @@ function buildContext() {
     "ThemeToggle.tsx": read("src/components/ThemeToggle.tsx"),
     "markdown.tsx": read("src/lib/markdown.tsx"),
   };
+  Object.assign(filesRef, files);
 
   return {
     cssRaw,
@@ -291,6 +344,7 @@ function buildContext() {
     color,
     contrastAcrossThemes,
     files,
+    utilitiesFor,
     rule: (sel) => flat.find((r) => !r.media && matchSelector(r.selector, sel)) ?? null,
     ruleIn: (mediaQuery, sel) =>
       flat.find((r) => r.media && r.media.includes(mediaQuery) && matchSelector(r.selector, sel)) ?? null,
@@ -354,7 +408,9 @@ const CONTRACT = [
         guidance: "`color-scheme` makes form controls, scrollbars and the UA render for the active theme (light default, dark opt-in).",
         check(ctx) {
           const root = ctx.rule(":root");
-          const v = root && decl(root.body, "color-scheme");
+          const v =
+            (root && decl(root.body, "color-scheme")) ??
+            (ctx.css.match(/color-scheme\s*:\s*(light|dark)/) || [])[1];
           if (!/light|dark/.test(v ?? "")) return FAIL("no `color-scheme` on :root");
           if (ctx.hasDarkTheme) return PASS(`color-scheme: ${v}; dark palette present`);
           return PASS(`color-scheme: ${v}`);
@@ -367,6 +423,14 @@ const CONTRACT = [
         title: "Borders use one thin-line idiom (细线边框)",
         guidance: "Keep every structural border 1px (or a shared token); no chunky 3px+ frames — a calm console reads through hairlines, not heavy frames.",
         check(ctx) {
+          // DEC-019: hairlines are `border`/`border-x`/`divide-*` utilities (1px by
+          // default in Tailwind); only a deliberate border-N utility goes thicker.
+          const componentSources = Object.entries(ctx.files)
+            .filter(([name]) => name.endsWith(".tsx"))
+            .map(([, v]) => v ?? "")
+            .join("\n");
+          const utilBorders = [...componentSources.matchAll(/\bborder(?:-[trblxy])?-(\d)\b/g)].map((m) => Number(m[1]));
+          const utilHairlines = (componentSources.match(/\bborder\b(?!-\d)/g) ?? []).length;
           const thick = [];
           let thin = 0;
           for (const r of ctx.flat) {
@@ -377,9 +441,11 @@ const CONTRACT = [
               else if (Number(px) <= 1.5) thin++;
             }
           }
+          const utilThick = utilBorders.filter((n) => n >= 3);
           if (thick.length) return FAIL(`thick borders break the hairline idiom: ${thick.join(", ")}`);
-          if (thin < 3) return WARN("fewer than 3 hairline borders found — is the console frame styled?");
-          return PASS(`${thin} hairline borders, 0 thick`);
+          if (utilThick.length) return FAIL(`thick border utilities break the hairline idiom: border-${utilThick.join(", border-")}`);
+          if (thin + utilHairlines < 3) return WARN("fewer than 3 hairline borders found — is the console frame styled?");
+          return PASS(`${thin} CSS + ${utilHairlines} utility hairline borders, 0 thick`);
         },
       },
     ],
@@ -427,7 +493,16 @@ const CONTRACT = [
         guidance: "Unbounded line length hurts reading. Content regions should cap around 60–75ch (~700–980px).",
         check(ctx) {
           const widths = ctx.values("max-width").filter((v) => /px|ch|rem/.test(v.value));
-          if (!widths.length) return WARN("no max-width on any content container — text can run edge to edge on wide screens");
+          if (!widths.length) {
+            // DEC-019: the measure is capped by `max-w-*` utilities on the containers.
+            const sources = ["page.tsx", "FloatingChat.tsx", "DisplayScreen.tsx", "settings/models/page.tsx"]
+              .map((n) => ctx.files[n] ?? "")
+              .join("\n");
+            const caps = [...new Set([...sources.matchAll(/\bmax-w-(\w+)\b/g)].map((m) => m[1]))]
+              .filter((c) => c !== "none" && c !== "full");
+            if (!caps.length) return WARN("no max-width on any content container — text can run edge to edge on wide screens");
+            return PASS(`constrained by utilities: ${caps.map((c) => `max-w-${c}`).join(", ")}`);
+          }
           const tooWide = widths.filter((v) => toPx(v.value) > 1100);
           if (tooWide.length === widths.length) return WARN(`content max-width(s) all > 1100px: ${tooWide.map((v) => v.value).join(", ")}`);
           return PASS(`constrained: ${widths.map((v) => `${v.selector}=${v.value}`).join(", ")}`);
@@ -461,13 +536,13 @@ const CONTRACT = [
         ref: "WCAG 1.4.3 Contrast (Minimum) — 4.5:1 body text",
         req: "REQ-F-014",
         title: "Primary text on the background clears 4.5:1 in every theme",
-        guidance: "The main --text / --bg pair must reach AA for normal text — checked for the light and (if present) dark palette.",
+        guidance: "The main --foreground / --background pair must reach AA for normal text — checked for the light and (if present) dark palette.",
         check(ctx) {
-          const results = ctx.contrastAcrossThemes("var(--text)", "var(--bg)", 4.5);
+          const results = ctx.contrastAcrossThemes("var(--foreground)", "var(--background)", 4.5);
           const bad = results.filter((r) => r.ratio !== null && r.ratio < 4.5);
           const unresolved = results.filter((r) => r.ratio === null);
-          if (unresolved.length === results.length) return SKIP("cannot resolve --text / --bg");
-          if (bad.length) return FAIL(bad.map((r) => `${r.name} --text/--bg ${r.ratio.toFixed(2)}:1 (<4.5)`).join("; "));
+          if (unresolved.length === results.length) return SKIP("cannot resolve --foreground / --background");
+          if (bad.length) return FAIL(bad.map((r) => `${r.name} --foreground/--background ${r.ratio.toFixed(2)}:1 (<4.5)`).join("; "));
           return PASS(results.filter((r) => r.ratio).map((r) => `${r.name} ${r.ratio.toFixed(2)}:1`).join(", "));
         },
       },
@@ -477,13 +552,13 @@ const CONTRACT = [
         title: "Muted / secondary text on surfaces clears 4.5:1 in every theme",
         guidance: "--muted is used for status and metadata; hold it to AA on --surface (fallback --bg) in each theme.",
         check(ctx) {
-          const surface = ctx.color("var(--surface)") ? "var(--surface)" : "var(--bg)";
-          const results = ctx.contrastAcrossThemes("var(--muted)", surface, 4.5);
+          const surface = ctx.color("var(--card)") ? "var(--card)" : "var(--background)";
+          const results = ctx.contrastAcrossThemes("var(--muted-foreground)", surface, 4.5);
           const bad = results.filter((r) => r.ratio !== null && r.ratio < 3);
           const warn = results.filter((r) => r.ratio !== null && r.ratio >= 3 && r.ratio < 4.5);
-          if (results.every((r) => r.ratio === null)) return SKIP("cannot resolve --muted / surface");
-          if (bad.length) return FAIL(bad.map((r) => `${r.name} --muted ${r.ratio.toFixed(2)}:1 (<3)`).join("; "));
-          if (warn.length) return WARN(warn.map((r) => `${r.name} --muted ${r.ratio.toFixed(2)}:1 — large text only`).join("; "));
+          if (results.every((r) => r.ratio === null)) return SKIP("cannot resolve --muted-foreground / surface");
+          if (bad.length) return FAIL(bad.map((r) => `${r.name} --muted-foreground ${r.ratio.toFixed(2)}:1 (<3)`).join("; "));
+          if (warn.length) return WARN(warn.map((r) => `${r.name} --muted-foreground ${r.ratio.toFixed(2)}:1 — large text only`).join("; "));
           return PASS(results.filter((r) => r.ratio).map((r) => `${r.name} ${r.ratio.toFixed(2)}:1`).join(", "));
         },
       },
@@ -494,12 +569,15 @@ const CONTRACT = [
         title: "Interactive element borders clear 3:1 against their background in every theme",
         guidance: "If the hairline border is the only thing marking an input or button, it must reach 3:1 — hard on both a near-white and a near-black ground, so both are checked.",
         check(ctx) {
-          const results = ctx.contrastAcrossThemes("var(--line)", "var(--bg)", 3);
+          // --input is the token every control (Input/Textarea/outline Button) draws
+          // its boundary with; --border is the decorative hairline, which 1.4.11
+          // does not govern. Check the one that actually marks a control.
+          const results = ctx.contrastAcrossThemes("var(--input)", "var(--background)", 3);
           const bad = results.filter((r) => r.ratio !== null && r.ratio < 3);
-          if (results.every((r) => r.ratio === null)) return SKIP("cannot resolve --line / --bg");
+          if (results.every((r) => r.ratio === null)) return SKIP("cannot resolve --border / --background");
           if (bad.length) {
             return FAIL(
-              bad.map((r) => `${r.name} --line/--bg ${r.ratio.toFixed(2)}:1 (<3) — controls relying on this border are hard to perceive`).join("; ")
+              bad.map((r) => `${r.name} --input/--background ${r.ratio.toFixed(2)}:1 (<3) — controls relying on this border are hard to perceive`).join("; ")
             );
           }
           return PASS(results.filter((r) => r.ratio).map((r) => `${r.name} ${r.ratio.toFixed(2)}:1`).join(", "));
@@ -667,8 +745,15 @@ const CONTRACT = [
           const fc = ctx.rule(".floating-chat");
           const w = fc && decl(fc.body, "width");
           const mw = fc && decl(fc.body, "max-width");
-          const ok = (w && /100vw|100%/.test(w) && /min\(|calc\(/.test(w)) || (mw && /100vw|100%/.test(mw));
-          return ok ? PASS(`width: ${w ?? mw}`) : FAIL(`.floating-chat width (${w ?? "unset"}) is not viewport-clamped`);
+          if ((w && /100vw|100%/.test(w) && /min\(|calc\(/.test(w)) || (mw && /100vw|100%/.test(mw))) {
+            return PASS(`width: ${w ?? mw}`);
+          }
+          // DEC-019: the clamp is now `w-full max-w-*` on the section itself.
+          const u = ctx.utilitiesFor("floating-chat ", ["FloatingChat.tsx"]);
+          if (/\bw-full\b/.test(u) && /\bmax-w-[\w[\]().-]+/.test(u)) {
+            return PASS(`w-full + ${(u.match(/max-w-[\w[\]().-]+/) || [])[0]}`);
+          }
+          return FAIL(".floating-chat is not viewport-clamped (no width clamp in CSS or `w-full max-w-*` utilities)");
         },
       },
       {
@@ -689,10 +774,16 @@ const CONTRACT = [
         title: "A mobile breakpoint exists (≤ 768px)",
         guidance: "The console layout must adapt for narrow screens, not just shrink.",
         check(ctx) {
-          const mq = ctx.css.match(/@media\s*\([^)]*max-width\s*:\s*(\d+)px/g);
-          if (!mq) return FAIL("no max-width media query");
           const widths = [...ctx.css.matchAll(/max-width\s*:\s*(\d+)px/g)].map((m) => Number(m[1]));
-          return widths.some((w) => w <= 768) ? PASS(`breakpoint(s): ${[...new Set(widths)].join(", ")}px`) : WARN(`only wide breakpoints: ${widths.join(", ")}px`);
+          if (widths.some((w) => w <= 768)) return PASS(`breakpoint(s): ${[...new Set(widths)].join(", ")}px`);
+          // DEC-019: Tailwind is mobile-first — base styles are the narrow case and
+          // `sm:` (640px) upward adapts. Assert the app actually uses that scale.
+          const sources = ["page.tsx", "FloatingChat.tsx", "ModelSettings.tsx", "DisplayScreen.tsx", "CornerMenu.tsx"]
+            .map((n) => ctx.files[n] ?? "")
+            .join("\n");
+          const prefixes = [...new Set([...sources.matchAll(/\b(sm|md|lg):/g)].map((m) => m[1]))];
+          if (prefixes.length) return PASS(`mobile-first Tailwind scale in use: ${prefixes.join(", ")}:`);
+          return FAIL("no max-width media query and no responsive Tailwind prefixes — layout does not adapt");
         },
       },
       {
@@ -708,7 +799,14 @@ const CONTRACT = [
             const r = ctx.rule(sel);
             return r && decl(r.body, "padding-bottom");
           });
-          if (!selector) return FAIL(`no page container (${candidates.join(", ")}) sets padding-bottom for the fixed bar`);
+          if (!selector) {
+            // DEC-019: the clearance is now a `pb-*` utility on the message container.
+            const u = ctx.utilitiesFor("home__message", ["page.tsx"]);
+            const pb = (u.match(/\bpb-(\d+)\b/) || [])[1];
+            if (pb && Number(pb) * 4 >= 96) return PASS(`.home__message pb-${pb} (${Number(pb) * 4}px)`);
+            if (pb) return FAIL(`.home__message pb-${pb} is only ${Number(pb) * 4}px (< 6rem clearance)`);
+            return FAIL(`no page container (${candidates.join(", ")}) clears the fixed bar`);
+          }
 
           const pb = decl(ctx.rule(selector).body, "padding-bottom");
           if (toPx(pb) < 96) return FAIL(`${selector} padding-bottom is ${pb} (< 6rem clearance for the fixed bar)`);
@@ -729,7 +827,15 @@ const CONTRACT = [
         check(ctx) {
           const msg = ctx.rule(".floating-chat__message");
           const v = msg && (decl(msg.body, "overflow-wrap") || decl(msg.body, "word-break"));
-          return /anywhere|break-word|break-all/.test(v ?? "") ? PASS(v) : FAIL(".floating-chat__message does not wrap long words");
+          if (/anywhere|break-word|break-all/.test(v ?? "")) return PASS(v);
+          // DEC-019: `break-words` on the bubble, plus a wrapping code block.
+          const bubble = ctx.utilitiesFor("floating-chat__message ", ["FloatingChat.tsx"]);
+          const code = ctx.files["markdown.tsx"] ?? "";
+          const bubbleOk = /\bbreak-words\b|\bbreak-all\b/.test(bubble);
+          const codeOk = /whitespace-pre-wrap|break-words|overflow-x-auto/.test(code);
+          if (bubbleOk && codeOk) return PASS("break-words on the bubble; wrapping/scrolling code blocks");
+          if (!bubbleOk) return FAIL(".floating-chat__message does not wrap long words");
+          return FAIL("code blocks neither wrap nor scroll — a long line overflows");
         },
       },
       {
@@ -740,7 +846,15 @@ const CONTRACT = [
         guidance: "The expanded panel must cap its height and scroll internally, not push the page.",
         check(ctx) {
           const list = ctx.rule(".floating-chat__messages");
-          if (!list) return SKIP(".floating-chat__messages not found");
+          if (!list) {
+            // DEC-019: `max-h-[50vh] overflow-y-auto` utilities on the transcript.
+            const u = ctx.utilitiesFor("floating-chat__messages", ["FloatingChat.tsx"]);
+            if (!u) return FAIL(".floating-chat__messages not found in CSS or component source");
+            const cap = (u.match(/max-h-\[?([\w./]+)/) || [])[1];
+            if (!/overflow-y-auto|overflow-auto|overflow-y-scroll/.test(u)) return FAIL("transcript has no overflow scroll");
+            if (!cap) return FAIL("transcript has no bounded height — it will push the page");
+            return PASS(`transcript: max-h-${cap}, overflow-y-auto`);
+          }
           const overflow = decl(list.body, "overflow") || decl(list.body, "overflow-y");
           if (!/auto|scroll/.test(overflow ?? "")) return FAIL("transcript has no overflow scroll");
 
@@ -764,7 +878,12 @@ const CONTRACT = [
         check(ctx) {
           const fc = ctx.rule(".floating-chat");
           const bottom = fc && decl(fc.body, "bottom");
-          return /safe-area-inset/.test(bottom ?? "") || /viewport-fit=cover/.test(ctx.files["layout.tsx"] ?? "")
+          // DEC-019: the inset is an arbitrary `pb-[calc(...env(safe-area-inset-bottom)...)]`
+          // utility on the console itself.
+          const utils = ctx.utilitiesFor("floating-chat ", ["FloatingChat.tsx"]);
+          return /safe-area-inset/.test(bottom ?? "") ||
+            /safe-area-inset/.test(utils) ||
+            /viewport-fit=cover/.test(ctx.files["layout.tsx"] ?? "")
             ? PASS("safe-area handled")
             : WARN("bottom offset ignores env(safe-area-inset-bottom) — bar may collide with the iOS home indicator");
         },
@@ -778,7 +897,15 @@ const CONTRACT = [
           "The composer expands into a bottom panel, not a full-screen chat. Cap the expanded height at 50vh (CR-20260909, was 65vh) so the page behind stays visible and the product does not read as a chat clone.",
         check(ctx) {
           const expanded = ctx.rule(/\.floating-chat--expanded|\.floating-chat\.is-expanded/);
-          if (!expanded) return SKIP("no expanded-state rule");
+          if (!expanded) {
+            // DEC-019: the cap is the transcript's own max-h utility.
+            const u = ctx.utilitiesFor("floating-chat__messages", ["FloatingChat.tsx"]);
+            const vhu = (u.match(/max-h-\[(\d+)vh\]/) || [])[1];
+            if (!vhu) return FAIL("expanded console has no viewport-relative height cap");
+            return Number(vhu) <= 55
+              ? PASS(`transcript capped at ${vhu}vh`)
+              : FAIL(`transcript may grow to ${vhu}vh — exceeds the 50vh cap (CR-20260909)`);
+          }
           const maxH = decl(expanded.body, "max-height");
           if (!maxH) return FAIL("expanded console has no max-height — it can grow to full screen");
           const vh = maxH.match(/^(\d+(?:\.\d+)?)vh$/);
@@ -923,7 +1050,8 @@ const CONTRACT = [
         guidance: "Never render an API key in a plain text input.",
         check(ctx) {
           const src = ctx.files["ModelSettings.tsx"] ?? "";
-          const blocks = src.split(/<input\b/).slice(1);
+          // The field may be a bare <input> or the Input primitive, which renders one.
+          const blocks = src.split(/<[Ii]nput\b/).slice(1);
           const secret = blocks.find((b) => /name=["'](secret|apiKey|api_key|token)["']/i.test(b.slice(0, 400)) || /secret|api[\s-]?key/i.test(b.slice(0, 200)));
           if (!secret) return SKIP("no secret field found");
           return /type=["']password["']/.test(secret.slice(0, 400)) ? PASS() : FAIL("secret field is not type=password");
@@ -972,7 +1100,15 @@ const CONTRACT = [
         guidance: "全局底部悬浮：position fixed, anchored near bottom, above page content.",
         check(ctx) {
           const fc = ctx.rule(".floating-chat");
-          if (!fc) return FAIL(".floating-chat rule missing");
+          if (!fc) {
+            // DEC-019: pinning is now `fixed inset-x-0 bottom-0 z-20` on the section.
+            const u = ctx.utilitiesFor("floating-chat ", ["FloatingChat.tsx"]);
+            if (!/\bfixed\b/.test(u)) return FAIL(".floating-chat is not position: fixed");
+            if (!/\bbottom-0\b|\bbottom-\d/.test(u)) return FAIL(".floating-chat is not anchored to the bottom");
+            const zu = (u.match(/\bz-(\d+)\b/) || [])[1];
+            if (!(Number(zu) >= 1)) return WARN("no z-index utility — the console may fall behind page content");
+            return PASS(`fixed, bottom-anchored, z-${zu} (Tailwind utilities)`);
+          }
           const pos = decl(fc.body, "position");
           // Take the first literal length in the offset, so calc(1.25rem + env(safe-area…)) still reads as 20px.
           const bottomRaw = decl(fc.body, "bottom") ?? "";
@@ -992,7 +1128,14 @@ const CONTRACT = [
         guidance: "left:50% + translateX(-50%), or symmetric left/right.",
         check(ctx) {
           const fc = ctx.rule(".floating-chat");
-          if (!fc) return SKIP("no .floating-chat");
+          if (!fc) {
+            // DEC-019: centring is `mx-auto` on the max-width section.
+            const u = ctx.utilitiesFor("floating-chat ", ["FloatingChat.tsx"]);
+            if (!u) return FAIL("no .floating-chat in CSS or component source");
+            if (/\bmx-auto\b/.test(u)) return PASS("mx-auto within a max-width container");
+            if (/\binset-x-0\b/.test(u)) return WARN("full-bleed via inset-x-0 without mx-auto — not centred on wide screens");
+            return FAIL(".floating-chat is not horizontally centred");
+          }
           const left = decl(fc.body, "left");
           const transform = decl(fc.body, "transform");
           const right = decl(fc.body, "right");
@@ -1015,7 +1158,9 @@ const CONTRACT = [
           // Legacy explicit toggle OR the derived model.
           const derives = /showTranscript\s*=\s*hasTranscript\s*&&\s*!\s*userCollapsed/.test(src);
           const drivesClass = /floating-chat--expanded[^`"']*\$\{?\s*(showTranscript|expanded)/.test(src) ||
-            /(showTranscript|expanded)\s*\?\s*["'`]floating-chat--expanded/.test(src);
+            /(showTranscript|expanded)\s*\?\s*["'`]floating-chat--expanded/.test(src) ||
+            // cn(...) form: `showTranscript && "floating-chat--expanded"`.
+            /(showTranscript|expanded)\s*&&\s*["'`]floating-chat--expanded/.test(src);
           const toggles = /setExpanded\(true\)/.test(src) || (derives && drivesClass);
           // With the derived model "collapsed by default" == hasTranscript starts false
           // (messages initialised to [] or from a restored conversation only).
@@ -1023,11 +1168,20 @@ const CONTRACT = [
             derives ||
             /^\s*false\s*$/.test(src.match(/expanded[^;]*useState\(([^)]*)\)/)?.[1] ?? "") ||
             /messages[^;]*useState[^;]*restored\s*\?\s*initialMessages\s*:\s*\[\]/.test(src);
-          if (!rule) return FAIL("no .floating-chat--expanded style");
+          // DEC-019: the modifier is a state hook applied via cn(); the height change
+          // is the transcript's own max-h/overflow rather than a rule on the modifier.
+          const expandedHook = /floating-chat--expanded/.test(src);
+          const transcriptBounded = /floating-chat__messages[\s\S]{0,200}max-h-\[?[\w./]+/.test(src);
+          if (!rule && !(expandedHook && transcriptBounded)) {
+            return FAIL("no expanded panel: neither a .floating-chat--expanded rule nor a bounded transcript");
+          }
           if (!toggles) return FAIL("sending does not drive the expanded panel (no setExpanded(true) and no derived showTranscript)");
           if (!startsCollapsed) return WARN("panel may not start collapsed");
-          const grows = decl(rule.body, "min-height") || decl(rule.body, "height");
-          return grows ? PASS(`expands to ${grows}${derives ? " (derived)" : ""}`) : WARN("--expanded exists but does not change height");
+          const grows = rule && (decl(rule.body, "min-height") || decl(rule.body, "height"));
+          if (grows) return PASS(`expands to ${grows}${derives ? " (derived)" : ""}`);
+          const cap = (src.match(/floating-chat__messages[\s\S]{0,200}?(max-h-\[?[\w./]+)/) || [])[1];
+          if (cap) return PASS(`transcript renders when expanded, bounded by ${cap}${derives ? " (derived)" : ""}`);
+          return WARN("--expanded exists but does not change height");
         },
       },
       {
@@ -1087,7 +1241,14 @@ const CONTRACT = [
           const hasAria = /aria-haspopup=/.test(menuSrc) && /aria-expanded=/.test(menuSrc);
           if (!hasTrigger || !hasAria) return FAIL("CornerMenu trigger missing (real <button> + aria-haspopup + aria-expanded)");
           const menu = ctx.rule(".corner-menu");
-          const z = menu && parseInt(decl(menu.body, "z-index") ?? "", 10);
+          let z = menu ? parseInt(decl(menu.body, "z-index") ?? "", 10) : NaN;
+          if (!(z >= 21)) {
+            // DEC-019: the layer is a `z-30` utility on the fixed wrapper.
+            const u = ctx.utilitiesFor("corner-menu ", ["CornerMenu.tsx"]);
+            z = Number((u.match(/\bz-(\d+)\b/) || [])[1]);
+            if (!/\bfixed\b/.test(u)) return FAIL(".corner-menu is not position: fixed");
+            if (!/\bbottom-\d/.test(u) || !/\bleft-\d/.test(u)) return FAIL(".corner-menu is not anchored bottom-left");
+          }
           if (!(z >= 21)) return FAIL(`.corner-menu z-index (${z}) is not above the floating chat (20)`);
           return PASS(`CornerMenu: header clean, trigger + aria, z-index ${z}`);
         },
@@ -1101,9 +1262,13 @@ const CONTRACT = [
           "A real <button> with aria-expanded that toggles userCollapsed, rendered only when a transcript exists; no height transition on the expanded panel (v1).",
         check(ctx) {
           const src = ctx.files["FloatingChat.tsx"] ?? "";
-          const hasButton = /floating-chat__toggle/.test(src) && /<button[^>]*floating-chat__toggle/.test(src);
-          const hasAria = /floating-chat__toggle[\s\S]{0,200}aria-expanded=/.test(src);
-          const gated = /hasTranscript\s*\?\s*[\s\S]{0,120}floating-chat__toggle/.test(src);
+          // The control may be a <button> or the Button primitive, which renders one.
+          const hasButton =
+            /floating-chat__toggle/.test(src) &&
+            (/<button[^>]*floating-chat__toggle/.test(src) || /<Button[\s\S]{0,240}floating-chat__toggle/.test(src));
+          const hasAria = /floating-chat__toggle[\s\S]{0,200}aria-expanded=/.test(src) ||
+            /aria-expanded=[\s\S]{0,200}floating-chat__toggle/.test(src);
+          const gated = /hasTranscript\s*\?\s*[\s\S]{0,240}floating-chat__toggle/.test(src);
           const expandedRule = ctx.rule(/\.floating-chat--expanded/);
           const noTween = !expandedRule || !/transition[^;]*(max-height|min-height|height)/.test(expandedRule.body);
           if (!hasButton) return FAIL("no .floating-chat__toggle <button>");
@@ -1127,13 +1292,20 @@ const CONTRACT = [
           if (/<header\b/.test(page)) return FAIL("page.tsx still renders a <header> — the title moved into the display screen");
 
           const base = ctx.rule(".display-screen");
-          if (!base) return FAIL("no .display-screen rule");
-          if (!/fixed/.test(decl(base.body, "position") ?? "")) return FAIL(".display-screen is not position: fixed");
-          const z = parseInt(decl(base.body, "z-index") ?? "0", 10);
+          let z;
+          if (base) {
+            if (!/fixed/.test(decl(base.body, "position") ?? "")) return FAIL(".display-screen is not position: fixed");
+            z = parseInt(decl(base.body, "z-index") ?? "0", 10);
+          } else {
+            // DEC-019: `fixed inset-0 z-0` utilities on the section.
+            const u = ctx.utilitiesFor("display-screen ", ["DisplayScreen.tsx"]);
+            if (!/\bfixed\b/.test(u)) return FAIL(".display-screen is not position: fixed");
+            if (!/\binset-0\b/.test(u)) return FAIL(".display-screen does not cover the viewport (no inset-0)");
+            z = Number((u.match(/\bz-(\d+)\b/) || ["", "0"])[1]);
+          }
           if (z >= 20) return FAIL(`.display-screen z-index (${z}) is not below the floating chat (20)`);
 
-          const notice = ctx.rule(".display-screen__notice");
-          if (!notice) return FAIL("no .display-screen__notice rule (CP-7)");
+          if (!/display-screen__notice/.test(screen)) return FAIL("no display-screen__notice element (CP-7)");
           // Non-dismissible: the component must not put a button in the notice or handle Escape.
           const noticeMarkup = screen.match(/display-screen__notice[\s\S]{0,240}/)?.[0] ?? "";
           if (/<button/i.test(noticeMarkup)) return FAIL("the unsandboxed-HTML notice has a close button — it must be non-dismissible (CP-7)");
@@ -1184,8 +1356,16 @@ const CONTRACT = [
           const inJsx = states.every((s) => new RegExp(`floating-chat__light--${s}|["']${s}["']`).test(src));
           const inCss = states.every((s) => new RegExp(`\\.floating-chat__light--${s}\\b`).test(ctx.css));
           if (!inJsx) return FAIL("FloatingChat does not render all four light states");
-          if (!inCss) return FAIL("globals.css does not style all four .floating-chat__light--* states");
-          return PASS("four light states rendered and styled");
+          if (inCss) return PASS("four light states rendered and styled");
+          // DEC-019: each state maps to its own utility tone instead of a CSS rule.
+          const tone = src.match(/LIGHT_TONE[\s\S]*?\{([\s\S]*?)\}/)?.[1] ?? "";
+          const missing = states.filter((s) => !new RegExp(`${s}\\s*:`).test(tone));
+          if (missing.length) return FAIL(`no distinct tone for light state(s): ${missing.join(", ")}`);
+          const tones = states.map((s) => (tone.match(new RegExp(`${s}\\s*:\\s*["'\`]([^"'\`]*)`)) || [])[1] ?? "");
+          if (new Set(tones).size < states.length) {
+            return FAIL(`light states share a tone (${tones.join(" | ")}) — they must be visually distinguishable`);
+          }
+          return PASS(`four light states with distinct tones: ${tones.join(" | ")}`);
         },
       },
     ],
@@ -1410,15 +1590,40 @@ async function runLive(url) {
           const l2 = lum(c2);
           return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
         }
+        // Normalise any computed colour — rgb(), oklab(), oklch(), color() — by
+        // letting the browser paint it and reading the pixel back. Tailwind v4
+        // computes in oklab, which no regex can turn into sRGB.
+        const _cv = document.createElement("canvas");
+        _cv.width = _cv.height = 1;
+        const _cx = _cv.getContext("2d", { willReadFrequently: true });
+        const _colorCache = new Map();
+        function toRgba(str) {
+          if (!str) return null;
+          if (_colorCache.has(str)) return _colorCache.get(str);
+          let out = null;
+          try {
+            _cx.clearRect(0, 0, 1, 1);
+            _cx.fillStyle = "#000";
+            _cx.fillStyle = str;
+            // An unparseable value leaves fillStyle at the previous colour.
+            _cx.clearRect(0, 0, 1, 1);
+            _cx.globalAlpha = 1;
+            _cx.fillRect(0, 0, 1, 1);
+            const d = _cx.getImageData(0, 0, 1, 1).data;
+            out = { r: d[0], g: d[1], b: d[2], a: d[3] / 255 };
+          } catch {
+            const m = str.match(/[\d.]+/g);
+            out = m ? { r: Number(m[0]), g: Number(m[1]), b: Number(m[2]), a: m[3] === undefined ? 1 : Number(m[3]) } : null;
+          }
+          _colorCache.set(str, out);
+          return out;
+        }
         function rgb(str) {
-          const m = str.match(/[\d.]+/g);
-          return m ? m.slice(0, 3).map(Number) : null;
+          const c = toRgba(str);
+          return c ? [c.r, c.g, c.b] : null;
         }
         function rgba(str) {
-          const m = str.match(/[\d.]+/g);
-          if (!m) return null;
-          const n = m.map(Number);
-          return { r: n[0], g: n[1], b: n[2], a: n[3] === undefined ? 1 : n[3] };
+          return toRgba(str);
         }
         // Opaque base behind transparent/gradient layers: the real painted body
         // background when it has one, otherwise white (works for either theme).
@@ -1457,6 +1662,11 @@ async function runLive(url) {
           if (!text || text.length < 2) return;
           const cs = getComputedStyle(el);
           if (cs.visibility === "hidden" || cs.display === "none" || Number(cs.opacity) === 0) return;
+          // Screen-reader-only text is never painted, so it has no contrast to meet.
+          const box = el.getBoundingClientRect();
+          const clipped = cs.clipPath !== "none" || (cs.clip && cs.clip !== "auto");
+          if (clipped && box.width <= 2 && box.height <= 2) return;
+          if (box.width === 0 || box.height === 0) return;
           const fg = rgb(cs.color);
           if (!fg) return;
           const size = parseFloat(cs.fontSize);
@@ -1476,6 +1686,19 @@ async function runLive(url) {
           ? PASS()
           : FAIL(`${report.length} low-contrast text run(s): ` + report.slice(0, 4).map((c) => `"${c.text}" ${c.ratio}:1<${c.need}`).join("; "));
 
+      // Colour transitions must not be in flight while colours are measured, or a
+      // theme switch is read mid-tween. Suppressed only around these two probes.
+      const freezeTransitions = () =>
+        page.evaluate(() => {
+          const style = document.createElement("style");
+          style.id = "ui-contract-freeze";
+          style.textContent = "*,*::before,*::after{transition:none!important;animation:none!important}";
+          document.head.appendChild(style);
+        });
+      const unfreezeTransitions = () =>
+        page.evaluate(() => document.getElementById("ui-contract-freeze")?.remove());
+
+      await freezeTransitions();
       push("LV-CONTRAST", "All rendered text meets WCAG AA contrast (light)", describeContrast(await page.evaluate(contrastProbe)), "WCAG 1.4.3");
 
       // Same page forced into the dark theme the appearance toggle sets.
@@ -1486,6 +1709,7 @@ async function runLive(url) {
         describeContrast(await page.evaluate(contrastProbe)),
         "WCAG 1.4.3"
       );
+      await unfreezeTransitions();
       const darkOverflow = await page.evaluate(() => {
         document.documentElement.setAttribute("data-theme", "dark");
         const d = document.documentElement;

@@ -47,7 +47,7 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="home">
+    <main className="home relative min-h-screen bg-background text-foreground">
       {/* CR-20260909-display-screen: the home page IS a full-screen display screen;
           the chat and ☰ menu float above it (z-index: base / 20 / 30). */}
       {storeReady ? <DisplayScreen initial={resolveDisplayView()} /> : null}
@@ -60,7 +60,8 @@ export default async function HomePage() {
       </CornerMenu>
 
       {auth.ok && !storage.configured ? (
-        <div className="home__message">
+        /* pb-36 keeps the message clear of the fixed bottom console. */
+        <div className="home__message mx-auto max-w-3xl px-6 pt-8 pb-36">
           <ConfigWarning title="本地存储未配置" missing={storage.missing} hint={STORAGE_CONFIG_HINT} />
         </div>
       ) : null}
@@ -72,9 +73,11 @@ export default async function HomePage() {
           initialMessages={initialMessages}
         />
       ) : !auth.ok ? (
-        <div className="home__message">
-          <h1 className="home__title">Agent-Jarvis</h1>
-          <p className="home__hint">登录 Agent-Jarvis 后即可开始对话。</p>
+        <div className="home__message mx-auto max-w-3xl px-6 pt-8 pb-36 text-center">
+          <h1 className="home__title text-3xl font-semibold tracking-tight sm:text-4xl">Agent-Jarvis</h1>
+          <p className="home__hint mt-3 text-base text-muted-foreground">
+            登录 Agent-Jarvis 后即可开始对话。
+          </p>
         </div>
       ) : null}
     </main>

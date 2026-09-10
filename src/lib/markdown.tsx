@@ -130,12 +130,12 @@ function renderInline(text: string, keyBase: string): ReactNode[] {
 export function Markdown({ text }: { text: string }): ReactElement {
   const blocks = parseBlocks(text);
   return (
-    <div className="md">
+    <div className="md flex flex-col gap-2 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 [&_code]:rounded-sm [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.85em] [&_li]:ml-4 [&_li]:list-disc [&_strong]:font-semibold">
       {blocks.map((block, index) => {
         const key = `b${index}`;
         if (block.type === "code") {
           return (
-            <pre className="md__code" key={key}>
+            <pre className="md__code overflow-x-auto whitespace-pre-wrap break-words rounded-md bg-muted p-3 font-mono text-xs" key={key}>
               <code>{block.content}</code>
             </pre>
           );

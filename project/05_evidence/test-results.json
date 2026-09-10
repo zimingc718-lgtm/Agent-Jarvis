@@ -376,6 +376,34 @@
       "command": "python -m unittest tests.test_governance && python tools/governance.py review r1",
       "real_entry": true,
       "evidence": "Hard gate, two halves. (a) One-shot before/after comparison run during P3: the 20 combinations review r1|r2|r3|r4 × {skills, display-screen, skill-intake, ui-foundation, process-hardening} were captured before the migration and re-run after it — normalised diff is empty and all 20 are PASS, so the migration broke no in-flight CR. Information loss was checked by extracting every review line (len ≥ 12, non-heading) from the pre-migration specs at git HEAD and searching for it whitespace-insensitively across all change records: 250/250 found. (b) Repeatable invariant in MigrationCompatibilityTests (4): all 20 review combinations still PASS against the real repo root; check-specs PASSes; every CR carrying a '（迁移自 …）' provenance marker has an '## R{n} 评审意见' heading (12 such CRs); no spec heading matches any review pattern."
+    },
+    {
+      "id": "TEST-047",
+      "result": "PASS",
+      "command": "npm run test:visual && npm run test:typecheck && npm run test:ui-contract",
+      "real_entry": false,
+      "evidence": "① components.json: style new-york, rsc true, baseColor neutral, cssVariables true, tailwind.css src/app/globals.css. ② globals.css carries the full DEC-019 semantic HSL triplet set on :root (light default) with :root[data-theme=\"dark\"] overrides and NO prefers-color-scheme rule — the OS preference can no longer force dark (TASK-044 ④). ③ 11 primitives under src/components/ui (button, input, textarea, label, dialog, dropdown-menu, tooltip, separator, scroll-area, switch, alert). ④ globals.css went from 715 to 137 lines and retains zero component visual selectors (.floating-chat*/.display-screen*/.corner-menu*/.dialog*/.settings-*/.provider-* all gone); the hand-drawn ☰ and ↑/↓ glyphs are Lucide icons; one stylesheet only. ⑤ static UI contract 49 rules: 49 pass / 0 fail / 0 warn / 0 skip, including token, focus-visible, reduced-motion and both-theme contrast rules. tsc --noEmit clean; visual 3/3."
+    },
+    {
+      "id": "TEST-048",
+      "result": "PASS",
+      "command": "npm run test:theme && npm run test:auth-ui && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "① theme-toggle 5/5: light is the default with nothing stored, an explicit dark choice writes data-theme + jarvis-theme and survives a reload. ② corner-menu 5/5 and e2e TEST-032 regression: DisplayScreen, the bottom console and the ☰ menu stack correctly (z 0 / 20 / 30) in a real browser. ③ Esc closes the menu and returns focus to the trigger; light-dismiss on outside pointer. ④ the item is 「模型」 and opens the model dialog. ⑤ LB-05 (static + live) confirms the console carries no provider/model selector and the request body has no providerId/model. ⑥ display.test.ts 6/6 plus e2e: GET /api/display and jarvis:display-changed behave as before."
+    },
+    {
+      "id": "TEST-049",
+      "result": "PASS",
+      "command": "npm run test:settings-ui && npm run test:providers && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "① the 模型 dialog and /settings/models render the same ModelSettings component, so the form semantics are identical by construction. ② settings-models 8/8 + provider-routes: add, edit, test, enable/disable and ↑/↓ priority all still go through the existing Provider API (POST /api/providers, PATCH/DELETE /api/providers/[id], POST /api/providers/test) — no request shape changed. ③ the native <dialog> keeps the platform focus trap, Esc and focus restore; the body scrolls within a max-height so a long provider form cannot push the dialog off-screen. ④ every field is a Label+Input pair, the ↑/↓ icon buttons carry both an aria-label and a Tooltip and render at 44x44 (LV-TARGET ≥24px passes with margin), status stays role=status. ⑤ no .dialog__*/.provider-*/.settings-* rules remain in the stylesheet."
+    },
+    {
+      "id": "TEST-050",
+      "result": "PASS",
+      "command": "npm run test:floating-chat && npm run test:markdown && npm run test:e2e && npm run test:ui-contract:live",
+      "real_entry": true,
+      "evidence": "① floating-chat 25/25 and markdown 8/8: streaming, stop, new conversation, collapse/reload, the four status-light states, request-level error line and Markdown rendering are unchanged — only the visual layer was replaced. ② the composer uses Button/Textarea/Tooltip with Lucide icons; the light keeps its four distinct tones and its role=status text. ③ live tier at 320/390/1280px in both themes: no horizontal overflow on / or /settings/models, LV-CONTRAST and LV-CONTRAST-DARK both pass, focus indicators present, targets ≥24px, reduced-motion honoured. ④ e2e 10/10 walks provider priority → chat → display screen → theme → reload in a real browser. ⑤ the P3 upload/skill UI is preserved unchanged but is NOT part of this CR's passing evidence — TEST-043..046 remain its own CR's证据. Live tier total: 68 pass / 0 fail / 0 warn / 0 skip, incl. axe-core with no serious/critical violations."
     }
   ],
   "executed_commands": [
@@ -448,6 +476,21 @@
       "command": "python tools/governance.py review r1|r2|r3|r4 --cr <5 CP-model CRs>",
       "result": "PASS",
       "summary": "20/20 PASS, normalised diff against the pre-migration capture is empty (TEST-054 hard gate)"
+    },
+    {
+      "command": "npm run test:ui-contract",
+      "result": "PASS",
+      "summary": "static tier 49/49 after retargeting every rule from CSS declarations to Tailwind utilities (0 warn, 0 skip)"
+    },
+    {
+      "command": "node scripts/ui-contract.mjs --live --url http://127.0.0.1:3330",
+      "result": "PASS",
+      "summary": "live tier 68/68 incl. axe-core, both themes, 320/390/1280px"
+    },
+    {
+      "command": "npm run build:verify",
+      "result": "PASS",
+      "summary": "Tailwind v4 pipeline compiles; 13/13 routes generated"
     }
   ],
   "known_warnings": [

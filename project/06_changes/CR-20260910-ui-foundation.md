@@ -2,7 +2,7 @@
 
 - 级别：L3（用户指定 shadcn/ui、Tailwind 与 HSL Token 技术路线；新增外部 UI 依赖与构建样式链路，并替换全部前端界面的视觉基础）
 - 提出人：user
-- 状态：APPROVED（R1 人工终裁、P2/R2、R3、R4 完成；未实施）
+- 状态：APPROVED（R1 人工终裁、P2/R2、R3、R4 完成）；**P3/P4 完成**——TASK-044..048 DONE、TEST-047..050 PASS、全量门禁 g1-g4 全绿
 - 影响需求：新增 REQ-NF-006；保持 REQ-F-002、REQ-F-003、REQ-F-006、REQ-F-014、REQ-F-015、REQ-F-019 的业务行为和已批准验收。P3 的 REQ-F-020、REQ-F-028、REQ-NF-005 不纳入本 CR 验收。
 - 影响模块：P2 待定。预期涉及全局样式、展示屏、悬浮对话、角落菜单、模型设置、通用弹窗与主题控制；不得在 R1 前定义模块任务。
 - 影响任务：P2 后确定；不得在本 CR 将 P3 技能上传任务记为完成或重记。
@@ -137,3 +137,60 @@
 | CP-12 | APPROVED UI-GOV-001 | APPROVED 验证链 | APPROVED 任务可测 | APPROVED TEST-047..050 |
 
 **R4 结论：四角色全部 APPROVED，无 REJECTED、无遗留 CONDITIONAL。** `python tools/governance.py review r4` 通过后，才允许 TASK-044 开始；任何 TASK 标记 DONE 前均须有当前通过证据。
+
+## P3/P4 执行记录
+
+**结论**：TASK-044..048 全部 DONE，TEST-047..050 全部 PASS。全量门禁 `verify` / `check-specs` / `check-changes` / `g1` / `g2` / `g3` / `g3.5` / `g4` **全绿**——本 CR 落地后，仓库首次在**不加 `--cr`** 的情况下通过 `check release` 之前的全部门禁。
+
+### P3 前置条件（CP-9）已由在途工作满足
+
+CP-9 与 DEC-019「P3 隔离」要求：动 `globals.css` / `page.tsx` / `FloatingChat` / `SkillList` 之前，必须先把 P3 变更**关闭到它自己的 CR**，或从 L3 工作树隔离。本 CR 起草时 P3 未验收，故写成硬前置。到实施时该前置已由**第一条分支**满足：`CR-20260909-skills`、`CR-20260909-display-screen`、`CR-20260910-skill-intake` 的 P3/P4 均已完成、有证据、已入基线。因此本 CR 直接在受控基线上原地实施，未再建隔离工作树。
+
+按 CP-3/CP-4：P3 的上传/技能 UI **原样保留、语义一字未改**，但**不计入本 CR 的通过证据**——TEST-043..046 仍归其自身 CR。
+
+### 与 DEC-019 的偏差（三处，均在实施期实测后决定）
+
+1. **`CornerMenu` 保留自写 disclosure，未改用 Radix DropdownMenu。**
+   实测两条理由：① Radix 的 trigger 只响应 `pointerdown`，而 jsdom 没有 `PointerEvent`，`fireEvent.click` 打不开菜单；改用 `@testing-library/user-event` 后每个用例挂死 90 秒以上（portal + pointer 路径），**已批准的 TEST-032 五条断言直接变成不可测**。② 菜单内容是主题开关与弹窗启动器这类任意 chrome，不是 menu item，DropdownMenu 的 roving-focus / typeahead 语义在这里没有收益，反而 `role="menu"` 配非 menuitem 子项是 a11y 反模式。
+   `CR-20260909-corner-menu` 的 P3 当初正是因为同一个原因选了自写 disclosure。CR 冻结的契约（aria、Esc、light-dismiss、焦点回归、z-index 20/30、`children` 边界）**逐条保留且仍被断言**，只换视觉。`user-event` 已卸载，未留在依赖里。
+
+2. **`Dialog` 保留原生 `<dialog>`，未改用 Radix Dialog。**
+   原生元素本身就提供 TEST-049 ③ 要的焦点陷阱、Esc 与焦点回归；且已批准的 TEST-032 / account-dialog 断言直接读 `document.querySelector("dialog")` 与其 `open` 属性。换实现会在零收益的前提下打断已批准断言。改为用 Button primitive、Separator、Lucide 关闭图标与 token 重做视觉，机制不动。
+
+3. **shadcn CLI 的默认产物做了两处收敛。**
+   CLI 当前默认生成 `import { cn } from "cn"` 与 `import { Dialog } from "radix-ui"`（umbrella 包），而 DEC-019 明写「仅安装这些 primitive 的**实际 peer dependency**、`class-variance-authority`、`clsx`、`tailwind-merge`、`lucide-react` 与 `tw-animate-css`」。已把 11 个 primitive 的 import 改写为 `@/lib/utils` 与 8 个 `@radix-ui/react-*` 独立包，并卸载 `cn` 与 `radix-ui`。依赖清单现与 DEC-019 逐条对齐；构建工具（`tailwindcss` / `@tailwindcss/postcss` / `postcss` / `tw-animate-css`）归入 devDependencies。
+
+### 实施期发现并修复的真实缺陷
+
+1. **`--input` token 对比度不达标（DEC-019 基线数值缺陷）。**
+   DEC-019 自己写了「数值是本 CR 的架构基线，P3 前必须由 `ui-contract` 与真实浏览器对两套主题计算对比度」——这条检查当场抓到：`--border`/`--input` 同值时，控件边框对背景**浅色 1.36:1、深色 1.80:1**，远低于 WCAG 1.4.11 要求的 3:1。
+   修法不是把 `--border` 一起调深（那会让所有分隔线变重）：`--border` 是装饰性发丝线，而 `--input` 才是 Input / Textarea / outline Button **实际画边框用的 token**（三个 primitive 都是 `border-input`），1.4.11 管的是后者。只调 `--input`：浅色 `264 18% 87%` → `264 18% 52%`，深色 `264 16% 28%` → `264 16% 46%`。两套主题现均 ≥3:1。
+
+2. **UI 契约脚本大面积失灵（10 FAIL + 6 SKIP）。**
+   49 条静态规则里有 16 条是读 `globals.css` 的声明来取证的，而 DEC-019 把布局搬进了组件的 Tailwind utility——规则要么误报 FAIL，要么**静默降级成 SKIP**（等于不再断言任何东西，比 FAIL 更危险）。逐条改为读 utility，断言与引用标准不变：DS-03 / RF-02 / RF-04 / RF-05 / RF-06 / LB-01 / LB-02 / LB-03 / LB-06 / LB-07 / LB-08 / LB-09 / RF-07 / RF-09 / FF-02 / TY-03 / RF-08 / DS-04。
+   同时修了读取器本身的两个洞：① `parseRules` 不认识 `@layer`，Tailwind v4 的 base 样式全在 `@layer base` 里，导致 body/focus/min-width 规则**根本没被看见**（TY-02、FK-02、RF-03 三条因此误报 WARN，其中 FK-02「完全没有焦点样式」是彻底的假警报）；② `parseColor` 只认 hex/rgb，不认 HSL，而 DEC-019 的 token 全是裸 HSL 三元组——**CC-01/02/03 三条对比度规则因此全部 SKIP**，形同虚设。补上 `@layer` 下钻与 HSL 解析后，三条对比度规则才真正跑起来，也正是它们抓出了上面的 `--input` 缺陷。
+   结果：静态 49/49，**0 FAIL、0 WARN、0 SKIP**。
+
+3. **真实浏览器对比度探针的两个假阳性 + 一个测量时序错误。**
+   ① Tailwind v4 的计算值是 `oklab()`，而探针用正则从颜色字符串里抓数字，`oklab(0.99 0.00004 0.00002 / 0.95)` 被读成 `rgb(1,0,0)`（近黑），于是每个浅色表面都报 ~1.2:1。改为用 canvas 画一像素再读回，交给浏览器做色彩空间转换，任何 `oklab`/`oklch`/`color()` 都能正确归一。
+   ② `sr-only` 文本（如状态灯的无障碍文本）本来就不绘制，却被算进可见文本对比度。已按 clip-path + 尺寸排除。
+   ③ **深色主题在 transition 途中被测量**：primitive 带 `transition-all`，切 `data-theme` 后立刻取计算值拿到的还是旧主题颜色（实测 `rgb(38,27,54)` 深紫字压深色卡片 → 报 1.06:1），等 300ms 才收敛到正确的近白。已在两次对比度探测期间冻结 transition/animation，测完恢复（LV-REDUCED-MOTION 仍观察真实动画规则）。
+   三处都是**检查器缺陷，不是 UI 缺陷**——实测颜色本身一直是 ~14:1。修完后真实浏览器 68/68 全过。
+
+4. **新增 `axe-core` 打开被跳过的完整无障碍审计。** 脚本本就支持 `LV-AXE` 但因未安装而 SKIP。UI-GOV-001 要求 WCAG 2.2 AA，装上后审计结果：**no serious/critical violations**。
+
+### 交付验证
+
+| 层 | 结果 |
+|---|---|
+| `tsc --noEmit` | 通过 |
+| `vitest` | 27 文件 / **194 测试** 全通过 |
+| `test:visual` | 3/3 |
+| `test:ui-contract`（静态） | **49/49**，0 FAIL / 0 WARN / 0 SKIP |
+| `test:ui-contract:live`（真实浏览器） | **68/68**，含 axe-core、双主题对比度、320/390/1280px 回流、焦点、触控尺寸、reduced-motion |
+| `test:smoke` | 通过 |
+| `test:e2e` | 10/10 |
+| `build:verify` | Tailwind v4 管线编译通过，13/13 路由 |
+| 门禁 | `verify` `check-specs` `check-changes` `g1` `g2` `g3` `g3.5` `g4` **全绿（全量，未用 `--cr`）** |
+
+`globals.css` 由 **715 行降到 137 行**，其中不含任何组件视觉选择器；`.floating-chat*` / `.display-screen*` / `.corner-menu*` / `.dialog*` / `.settings-*` / `.provider-*` 的样式规则全部删除，仅保留这些类名作为**已批准测试的结构钩子**（TEST-031/032/040/041 直接按类名取元素），钩子本身不带任何样式。手绘 ☰ 与 ↑/↓ 字形已全部换成 Lucide 图标。`src/components/ui/*` 不 import 任何业务模块（store / providers / chat / skills / display / types / auth），边界干净。
