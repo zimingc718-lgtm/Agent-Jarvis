@@ -496,9 +496,7 @@
   "known_warnings": [
     "Node.js reports node:sqlite as experimental during tests and build.",
     "npm audit reports dependency vulnerabilities; no force upgrade applied.",
-    "ui-contract --live LV-AXE skipped: axe-core is not a dependency; install `axe-core` (devDep) to enable the full automated audit.",
     "The Markdown renderer covers the common LLM subset only; tables, images and inline HTML render as literal text by design.",
-    "gate g3 is intentionally red until TEST-022 (real Google login) is verified by a human and attributed in this file.",
     "next build and next dev must not share a build dir: use npm run build:verify / the NEXT_DIST_DIR-isolated smoke and e2e servers. See docs/WORKFLOW.md.",
     {
       "id": "CR-20260909-minimal-floating-chat",
