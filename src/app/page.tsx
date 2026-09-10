@@ -2,11 +2,13 @@ import { getServerSession } from "next-auth";
 import { AccountDialog } from "@/components/AccountDialog";
 import { ConfigWarning } from "@/components/ConfigWarning";
 import { CornerMenu } from "@/components/CornerMenu";
+import { DisplayScreen } from "@/components/DisplayScreen";
 import { FloatingChat, type FloatingMessage } from "@/components/FloatingChat";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { authOptions, getGoogleOAuthConfig } from "@/lib/auth";
 import { requireUserId } from "@/lib/auth-guard";
+import { resolveDisplayView } from "@/lib/display";
 import { getDefaultProviderTemplates } from "@/lib/providers";
 import { STORAGE_CONFIG_HINT, getStorageConfig } from "@/lib/runtime-config";
 import { getStore } from "@/lib/store-singleton";
@@ -40,9 +42,9 @@ export default async function HomePage() {
 
   return (
     <main className="home">
-      <header className="home__bar">
-        <h1 className="home__title">Agent-Jarvis</h1>
-      </header>
+      {/* CR-20260909-display-screen: the home page IS a full-screen display screen;
+          the chat and ☰ menu float above it (z-index: base / 20 / 30). */}
+      {storeReady ? <DisplayScreen initial={resolveDisplayView()} /> : null}
 
       <CornerMenu>
         <ThemeToggle />
@@ -51,7 +53,9 @@ export default async function HomePage() {
       </CornerMenu>
 
       {auth.ok && !storage.configured ? (
-        <ConfigWarning title="本地存储未配置" missing={storage.missing} hint={STORAGE_CONFIG_HINT} />
+        <div className="home__message">
+          <ConfigWarning title="本地存储未配置" missing={storage.missing} hint={STORAGE_CONFIG_HINT} />
+        </div>
       ) : null}
 
       {storeReady ? (
@@ -61,7 +65,10 @@ export default async function HomePage() {
           initialMessages={initialMessages}
         />
       ) : !auth.ok ? (
-        <p className="home__hint">登录 Agent-Jarvis 后即可开始对话。</p>
+        <div className="home__message">
+          <h1 className="home__title">Agent-Jarvis</h1>
+          <p className="home__hint">登录 Agent-Jarvis 后即可开始对话。</p>
+        </div>
       ) : null}
     </main>
   );

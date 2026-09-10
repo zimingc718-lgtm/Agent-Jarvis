@@ -2,7 +2,7 @@
 
 - 级别: L3（重写首页形态 REQ-F-015 + 新增全屏渲染层 + 落地 DEC-015 未沙箱化 `<iframe srcdoc>` 的实际渲染 + 修订路由契约）
 - 提出人: user（"skill 会输出一个 html，将其结果在首页上显示…底下是根据对话框显示出固定的知识呈现或者动态内容显示…可以理解为 Jarvis 的动态显示屏…全屏。对话框在它的上面…刷新还在，除非对话出现其他指令…让它显示首页，那么就回到标题首页" → msg 50-6 / 51-12 / 51-13 / 51-15；F1/F2 拆分见 CR-20260909-skills CP-12）
-- 状态: R1 四角色 APPROVED（1 轮反馈闭环）+ R2/R3/R4 四角色 APPROVED、机器门 PASS（P2 已成文）；待用户 R1 人工终裁 → P3。g3 如实阻断（TEST-039..042 待实现）
+- 状态: CLOSED（R1 四角色 APPROVED（1 轮反馈闭环）+ 用户 2026-09-10 人工终裁「确认，开始执行」+ R2/R3/R4 机器门 PASS + P3/P4 完成：TASK-036..039 DONE、TEST-039..042 PASS、g1-g4 全绿。与 CR-20260909-skills 合并实现）
 - 评审模型: R1–R4 + G3/G3.5/G4（第二个按新共识门禁模型执行的 CR；R1 四角色）
 - 影响需求: 新增 REQ-F-026、REQ-F-027；**重写 REQ-F-015**（极简首页 → 全屏动态展示屏）；落地 REQ-F-025 ②（未沙箱化 HTML 的首渲提示条）
 - 影响模块: **新增 MOD-DISPLAY**（`src/components/DisplayScreen.tsx` + `src/lib/display.ts`）、MOD-DB（新增 `display_state` 单行表）、MOD-CHAT（`routeSkill` → `routeTurn` 返回 `{skill, display}`；路由层写 `display_state`）、MOD-CHAT-UI（`FloatingChat` 派发 `jarvis:display-changed`）、MOD-SETTINGS-UI（`page.tsx` 首页布局重写，层叠关系）
@@ -135,6 +135,33 @@
 | CP-15 | APPROVED 回归门 | APPROVED 断言反转是预期 | APPROVED TASK-038 Ⅱ 承接 | APPROVED TEST-021/032 作回归门重写（自审） |
 
 **R2/R3/R4 结果**：CP-1..CP-15 × 4 角色 **全 APPROVED，无 REJECTED、无遗留 CONDITIONAL**。DEC-015 的"后续 CR 必须沙箱化"出口义务由本 CR 继续承载（F1 已登记 known warning `skill-html-unsandboxed`；F2 落地不可关闭常驻提示条作为当前唯一缓解）——这是**跨 CR 的长期义务**，非本 CR 的未决条件。
+
+## R1 人工终裁
+
+用户 2026-09-10：「确认，开始执行。」——确认 CP-1..CP-15、REQ-F-015 重写为全屏动态展示屏、`display_state` 全局单行 + `kind` 扩展点、`routeTurn` 扩 `display`、提示条不可关闭常驻、未沙箱化渲染在本 CR 落地，并授权进入 P3（与 CR-20260909-skills 合并实现）。
+
+## P3/P4 实施记录（2026-09-10）
+
+### 落地清单
+
+| 任务 | 落点 |
+|---|---|
+| TASK-036 | `src/lib/store.ts`：`display_state` 建表 + `getDisplayState`/`setDisplayState`（`INSERT OR REPLACE`，固定主键 `'singleton'`）+ `dumpDisplayStateRowsForTest` |
+| TASK-037 | `src/components/DisplayScreen.tsx`（`kind` switch + `default` 回退、不可关闭 `.display-screen__notice`、无 `sandbox` 的 `<iframe srcDoc>`、`jarvis:display-changed` 订阅）+ `src/lib/display.ts` `resolveDisplayView`/`showInsight`/`showHome` + `src/app/api/display/route.ts` + `globals.css` `.display-screen*` |
+| TASK-038 | Ⅰ 组件与数据层（同上，未动首页）；Ⅱ `src/app/page.tsx` 删 `<header>`、`<DisplayScreen initial={resolveDisplayView()} />` 作基底、`.home` 改为纯容器 + `.home__message`；`ui-contract` 新增 **LB-09**、RF-05 候选容器扩到 `.display-screen--home`；TEST-021/032 回归门在 e2e 重跑 |
+| TASK-039 | `src/lib/skills.ts` `routeTurn` 返回 `{skill, display}`；`chat/stream/route.ts` 读 `display` → `showHome()` + `{type:"display",kind:"home"}` 尾事件；`FloatingChat` 收到 `insight`/`display` 尾事件后 `dispatchEvent(DISPLAY_CHANGED_EVENT)` |
+
+### P3 设计细化（相对 P2 的差异，已回写各层说明书）
+
+1. **单行原语归属澄清**：`getDisplayState`/`setDisplayState` 实现在 `src/lib/store.ts`（与其它表的 CRUD 原语一致）；`src/lib/display.ts` 是 MOD-DISPLAY 的服务端外观，提供 `resolveDisplayView()`（把指针 join 到 `insights.html`）与 `showInsight`/`showHome` 两个写入意图函数。DEC-017 ① 已按此更新。
+2. **`INSERT OR REPLACE` 取代 `ON CONFLICT DO UPDATE`**——单行表语义等价、SQLite 核心语法、无 upsert 版本依赖。
+3. **新增零依赖模块 `src/lib/display-events.ts`**，导出 `DISPLAY_CHANGED_EVENT` 与 `DisplayView` 类型。理由：CP-13 要求 `FloatingChat` 不 import `DisplayScreen`；同时客户端组件不能经 `@/lib/display` 拉入 `store-singleton`（`node:sqlite`/`node:fs`）。事件名与视图类型因此各只有**一处**定义。
+4. **`playwright.config.ts` 加 `workers: 1`**。理由：新增第二个 spec 文件后暴露出既有并行缺陷——各 spec 共用同一 dev server 与 SQLite，而 `resolveActiveProvider` 走**全局**优先级序，并行会互抢解析到的 Provider。属测试基建修复，不改产品行为。
+5. **`skills-display.spec.ts` 自清理**：进入时与收尾时各删一次全部 Provider，避免污染共用 e2e 库的其它 spec。
+
+### 验证
+
+`npm test` **159** · `ui-contract` 静态 **49/0/0** · `--live` **67 PASS / 1 SKIP** · `smoke` OK · `test:e2e` **10 PASS**（新增 `tests/e2e/skills-display.spec.ts` 2 例：洞察上屏 + 提示条不可关闭 + 刷新保持 + 显示首页回标题 + 未产出提示；☰ 在展示屏之上可用）· `build:verify` OK · `tsc --noEmit` OK。
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 

@@ -33,7 +33,11 @@ export type ChatDelta =
   | { type: "delta"; text: string }
   | { type: "stopped" }
   | { type: "error"; message: string }
-  | { type: "done"; messageId: string };
+  | { type: "done"; messageId: string }
+  // CR-20260909: skill-turn tail events, emitted after the reply is persisted.
+  | { type: "insight"; insightId: string }
+  | { type: "insight-missing"; reason: "none" | "incomplete" }
+  | { type: "display"; kind: "home" };
 
 export type ChatMessage = {
   role: "system" | "user" | "assistant";

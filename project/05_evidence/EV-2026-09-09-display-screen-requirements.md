@@ -93,6 +93,16 @@ CR `## R2/R3/R4 评审矩阵`：CP-1..CP-15 × 4 角色，**全 APPROVED，无 R
 | `python tools/governance.py verify \| gate g1 \| gate g2 \| check-changes \| ui` | 全 PASS |
 | `python tools/governance.py gate g3` | **如实阻断**：`missing PASS evidence for: TEST-034..042`（F1+F2 合并 P3 待实现）|
 
-## 6. 本证据边界
+## 6. P3/P4 实施（2026-09-10）
 
-P2 锁定三层设计 + R2/R3/R4 矩阵。**F1（CR-20260909-skills）与 F2（本 CR）P3 合并实现**——`routeTurn` 从第一行即目标签名。P3 落地 TASK-033..039、TEST-034..042 回填 PASS、清 F1 出口义务清单后补实现 EV。DEC-015 的"后续 CR 必须沙箱化"是跨 CR 长期义务。
+用户 2026-09-10「确认，开始执行」完成 R1 人工终裁并授权 P3。与 CR-20260909-skills 合并实现（`routeTurn` 从第一行即目标签名，无 rename）。逐任务落点与 P3 设计细化（5 项）见 `project/06_changes/CR-20260909-display-screen.md` 的「P3/P4 实施记录」。要点：
+
+- **新增源文件**：`src/components/DisplayScreen.tsx`（MOD-DISPLAY）、`src/lib/display.ts`、`src/lib/display-events.ts`（零依赖，供 client 组件导入事件名与 `DisplayView` 类型，满足 CP-13 解耦）、`src/app/api/display/route.ts`。
+- **改动**：`src/lib/store.ts`（`display_state` 单行表 + 原语）、`src/app/page.tsx`（删 `<header>`，`DisplayScreen` 作全屏基底）、`src/app/globals.css`（`.display-screen*`、`.home` 改纯容器 + `.home__message`）、`src/components/FloatingChat.tsx`（尾事件 → 派发 `jarvis:display-changed`）、`scripts/ui-contract.mjs`（新增 LB-09、RF-05 容器候选扩展）。
+- **未沙箱化渲染已真实落地**：`<iframe srcDoc>` 无 `sandbox`（DEC-015），其上不可关闭的 `.display-screen__notice` 常驻——LB-09 静态守卫「notice 内无 `<button>`、组件无按键处理、iframe 无 `sandbox` 属性」，e2e 断言 Escape 不移除提示条。
+- **测试基建修复**：`playwright.config.ts` 加 `workers: 1`（共用 dev server + SQLite + 全局 Provider 优先级序，并行 spec 会互抢）；`skills-display.spec.ts` 进出各清一次 Provider。
+- **验证**：`npm test` 159、`ui-contract` 49/0/0 与 `--live` 67 PASS/1 SKIP、`smoke` OK、`test:e2e` 10 PASS、`build:verify` OK、`tsc --noEmit` OK；`g1/g2/g3/g3.5/g4` + `review r1..r4` 全 PASS。
+
+## 7. 本证据边界
+
+CR CLOSED。DEC-015 的"后续 CR 必须沙箱化"是**跨 CR 长期义务**（`skill-html-unsandboxed` known warning 持续承载）。非目标未变：不做多屏/分屏、展示历史回看、展示屏手动编辑或导出；`display` 路由只支持"回首页"意图。

@@ -41,7 +41,9 @@
     "config:check": "node scripts/check-config.mjs",
     "test:config": "vitest run tests/config-check.test.ts tests/runtime-config.test.ts tests/api-guard.test.ts",
     "build:verify": "node -e \"process.env.NEXT_DIST_DIR='.next-verify';require('child_process').execSync('next build',{stdio:'inherit'})\"",
-    "clean": "node -e \"const fs=require('fs');for(const d of ['.next','.next-smoke','.next-e2e','.next-verify'])fs.rmSync(d,{recursive:true,force:true})\""
+    "clean": "node -e \"const fs=require('fs');for(const d of ['.next','.next-smoke','.next-e2e','.next-verify'])fs.rmSync(d,{recursive:true,force:true})\"",
+    "test:skills": "vitest run tests/skills.test.ts tests/skills-route.test.ts",
+    "test:display": "vitest run tests/display.test.ts"
   },
   "dependencies": {
     "next": "^15.5.2",

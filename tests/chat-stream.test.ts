@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runChatTurn } from "@/lib/chat";
+import { captureSkillHtml } from "@/lib/skills";
 import { createStore, type Store } from "@/lib/store";
 import type { ChatMessage } from "@/lib/types";
 
@@ -275,5 +276,93 @@ describe("runChatTurn", () => {
 
     await expect(runChatTurn({ store, userId: user.id, message: "hi" })).rejects.toMatchObject({ status: 409 });
     expect(store.listRecentConversations(user.id)).toHaveLength(0);
+  });
+
+  // CR-20260909-skills — TEST-035 (injection) / TEST-036 (HTML capture) / CP-14 (default unchanged)
+  it("appends the skill segment to the system prompt for this turn only, without persisting it", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    const providerId = localProvider(store, user.id);
+
+    let sent: ChatMessage[] = [];
+    const stream = await runChatTurn({
+      store,
+      userId: user.id,
+      providerId,
+      message: "use the skill",
+      skill: "SKILL: extra instructions for this turn",
+      providerStream: async function* (input) {
+        sent = input.messages;
+        yield { type: "delta", text: "ok" };
+      },
+    });
+    await readSse(stream);
+
+    expect(sent[0]).toEqual({
+      role: "system",
+      content: expect.stringContaining("SKILL: extra instructions for this turn"),
+    });
+    // The persisted user/assistant rows never contain the skill text.
+    const [conversation] = store.listRecentConversations(user.id);
+    for (const message of store.listMessages(conversation.id)) {
+      expect(message.content).not.toContain("extra instructions for this turn");
+    }
+  });
+
+  it("captures the last ```html block on a skill turn and reports the missing cases", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    const providerId = localProvider(store, user.id);
+
+    async function run(reply: string, skill: string | undefined) {
+      const events: Array<{ html?: string; reason?: string }> = [];
+      const stream = await runChatTurn({
+        store,
+        userId: user.id,
+        providerId,
+        message: "go",
+        skill,
+        providerStream: async function* () {
+          yield { type: "delta", text: reply };
+        },
+        onFinal: (finalText, status) => {
+          events.push({ status } as never);
+          const captured = captureSkillHtml(finalText);
+          if ("html" in captured) {
+            events.push({ html: captured.html });
+            return [{ type: "insight", insightId: "i" }];
+          }
+          events.push({ reason: captured.missing });
+          return [{ type: "insight-missing", reason: captured.missing }];
+        },
+      });
+      const body = await readSse(stream);
+      return { events, body };
+    }
+
+    const twoBlocks = await run("a\n```html\n<p>1</p>\n```\nb\n```html\n<p>2</p>\n```", "S");
+    expect(twoBlocks.events).toContainEqual({ html: "<p>2</p>" });
+    expect(twoBlocks.body).toContain("event: insight");
+
+    const none = await run("no html here", "S");
+    expect(none.events).toContainEqual({ reason: "none" });
+    expect(none.body).toContain('"reason":"none"');
+
+    const unclosed = await run("intro\n```html\n<p>unfinished", "S");
+    expect(unclosed.events).toContainEqual({ reason: "incomplete" });
+
+    // CP-14: with no skill, onFinal is still called by the route but the route's own
+    // guard (`skillSegment && status === "complete"`) skips capture. runChatTurn itself
+    // is unchanged — the default path here has no onFinal and behaves exactly as before.
+    const plain = await runChatTurn({
+      store,
+      userId: user.id,
+      providerId,
+      message: "plain",
+      providerStream: async function* () {
+        yield { type: "delta", text: "```html\n<p>should be ignored</p>\n```" };
+      },
+    });
+    const plainBody = await readSse(plain);
+    expect(plainBody).toContain("event: done");
+    expect(plainBody).not.toContain("event: insight");
   });
 });

@@ -31,6 +31,17 @@ type RunChatTurnInput = {
   systemPrompt?: string;
   signal?: AbortSignal;
   providerStream?: (input: ProviderStreamInput) => AsyncIterable<ChatDelta>;
+  /**
+   * Additional system segment for this turn only (CR-20260909-skills). When set it is
+   * appended after the base system prompt; the persisted conversation is unchanged.
+   */
+  skill?: string;
+  /**
+   * Called once with the final assistant text after it is persisted (CR-20260909).
+   * Returns extra SSE deltas (e.g. `insight` / `display`) to emit before the stream closes.
+   * The insight write itself lives in the route handler, never here.
+   */
+  onFinal?: (finalText: string, status: "complete" | "stopped" | "error", conversationId: string) => ChatDelta[];
 };
 
 const encoder = new TextEncoder();
@@ -92,7 +103,9 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
 
   input.store.addMessage(conversationId, "user", message, "complete");
 
-  const systemPrompt = input.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
+  const baseSystemPrompt = input.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
+  // CR-20260909-skills: the skill segment is appended for this turn only, never persisted.
+  const systemPrompt = input.skill ? `${baseSystemPrompt}\n\n${input.skill}` : baseSystemPrompt;
   const chatMessages: ChatMessage[] = [
     ...(systemPrompt ? [{ role: "system" as const, content: systemPrompt }] : []),
     ...history,
@@ -114,6 +127,9 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     signal: input.signal,
     providerStream,
     onComplete: (content, status) => input.store.addMessage(conversationId, "assistant", content, status),
+    onFinal: input.onFinal
+      ? (content, status) => input.onFinal!(content, status, conversationId)
+      : undefined,
   });
 }
 
@@ -123,19 +139,28 @@ function createStreamingResponse(input: {
   signal?: AbortSignal;
   providerStream: AsyncIterable<ChatDelta>;
   onComplete(content: string, status: "complete" | "stopped" | "error"): void;
+  onFinal?: (content: string, status: "complete" | "stopped" | "error") => ChatDelta[];
 }): ReadableStream<Uint8Array> {
   return new ReadableStream<Uint8Array>({
     async start(controller) {
       let assistantText = "";
       let persisted = false;
 
+      const send = (delta: ChatDelta) => controller.enqueue(encoder.encode(formatSse(delta)));
       const persistOnce = (status: "complete" | "stopped" | "error", content = assistantText) => {
-        if (!persisted) {
-          input.onComplete(content, status);
-          persisted = true;
+        if (persisted) {
+          return;
+        }
+        input.onComplete(content, status);
+        persisted = true;
+        try {
+          for (const delta of input.onFinal?.(content, status) ?? []) {
+            send(delta);
+          }
+        } catch {
+          /* a display/insight hook must never break the reply stream */
         }
       };
-      const send = (delta: ChatDelta) => controller.enqueue(encoder.encode(formatSse(delta)));
 
       send({ type: "start", conversationId: input.conversationId, messageId: input.messageId });
 

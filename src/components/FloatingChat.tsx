@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import { DragEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import { DISPLAY_CHANGED_EVENT } from "@/lib/display-events";
 import { Markdown } from "@/lib/markdown";
 
 export type FloatingMessage = {
@@ -15,7 +16,11 @@ export type ChatStreamEvent =
   | { type: "delta"; text: string }
   | { type: "stopped" }
   | { type: "error"; message: string }
-  | { type: "done" };
+  | { type: "done" }
+  // CR-20260909: skill-turn / display tail events.
+  | { type: "insight"; insightId: string }
+  | { type: "insight-missing"; reason: "none" | "incomplete" }
+  | { type: "display"; kind: "home" };
 
 export type ChatStreamRequest = {
   message: string;
@@ -148,6 +153,12 @@ export async function* streamChatDeltas(request: ChatStreamRequest): AsyncIterab
         yield { type: "error", message: parsed.message };
       } else if (parsed.type === "done") {
         yield { type: "done" };
+      } else if (parsed.type === "insight" && typeof parsed.insightId === "string") {
+        yield { type: "insight", insightId: parsed.insightId };
+      } else if (parsed.type === "insight-missing" && (parsed.reason === "none" || parsed.reason === "incomplete")) {
+        yield { type: "insight-missing", reason: parsed.reason };
+      } else if (parsed.type === "display" && parsed.kind === "home") {
+        yield { type: "display", kind: "home" };
       }
     }
   }
@@ -179,6 +190,7 @@ export function FloatingChat({
   const [userCollapsed, setUserCollapsed] = useState(() => chatCollapsed());
   const [isStreaming, setIsStreaming] = useState(false);
   const [justFinished, setJustFinished] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const [probeState, setProbeState] = useState<Exclude<LightState, "busy" | "done">>(
     hasEnabledProvider ? "checking" : "off"
   );
@@ -256,6 +268,56 @@ export function FloatingChat({
     markSessionEnded(true);
   }
 
+  function appendSystemMessage(content: string) {
+    setMessages((current) => [...current, { id: crypto.randomUUID(), role: "system", content }]);
+  }
+
+  // CR-20260909-skills CP-1: dropping a folder onto the chat box registers a skill.
+  async function handleDrop(event: DragEvent<HTMLElement>) {
+    const folder = readDroppedFolderEntries(event.dataTransfer);
+    if (!folder) {
+      return;
+    }
+    event.preventDefault();
+    setDragActive(false);
+    applyCollapsed(false);
+    const pendingId = crypto.randomUUID();
+    setMessages((current) => [
+      ...current,
+      { id: pendingId, role: "system", content: `正在注册技能「${folder.name}」…` },
+    ]);
+    const replace = (content: string) =>
+      setMessages((current) => current.map((item) => (item.id === pendingId ? { ...item, content } : item)));
+
+    try {
+      const files = await collectFolderFiles(folder.entry);
+      if (files.length === 0) {
+        replace("该文件夹没有可读取的文本文件，未注册。");
+        return;
+      }
+      const form = new FormData();
+      form.set("folderName", folder.name);
+      for (const file of files) {
+        form.append("file", new File([file.content], file.path, { type: "text/plain" }));
+      }
+      const response = await fetch("/api/skills", { method: "POST", body: form });
+      const data = (await response.json().catch(() => ({}))) as {
+        name?: string;
+        description?: string;
+        docGenerated?: boolean;
+        message?: string;
+      };
+      if (!response.ok) {
+        replace(data.message ?? "技能注册失败。");
+        return;
+      }
+      const hint = data.docGenerated ? "" : "（未生成描述，可在对话中补充）";
+      replace(`已注册技能：${data.name} — ${data.description}${hint}`);
+    } catch {
+      replace("技能注册失败。");
+    }
+  }
+
   function handleNewConversation() {
     // Clearing the messages collapses the panel on its own (hasTranscript -> false).
     setMessages([]);
@@ -321,6 +383,13 @@ export function FloatingChat({
             current.map((item) => (item.id === assistantId ? { ...item, status: "error" } : item))
           );
           break;
+        } else if (chunk.type === "insight") {
+          window.dispatchEvent(new Event(DISPLAY_CHANGED_EVENT));
+          appendSystemMessage("已生成洞察，可在展示屏查看。");
+        } else if (chunk.type === "insight-missing") {
+          appendSystemMessage(chunk.reason === "incomplete" ? "本轮的 HTML 不完整。" : "本轮未产出 HTML。");
+        } else if (chunk.type === "display") {
+          window.dispatchEvent(new Event(DISPLAY_CHANGED_EVENT));
         }
       }
     } catch (error) {
@@ -377,8 +446,22 @@ export function FloatingChat({
 
   return (
     <section
-      className={`floating-chat ${showTranscript ? "floating-chat--expanded" : ""}`}
+      className={`floating-chat ${showTranscript ? "floating-chat--expanded" : ""} ${
+        dragActive ? "floating-chat--drag" : ""
+      }`}
       aria-label="Agent-Jarvis chat"
+      onDragOver={(event) => {
+        if ([...(event.dataTransfer?.types ?? [])].includes("Files")) {
+          event.preventDefault();
+          setDragActive(true);
+        }
+      }}
+      onDragLeave={(event) => {
+        if (event.currentTarget === event.target) {
+          setDragActive(false);
+        }
+      }}
+      onDrop={handleDrop}
     >
       <div className="floating-chat__status">
         <span className={`floating-chat__light floating-chat__light--${lightState}`} aria-hidden="true" />
@@ -449,10 +532,93 @@ export function FloatingChat({
   );
 }
 
-function safeJsonParse(value: string): { type?: unknown; text?: unknown; message?: unknown; conversationId?: unknown } | null {
+function safeJsonParse(value: string): {
+  type?: unknown;
+  text?: unknown;
+  message?: unknown;
+  conversationId?: unknown;
+  insightId?: unknown;
+  reason?: unknown;
+  kind?: unknown;
+} | null {
   try {
     return JSON.parse(value);
   } catch {
     return null;
   }
+}
+
+type DroppedFile = { path: string; content: string };
+const MAX_SKILL_FILE_BYTES = 512 * 1024;
+
+/**
+ * Synchronously pull the single dropped directory entry out of the event
+ * (the DataTransfer item list is cleared once the handler returns).
+ */
+function readDroppedFolderEntries(
+  dataTransfer: DataTransfer | null
+): { name: string; entry: FileSystemDirectoryEntry } | null {
+  if (!dataTransfer) {
+    return null;
+  }
+  const directories: FileSystemDirectoryEntry[] = [];
+  for (const item of Array.from(dataTransfer.items)) {
+    if (item.kind !== "file") {
+      continue;
+    }
+    const entry = item.webkitGetAsEntry?.();
+    if (entry?.isDirectory) {
+      directories.push(entry as FileSystemDirectoryEntry);
+    }
+  }
+  return directories.length === 1 ? { name: directories[0].name, entry: directories[0] } : null;
+}
+
+async function collectFolderFiles(root: FileSystemDirectoryEntry): Promise<DroppedFile[]> {
+  const out: DroppedFile[] = [];
+
+  async function readDir(dir: FileSystemDirectoryEntry): Promise<FileSystemEntry[]> {
+    const reader = dir.createReader();
+    const all: FileSystemEntry[] = [];
+    // readEntries returns in batches until it yields an empty array.
+    for (;;) {
+      const batch = await new Promise<FileSystemEntry[]>((resolve, reject) =>
+        reader.readEntries((entries) => resolve(entries), reject)
+      );
+      if (batch.length === 0) {
+        break;
+      }
+      all.push(...batch);
+    }
+    return all;
+  }
+
+  // `prefix` is the folder-relative directory path ("" at the root).
+  async function walk(entry: FileSystemEntry, prefix: string): Promise<void> {
+    const relPath = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isFile) {
+      const file = await new Promise<File>((resolve, reject) =>
+        (entry as FileSystemFileEntry).file((f) => resolve(f), reject)
+      );
+      if (file.size > MAX_SKILL_FILE_BYTES) {
+        return;
+      }
+      const content = await file.text();
+      if (content.includes("\u0000")) {
+        return; // binary
+      }
+      out.push({ path: relPath, content });
+      return;
+    }
+    if (entry.isDirectory) {
+      for (const child of await readDir(entry as FileSystemDirectoryEntry)) {
+        await walk(child, relPath);
+      }
+    }
+  }
+
+  for (const child of await readDir(root)) {
+    await walk(child, "");
+  }
+  return out;
 }

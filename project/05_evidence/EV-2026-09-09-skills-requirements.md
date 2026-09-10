@@ -120,6 +120,16 @@
 | `python tools/governance.py gate g3` | **如实阻断**：`missing PASS evidence for: TEST-034..038`（P3 待实现）|
 | `python -m unittest tests.test_governance` | 23 PASS（含 `_cr_scoped_text` 回归）|
 
-## 6. 本证据边界
+## 6. P3/P4 实施（2026-09-10）
 
-P2 锁定三层设计 + R2/R3/R4 矩阵。P3 实现 TASK-033/034/035、TEST-034..038 回填 PASS、清零出口义务清单后补实现 EV。F2（CR-20260909-display-screen）尚未起草。
+用户 2026-09-10「确认，开始执行」授权后，与 CR-20260909-display-screen **合并实现**。逐任务落点、P3 设计细化（5 项）与出口义务清零表见 `project/06_changes/CR-20260909-skills.md` 的「P3/P4 实施记录」。要点：
+
+- **新增源文件**：`src/lib/skills.ts`（MOD-SKILLS）、`src/app/api/skills/route.ts`、`src/app/api/insights/route.ts`。
+- **改动**：`src/lib/store.ts`（`skills`/`insights` 表 + CRUD + `SkillNameConflictError`）、`src/lib/chat.ts`（`skill?` 附加 system 段 + `onFinal` 回调）、`src/app/api/chat/stream/route.ts`（路由前置 + 写库 + 尾事件）、`src/components/FloatingChat.tsx`（拖放上传 + 三类系统消息 + 尾事件处理）、`src/lib/types.ts`（`ChatDelta` 加 `insight`/`insight-missing`/`display`）。
+- **零新增运行依赖**；新增 env `JARVIS_SKILLS_PATH`（测试/e2e 隔离技能目录）。
+- **出口义务 5 条全部清零**（known warning 已登记、DEC-015 出口义务保留、`routeTurn` 4 条 fail-open + 请求体形态断言、`chat.ts` grep 无 `insertInsight`、路径穿越防护双重）。
+- **验证**：`npm test` 159、`ui-contract` 49/0/0 与 `--live` 67 PASS/1 SKIP、`smoke` OK、`test:e2e` 10 PASS、`build:verify` OK、`tsc --noEmit` OK；`g1/g2/g3/g3.5/g4` + `review r1..r4` 全 PASS。
+
+## 7. 本证据边界
+
+CR CLOSED。DEC-015 的「后续 CR 必须沙箱化」是**跨 CR 长期义务**，由 `test-results.json` 的 `skill-html-unsandboxed` known warning 持续可追溯。技能的删除 / 编辑 / 多技能管理 UI 仍是非目标。

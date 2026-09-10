@@ -275,6 +275,7 @@ function buildContext() {
     "SettingsDialog.tsx": read("src/components/SettingsDialog.tsx"),
     "AccountDialog.tsx": read("src/components/AccountDialog.tsx"),
     "CornerMenu.tsx": read("src/components/CornerMenu.tsx"),
+    "DisplayScreen.tsx": read("src/components/DisplayScreen.tsx"),
     "ThemeToggle.tsx": read("src/components/ThemeToggle.tsx"),
     "markdown.tsx": read("src/lib/markdown.tsx"),
   };
@@ -701,7 +702,8 @@ const CONTRACT = [
         title: "Page content clears the fixed bottom console",
         guidance: "The page scroll container needs padding-bottom ≥ the console height so nothing hides behind it — on mobile too.",
         check(ctx) {
-          const candidates = [".home", ".shell", "main"];
+          // CR-20260909-display-screen: the home view is a full-screen scroll layer.
+          const candidates = [".display-screen--home", ".display-screen", ".home__message", ".home", ".shell", "main"];
           const selector = candidates.find((sel) => {
             const r = ctx.rule(sel);
             return r && decl(r.body, "padding-bottom");
@@ -1109,6 +1111,64 @@ const CONTRACT = [
           if (!gated) return WARN("collapse control may render without a transcript");
           if (!noTween) return FAIL("expanded panel animates its height — v1 is an instant toggle (DEC-013)");
           return PASS("collapse control: <button> + aria-expanded, transcript-gated, no height animation");
+        },
+      },
+      {
+        id: "LB-09",
+        ref: "REQ-F-015 / REQ-F-026 (CR-20260909-display-screen)",
+        req: "REQ-F-015",
+        title: "Home is a full-screen display screen with the chat and menu above it",
+        guidance:
+          "page.tsx renders <DisplayScreen> as the base layer; .display-screen is fixed/full-screen at a z-index below the chat (20) and menu (30); the insight notice is non-dismissible (no close button, no Escape handler) and the insight <iframe> is deliberately unsandboxed (DEC-015).",
+        check(ctx) {
+          const page = ctx.files["page.tsx"] ?? "";
+          const screen = ctx.files["DisplayScreen.tsx"] ?? "";
+          if (!/<DisplayScreen\b/.test(page)) return FAIL("page.tsx does not render <DisplayScreen>");
+          if (/<header\b/.test(page)) return FAIL("page.tsx still renders a <header> — the title moved into the display screen");
+
+          const base = ctx.rule(".display-screen");
+          if (!base) return FAIL("no .display-screen rule");
+          if (!/fixed/.test(decl(base.body, "position") ?? "")) return FAIL(".display-screen is not position: fixed");
+          const z = parseInt(decl(base.body, "z-index") ?? "0", 10);
+          if (z >= 20) return FAIL(`.display-screen z-index (${z}) is not below the floating chat (20)`);
+
+          const notice = ctx.rule(".display-screen__notice");
+          if (!notice) return FAIL("no .display-screen__notice rule (CP-7)");
+          // Non-dismissible: the component must not put a button in the notice or handle Escape.
+          const noticeMarkup = screen.match(/display-screen__notice[\s\S]{0,240}/)?.[0] ?? "";
+          if (/<button/i.test(noticeMarkup)) return FAIL("the unsandboxed-HTML notice has a close button — it must be non-dismissible (CP-7)");
+          if (/onKeyDown|["']keydown["']|key === ["']Escape["']/.test(screen)) {
+            return FAIL("DisplayScreen handles a key event — the notice must not be dismissible via Escape (CP-7)");
+          }
+
+          // DEC-015: the insight iframe is intentionally rendered without a sandbox attribute.
+          if (!/<iframe\b/.test(screen)) return FAIL("DisplayScreen renders no <iframe> for insight HTML");
+          if (/<iframe[^>]*\bsandbox\b/.test(screen)) {
+            return FAIL("the insight <iframe> has a sandbox attribute — DEC-015 records this as a deliberate non-goal; add it via a future CR, not silently");
+          }
+          if (/setInterval\s*\(|new EventSource|new WebSocket/.test(screen)) {
+            return FAIL("DisplayScreen polls / opens a stream — it must refetch on the jarvis:display-changed event only (CP-9)");
+          }
+          if (!/jarvis:display-changed|DISPLAY_CHANGED_EVENT/.test(screen)) {
+            return FAIL("DisplayScreen does not listen for the display-changed event");
+          }
+          return PASS(`display screen: fixed base z-index ${z}, non-dismissible notice, unsandboxed iframe (DEC-015), event-driven refetch`);
+        },
+      },
+      {
+        id: "SK-01",
+        ref: "REQ-F-020 (CR-20260909-skills)",
+        req: "REQ-F-020",
+        title: "The chat box accepts a dropped skill folder",
+        guidance:
+          "FloatingChat wires onDrop on the console and posts the folder to /api/skills; it reads the dropped directory via webkitGetAsEntry.",
+        check(ctx) {
+          const src = ctx.files["FloatingChat.tsx"] ?? "";
+          if (!/onDrop=/.test(src)) return FAIL("FloatingChat has no onDrop handler");
+          if (!/webkitGetAsEntry/.test(src)) return FAIL("FloatingChat does not read the dropped directory (webkitGetAsEntry)");
+          if (!/["']\/api\/skills["']/.test(src)) return FAIL("FloatingChat never posts to /api/skills");
+          if (!/已注册技能|技能注册失败/.test(src)) return FAIL("no transcript feedback for skill registration");
+          return PASS("folder drop → /api/skills → transcript confirmation");
         },
       },
       {

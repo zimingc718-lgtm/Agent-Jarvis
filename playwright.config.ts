@@ -4,6 +4,10 @@ export default defineConfig({
   testDir: "./tests/e2e",
   timeout: 30_000,
   fullyParallel: false,
+  // One worker: every spec shares the same dev server and SQLite file, and
+  // `resolveActiveProvider` walks a single global priority order — parallel spec
+  // files would race over which provider the console resolves to.
+  workers: 1,
   reporter: "list",
   use: {
     baseURL: "http://127.0.0.1:3330",
@@ -30,6 +34,7 @@ export default defineConfig({
       GOOGLE_CLIENT_ID: "e2e-client.apps.googleusercontent.com",
       GOOGLE_CLIENT_SECRET: "e2e-client-secret",
       JARVIS_DB_PATH: process.env.JARVIS_E2E_DB_PATH ?? "./.data/e2e.sqlite",
+      JARVIS_SKILLS_PATH: process.env.JARVIS_E2E_SKILLS_PATH ?? "./.data/e2e-skills",
       JARVIS_E2E_MODEL_PORT: "3321"
     }
   }

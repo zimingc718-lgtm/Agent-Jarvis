@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-09T23:00:00Z",
+  "generated_at": "2026-09-10",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
@@ -17,7 +17,17 @@
     "project/06_changes/CR-20260909-minimal-floating-chat.md",
     "project/06_changes/CR-20260909-collapsible-panel.md",
     "project/06_changes/CR-20260909-corner-menu.md",
-    "project/06_changes/CR-20260909-consensus-review-gates.md"
+    "project/06_changes/CR-20260909-consensus-review-gates.md",
+    {
+      "id": "CR-20260909-skills",
+      "status": "P1-P4 complete",
+      "detail": "F1 skill system: MOD-SKILLS (src/lib/skills.ts) — registerSkill / generateSkillDoc / routeTurn / resolveSkillForTurn; skills + insights tables; POST/GET /api/skills; GET /api/insights read-back; runChatTurn gains skill? + onFinal (insight write stays in the /api/chat/stream route, chat.ts never imports insertInsight); FloatingChat folder drag-drop + system messages. TASK-033/034/035 DONE. TEST-034..038 PASS. review r1|r2|r3|r4 PASS."
+    },
+    {
+      "id": "CR-20260909-display-screen",
+      "status": "P1-P4 complete",
+      "detail": "F2 dynamic display screen: MOD-DISPLAY (DisplayScreen.tsx + src/lib/display.ts) — full-screen base layer, kind home/insight + fallback, non-dismissible notice, unsandboxed <iframe srcdoc> (DEC-015); display_state single global row (DEC-017); GET /api/display; routeTurn display field + route-layer showHome/showInsight; jarvis:display-changed event (FloatingChat dispatches, DisplayScreen refetches — no polling/SSE); page.tsx rewritten (no <header>, DisplayScreen is the base). TASK-036/037/038/039 DONE. TEST-039..042 PASS + TEST-021/032 regression. review r1|r2|r3|r4 PASS (R1 conditionals closed to APPROVED in one feedback round)."
+    }
   ],
   "tests": [
     {
@@ -242,6 +252,69 @@
       "command": "python -m unittest tests.test_governance",
       "real_entry": true,
       "evidence": "tests/test_governance.py: governance.py review — a CR with a ## 变化点登记 table + an architecture section that mentions the CR and every CP id -> REVIEW_R2_PASS; a CP missing from the architecture doc -> REVIEW_R2_COVERAGE_GAP naming the CP; a matrix cell containing REJECTED -> REVIEW_R2_BLOCKED; review r1 with no 'R1 … 拍板/终裁' marker -> REVIEW_R1_BLOCKED; no CR using the CP-registry model -> vacuous OK. 23 governance unit tests pass (incl. coverage scoped to the CR own section)."
+    },
+    {
+      "id": "TEST-034",
+      "result": "PASS",
+      "command": "npm run test:skills",
+      "real_entry": true,
+      "evidence": "tests/skills.test.ts: routeTurn (DEC-016) — picks a registered skill from model JSON; returns null skill / display:\"home\" independently; 4 fail-open paths (no completer / thrown completer / non-JSON / unregistered name) all return {skill:null,display:null} without throwing; request is non-streaming, history-free, max_tokens 64, timeout 10s."
+    },
+    {
+      "id": "TEST-035",
+      "result": "PASS",
+      "command": "npm run test:skills",
+      "real_entry": true,
+      "evidence": "tests/skills.test.ts: resolveSkillForTurn includes SKILL.md body + allowlisted text files (incl. nested), excludes non-allowlisted (.png), truncates past 32KB with a marker; generateSkillDoc parses frontmatter or falls back to the folder name + （未生成描述）."
+    },
+    {
+      "id": "TEST-036",
+      "result": "PASS",
+      "command": "npm run test:chat-stream",
+      "real_entry": true,
+      "evidence": "tests/chat-stream.test.ts: runChatTurn + onFinal captures the LAST closed ```html block, reports 'none' with no fence and 'incomplete' with an unclosed fence; a turn with no skill segment is unchanged (no insight event, event: done)."
+    },
+    {
+      "id": "TEST-037",
+      "result": "PASS",
+      "command": "npm run test:display",
+      "real_entry": true,
+      "evidence": "tests/display.test.ts: insights written by insertInsight are returned by GET /api/insights?conversationId= newest-first with html to the owner; non-owner 404; unauthenticated 401; missing conversationId 400 — the real read-back consumer (principle 13)."
+    },
+    {
+      "id": "TEST-038",
+      "result": "PASS",
+      "command": "npm run test:e2e",
+      "real_entry": true,
+      "evidence": "tests/e2e/skills-display.spec.ts + tests/skills-route.test.ts: POST /api/skills stores a folder raw, generates SKILL.md, registers it (GET lists it), 409 on a duplicate slug, drops path-traversal entries; a skill turn producing ```html surfaces the insight; a follow-up unrelated send does not re-trigger the skill (per-message); a skill turn with no HTML shows 「Plain reply, no HTML.」 in the transcript."
+    },
+    {
+      "id": "TEST-039",
+      "result": "PASS",
+      "command": "npm run test:display",
+      "real_entry": true,
+      "evidence": "tests/display.test.ts: getDisplayState returns {kind:'home',refId:null} with no row; setDisplayState round-trips; the table keeps exactly one row across repeated writes (dumpDisplayStateRowsForTest length 1); updated_at refreshes each write (DEC-017 ①)."
+    },
+    {
+      "id": "TEST-040",
+      "result": "PASS",
+      "command": "npm run test:visual",
+      "real_entry": true,
+      "evidence": "scripts/ui-contract.mjs LB-09 (static): page.tsx renders <DisplayScreen> and no <header>; .display-screen is position:fixed at z-index < 20 (below chat 20 / menu 30); .display-screen__notice exists with no close button and DisplayScreen handles no key event (non-dismissible, CP-7); the insight <iframe> has no sandbox attribute (DEC-015, deliberate) and DisplayScreen refetches on jarvis:display-changed only (no setInterval/EventSource/WebSocket)."
+    },
+    {
+      "id": "TEST-041",
+      "result": "PASS",
+      "command": "npm run test:e2e",
+      "real_entry": true,
+      "evidence": "tests/e2e/skills-display.spec.ts (real browser): home renders a full-screen .display-screen--home with the title; a skill turn's ```html renders in .display-screen__frame behind a visible .display-screen__notice; Escape does not dismiss the notice; the insight survives page.reload(); 「显示首页」 routes the screen back to the title view and that also survives a reload; the ☰ menu opens on top of the display screen."
+    },
+    {
+      "id": "TEST-042",
+      "result": "PASS",
+      "command": "npm run test:skills && npm run test:display",
+      "real_entry": true,
+      "evidence": "tests/skills.test.ts routeTurn display field: {\"display\":\"home\"} -> \"home\"; missing/garbage -> null (fail-open); skill and display are independent. tests/display.test.ts: showInsight / showHome move display_state and GET /api/display reflects it with the joined html."
     }
   ],
   "executed_commands": [
@@ -322,6 +395,10 @@
       "id": "config-check-single-admin-eval-order",
       "status": "known, user decided not to fix (2026-09-09)",
       "detail": "scripts/check-config.mjs computes SINGLE_ADMIN = isRealValue(process.env.JARVIS_TEST_USER_ID) at module top, before loadEnv() reads .env.local. So when JARVIS_TEST_USER_ID lives in .env.local (not the shell), `npm run config:check` still reports GOOGLE_CLIENT_ID/SECRET as 缺少 instead of 暂缓 and exits 1. TEST-023 passes because it injects JARVIS_TEST_USER_ID into the child process env directly. Cosmetic only — the dev server's JARVIS_TEST_USER_ID bypass (auth-guard.ts, read per-request after Next loads .env.local) is unaffected. Fix would be: move the SINGLE_ADMIN computation after loadEnv() + add a TEST-023 case that goes through .env.local."
+    },
+    {
+      "id": "skill-html-unsandboxed",
+      "detail": "CR-20260909-skills / CR-20260909-display-screen (DEC-015): skill-generated HTML is rendered in an <iframe srcdoc> WITHOUT a sandbox attribute. Same-origin scripts in that HTML can read localStorage and call same-origin APIs (e.g. DELETE /api/providers/[id]). The user (2026-09-09, msg 54-1) accepted this risk for the local single-admin form; the only mitigation is the non-dismissible notice bar (REQ-F-025 ②). Sandboxing the iframe is a mandatory exit obligation for a future CR."
     }
   ]
 }

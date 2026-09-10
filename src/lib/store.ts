@@ -35,6 +35,34 @@ export type MessageRecord = {
   createdAt: string;
 };
 
+/** A registered skill folder (CR-20260909-skills). */
+export type SkillRecord = {
+  id: string;
+  name: string;
+  description: string;
+  dirPath: string;
+  createdAt: string;
+};
+
+/** A captured skill HTML output (CR-20260909-skills). */
+export type InsightRecord = {
+  id: string;
+  conversationId: string;
+  kind: string;
+  html: string;
+  createdAt: string;
+};
+
+/**
+ * The single global pointer for the dynamic display screen (CR-20260909-display-screen, DEC-017).
+ * `kind` is an extension point: F2 renders "home" / "insight", anything else falls back to home.
+ */
+export type DisplayStateRecord = {
+  kind: string;
+  refId: string | null;
+  updatedAt: string;
+};
+
 /** Thrown when a stored provider secret exists but cannot be decrypted (usually a changed JARVIS_SECRET_KEY). */
 export class ProviderSecretError extends Error {
   readonly providerId: string;
@@ -43,6 +71,17 @@ export class ProviderSecretError extends Error {
     super("Stored provider secret could not be decrypted.");
     this.name = "ProviderSecretError";
     this.providerId = providerId;
+  }
+}
+
+/** Thrown by `insertSkill` when the user already has a skill with the same name (CR-20260909-skills). */
+export class SkillNameConflictError extends Error {
+  readonly skillName: string;
+
+  constructor(skillName: string) {
+    super(`A skill named "${skillName}" is already registered.`);
+    this.name = "SkillNameConflictError";
+    this.skillName = skillName;
   }
 }
 
@@ -69,6 +108,19 @@ export type Store = {
   addMessage(conversationId: string, role: "user" | "assistant", content: string, status: string): string;
   listRecentConversations(userId: string): ConversationSummary[];
   listMessages(conversationId: string): MessageRecord[];
+  // --- Skills (CR-20260909-skills) ---
+  /** Register a skill folder. Throws if the user already has a skill with this name. */
+  insertSkill(userId: string, input: { name: string; description: string; dirPath: string }): SkillRecord;
+  listSkills(userId: string): SkillRecord[];
+  getSkill(userId: string, skillId: string): SkillRecord | null;
+  // --- Insights (CR-20260909-skills) ---
+  insertInsight(input: { conversationId: string; kind: string; html: string }): InsightRecord;
+  listInsights(conversationId: string): InsightRecord[];
+  getInsight(insightId: string): InsightRecord | null;
+  // --- Display state (CR-20260909-display-screen, DEC-017) ---
+  getDisplayState(): DisplayStateRecord;
+  setDisplayState(next: { kind: string; refId?: string | null }): void;
+  dumpDisplayStateRowsForTest(): DisplayStateRecord[];
   close(): void;
 };
 
@@ -385,6 +437,88 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
         .all(conversationId) as MessageRecord[];
     },
 
+    insertSkill(userId, input) {
+      ensureUserRecord(db, userId);
+      const clash = db
+        .prepare("SELECT id FROM skills WHERE user_id = ? AND name = ?")
+        .get(userId, input.name) as { id: string } | undefined;
+      if (clash) {
+        throw new SkillNameConflictError(input.name);
+      }
+      const id = randomUUID();
+      const createdAt = new Date().toISOString();
+      db.prepare(
+        "INSERT INTO skills (id, user_id, name, description, dir_path, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+      ).run(id, userId, input.name, input.description, input.dirPath, createdAt);
+      return { id, name: input.name, description: input.description, dirPath: input.dirPath, createdAt };
+    },
+
+    listSkills(userId) {
+      return db
+        .prepare(
+          `SELECT id, name, description, dir_path AS dirPath, created_at AS createdAt
+             FROM skills WHERE user_id = ? ORDER BY created_at ASC`
+        )
+        .all(userId) as SkillRecord[];
+    },
+
+    getSkill(userId, skillId) {
+      const row = db
+        .prepare(
+          `SELECT id, name, description, dir_path AS dirPath, created_at AS createdAt
+             FROM skills WHERE user_id = ? AND id = ? LIMIT 1`
+        )
+        .get(userId, skillId) as SkillRecord | undefined;
+      return row ?? null;
+    },
+
+    insertInsight(input) {
+      const id = randomUUID();
+      const createdAt = new Date().toISOString();
+      db.prepare(
+        "INSERT INTO insights (id, conversation_id, kind, html, created_at) VALUES (?, ?, ?, ?, ?)"
+      ).run(id, input.conversationId, input.kind, input.html, createdAt);
+      return { id, conversationId: input.conversationId, kind: input.kind, html: input.html, createdAt };
+    },
+
+    listInsights(conversationId) {
+      return db
+        .prepare(
+          `SELECT id, conversation_id AS conversationId, kind, html, created_at AS createdAt
+             FROM insights WHERE conversation_id = ? ORDER BY created_at DESC, rowid DESC`
+        )
+        .all(conversationId) as InsightRecord[];
+    },
+
+    getInsight(insightId) {
+      const row = db
+        .prepare(
+          `SELECT id, conversation_id AS conversationId, kind, html, created_at AS createdAt
+             FROM insights WHERE id = ? LIMIT 1`
+        )
+        .get(insightId) as InsightRecord | undefined;
+      return row ?? null;
+    },
+
+    getDisplayState() {
+      const row = db
+        .prepare("SELECT kind, ref_id AS refId, updated_at AS updatedAt FROM display_state WHERE id = 'singleton'")
+        .get() as DisplayStateRecord | undefined;
+      return row ?? { kind: "home", refId: null, updatedAt: new Date(0).toISOString() };
+    },
+
+    setDisplayState(next) {
+      db.prepare(
+        "INSERT OR REPLACE INTO display_state (id, kind, ref_id, updated_at) VALUES ('singleton', ?, ?, ?)"
+      ).run(next.kind, next.refId ?? null, new Date().toISOString());
+    },
+
+    dumpDisplayStateRowsForTest() {
+      return db
+        .prepare("SELECT kind, ref_id AS refId, updated_at AS updatedAt FROM display_state")
+        .all() as DisplayStateRecord[];
+    },
+
     close() {
       db.close();
     },
@@ -461,8 +595,35 @@ function migrate(db: DatabaseSync): void {
       FOREIGN KEY (conversation_id) REFERENCES conversations(id)
     );
 
+    CREATE TABLE IF NOT EXISTS skills (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL,
+      dir_path TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      UNIQUE (user_id, name)
+    );
+
+    CREATE TABLE IF NOT EXISTS insights (
+      id TEXT PRIMARY KEY,
+      conversation_id TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      html TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS display_state (
+      id TEXT PRIMARY KEY,
+      kind TEXT NOT NULL,
+      ref_id TEXT,
+      updated_at TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_providers_user ON providers(user_id);
     CREATE INDEX IF NOT EXISTS idx_conversations_user ON conversations(user_id, updated_at DESC);
     CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_skills_user ON skills(user_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_insights_conversation ON insights(conversation_id, created_at DESC);
   `);
 }
