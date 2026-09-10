@@ -1,0 +1,11 @@
+{"round":1,"gate":"R1","role":"产品","verdict":"CONDITIONAL","conditions":["确认既有深色主题是保留还是退役；未经明确确认，不得删除 REQ-F-014 的深色切换能力","全界面范围仅含已批准前端界面，P3 技能上传不构成本 CR 验收"],"evidence":["用户 INPUT-2026-09-10-005","REQ-F-014","REQ-F-006"]}
+{"round":1,"gate":"R1","role":"架构","verdict":"CONDITIONAL","conditions":["P2 锁定 shadcn/ui、Tailwind、HSL Token 的版本与依赖清单","定义 data-theme、SSR/hydration 与主题持久化兼容策略","不改变 API、数据库、Provider 授权或数据协议"],"evidence":["src/app/globals.css","package.json","docs/UI_STANDARD.md"]}
+{"round":1,"gate":"R1","role":"模块","verdict":"CONDITIONAL","conditions":["隔离当前 P3 未验收的 globals.css、FloatingChat、首页和技能列表改动","后续任务按基础设施、primitive、布局、菜单/弹窗、聊天/设置适配拆分并可回滚","替代的旧样式在同一受控变更清理"],"evidence":["git status --short","CR-20260910-skill-intake","AI_STANDARD 原则 16"]}
+{"round":1,"gate":"R1","role":"测试","verdict":"CONDITIONAL","conditions":["主题决策后冻结亮暗测试矩阵","每项保留行为有独立组件或真实入口断言","P3 TEST-043..046 不得成为本 CR 通过证据"],"evidence":["docs/UI_STANDARD.md","REQ-F-006","REQ-F-014"]}
+{"round":1,"gate":"R1","outcome":"四角色无 REJECTED；均为 CONDITIONAL。唯一需用户裁决的产品条件是既有深色主题保留或退役；其余条件进入 P2 约束，等待 R1 人工终裁。"}
+{"round":2,"gate":"R1","actor":"产品 owner（人工终裁记录）","resolution":{"深色主题":"用户 2026-09-10 明确“保留”；浅色紫色是默认主题，不删除 REQ-F-014。","架构约束":"保留为 P2 架构交付项，不改变 API、数据、Provider 授权边界。","模块约束":"P3 与 L3 隔离、任务可回滚拆分，保留为 P2/R3 约束。","测试约束":"冻结浅色紫色默认与深色两套主题矩阵，P3 测试不作为本 CR 证据。"}}
+{"round":2,"gate":"R1","role":"产品","verdict":"APPROVED","note":"深色主题保留已明确，REQ-NF-006 ⑥已锁定。"}
+{"round":2,"gate":"R1","role":"架构","verdict":"APPROVED","note":"技术细节作为 P2 约束，无未决产品边界。"}
+{"round":2,"gate":"R1","role":"模块","verdict":"APPROVED","note":"P3 排除范围与隔离要求明确，任务拆分留待 R3。"}
+{"round":2,"gate":"R1","role":"测试","verdict":"APPROVED","note":"两套主题测试范围已冻结，真实入口要求明确。"}
+{"round":2,"gate":"R1","outcome":"四角色全部 APPROVED；用户完成 R1 人工终裁。允许进入 P2，不代表代码实施授权。"}
