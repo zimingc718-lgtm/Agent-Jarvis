@@ -236,8 +236,52 @@ textarea {
 
 /* Each launcher / control reads as a full-width menu row. */
 .corner-menu__panel > button,
-.corner-menu__panel > .theme-toggle {
+.corner-menu__panel > .theme-toggle,
+.corner-menu__panel > .skill-list {
   width: 100%;
+}
+
+/* REQ-F-028: read-only list of what the system currently knows how to do. */
+.skill-list {
+  display: grid;
+  gap: 0.25rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.skill-list__title {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.skill-list__empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.skill-list__items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.skill-list__item {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.skill-list__name {
+  font-size: 0.9rem;
+}
+
+.skill-list__description {
+  font-size: 0.85rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
 }
 
 .corner-menu__panel > button {
@@ -481,9 +525,24 @@ textarea {
   }
 }
 
+/* REQ-F-020 ①: explicit skill intake next to the drop target. */
+.floating-chat__upload {
+  padding: 0.25rem 0.5rem;
+  min-height: 1.75rem;
+  font-size: 0.85rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.floating-chat__upload:first-of-type {
+  margin-left: auto;
+}
+
 /* REQ-F-019: collapse / expand the transcript. Real <button>, ≥ 24px hit area. */
 .floating-chat__toggle {
-  margin-left: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;

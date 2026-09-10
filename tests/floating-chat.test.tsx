@@ -2,6 +2,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  classifyDrop,
+  describeExcluded,
   FloatingChat,
   PreStreamError,
   streamChatDeltas,
@@ -462,5 +464,145 @@ describe("FloatingChat", () => {
         void _;
       }
     }).rejects.toBeInstanceOf(PreStreamError);
+  });
+  // CR-20260910-skill-intake — TEST-044: skill intake has three entry points and
+  // every outcome, including refusal, is visible.
+  describe("skill intake (TEST-044)", () => {
+    function dataTransferWith(items: Array<{ dir?: string; file?: File }>): DataTransfer {
+      return {
+        types: ["Files"],
+        items: items.map((item) => ({
+          kind: "file",
+          webkitGetAsEntry: () => (item.dir ? { isDirectory: true, isFile: false, name: item.dir } : null),
+          getAsFile: () => item.file ?? null,
+        })),
+      } as unknown as DataTransfer;
+    }
+
+    it("① a drop that is neither a folder nor a zip is refused OUT LOUD, and the browser default is stopped", async () => {
+      render(<FloatingChat hasEnabledProvider probeProviders={readyProbe} />);
+      const panel = screen.getByLabelText("Agent-Jarvis chat");
+
+      const dataTransfer = dataTransferWith([{ file: new File(["x"], "notes.pdf") }]);
+      // fireEvent reports whether preventDefault was called: it returns false when it was.
+      const notPrevented = fireEvent.drop(panel, { dataTransfer });
+      expect(notPrevented).toBe(false); // ← the P6 root cause: the browser used to take over
+
+      await waitFor(() =>
+        expect(screen.getByText(/只能接收技能文件夹或 zip 压缩包/)).toBeInTheDocument()
+      );
+      expect(screen.getByText(/notes\.pdf/)).toBeInTheDocument();
+    });
+
+    it("② dropping a zip posts it to /api/skills as `archive`", async () => {
+      const fetchMock = vi.fn(
+        async () =>
+          new Response(JSON.stringify({ name: "reporter", description: "d", docGenerated: true }), { status: 201 })
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      render(<FloatingChat hasEnabledProvider probeProviders={readyProbe} />);
+      const panel = screen.getByLabelText("Agent-Jarvis chat");
+
+      const zip = new File([new Uint8Array([1, 2, 3])], "reporter.zip", { type: "application/zip" });
+      fireEvent.drop(panel, { dataTransfer: dataTransferWith([{ file: zip }]) });
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+      const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+      expect(url).toBe("/api/skills");
+      expect((init.body as FormData).get("archive")).toBeInstanceOf(File);
+      await waitFor(() => expect(screen.getByText(/已注册技能：reporter/)).toBeInTheDocument());
+    });
+
+    it("③ picking a zip through the upload button takes the same submit path", async () => {
+      const fetchMock = vi.fn(
+        async () =>
+          new Response(JSON.stringify({ name: "picked", description: "d", docGenerated: true }), { status: 201 })
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      render(<FloatingChat hasEnabledProvider probeProviders={readyProbe} />);
+
+      expect(screen.getByRole("button", { name: "上传文件夹" })).toBeInTheDocument();
+      const input = screen.getByLabelText("选择技能 zip 压缩包");
+      fireEvent.change(input, { target: { files: [new File(["z"], "picked.zip")] } });
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+      const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+      expect((init.body as FormData).get("archive")).toBeInstanceOf(File);
+      // ⑤ Same receipt wording as the drop path — one shared submit implementation.
+      await waitFor(() => expect(screen.getByText(/已注册技能：picked/)).toBeInTheDocument());
+    });
+
+    it("④ a registration receipt that excludes files says so", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(
+          async () =>
+            new Response(
+              JSON.stringify({
+                name: "s",
+                description: "d",
+                docGenerated: true,
+                excluded: [{ path: "logo.png", reason: "binary" }],
+              }),
+              { status: 201 }
+            )
+        )
+      );
+      render(<FloatingChat hasEnabledProvider probeProviders={readyProbe} />);
+      const input = screen.getByLabelText("选择技能 zip 压缩包");
+      fireEvent.change(input, { target: { files: [new File(["z"], "s.zip")] } });
+
+      await waitFor(() => expect(screen.getByText(/未纳入技能内容/)).toBeInTheDocument());
+      expect(screen.getByText(/logo\.png（二进制文件）/)).toBeInTheDocument();
+    });
+
+    it("classifyDrop distinguishes folder / zip / neither", () => {
+      expect(classifyDrop(dataTransferWith([{ dir: "skill" }]))).toMatchObject({ kind: "folder", name: "skill" });
+      expect(classifyDrop(dataTransferWith([{ file: new File(["z"], "a.zip") }]))).toMatchObject({ kind: "archive" });
+      expect(classifyDrop(dataTransferWith([{ file: new File(["z"], "a.pdf") }]))).toMatchObject({ kind: "none" });
+      expect(classifyDrop(dataTransferWith([{ dir: "a" }, { dir: "b" }]))).toMatchObject({ kind: "none" });
+    });
+
+    it("describeExcluded names the reason and folds a long list", () => {
+      expect(describeExcluded([{ path: "a.rs", reason: "not-injected" }])).toContain("不进入对话上下文");
+      const many = Array.from({ length: 7 }, (_, i) => ({ path: `f${i}`, reason: "binary" }));
+      expect(describeExcluded(many)).toContain("等 7 个文件");
+    });
+  });
+
+  // CR-20260910-skill-intake — TEST-046 ④⑤: which skill a turn used.
+  it("announces the skill a turn used, and stays quiet when none was used (TEST-046 ④⑤)", async () => {
+    const { unmount } = render(
+      <FloatingChat
+        hasEnabledProvider
+        probeProviders={readyProbe}
+        onStream={async function* () {
+          yield { type: "start", conversationId: "c1" };
+          yield { type: "delta", text: "answer" };
+          yield { type: "done" };
+          yield { type: "skill", name: "reporter" };
+        }}
+      />
+    );
+    fireEvent.change(screen.getByPlaceholderText("Ask Agent-Jarvis"), { target: { value: "go" } });
+    fireEvent.submit(screen.getByRole("button", { name: "发送" }).closest("form")!);
+    await waitFor(() => expect(screen.getByText("本轮使用技能：reporter")).toBeInTheDocument());
+    unmount();
+
+    render(
+      <FloatingChat
+        hasEnabledProvider
+        probeProviders={readyProbe}
+        onStream={async function* () {
+          yield { type: "start", conversationId: "c2" };
+          yield { type: "delta", text: "plain" };
+          yield { type: "done" };
+        }}
+      />
+    );
+    fireEvent.change(screen.getByPlaceholderText("Ask Agent-Jarvis"), { target: { value: "go" } });
+    fireEvent.submit(screen.getByRole("button", { name: "发送" }).closest("form")!);
+    await waitFor(() => expect(screen.getByText("plain")).toBeInTheDocument());
+    expect(screen.queryByText(/本轮使用技能/)).not.toBeInTheDocument();
   });
 });

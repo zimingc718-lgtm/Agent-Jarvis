@@ -2,7 +2,7 @@
 
 - 级别: L2（扩展已批准需求 REQ-F-020 的输入形态 + 新增一个处理不可信二进制输入的自写解析器；无新增运行依赖、无部署/信任模型变更）
 - 提出人: user（P6 运行反馈：「拖skill压缩包到对话框，没有上传反应」→「skill上传成功了，但对话模型读取不了」→ 定位后决策「1. 一起做；2. c。3. 自写。4. 顺便放宽。」）
-- 状态: R1 人工终裁完成（用户 2026-09-10「确认」）；P2 完成、R2/R3/R4 四角色全 APPROVED；P3 待实现
+- 状态: CLOSED（R1 人工终裁 + R2/R3/R4 四角色全 APPROVED + P3/P4 完成：TASK-040..043 DONE、TEST-043..046 PASS、5 条出口义务清零、本 CR 相关回归全绿）。注：仓库级 `gate g3` 此刻为红，**原因在 CR-20260910-ui-foundation**（其 TEST-047..050 已过 R4 但未实施），与本 CR 无关 —— 见下「g3 跨 CR 阻塞」。
 - 评审模型: R1–R4 + G3/G3.5/G4
 - 影响需求: **重写 REQ-F-020 ①⑤**（拖文件夹 → 文件夹 **或 zip** + 显式上传入口；白名单放宽 + 被排除文件须回执）；新增 **REQ-F-028**（技能可见性）、**REQ-NF-005**（不可信归档处理边界）
 - 影响模块: **新增 MOD-ZIP**（`src/lib/zip.ts`，纯函数解析器）、MOD-SKILLS（消费解析结果 + 白名单）、MOD-CHAT-UI（上传入口 + 非法拖放提示 + 「本轮使用技能」提示）、MOD-SETTINGS-UI（☰ 菜单内技能列表）、MOD-CHAT（SSE 新增 `skill` 尾事件）
@@ -143,3 +143,48 @@ DB skills 表      → 0 行
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 https://claude.ai/code/session_01Ckbi5GYRRH4HyTHLEWnrtZ
+
+## P3/P4 实施记录（2026-09-10）
+
+### 落地清单
+
+| 任务 | 落点 |
+|---|---|
+| TASK-040 | **新增 `src/lib/zip.ts`**（MOD-ZIP）：`readZipEntries` / `deriveFolderName` / `ZipError` / `DEFAULT_ZIP_LIMITS`。尾部 65557 字节内反向搜 EOCD → 遍历 Central Directory → 按 `localHeaderOffset` 读 Local File Header 定位数据 → method `0` 切片 / method `8` 走 `inflateRawSync`。每次 `readUInt*` 前经 `ensure()` 边界校验 |
+| TASK-041 | `FloatingChat`：`submitSkillUpload(input)` 单一提交路径；`handleDrop` **首行 `preventDefault`** 后再 `classifyDrop` 分类，三态（folder / archive / none）各有出口，none 走系统消息说明原因；两个隐藏 `<input>`（`webkitdirectory` / `accept=".zip"`，各带 `aria-label`）+ 两个真实 `<button>`；新增导出的纯函数 `classifyDrop` / `describeExcluded` 便于单测 |
+| TASK-042 | `POST /api/skills` 增 `archive` 分支（`readZipEntries` → `deriveFolderName` → `UploadedFile[]` → 既有 `registerSkill`）；`ZipError` → 400 且零产物；`SKILL_TEXT_EXTENSIONS` 11 → 16；回执新增 `excluded: [{path, reason}]` 四类 |
+| TASK-043 | **新增 `src/components/SkillList.tsx`**（只读，读 `GET /api/skills`，监听 `SKILLS_CHANGED_EVENT` 重取）；`page.tsx` 经 `CornerMenu` `children` 挂载并 SSR 注水 `initialSkills`；`chat/stream/route.ts` `onFinal` 加 `{type:"skill", name}` 尾事件；`FloatingChat` 消费后插「本轮使用技能：X」；`display-events.ts` → **`ui-events.ts`**（旧文件已删，原则 16） |
+
+### P3 设计细化（相对 P2 的差异，已回写各层说明书）
+
+1. **`maxRatio` 由 100 上调到 2000**。P2 定的 100 在实现时被 TEST-043 ⑤ 证伪：deflate 对重复文本轻易达到 1000:1，一个 200 KB 的普通重复文本技能文件就会被误杀。真正的内存边界是 `maxTotalBytes`（50 MiB）与 `maxEntryBytes`（5 MiB）—— 二者在**解压前**用 Central Directory 声明的大小判定，所以分配量本就有界；`maxRatio` 只作病态归档的兜底。四项上限的结构不变，REQ-NF-005 ② 仍成立。
+2. **「不支持的压缩方法」与「加密」分开处置**（P2 已定，实现确认）：前者逐条进 `skipped`（合法但不支持，非恶意），后者整包拒（读不出任何有意义内容）。
+3. **`inflateRawSync` 加 `maxOutputLength: uncompSize + 1`**，并在解压后复核实际长度 —— 防止「声明小、实际大」的头部撒谎。P2 未写到这一层。
+4. **`smoke.mjs` 端口改为可回退**：固定 3210 在本机被无关进程占为临时端口导致 `EACCES`，整轮 smoke 挂掉。新增 `pickPort()`：显式配置优先，否则试首选端口、被占则由系统分配。属测试基建健壮性修复，不改产品行为。
+5. **两个隐藏 `<input>` 补 `aria-label`** —— `ui-contract` SE-05 要求每个 input 有可访问名，隐藏与否不影响该静态规则。
+
+### 出口义务清零
+
+| # | 条件 | 状态 |
+|---|---|---|
+| ① | `src/lib/zip.ts` 不得 import `node:fs` / `store` | ✅ `tests/zip.test.ts` 末条源码守卫，grep 为空 |
+| ② | 被拒归档 `.data/skills/` 零产物 | ✅ `tests/skills-route.test.ts` ③ 断言 `SKILLS_ROOT` 为空 |
+| ③ | `handleDrop` 首行 `preventDefault` | ✅ `tests/floating-chat.test.tsx` ① 用 `fireEvent.drop` 返回值断言（返回 `false` 即已阻止） |
+| ④ | `display-events.ts` 更名后旧文件必须删除 | ✅ `git mv` 完成，仓库内无该文件，两处 import 已同步 |
+| ⑤ | TEST-034..042 全部重跑通过 | ✅ 194 单测 + 10 e2e 全绿 |
+
+### 验证
+
+`npm test` **194**（新增 `zip` 19、`skill-list` 5、`floating-chat` +7、`skills-route` +4）· `ui-contract` 静态 **49/0/0** · `npm run test:smoke` OK · `npm run test:e2e` **10 PASS**（含真机走「上传 zip」按钮 → 文件选择器 → 注册 → ☰ 技能列表免刷新更新）· `npm run build:verify` OK · `npx tsc --noEmit` OK。**零新增运行依赖**（`package.json` `dependencies` 未变）。
+
+### g3 跨 CR 阻塞（如实记录）
+
+`gate g3` 对**测试说明书里全部 required TEST** 求交集判定，因此任何一个「R4 已过、P3 未做」的在途 CR 都会让 g3 对**所有** CR 变红。本 CR 收口时：
+
+```
+gate g3 → FAIL missing PASS evidence for: TEST-047, TEST-048, TEST-049, TEST-050
+```
+
+这四条属 `REQ-NF-006` / CR-20260910-ui-foundation（并行会话，状态 APPROVED 未实施）。本 CR 自身的 TEST-043..046 已 PASS，TEST-034..042 回归全绿。
+
+这不是本 CR 的缺陷，但**是流程本身的一个摩擦点**：g3 没有按 CR 切分的粒度，导致「别人的 CR 没做完」会阻塞「我的 CR 收口」。已登记为流程优化候选（见后续流程 CR）。

@@ -66,6 +66,40 @@ function safeJson(raw: string): { messages?: Array<{ role: string; content: stri
   }
 }
 
+/** A minimal stored (method 0) zip, so the e2e exercises the real archive path. */
+function storedZip(files: Array<{ name: string; body: string }>): Buffer {
+  const locals: Buffer[] = [];
+  const centrals: Buffer[] = [];
+  let offset = 0;
+  for (const file of files) {
+    const data = Buffer.from(file.body, "utf8");
+    const nameBuf = Buffer.from(file.name, "utf8");
+    const lfh = Buffer.alloc(30);
+    lfh.writeUInt32LE(0x04034b50, 0);
+    lfh.writeUInt32LE(data.length, 18);
+    lfh.writeUInt32LE(data.length, 22);
+    lfh.writeUInt16LE(nameBuf.length, 26);
+    locals.push(lfh, nameBuf, data);
+    const cd = Buffer.alloc(46);
+    cd.writeUInt32LE(0x02014b50, 0);
+    cd.writeUInt32LE(data.length, 20);
+    cd.writeUInt32LE(data.length, 24);
+    cd.writeUInt16LE(nameBuf.length, 28);
+    cd.writeUInt32LE(offset, 42);
+    centrals.push(cd, nameBuf);
+    offset += lfh.length + nameBuf.length + data.length;
+  }
+  const localPart = Buffer.concat(locals);
+  const cdPart = Buffer.concat(centrals);
+  const eocd = Buffer.alloc(22);
+  eocd.writeUInt32LE(0x06054b50, 0);
+  eocd.writeUInt16LE(files.length, 8);
+  eocd.writeUInt16LE(files.length, 10);
+  eocd.writeUInt32LE(cdPart.length, 12);
+  eocd.writeUInt32LE(localPart.length, 16);
+  return Buffer.concat([localPart, cdPart, eocd]);
+}
+
 /** The e2e DB is shared by every spec file; this one must be the only provider while it runs. */
 async function removeAllProviders(page: Page) {
   const existing = await (await page.request.get("/api/providers")).json();
@@ -103,14 +137,22 @@ test("skill turn surfaces an insight on the display screen; 显示首页 returns
 }) => {
   await configureProvider(page);
 
-  // Register a skill through the API (the drop handler posts the same multipart).
-  const registered = await page.request.post("/api/skills", {
-    multipart: {
-      folderName: "Reporter Skill",
-      file: { name: "SKILL-notes.md", mimeType: "text/plain", buffer: Buffer.from("how to write reports") },
-    },
+  // CR-20260910-skill-intake: register from a **zip**, through the real upload
+  // control — the path that silently did nothing before this CR.
+  await page.goto("/");
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: "上传 zip" }).click();
+  await (await chooser).setFiles({
+    name: "Reporter Skill.zip",
+    mimeType: "application/zip",
+    buffer: storedZip([{ name: "reporter-skill/SKILL-notes.md", body: "how to write reports" }]),
   });
-  expect(registered.status()).toBe(201);
+  await expect(page.getByText(/已注册技能：/)).toBeVisible();
+
+  // REQ-F-028 ③: the ☰ menu's list picks it up without a reload.
+  await page.getByRole("button", { name: "打开菜单" }).click();
+  await expect(page.getByRole("region", { name: "已注册技能" })).toContainText("reporter");
+  await page.keyboard.press("Escape");
 
   await page.goto("/");
   // Home = full-screen display screen, default title view.

@@ -13,7 +13,7 @@
     "governance:g1": "python tools/governance.py gate g1",
     "governance:g2": "python tools/governance.py gate g2",
     "test:auth": "vitest run tests/auth.test.ts",
-    "test:auth-ui": "vitest run tests/account-dialog.test.tsx tests/home-dialogs.test.tsx tests/floating-chat.test.tsx tests/settings-models.test.tsx",
+    "test:auth-ui": "vitest run tests/account-dialog.test.tsx tests/home-dialogs.test.tsx tests/floating-chat.test.tsx tests/settings-models.test.tsx tests/skill-list.test.tsx",
     "test:theme": "vitest run tests/theme-toggle.test.tsx",
     "test:markdown": "vitest run tests/markdown.test.tsx",
     "test:crypto": "vitest run tests/crypto.test.ts",
@@ -43,7 +43,8 @@
     "build:verify": "node -e \"process.env.NEXT_DIST_DIR='.next-verify';require('child_process').execSync('next build',{stdio:'inherit'})\"",
     "clean": "node -e \"const fs=require('fs');for(const d of ['.next','.next-smoke','.next-e2e','.next-verify'])fs.rmSync(d,{recursive:true,force:true})\"",
     "test:skills": "vitest run tests/skills.test.ts tests/skills-route.test.ts",
-    "test:display": "vitest run tests/display.test.ts"
+    "test:display": "vitest run tests/display.test.ts",
+    "test:zip": "vitest run tests/zip.test.ts"
   },
   "dependencies": {
     "next": "^15.5.2",

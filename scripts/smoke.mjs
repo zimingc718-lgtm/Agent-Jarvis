@@ -3,8 +3,11 @@ import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { createServer } from "node:http";
 import { join } from "node:path";
 
-const appPort = Number(process.env.JARVIS_SMOKE_PORT ?? 3210);
-const mockPort = Number(process.env.JARVIS_SMOKE_MODEL_PORT ?? 3211);
+// Fixed ports make the harness flaky: any unrelated process can hold 3210 as an
+// ephemeral port and the whole smoke run dies with EACCES/EADDRINUSE. Prefer the
+// configured port, fall back to whatever the OS hands out.
+const appPort = await pickPort(process.env.JARVIS_SMOKE_PORT, 3210);
+const mockPort = await pickPort(process.env.JARVIS_SMOKE_MODEL_PORT, 3211, appPort);
 const root = process.cwd();
 const smokeRoot = join(root, ".data");
 mkdirSync(smokeRoot, { recursive: true });
@@ -248,6 +251,36 @@ try {
 if (smokePassed) {
   console.log("OK smoke passed");
   process.exit(0);
+}
+
+/**
+ * Resolve a usable port: an explicitly configured one is honoured as-is, otherwise
+ * `preferred` is probed and the OS picks a free port when it is taken.
+ */
+async function pickPort(configured, preferred, ...avoid) {
+  if (configured) {
+    return Number(configured);
+  }
+  for (const candidate of [preferred, 0]) {
+    if (avoid.includes(candidate)) {
+      continue;
+    }
+    const probe = createServer();
+    try {
+      await new Promise((resolve, reject) => {
+        probe.once("error", reject);
+        probe.listen(candidate, "127.0.0.1", () => resolve());
+      });
+      const { port } = probe.address();
+      await new Promise((resolve) => probe.close(() => resolve()));
+      if (!avoid.includes(port)) {
+        return port;
+      }
+    } catch {
+      await new Promise((resolve) => probe.close(() => resolve()));
+    }
+  }
+  throw new Error("could not find a free port for the smoke run");
 }
 
 function listen(server, port) {

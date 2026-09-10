@@ -69,6 +69,10 @@ export async function POST(request: Request) {
       skill: skillSegment,
       onFinal: (finalText, status, activeConversationId) => {
         const tail: ChatDelta[] = [];
+        // CR-20260910-skill-intake: tell the user which skill this turn used (REQ-F-028 ②).
+        if (route.skill) {
+          tail.push({ type: "skill", name: route.skill });
+        }
         // CR-20260909-display-screen: "show the home screen" is known up front.
         if (route.display === "home") {
           showHome();

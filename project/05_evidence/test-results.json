@@ -27,6 +27,11 @@
       "id": "CR-20260909-display-screen",
       "status": "P1-P4 complete",
       "detail": "F2 dynamic display screen: MOD-DISPLAY (DisplayScreen.tsx + src/lib/display.ts) — full-screen base layer, kind home/insight + fallback, non-dismissible notice, unsandboxed <iframe srcdoc> (DEC-015); display_state single global row (DEC-017); GET /api/display; routeTurn display field + route-layer showHome/showInsight; jarvis:display-changed event (FloatingChat dispatches, DisplayScreen refetches — no polling/SSE); page.tsx rewritten (no <header>, DisplayScreen is the base). TASK-036/037/038/039 DONE. TEST-039..042 PASS + TEST-021/032 regression. review r1|r2|r3|r4 PASS (R1 conditionals closed to APPROVED in one feedback round)."
+    },
+    {
+      "id": "CR-20260910-skill-intake",
+      "status": "P1-P4 complete",
+      "detail": "P6 defect + zip intake. New MOD-ZIP (src/lib/zip.ts, pure, bounded, zero-dependency: hand-written EOCD/Central Directory + zlib.inflateRawSync, DEC-018/REQ-NF-005). POST /api/skills gains an `archive` branch and an `excluded` receipt; SKILL_TEXT_EXTENSIONS 11 -> 16. FloatingChat: three intake paths collapse into one submitSkillUpload, handleDrop preventDefaults on its first line (root-cause fix), two hidden <input>s plus two real buttons. New SkillList in the ☰ menu + {type:'skill'} SSE tail event + display-events.ts renamed ui-events.ts. TASK-040..043 DONE; TEST-043..046 PASS; TEST-034..042 regression green."
     }
   ],
   "tests": [
@@ -315,6 +320,34 @@
       "command": "npm run test:skills && npm run test:display",
       "real_entry": true,
       "evidence": "tests/skills.test.ts routeTurn display field: {\"display\":\"home\"} -> \"home\"; missing/garbage -> null (fail-open); skill and display are independent. tests/display.test.ts: showInsight / showHome move display_state and GET /api/display reflects it with the joined html."
+    },
+    {
+      "id": "TEST-043",
+      "result": "PASS",
+      "command": "npm run test:zip",
+      "real_entry": true,
+      "evidence": "tests/zip.test.ts (19): hand-built ZIP bytes cover store/deflate/nested/directory entries, deriveFolderName, and a legitimate high-ratio sample that must NOT be rejected; 11 whole-archive rejections (../ , absolute path, drive letter, backslash, encryption bit, >maxEntries, >maxEntryBytes, >maxTotalBytes, >maxRatio, >maxArchiveBytes, missing EOCD / truncated / zip64 sentinel); unsupported compression method is skipped per-entry, not fatal; plus a source guard that src/lib/zip.ts imports neither node:fs nor the store (CP-10)."
+    },
+    {
+      "id": "TEST-044",
+      "result": "PASS",
+      "command": "npm run test:floating-chat && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "tests/floating-chat.test.tsx skill-intake block: a drop that is neither folder nor zip has preventDefault called (fireEvent.drop returns false) and the transcript explains the refusal — the P6 root-cause guard; dropping a zip posts `archive` to /api/skills; the upload button路径 posts the same shape and renders the same receipt (one shared submit); classifyDrop and describeExcluded unit-checked. e2e drives the real 上传 zip button through the browser file chooser."
+    },
+    {
+      "id": "TEST-045",
+      "result": "PASS",
+      "command": "npm run test:skills",
+      "real_entry": true,
+      "evidence": "tests/skills-route.test.ts zip block: a zip registers and .mdx/.toml/.sh/.jsonl/.xml all reach resolveSkillForTurn (widened allowlist); all four excluded reasons appear (binary / too-large / not-injected / unsupported-zip-method) with not-injected proven to be stored-but-not-injected; a rejected archive returns 400 and leaves SKILLS_ROOT empty (REQ-NF-005 ② no partial write); zip and folder uploads of the same content produce identical skill directories."
+    },
+    {
+      "id": "TEST-046",
+      "result": "PASS",
+      "command": "npm run test:auth-ui && npm run test:e2e",
+      "real_entry": true,
+      "evidence": "tests/skill-list.test.tsx (5): list renders name — description, empty state 尚未注册技能, refetch on jarvis:skills-changed without a reload, read-only guard (no buttons/inputs), last-good list kept when a refetch fails. tests/floating-chat.test.tsx: 本轮使用技能：X appears on a skill turn and is absent otherwise. e2e asserts the ☰ list picks up a fresh registration with no reload."
     }
   ],
   "executed_commands": [

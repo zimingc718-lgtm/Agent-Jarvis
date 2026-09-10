@@ -5,6 +5,7 @@ import { CornerMenu } from "@/components/CornerMenu";
 import { DisplayScreen } from "@/components/DisplayScreen";
 import { FloatingChat, type FloatingMessage } from "@/components/FloatingChat";
 import { SettingsDialog } from "@/components/SettingsDialog";
+import { SkillList } from "@/components/SkillList";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { authOptions, getGoogleOAuthConfig } from "@/lib/auth";
 import { requireUserId } from "@/lib/auth-guard";
@@ -27,6 +28,11 @@ export default async function HomePage() {
 
   const savedProviders = storeReady ? getStore().listProviders(auth.userId) : [];
   const hasEnabledProvider = savedProviders.some((provider) => provider.enabled);
+  const registeredSkills = storeReady
+    ? getStore()
+        .listSkills(auth.userId)
+        .map((skill) => ({ id: skill.id, name: skill.name, description: skill.description }))
+    : [];
 
   let initialConversationId: string | null = null;
   let initialMessages: FloatingMessage[] = [];
@@ -50,6 +56,7 @@ export default async function HomePage() {
         <ThemeToggle />
         <SettingsDialog templates={templates} providers={savedProviders} storage={storage} />
         <AccountDialog authenticated={auth.ok} googleOAuth={googleOAuth} />
+        {storeReady ? <SkillList initialSkills={registeredSkills} /> : null}
       </CornerMenu>
 
       {auth.ok && !storage.configured ? (

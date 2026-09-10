@@ -1,7 +1,7 @@
 "use client";
 
-import { DragEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
-import { DISPLAY_CHANGED_EVENT } from "@/lib/display-events";
+import { ChangeEvent, DragEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import { DISPLAY_CHANGED_EVENT, SKILLS_CHANGED_EVENT } from "@/lib/ui-events";
 import { Markdown } from "@/lib/markdown";
 
 export type FloatingMessage = {
@@ -20,7 +20,9 @@ export type ChatStreamEvent =
   // CR-20260909: skill-turn / display tail events.
   | { type: "insight"; insightId: string }
   | { type: "insight-missing"; reason: "none" | "incomplete" }
-  | { type: "display"; kind: "home" };
+  | { type: "display"; kind: "home" }
+  // CR-20260910-skill-intake: which skill this turn used.
+  | { type: "skill"; name: string };
 
 export type ChatStreamRequest = {
   message: string;
@@ -159,6 +161,8 @@ export async function* streamChatDeltas(request: ChatStreamRequest): AsyncIterab
         yield { type: "insight-missing", reason: parsed.reason };
       } else if (parsed.type === "display" && parsed.kind === "home") {
         yield { type: "display", kind: "home" };
+      } else if (parsed.type === "skill" && typeof parsed.name === "string") {
+        yield { type: "skill", name: parsed.name };
       }
     }
   }
@@ -204,6 +208,8 @@ export function FloatingChat({
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const finishTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const folderInputRef = useRef<HTMLInputElement | null>(null);
+  const archiveInputRef = useRef<HTMLInputElement | null>(null);
 
   // DEC-013: `expanded` is derived, not stored. The transcript shows when there is
   // one AND the user has not collapsed the panel.
@@ -272,40 +278,45 @@ export function FloatingChat({
     setMessages((current) => [...current, { id: crypto.randomUUID(), role: "system", content }]);
   }
 
-  // CR-20260909-skills CP-1: dropping a folder onto the chat box registers a skill.
-  async function handleDrop(event: DragEvent<HTMLElement>) {
-    const folder = readDroppedFolderEntries(event.dataTransfer);
-    if (!folder) {
-      return;
-    }
-    event.preventDefault();
-    setDragActive(false);
+  /**
+   * CR-20260910-skill-intake CP-11: the ONE place a skill is submitted. The three
+   * entry points (drop a folder, drop a zip, pick from disk) only shape their input
+   * into a `SkillUploadInput`; submission, receipt rendering and error handling live
+   * here once.
+   */
+  async function submitSkillUpload(input: SkillUploadInput) {
     applyCollapsed(false);
+    const label = input.kind === "folder" ? input.folderName : input.archive.name;
     const pendingId = crypto.randomUUID();
     setMessages((current) => [
       ...current,
-      { id: pendingId, role: "system", content: `正在注册技能「${folder.name}」…` },
+      { id: pendingId, role: "system", content: `正在注册技能「${label}」…` },
     ]);
     const replace = (content: string) =>
       setMessages((current) => current.map((item) => (item.id === pendingId ? { ...item, content } : item)));
 
     try {
-      const files = await collectFolderFiles(folder.entry);
-      if (files.length === 0) {
-        replace("该文件夹没有可读取的文本文件，未注册。");
-        return;
-      }
       const form = new FormData();
-      form.set("folderName", folder.name);
-      for (const file of files) {
-        form.append("file", new File([file.content], file.path, { type: "text/plain" }));
+      if (input.kind === "folder") {
+        if (input.files.length === 0) {
+          replace("该文件夹没有可读取的文本文件，未注册。");
+          return;
+        }
+        form.set("folderName", input.folderName);
+        for (const file of input.files) {
+          form.append("file", new File([file.content], file.path, { type: "text/plain" }));
+        }
+      } else {
+        form.set("archive", input.archive, input.archive.name);
       }
+
       const response = await fetch("/api/skills", { method: "POST", body: form });
       const data = (await response.json().catch(() => ({}))) as {
         name?: string;
         description?: string;
         docGenerated?: boolean;
         message?: string;
+        excluded?: Array<{ path: string; reason: string }>;
       };
       if (!response.ok) {
         replace(data.message ?? "技能注册失败。");
@@ -313,8 +324,64 @@ export function FloatingChat({
       }
       const hint = data.docGenerated ? "" : "（未生成描述，可在对话中补充）";
       replace(`已注册技能：${data.name} — ${data.description}${hint}`);
+      // REQ-F-020 ⑤: never drop content silently.
+      if (data.excluded?.length) {
+        appendSystemMessage(describeExcluded(data.excluded));
+      }
+      // REQ-F-028 ④: the ☰ menu's skill list picks this up without a reload.
+      window.dispatchEvent(new Event(SKILLS_CHANGED_EVENT));
     } catch {
       replace("技能注册失败。");
+    }
+  }
+
+  /**
+   * CR-20260910-skill-intake CP-1. The P6 root cause was calling `preventDefault()`
+   * only AFTER deciding the drop was usable — a dropped zip fell through to the
+   * browser, which navigated away, and nothing ever reached the server. Now the
+   * default is stopped first and every outcome, including refusal, is spoken.
+   */
+  function handleDrop(event: DragEvent<HTMLElement>) {
+    if (!event.dataTransfer || !Array.from(event.dataTransfer.types).includes("Files")) {
+      return;
+    }
+    event.preventDefault();
+    setDragActive(false);
+
+    const dropped = classifyDrop(event.dataTransfer);
+    if (dropped.kind === "folder") {
+      void collectFolderFiles(dropped.entry).then((files) =>
+        submitSkillUpload({ kind: "folder", folderName: dropped.name, files })
+      );
+    } else if (dropped.kind === "archive") {
+      void submitSkillUpload({ kind: "archive", archive: dropped.file });
+    } else {
+      appendSystemMessage(`只能接收技能文件夹或 zip 压缩包，本次未处理：${dropped.reason}`);
+    }
+  }
+
+  function handleFolderPicked(event: ChangeEvent<HTMLInputElement>) {
+    const picked = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (picked.length === 0) {
+      return;
+    }
+    // webkitdirectory gives每个 File a `webkitRelativePath` of `<folder>/<rest…>`.
+    const first = (picked[0] as File & { webkitRelativePath?: string }).webkitRelativePath ?? picked[0].name;
+    const folderName = first.split("/")[0] || "skill";
+    void Promise.all(
+      picked.map(async (file) => {
+        const relative = (file as File & { webkitRelativePath?: string }).webkitRelativePath ?? file.name;
+        return { path: relative.split("/").slice(1).join("/") || file.name, content: await file.text() };
+      })
+    ).then((files) => submitSkillUpload({ kind: "folder", folderName, files }));
+  }
+
+  function handleArchivePicked(event: ChangeEvent<HTMLInputElement>) {
+    const [archive] = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (archive) {
+      void submitSkillUpload({ kind: "archive", archive });
     }
   }
 
@@ -390,6 +457,8 @@ export function FloatingChat({
           appendSystemMessage(chunk.reason === "incomplete" ? "本轮的 HTML 不完整。" : "本轮未产出 HTML。");
         } else if (chunk.type === "display") {
           window.dispatchEvent(new Event(DISPLAY_CHANGED_EVENT));
+        } else if (chunk.type === "skill") {
+          appendSystemMessage(`本轮使用技能：${chunk.name}`);
         }
       }
     } catch (error) {
@@ -468,6 +537,32 @@ export function FloatingChat({
         <span className="floating-chat__sr" role="status">
           {LIGHT_LABEL[lightState]}
         </span>
+
+        {/* REQ-F-020 ①: an explicit intake path next to the drop target — drag-and-drop
+            of directories is uneven across browsers, and a keyboard user has no drop. */}
+        <input
+          ref={folderInputRef}
+          type="file"
+          hidden
+          aria-label="选择技能文件夹"
+          onChange={handleFolderPicked}
+          {...({ webkitdirectory: "", directory: "" } as Record<string, string>)}
+        />
+        <input
+          ref={archiveInputRef}
+          type="file"
+          hidden
+          aria-label="选择技能 zip 压缩包"
+          accept=".zip,application/zip"
+          onChange={handleArchivePicked}
+        />
+        <button type="button" className="floating-chat__upload" onClick={() => folderInputRef.current?.click()}>
+          上传文件夹
+        </button>
+        <button type="button" className="floating-chat__upload" onClick={() => archiveInputRef.current?.click()}>
+          上传 zip
+        </button>
+
         {hasTranscript ? (
           <button
             type="button"
@@ -540,6 +635,7 @@ function safeJsonParse(value: string): {
   insightId?: unknown;
   reason?: unknown;
   kind?: unknown;
+  name?: unknown;
 } | null {
   try {
     return JSON.parse(value);
@@ -551,27 +647,72 @@ function safeJsonParse(value: string): {
 type DroppedFile = { path: string; content: string };
 const MAX_SKILL_FILE_BYTES = 512 * 1024;
 
+/** The only two shapes `submitSkillUpload` accepts (CR-20260910-skill-intake CP-11). */
+type SkillUploadInput =
+  | { kind: "folder"; folderName: string; files: DroppedFile[] }
+  | { kind: "archive"; archive: File };
+
+type DropClassification =
+  | { kind: "folder"; name: string; entry: FileSystemDirectoryEntry }
+  | { kind: "archive"; file: File }
+  | { kind: "none"; reason: string };
+
+const EXCLUDED_REASON_TEXT: Record<string, string> = {
+  binary: "二进制文件",
+  "too-large": "文件过大",
+  "not-injected": "扩展名不在白名单，已保存但不进入对话上下文",
+  "unsupported-zip-method": "压缩包内不支持的压缩方式",
+};
+
+/** REQ-F-020 ⑤: say what was left out and why, instead of dropping it silently. */
+export function describeExcluded(excluded: Array<{ path: string; reason: string }>): string {
+  const shown = excluded
+    .slice(0, 5)
+    .map((item) => `${item.path}（${EXCLUDED_REASON_TEXT[item.reason] ?? item.reason}）`)
+    .join("、");
+  const rest = excluded.length > 5 ? ` 等 ${excluded.length} 个文件` : "";
+  return `以下文件未纳入技能内容：${shown}${rest}`;
+}
+
 /**
- * Synchronously pull the single dropped directory entry out of the event
- * (the DataTransfer item list is cleared once the handler returns).
+ * Classify a drop **synchronously** — the DataTransfer item list is cleared once
+ * the handler returns, so entries must be pulled out before any await.
  */
-function readDroppedFolderEntries(
-  dataTransfer: DataTransfer | null
-): { name: string; entry: FileSystemDirectoryEntry } | null {
-  if (!dataTransfer) {
-    return null;
-  }
+export function classifyDrop(dataTransfer: DataTransfer): DropClassification {
   const directories: FileSystemDirectoryEntry[] = [];
-  for (const item of Array.from(dataTransfer.items)) {
+  const files: File[] = [];
+
+  for (const item of Array.from(dataTransfer.items ?? [])) {
     if (item.kind !== "file") {
       continue;
     }
     const entry = item.webkitGetAsEntry?.();
     if (entry?.isDirectory) {
       directories.push(entry as FileSystemDirectoryEntry);
+      continue;
+    }
+    const file = item.getAsFile?.();
+    if (file) {
+      files.push(file);
     }
   }
-  return directories.length === 1 ? { name: directories[0].name, entry: directories[0] } : null;
+
+  if (directories.length === 1 && files.length === 0) {
+    return { kind: "folder", name: directories[0].name, entry: directories[0] };
+  }
+  if (directories.length === 0 && files.length === 1 && /\.zip$/i.test(files[0].name)) {
+    return { kind: "archive", file: files[0] };
+  }
+  if (directories.length > 1) {
+    return { kind: "none", reason: "一次只能拖入一个技能文件夹" };
+  }
+  if (files.length > 1) {
+    return { kind: "none", reason: "一次只能拖入一个 zip 压缩包" };
+  }
+  if (files.length === 1) {
+    return { kind: "none", reason: `「${files[0].name}」不是 zip 压缩包` };
+  }
+  return { kind: "none", reason: "没有识别到文件夹或 zip 压缩包" };
 }
 
 async function collectFolderFiles(root: FileSystemDirectoryEntry): Promise<DroppedFile[]> {

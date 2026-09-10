@@ -1,7 +1,7 @@
-import type { DisplayView } from "./display-events";
+import type { DisplayView } from "./ui-events";
 import { getStore } from "./store-singleton";
 
-export type { DisplayView } from "./display-events";
+export type { DisplayView } from "./ui-events";
 
 // MOD-DISPLAY server helpers. The raw single-row primitives live on the store
 // (`getDisplayState` / `setDisplayState`, DEC-017 ①); this module joins the

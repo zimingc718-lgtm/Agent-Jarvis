@@ -6,19 +6,29 @@ import type { ChatMessage, ProviderRuntimeConfig } from "./types";
 /** Where registered skill folders live on disk (CR-20260909-skills). Overridable for tests. */
 export const SKILLS_ROOT = process.env.JARVIS_SKILLS_PATH ?? join(process.cwd(), ".data", "skills");
 
-/** Text file extensions a skill folder may contribute to the injected context (REQ-F-022 ⑤). */
+/**
+ * Text file extensions a skill folder may contribute to the injected context
+ * (REQ-F-020 ⑤). Widened from 11 to 16 by CR-20260910-skill-intake — files
+ * outside this list are still stored verbatim, they just do not enter the
+ * per-turn context, and the registration receipt now says so.
+ */
 export const SKILL_TEXT_EXTENSIONS = [
   ".md",
+  ".mdx",
   ".txt",
   ".json",
+  ".jsonl",
   ".csv",
   ".yaml",
   ".yml",
+  ".toml",
+  ".xml",
   ".py",
   ".js",
   ".ts",
   ".tsx",
   ".html",
+  ".sh",
 ];
 
 /** Total bytes of skill content injected into a single turn (REQ-F-022 ②). */

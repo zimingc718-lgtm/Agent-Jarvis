@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DISPLAY_CHANGED_EVENT, type DisplayView } from "@/lib/display-events";
+import { DISPLAY_CHANGED_EVENT, type DisplayView } from "@/lib/ui-events";
 
 const NOTICE_TEXT =
   "以下内容由大模型生成，未做安全隔离。请勿在其中输入敏感信息。";

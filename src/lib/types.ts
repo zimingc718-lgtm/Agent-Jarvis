@@ -37,7 +37,9 @@ export type ChatDelta =
   // CR-20260909: skill-turn tail events, emitted after the reply is persisted.
   | { type: "insight"; insightId: string }
   | { type: "insight-missing"; reason: "none" | "incomplete" }
-  | { type: "display"; kind: "home" };
+  | { type: "display"; kind: "home" }
+  // CR-20260910-skill-intake: which skill this turn used (REQ-F-028 ②).
+  | { type: "skill"; name: string };
 
 export type ChatMessage = {
   role: "system" | "user" | "assistant";
