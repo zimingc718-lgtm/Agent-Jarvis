@@ -83,6 +83,43 @@
 
 → R1 通过。进入 P2（架构 / 模块 / 测试说明书写 `CR-20260909-skills` 节逐一响应 CP-1..CP-14，补 CR 内 R2/R3/R4 评审矩阵）。
 
-## 5. 本证据边界
+## 5. P2 产出（R2/R3/R4）
 
-R1 只锁定需求与 CP 登记。DEC-015/016、TASK-033..035、TEST-034..038 的具体方案在 P2 各层说明书产出，届时补 EV。`review r2|r3|r4` 在 P2 各层节 + 矩阵成文前预期报 `COVERAGE_GAP` / `MATRIX_INVALID`——这是 R1 阶段的正确状态。
+2026-09-09 同会话完成 P2 三层设计并通过 R2/R3/R4 机器门。
+
+### 5.1 架构（R2）
+
+- `架构设计说明书.md`：新增 `## CR-20260909-skills 方案`（CP-1..CP-14 逐行 部署/后端/数据库/前端/依赖/可行性）+ schema 清单（`skills` / `insights` 两表幂等迁移）+ 架构总判。
+- **DEC-015**（技能生成 HTML 未沙箱化）：立项为**高危**——`<iframe srcdoc>` 无 `sandbox` → 同源脚本可读 `localStorage`（`jarvis-theme`/`jarvis:chat-collapsed`/`jarvis:chat-session-ended`）、可打任意同源 API（`DELETE /api/providers/[id]`、`POST /api/chat/stream`、`GET /api/insights`）。用户 msg 54-1 接受风险。出口义务：后续 CR 必须加 `sandbox` 或改独立 origin/Worker。缓解（当前）：known warning `skill-html-unsandboxed` + F2 首渲提示条。
+- **DEC-016**（技能路由为独立最小 LLM 调用）：非流式、`max_tokens` 小、10s 超时、不带历史、fail-open（无 Provider / 超时 / 非法 JSON / 未知名 → `{skill:null}` 不抛）。触发时机：`POST /api/chat/stream` 收到发送后、启动主流式前，`listSkills` 非空时一次。
+- 新增 **MOD-SKILLS**（`src/lib/skills.ts`）；`MOD-CHAT` 职责扩到技能路由前置 + 注入 + HTML 捕获 + `insights` 读写；接口契约加 `POST/GET /api/skills`、`GET /api/insights`、`ChatDelta` 的 `insight`/`insight-missing` 尾事件、`runChatTurn` 的 `skill?`/`onInsight?`/`onInsightMissing?`。
+
+### 5.2 模块（R3）
+
+- `模块任务开发说明书.md`：新增 `## CR-20260909-skills 变化点影响矩阵与任务派生`（CP-1..CP-14 逐行 影响/分类/派生任务）+ `## CR-20260909-skills 技术设计`（逐 CP 实现方案 + 涉及符号 + 可行性）。
+- **TASK-033**（技能上传→SKILL.md 生成→注册，3 子项：Ⅰ 上传+落盘+路径穿越防护 / Ⅱ `generateSkillDoc` + frontmatter 解析 + 失败回退 / Ⅲ `registerSkill` + `listSkills`）。
+- **TASK-034**（`runChatTurn` `onInsight`/`onInsightMissing` 回调 + 路由层写 `insights` + `GET /api/insights` + 系统消息）。
+- **TASK-035**（`src/lib/skills.ts` `routeSkill` + `resolveSkillForTurn`；`runChatTurn` 加 `skill?`；`/api/chat/stream` 路由前置）。
+- 可行性：CP-1 中高（目录拖放跨浏览器差异 → `<input webkitdirectory>` 兜底），其余全高。**零新增运行依赖**（frontmatter 极简自解析，不引 yaml）。`runChatTurn` 缺省行为不变（CP-14，grep +测试守卫）。
+
+### 5.3 测试（R4）
+
+- `测试说明书.md`：新增 TEST-034（`routeSkill` mock，含 4 条 fail-open + 请求体形态）、TEST-035（`resolveSkillForTurn` 白名单/32KB/仅当轮 + frontmatter 回退）、TEST-036（HTML 捕获四态）、TEST-037（`insights` 写入 + `GET /api/insights` 读回，真实入口，满足原则 13）、TEST-038（e2e：拖放注册 → 技能轮 → 洞察落库 → per-message 不延续 → 未产出提示）+ `任务→测试派生矩阵` + `测试设计` 表（逐 CP）。
+- `routeSkill` 单测严格 mock（禁 CI 真实网络）；真实 LLM 仅 e2e 对本地 Provider。
+
+### 5.4 R2/R3/R4 未决条件（P3 出口义务清单）
+
+见 CR `## R4 评审矩阵` 末尾：① `skill-html-unsandboxed` 登记 `test-results.json`；② DEC-015 出口义务保留给 F2 CR；③ `routeSkill` 4 条 fail-open + 请求体形态断言（并入 TEST-034）；④ `src/lib/chat.ts` 不出现 `insertInsight`（grep 守卫）；⑤ TASK-033 Ⅰ 路径穿越防护（已在描述内）。
+
+### 5.5 验证
+
+| 命令 | 结果 |
+|---|---|
+| `python tools/governance.py review r1\|r2\|r3\|r4` | 全 PASS（首个真实 CR 跑通新模型全链）|
+| `python tools/governance.py verify \| gate g1 \| gate g2 \| check-changes \| ui` | 全 PASS |
+| `python tools/governance.py gate g3` | **如实阻断**：`missing PASS evidence for: TEST-034..038`（P3 待实现）|
+| `python -m unittest tests.test_governance` | 23 PASS（含 `_cr_scoped_text` 回归）|
+
+## 6. 本证据边界
+
+P2 锁定三层设计 + R2/R3/R4 矩阵。P3 实现 TASK-033/034/035、TEST-034..038 回填 PASS、清零出口义务清单后补实现 EV。F2（CR-20260909-display-screen）尚未起草。
