@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -948,14 +949,26 @@ class SpecStructureTests(unittest.TestCase):
     def test_053_5_the_migration_is_idempotent_on_the_real_specs(self) -> None:
         # The specs are already migrated, so a real run must be a no-op - asserted
         # against the working tree because that is where a re-run would do damage.
+        # The child writes spec paths, which are Chinese, and a piped Python
+        # process encodes stdout with the machine locale (GBK here), not UTF-8.
+        # Reading that as strict UTF-8 kills the reader thread in the background:
+        # run() still returns 0 and stdout comes back as None, so a real "the
+        # specs drifted" failure surfaces as an unrelated TypeError. Pin the
+        # child's encoding so both ends agree; errors="replace" and the None
+        # check keep any future mismatch a legible failure rather than a crash
+        # in the assertion (CR-20260910-test-subprocess-encoding).
+        env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
         result = subprocess.run(
             [sys.executable, "tools/migrate_specs.py", "--dry-run"],
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,
             encoding="utf-8",
+            errors="replace",
+            env=env,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIsNotNone(result.stdout, result.stderr)
         self.assertIn("already migrated", result.stdout)
 
 
