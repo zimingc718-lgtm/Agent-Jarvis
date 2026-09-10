@@ -64,10 +64,35 @@
 
 产品 / 测试 APPROVED；架构 / 模块 CONDITIONAL（条件均为可实现前置：DEC-017 成文、提示条不可关闭常驻、`page.tsx` 2 子项、`routeTurn` 签名同步）。无 REJECTED。
 
-## 4. R1 人工终裁
+## 4. R1 反馈闭环（用户要求：CONDITIONAL 必须闭环至全 APPROVED）
 
-**待用户拍板**。需确认：CP-1..CP-15、REQ-F-015 重写为"全屏动态展示屏"、未沙箱化 `<iframe srcdoc>` + 不可关闭提示条、`display_state` 全局单行 + `kind` 扩展点、`routeTurn` 扩 `display` 字段、非目标 4 行。
+见 `CR-20260909-display-screen.feedback.jsonl`。R1 首轮：产品 / 测试 APPROVED；架构 / 模块 CONDITIONAL。
 
-## 5. 本证据边界
+| 角色 | R1 CONDITIONAL 条件 | 处理 | R2 轮 |
+|---|---|---|---|
+| 架构 | ① 提示条不可关闭且渲染 insight 时常驻；② 内容流机制须 R1 锁定 | ① REQ-F-025 ② 收紧为"渲染时常驻不可关闭（无按钮 / Esc 无效）"；② CR 新增「机制 R1 锁定」节 + DEC-017 誊写 | **APPROVED** |
+| 模块 | ① `page.tsx` 重写按 2 子项；② `routeSkill→routeTurn` 签名 churn 须消除 | ① CP-12 + TASK-038 写死 2 子项；② 定 F1/F2 P3 合并实现，`src/lib/skills.ts` 从第一行即 `routeTurn(): {skill, display}`——F1 的 `架构 DEC-016 / 模块 TASK-035 / 接口契约 / TEST-034` 同步为 `routeTurn`，代码中永不出现 `routeSkill` | **APPROVED** |
 
-R1 只锁定需求与 CP 登记。DEC-017、TASK-036..039、TEST-039..042 的具体方案在 P2 各层说明书产出。`review r2|r3|r4` 在 P2 各层节 + 矩阵成文前预期报 `COVERAGE_GAP` / `MATRIX_INVALID`——R1 阶段的正确状态。
+**R1 收敛**：1 轮反馈闭环，四角色全 APPROVED，无遗留 CONDITIONAL。**待用户人工终裁**。
+
+## 5. P2 产出（R2/R3/R4，均已 APPROVED + 机器门 PASS）
+
+| 层 | 产出 | R2/R3/R4 评审 |
+|---|---|---|
+| 架构（R2） | `## CR-20260909-display-screen 方案`（CP-1..CP-15 逐行五面裁决）+ **DEC-017**（display_state 全局单行 get-or-create / 事件+重取无轮询·SSE / SSR 首帧同 DEC-011 / 路由层两处 setDisplayState）+ DEC-016 修订 + **MOD-DISPLAY** + `GET /api/display` 契约 + `DisplayState` 类型 | 四角色 APPROVED |
+| 模块（R3） | `## CR-20260909-display-screen 变化点影响矩阵` + `技术设计`（逐 CP）+ **TASK-036**（display_state 表 + 读写原语）**TASK-037**（DisplayScreen + GET /api/display + 事件流 + 不可关闭提示条 + 未沙箱化 iframe）**TASK-038**（page.tsx 重写，2 子项）**TASK-039**（routeTurn display 消费 + 路由层写 display_state）+ 关键接口新增行 | 四角色 APPROVED |
+| 测试（R4） | `## CR-20260909-display-screen 任务→测试派生矩阵` + `测试设计`（逐 CP）+ **TEST-039**（display_state get-or-create）**TEST-040**（DisplayScreen 组件：home/insight/提示条不可关闭/kind 回退/事件重取）**TEST-041**（e2e：全屏 → 洞察上屏 → 显示首页回标题 → **刷新保持** → ☰ 可点）**TEST-042**（routeTurn display 字段 + fail-open + 路由层写入）+ **TEST-021/032 回归门重写** | 四角色 APPROVED |
+
+CR `## R2/R3/R4 评审矩阵`：CP-1..CP-15 × 4 角色，**全 APPROVED，无 REJECTED、无遗留 CONDITIONAL**。
+
+### 5.1 验证
+
+| 命令 | 结果 |
+|---|---|
+| `python tools/governance.py review r1\|r2\|r3\|r4` | 全 PASS（skills + display-screen 两个 CR 均过）|
+| `python tools/governance.py verify \| gate g1 \| gate g2 \| check-changes \| ui` | 全 PASS |
+| `python tools/governance.py gate g3` | **如实阻断**：`missing PASS evidence for: TEST-034..042`（F1+F2 合并 P3 待实现）|
+
+## 6. 本证据边界
+
+P2 锁定三层设计 + R2/R3/R4 矩阵。**F1（CR-20260909-skills）与 F2（本 CR）P3 合并实现**——`routeTurn` 从第一行即目标签名。P3 落地 TASK-033..039、TEST-034..042 回填 PASS、清 F1 出口义务清单后补实现 EV。DEC-015 的"后续 CR 必须沙箱化"是跨 CR 长期义务。

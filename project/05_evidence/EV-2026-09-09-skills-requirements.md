@@ -99,17 +99,17 @@
 - `模块任务开发说明书.md`：新增 `## CR-20260909-skills 变化点影响矩阵与任务派生`（CP-1..CP-14 逐行 影响/分类/派生任务）+ `## CR-20260909-skills 技术设计`（逐 CP 实现方案 + 涉及符号 + 可行性）。
 - **TASK-033**（技能上传→SKILL.md 生成→注册，3 子项：Ⅰ 上传+落盘+路径穿越防护 / Ⅱ `generateSkillDoc` + frontmatter 解析 + 失败回退 / Ⅲ `registerSkill` + `listSkills`）。
 - **TASK-034**（`runChatTurn` `onInsight`/`onInsightMissing` 回调 + 路由层写 `insights` + `GET /api/insights` + 系统消息）。
-- **TASK-035**（`src/lib/skills.ts` `routeSkill` + `resolveSkillForTurn`；`runChatTurn` 加 `skill?`；`/api/chat/stream` 路由前置）。
+- **TASK-035**（`src/lib/skills.ts` `routeTurn` + `resolveSkillForTurn`；`runChatTurn` 加 `skill?`；`/api/chat/stream` 路由前置）。
 - 可行性：CP-1 中高（目录拖放跨浏览器差异 → `<input webkitdirectory>` 兜底），其余全高。**零新增运行依赖**（frontmatter 极简自解析，不引 yaml）。`runChatTurn` 缺省行为不变（CP-14，grep +测试守卫）。
 
 ### 5.3 测试（R4）
 
-- `测试说明书.md`：新增 TEST-034（`routeSkill` mock，含 4 条 fail-open + 请求体形态）、TEST-035（`resolveSkillForTurn` 白名单/32KB/仅当轮 + frontmatter 回退）、TEST-036（HTML 捕获四态）、TEST-037（`insights` 写入 + `GET /api/insights` 读回，真实入口，满足原则 13）、TEST-038（e2e：拖放注册 → 技能轮 → 洞察落库 → per-message 不延续 → 未产出提示）+ `任务→测试派生矩阵` + `测试设计` 表（逐 CP）。
-- `routeSkill` 单测严格 mock（禁 CI 真实网络）；真实 LLM 仅 e2e 对本地 Provider。
+- `测试说明书.md`：新增 TEST-034（`routeTurn` mock，含 4 条 fail-open + 请求体形态）、TEST-035（`resolveSkillForTurn` 白名单/32KB/仅当轮 + frontmatter 回退）、TEST-036（HTML 捕获四态）、TEST-037（`insights` 写入 + `GET /api/insights` 读回，真实入口，满足原则 13）、TEST-038（e2e：拖放注册 → 技能轮 → 洞察落库 → per-message 不延续 → 未产出提示）+ `任务→测试派生矩阵` + `测试设计` 表（逐 CP）。
+- `routeTurn` 单测严格 mock（禁 CI 真实网络）；真实 LLM 仅 e2e 对本地 Provider。
 
 ### 5.4 R2/R3/R4 未决条件（P3 出口义务清单）
 
-见 CR `## R4 评审矩阵` 末尾：① `skill-html-unsandboxed` 登记 `test-results.json`；② DEC-015 出口义务保留给 F2 CR；③ `routeSkill` 4 条 fail-open + 请求体形态断言（并入 TEST-034）；④ `src/lib/chat.ts` 不出现 `insertInsight`（grep 守卫）；⑤ TASK-033 Ⅰ 路径穿越防护（已在描述内）。
+见 CR `## R4 评审矩阵` 末尾：① `skill-html-unsandboxed` 登记 `test-results.json`；② DEC-015 出口义务保留给 F2 CR；③ `routeTurn` 4 条 fail-open + 请求体形态断言（并入 TEST-034）；④ `src/lib/chat.ts` 不出现 `insertInsight`（grep 守卫）；⑤ TASK-033 Ⅰ 路径穿越防护（已在描述内）。
 
 ### 5.5 验证
 
