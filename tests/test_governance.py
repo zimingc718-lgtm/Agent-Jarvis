@@ -376,6 +376,90 @@ class GovernanceCliTests(unittest.TestCase):
         self.assertEqual(code, 0, output)
         self.assertIn("G3_PASS", output)
 
+    # CR-20260909-consensus-review-gates — TEST-033
+    def _project_with_cp_cr(self, root: Path, cr_body: str) -> None:
+        write_project(root, {"project/06_changes/CR-2099-demo.md": cr_body})
+
+    _CP_REGISTRY = (
+        "# CR-2099-demo\n\n"
+        "## 变化点登记\n\n"
+        "| CP | 来源角色 | 一句话 | 关联 ID | 类型 |\n"
+        "|---|---|---|---|---|\n"
+        "| CP-1 | 产品 | demo change | REQ-F-001 | 修改 |\n"
+        "| CP-2 | 测试 | derived concern | REQ-F-001 | 派生 |\n\n"
+    )
+
+    _GOOD_MATRIX = (
+        "## R2 评审矩阵\n\n"
+        "| CP | 产品 | 架构 | 模块 | 测试 |\n"
+        "|---|---|---|---|---|\n"
+        "| CP-1 | APPROVED ev1 | APPROVED ev2 | CONDITIONAL 须补迁移 ev3 | APPROVED ev4 |\n"
+        "| CP-2 | APPROVED ev5 | APPROVED ev6 | APPROVED ev7 | APPROVED ev8 |\n\n"
+    )
+
+    def test_review_passes_when_cps_are_covered_and_the_matrix_is_clean(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._CP_REGISTRY + self._GOOD_MATRIX)
+            # The architecture doc must mention the CR and both CP ids.
+            (root / "project/02_solution/架构设计说明书.md").write_text(
+                "# 架构设计说明书\n\n## 批准状态\n\n- 当前状态：APPROVED\n\nREQ-F-001\n\n"
+                "## CR-2099-demo 方案\n\nCP-1 和 CP-2 都在此响应。\n",
+                encoding="utf-8",
+            )
+            code, output = governance.run(["review", "r2", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("REVIEW_R2_PASS", output)
+
+    def test_review_flags_a_change_point_missing_from_the_layer(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._CP_REGISTRY + self._GOOD_MATRIX)
+            (root / "project/02_solution/架构设计说明书.md").write_text(
+                "# 架构设计说明书\n\n## 批准状态\n\n- 当前状态：APPROVED\n\n"
+                "## CR-2099-demo 方案\n\n只响应了 CP-1。\n",
+                encoding="utf-8",
+            )
+            code, output = governance.run(["review", "r2", "--root", directory])
+
+        self.assertEqual(code, 1)
+        self.assertIn("REVIEW_R2_COVERAGE_GAP", output)
+        self.assertIn("CP-2", output)
+
+    def test_review_blocks_on_a_rejected_verdict(self) -> None:
+        rejected = self._GOOD_MATRIX.replace("APPROVED ev4", "REJECTED 不可测")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._CP_REGISTRY + rejected)
+            (root / "project/02_solution/架构设计说明书.md").write_text(
+                "# 架构设计说明书\n\n## CR-2099-demo 方案\n\nCP-1 CP-2\n", encoding="utf-8"
+            )
+            code, output = governance.run(["review", "r2", "--root", directory])
+
+        self.assertEqual(code, 1)
+        self.assertIn("REVIEW_R2_BLOCKED", output)
+        self.assertIn("REJECTED", output)
+
+    def test_review_r1_requires_a_human_sign_off(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._CP_REGISTRY)  # no R1 marker
+            code, output = governance.run(["review", "r1", "--root", directory])
+
+        self.assertEqual(code, 1)
+        self.assertIn("REVIEW_R1_BLOCKED", output)
+        self.assertIn("sign-off", output)
+
+    def test_review_passes_vacuously_without_the_cp_model(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            code, output = governance.run(["review", "r2", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("no change record uses the CP-registry model", output)
+
     def test_g3_passes_but_reports_a_deferred_test(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -3,6 +3,7 @@
 - 级别: L2
 - 提出人: user（"Google OAuth configuration required … 检查根因"）
 - 状态: APPROVED
+- 评审模型: pre-R1234（旧 G0/G1/G2/G3/G3.5/G4；CR-20260909-consensus-review-gates 起改为 R1–R4 + G3/G3.5/G4，不追溯本 CR）
 - 影响需求: REQ-F-001（正向验收改为人工验证项）、REQ-F-009（缺密钥的失败方式）、REQ-NF-001（本机可配置性）
 - 影响模块: MOD-AUTH、MOD-DB、MOD-CHAT-UI、MOD-SETTINGS-UI
 - 影响任务: TASK-019

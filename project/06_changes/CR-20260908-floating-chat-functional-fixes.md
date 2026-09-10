@@ -3,6 +3,7 @@
 - 级别: L2
 - 提出人: user
 - 状态: APPROVED
+- 评审模型: pre-R1234（旧 G0/G1/G2/G3/G3.5/G4；CR-20260909-consensus-review-gates 起改为 R1–R4 + G3/G3.5/G4，不追溯本 CR）
 - 影响需求: REQ-F-005、REQ-F-006、REQ-F-007、REQ-F-009、REQ-F-013、REQ-NF-002（均为实现修正，不新增需求；澄清 REQ-F-006/013 的验收在 UI 上必须可观察）
 - 影响模块: MOD-ADAPTER、MOD-CHAT、MOD-CHAT-UI、MOD-PROVIDER、MOD-SETTINGS-UI、MOD-DB
 - 影响任务: TASK-009 至 TASK-014（见 `project/03_modules/模块任务开发说明书.md`）

@@ -6,14 +6,20 @@
 
 ## 门禁总览
 
-| 门禁 | 控制目标 | 阻断条件 | 主要证据 |
-|---|---|---|---|
-| G0 受控入口 | 原始需求、变更、证据可定位 | 无原始输入、无状态、无法定位来源 | `project/00_input/` |
-| G1 需求基线 | 产品需求完整且经用户确认 | 用户未确认、需求无 ID、无验收标准、范围不清 | `产品需求说明书.md` |
-| G2 设计基线 | 架构、模块、测试从需求派生且一致 | 未从需求派生、缺影响分析、缺测试覆盖、评审未通过 | 架构、模块、测试说明书 |
-| G3 实施验证 | 实现完成且必选测试通过 | 任务未完成、必选测试未跑或失败、证据缺失 | 测试结果、证据记录 |
-| G3.5 真实入口 | 实际交付物可从真实入口使用 | 只测纯函数或测试桩、未启动真实构建物、主路径未覆盖 | 冒烟测试证据 |
-| G4 发布 | 发布范围满足已确认需求 | MUST 需求未验证、阻塞项开放、发布说明缺失 | 发布说明书、release manifest |
+CR-20260909-consensus-review-gates 起：设计阶段门禁为 R1–R4（共识门），G3/G3.5/G4 为机器证据门。
+
+| 门禁 | 类型 | 控制目标 | 阻断条件 | 主要证据 |
+|---|---|---|---|---|
+| G0 受控入口 | 机器 | 原始需求、变更、证据可定位 | 无原始输入、无状态、无法定位来源 | `project/00_input/` |
+| **R1 需求评审** | 人工终止 | 产品需求完整、变化点清晰、经用户拍板 | 缺「变化点登记」表、CP 无来源角色、缺逐条验收/非目标/用户确认、人未拍板 | `产品需求说明书.md`、CR |
+| **R2 架构评审** | 机器终止 | 架构逐一响应每个 CP，四角色共识 | 有 CP 未在架构说明书 `CR-<name>` 节被引用（`COVERAGE_GAP`）；`R2 评审矩阵` 有 REJECTED / 空格 / 无条件 CONDITIONAL（`MATRIX_INVALID`）| 架构说明书、CR 的 R2 矩阵 |
+| **R3 模块评审** | 机器终止 | 模块逐一响应每个架构 CP，四角色共识 | 同 R2，对模块说明书 | 模块说明书、CR 的 R3 矩阵 |
+| **R4 测试评审** | 机器终止 | 测试逐一响应每个任务，四角色共识 | 同 R2，对测试说明书 | 测试说明书、CR 的 R4 矩阵 |
+| G3 实施证据 | 机器 | 实现完成且必选测试通过 | 任务未完成、必选测试未跑或失败、证据缺失（DEFERRED 除外，见发布阻断例外） | 测试结果、证据记录 |
+| G3.5 真实入口 | 机器 | 实际交付物可从真实入口使用 | 只测纯函数或测试桩、未启动真实构建物、主路径未覆盖 | 冒烟测试证据 |
+| G4 发布 | 机器 | 发布范围满足已确认需求 | MUST 需求未验证、阻塞项开放、发布说明缺失 | 发布说明书、release manifest |
+
+`gate g1` / `gate g2` 保留为 `review r*` 的结构前置（产品需求有 APPROVED + 用户确认；REQ 有模块/测试覆盖），不再是设计阶段终门。
 
 ## 可执行命令
 
@@ -21,14 +27,18 @@
 
 ```powershell
 python tools/governance.py verify
-python tools/governance.py gate g1
-python tools/governance.py gate g2
+python tools/governance.py check-changes
+python tools/governance.py review r1
+python tools/governance.py review r2
+python tools/governance.py review r3
+python tools/governance.py review r4
 python tools/governance.py gate g3
 python tools/governance.py gate g3.5
 python tools/governance.py gate g4
-python tools/governance.py check-changes
 python tools/governance.py snapshot --actor <name>
 ```
+
+`gate g1` / `gate g2` 仍可执行，作为 `review r*` 的结构前置。
 
 `verify` 检查必需治理文件、基线快照和哈希链台账。`snapshot` 写入 `project/.governance/baseline.json` 并追加 `project/.governance/ledger.jsonl`。写入基线后，受控文件发生变化会被 `verify` 阻断，直到经过正式变更并重新快照。
 
@@ -36,7 +46,8 @@ python tools/governance.py snapshot --actor <name>
 
 - 产品需求说明书是产品意图基线。
 - 架构、模块、测试说明书必须从产品需求派生。
-- 编码前必须先有任务和测试定义。
+- **每个变化点（CP）必须在其下的每一层都有响应行，任何 CP 在任何层「消失」即阻断该层门禁（R2/R3/R4 的 `COVERAGE_GAP`）。**
+- 编码前必须先有任务和测试定义（R4 通过）。
 - 基线批准后，变更必须走 `project/06_changes/`。
 - 测试结果和运行记录只能证明当前实现，不自动证明未来版本。
 

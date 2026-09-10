@@ -3,6 +3,7 @@
 - 级别: L2
 - 提出人: user
 - 状态: CLOSED
+- 评审模型: pre-R1234（旧 G0/G1/G2/G3/G3.5/G4；CR-20260909-consensus-review-gates 起改为 R1–R4 + G3/G3.5/G4，不追溯本 CR）
 - 影响需求: 不新增产品功能需求；仅影响 UI 开发治理基线。
 - 影响模块: tools/governance.py, docs/UI_STANDARD.md, docs/AI_STANDARD.md, docs/WORKFLOW.md, docs/CONTROLS.md, AGENTS.md, package.json
 - 影响任务: 新增可执行 UI 规范检查，不创建业务实现任务。

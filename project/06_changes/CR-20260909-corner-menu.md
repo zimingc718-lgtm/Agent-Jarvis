@@ -3,6 +3,7 @@
 - 级别: L2
 - 提出人: user（"配置，账号登录两个入口放在左下角的悬浮选项" → 参考 Next dev 浮层 → 决策：☰ 触发器、主题内联、dev 指示器挪右、混合菜单 → 角色评审 → 决策：「配置」改名「模型」、Next 指示器挪 bottom-right、浮层机制留 P3 → "评审意见一致后，开始按流程执行开发"）
 - 状态: CLOSED（P1-P4 完成：TASK-031 DONE、TEST-032 PASS、g1-g4 全绿、TEST-019/021 + appearance/account e2e 回归通过）
+- 评审模型: pre-R1234（旧 G0/G1/G2/G3/G3.5/G4；CR-20260909-consensus-review-gates 起改为 R1–R4 + G3/G3.5/G4，不追溯本 CR）
 - 影响需求: REQ-F-015（验收重写：header 两按钮 → 左下角 ☰ 菜单）、REQ-F-014（新控件视觉约束）；REQ-F-015 澄清「主题开关位于弹窗外观分区」作废
 - 影响模块: MOD-SETTINGS-UI（新增 `CornerMenu`、`ThemeToggle` 迁宿主、`SettingsDialog` 瘦身）
 - 影响任务: 新增 TASK-031

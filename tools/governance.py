@@ -150,6 +150,8 @@ def run(argv: list[str] | None = None) -> tuple[int, str]:
         messages = check_changes(root)
     elif args.command == "ui":
         messages = check_ui_process_control(root)
+    elif args.command == "review":
+        messages = check_review(root, args.level.lower())
     else:
         parser.error("unknown command")
 
@@ -177,6 +179,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     ui_parser = subparsers.add_parser("ui", help="validate UI process controls")
     ui_parser.add_argument("--root", default=".", help="project root")
+
+    review_parser = subparsers.add_parser(
+        "review", help="validate a consensus review gate (CR-20260909-consensus-review-gates model)"
+    )
+    review_parser.add_argument("level", choices=["r1", "r2", "r3", "r4"])
+    review_parser.add_argument("--root", default=".", help="project root")
 
     return parser
 
@@ -533,6 +541,127 @@ def check_changes(root: Path) -> list[str]:
     if not records:
         return ["OK CHANGE_RECORDS_PASS no change records to validate"]
     return [f"OK CHANGE_RECORDS_PASS validated {len(records)} change record(s)"]
+
+
+# --- Consensus review gates (CR-20260909-consensus-review-gates) -----------------
+
+# Which spec doc each review level's coverage check reads.
+REVIEW_LAYER_DOC = {
+    "r2": "project/02_solution/架构设计说明书.md",
+    "r3": "project/03_modules/模块任务开发说明书.md",
+    "r4": "project/04_tests/测试说明书.md",
+}
+REVIEW_ROLES = ["产品", "架构", "模块", "测试"]
+REVIEW_VERDICTS = ("APPROVED", "CONDITIONAL", "REJECTED")
+
+
+def _section(text: str, heading_pattern: str) -> str:
+    """Body of the first `##`/`###` section whose heading matches, up to the next heading of same-or-higher level."""
+    match = re.search(rf"^(#{{2,3}})\s*{heading_pattern}[^\n]*\n", text, re.MULTILINE)
+    if not match:
+        return ""
+    level = len(match.group(1))
+    start = match.end()
+    tail = text[start:]
+    end = re.search(rf"^#{{1,{level}}}\s", tail, re.MULTILINE)
+    return tail[: end.start()] if end else tail
+
+
+def _table_rows(section: str) -> list[list[str]]:
+    """Data rows of the first markdown table in a section (skips header + separator)."""
+    lines = [line.strip() for line in section.splitlines() if line.strip().startswith("|")]
+    rows = [[cell.strip() for cell in line.strip().strip("|").split("|")] for line in lines]
+    # Drop the header row and the |---|---| separator row.
+    return [row for row in rows[2:] if any(cell for cell in row)]
+
+
+def parse_cp_registry(cr_text: str) -> list[dict[str, str]]:
+    """Rows of a CR's `## 变化点登记` table: [{cp, role}, ...]. Empty when the CR predates the model."""
+    section = _section(cr_text, "变化点登记")
+    if not section:
+        return []
+    out: list[dict[str, str]] = []
+    for row in _table_rows(section):
+        cp = re.search(r"\bCP-\d+\b", row[0]) if row else None
+        if cp:
+            out.append({"cp": cp.group(0), "role": row[1] if len(row) > 1 else ""})
+    return out
+
+
+def check_review(root: Path, level: str) -> list[str]:
+    changes_dir = root / "project/06_changes"
+    records = sorted(path for path in changes_dir.glob("CR-*.md") if path.is_file())
+
+    with_model = [(path, parse_cp_registry(read_text(path))) for path in records]
+    with_model = [(path, cps) for path, cps in with_model if cps]
+    if not with_model:
+        return [f"OK REVIEW_{level.upper()}_PASS no change record uses the CP-registry model yet"]
+
+    findings: list[str] = []
+    for path, cps in with_model:
+        name = path.stem  # e.g. CR-20260909-corner-menu
+        cr_text = read_text(path)
+        cp_ids = [entry["cp"] for entry in cps]
+
+        if level == "r1":
+            for entry in cps:
+                if not entry["role"]:
+                    findings.append(f"FAIL REVIEW_R1_BLOCKED {name}: {entry['cp']} has no 来源角色")
+            if not re.search(r"R1[^\n]*(拍板|终裁|人工确认)", cr_text):
+                findings.append(f"FAIL REVIEW_R1_BLOCKED {name}: no R1 human sign-off marker (expected 'R1 … 拍板/终裁')")
+            continue
+
+        # r2 / r3 / r4: downward coverage + review matrix.
+        layer_text = read_text(root / REVIEW_LAYER_DOC[level])
+        if not re.search(re.escape(name), layer_text):
+            findings.append(
+                f"FAIL REVIEW_{level.upper()}_BLOCKED {name}: {REVIEW_LAYER_DOC[level]} has no section for this CR"
+            )
+        uncovered = [cp for cp in cp_ids if not re.search(rf"\b{re.escape(cp)}\b", layer_text)]
+        if uncovered:
+            findings.append(
+                f"FAIL REVIEW_{level.upper()}_COVERAGE_GAP {name}: {', '.join(uncovered)} not addressed in {REVIEW_LAYER_DOC[level]}"
+            )
+
+        matrix = _section(cr_text, rf"R{level[1]}\s*评审矩阵")
+        if not matrix:
+            findings.append(f"FAIL REVIEW_{level.upper()}_MATRIX_INVALID {name}: no '## R{level[1]} 评审矩阵' section")
+            continue
+        header = next((line for line in matrix.splitlines() if line.strip().startswith("|")), "")
+        for role in REVIEW_ROLES:
+            if role not in header:
+                findings.append(f"FAIL REVIEW_{level.upper()}_MATRIX_INVALID {name}: matrix missing the {role} column")
+        rows = _table_rows(matrix)
+        matrix_cps = {re.search(r"\bCP-\d+\b", row[0]).group(0) for row in rows if row and re.search(r"\bCP-\d+\b", row[0])}
+        for cp in cp_ids:
+            if cp not in matrix_cps:
+                findings.append(f"FAIL REVIEW_{level.upper()}_MATRIX_INVALID {name}: {cp} has no row in the matrix")
+        for row in rows:
+            cp_cell = re.search(r"\bCP-\d+\b", row[0]) if row else None
+            if not cp_cell:
+                continue
+            for cell in row[1:5]:
+                if not cell:
+                    findings.append(f"FAIL REVIEW_{level.upper()}_MATRIX_INVALID {name}: {cp_cell.group(0)} has an empty verdict cell")
+                    continue
+                if "REJECTED" in cell:
+                    findings.append(
+                        f"FAIL REVIEW_{level.upper()}_BLOCKED {name}: {cp_cell.group(0)} has a REJECTED verdict — feed back to the layer owner"
+                    )
+                elif not any(v in cell for v in REVIEW_VERDICTS):
+                    findings.append(
+                        f"FAIL REVIEW_{level.upper()}_MATRIX_INVALID {name}: {cp_cell.group(0)} cell has no APPROVED/CONDITIONAL/REJECTED verdict"
+                    )
+                elif "CONDITIONAL" in cell and len(cell.replace("CONDITIONAL", "").strip(" *·:：-")) < 4:
+                    findings.append(
+                        f"FAIL REVIEW_{level.upper()}_MATRIX_INVALID {name}: {cp_cell.group(0)} has a CONDITIONAL with no condition text"
+                    )
+
+    if findings:
+        return findings
+    return [
+        f"OK REVIEW_{level.upper()}_PASS {len(with_model)} change record(s) satisfy the {level.upper()} consensus gate"
+    ]
 
 
 def check_ui_process_control(root: Path) -> list[str]:

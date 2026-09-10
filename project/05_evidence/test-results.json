@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-09T22:00:00Z",
+  "generated_at": "2026-09-09T23:00:00Z",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
@@ -16,7 +16,8 @@
     "project/06_changes/CR-20260909-next-build-dir-isolation.md",
     "project/06_changes/CR-20260909-minimal-floating-chat.md",
     "project/06_changes/CR-20260909-collapsible-panel.md",
-    "project/06_changes/CR-20260909-corner-menu.md"
+    "project/06_changes/CR-20260909-corner-menu.md",
+    "project/06_changes/CR-20260909-consensus-review-gates.md"
   ],
   "tests": [
     {
@@ -234,6 +235,13 @@
       "command": "npm run test:auth-ui && npm run test:e2e",
       "real_entry": true,
       "evidence": "component (tests/corner-menu.test.tsx): ☰ trigger has aria-haspopup=menu + aria-expanded; menu items are unmounted until opened; open -> role=menu with inline ThemeToggle + 模型 + 账号登录; Esc closes and returns focus to the trigger; mousedown outside closes; clicking 深色 sets data-theme=dark + localStorage['jarvis-theme'] with NO dialog[open]; 模型 opens the Model Providers dialog, 账号登录 opens the account dialog. SettingsDialog (tests/home-dialogs.test.tsx) trigger is 「模型」, dialog holds only provider settings (no 外观 group). e2e: home header exposes only the ☰ trigger (no 配置/模型/账号 buttons); appearance toggle now lives in the ☰ menu, switches without opening a dialog, and persists across page.reload(); the ☰ menu stays reachable while the chat panel is expanded (z-index 30 > 20)."
+    },
+    {
+      "id": "TEST-033",
+      "result": "PASS",
+      "command": "python -m unittest tests.test_governance",
+      "real_entry": true,
+      "evidence": "tests/test_governance.py: governance.py review — a CR with a ## 变化点登记 table + an architecture section that mentions the CR and every CP id -> REVIEW_R2_PASS; a CP missing from the architecture doc -> REVIEW_R2_COVERAGE_GAP naming the CP; a matrix cell containing REJECTED -> REVIEW_R2_BLOCKED; review r1 with no 'R1 … 拍板/终裁' marker -> REVIEW_R1_BLOCKED; no CR using the CP-registry model -> vacuous OK. 22 governance unit tests pass."
     }
   ],
   "executed_commands": [
