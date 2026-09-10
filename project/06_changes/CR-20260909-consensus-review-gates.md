@@ -89,6 +89,14 @@ R1 需求评审参与角色由「产品 / 架构 / 测试」改为「**产品 / 
 - `AI_STANDARD.md §8` 早已含「模块开发角色」常驻清单，无需新增。
 - 首个按四角色 R1 执行的 CR：`CR-20260909-skills`。
 
+## 修正 2（2026-09-09）：R2/R3/R4 覆盖检查按 CR 自有小节作用域
+
+在 `CR-20260909-skills` 上首次实跑 `review r2` 时发现：`check_review` 的 CP 覆盖检查对**整份层说明书**做 `\bCP-N\b` 搜索，而层说明书累积了历史多个 CR 的 `CP-N` 提及——一个 CR 只要层文档里**任何** CR 的小节提到 `CP-3`，`CP-3` 就被判为"已覆盖"。覆盖链因此弱于设计意图。
+
+- 修复：新增 `_cr_scoped_text(doc_text, cr_name)`，只取标题含该 CR 名的 `##`/`###` 小节正文（可多节，拼接）；覆盖检查与"有无本 CR 小节"判定都改在该作用域内进行。
+- 回归守卫：`tests/test_governance.py::test_review_coverage_is_scoped_to_the_crs_own_section`（兄弟 CR 小节提到 CP-2、本 CR 小节未提 → 仍报 `COVERAGE_GAP`）。
+- 影响：收紧，无放宽。既有 9 个旧 CR 不走该检查（pre-R1234），不受影响。
+
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 https://claude.ai/code/session_01Ckbi5GYRRH4HyTHLEWnrtZ

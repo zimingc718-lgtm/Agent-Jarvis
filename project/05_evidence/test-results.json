@@ -241,7 +241,7 @@
       "result": "PASS",
       "command": "python -m unittest tests.test_governance",
       "real_entry": true,
-      "evidence": "tests/test_governance.py: governance.py review — a CR with a ## 变化点登记 table + an architecture section that mentions the CR and every CP id -> REVIEW_R2_PASS; a CP missing from the architecture doc -> REVIEW_R2_COVERAGE_GAP naming the CP; a matrix cell containing REJECTED -> REVIEW_R2_BLOCKED; review r1 with no 'R1 … 拍板/终裁' marker -> REVIEW_R1_BLOCKED; no CR using the CP-registry model -> vacuous OK. 22 governance unit tests pass."
+      "evidence": "tests/test_governance.py: governance.py review — a CR with a ## 变化点登记 table + an architecture section that mentions the CR and every CP id -> REVIEW_R2_PASS; a CP missing from the architecture doc -> REVIEW_R2_COVERAGE_GAP naming the CP; a matrix cell containing REJECTED -> REVIEW_R2_BLOCKED; review r1 with no 'R1 … 拍板/终裁' marker -> REVIEW_R1_BLOCKED; no CR using the CP-registry model -> vacuous OK. 23 governance unit tests pass (incl. coverage scoped to the CR own section)."
     }
   ],
   "executed_commands": [

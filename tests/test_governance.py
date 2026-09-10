@@ -427,6 +427,24 @@ class GovernanceCliTests(unittest.TestCase):
         self.assertIn("REVIEW_R2_COVERAGE_GAP", output)
         self.assertIn("CP-2", output)
 
+    def test_review_coverage_is_scoped_to_the_crs_own_section(self) -> None:
+        # A sibling CR's section mentions CP-2; the target CR's own section does not.
+        # Coverage must still flag CP-2 as a gap (no cross-CR CP-id borrowing).
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._CP_REGISTRY + self._GOOD_MATRIX)
+            (root / "project/02_solution/架构设计说明书.md").write_text(
+                "# 架构设计说明书\n\n"
+                "## CR-2099-other 方案\n\n处理了 CP-1 和 CP-2。\n\n"
+                "## CR-2099-demo 方案\n\n只响应了 CP-1。\n",
+                encoding="utf-8",
+            )
+            code, output = governance.run(["review", "r2", "--root", directory])
+
+        self.assertEqual(code, 1)
+        self.assertIn("REVIEW_R2_COVERAGE_GAP", output)
+        self.assertIn("CP-2", output)
+
     def test_review_blocks_on_a_rejected_verdict(self) -> None:
         rejected = self._GOOD_MATRIX.replace("APPROVED ev4", "REJECTED 不可测")
         with tempfile.TemporaryDirectory() as directory:

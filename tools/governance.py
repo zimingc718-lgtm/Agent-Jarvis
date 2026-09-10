@@ -575,6 +575,30 @@ def _table_rows(section: str) -> list[list[str]]:
     return [row for row in rows[2:] if any(cell for cell in row)]
 
 
+def _cr_scoped_text(doc_text: str, cr_name: str) -> str:
+    """Concatenated bodies of every `##`/`###` section whose heading names this CR.
+
+    CP-coverage must be judged inside the CR's own sections of a layer doc, not
+    the whole file — layer docs accumulate `CP-N` mentions from many CRs and a
+    bare `\\bCP-3\\b` search would match an unrelated CR's section.
+    """
+    lines = doc_text.splitlines(keepends=True)
+    out: list[str] = []
+    i = 0
+    while i < len(lines):
+        heading = re.match(r"^(#{2,3})\s", lines[i])
+        if heading and re.search(re.escape(cr_name), lines[i]):
+            level = len(heading.group(1))
+            out.append(lines[i])
+            i += 1
+            while i < len(lines) and not re.match(rf"^#{{1,{level}}}\s", lines[i]):
+                out.append(lines[i])
+                i += 1
+            continue
+        i += 1
+    return "".join(out)
+
+
 def parse_cp_registry(cr_text: str) -> list[dict[str, str]]:
     """Rows of a CR's `## 变化点登记` table: [{cp, role}, ...]. Empty when the CR predates the model."""
     section = _section(cr_text, "变化点登记")
@@ -613,11 +637,12 @@ def check_review(root: Path, level: str) -> list[str]:
 
         # r2 / r3 / r4: downward coverage + review matrix.
         layer_text = read_text(root / REVIEW_LAYER_DOC[level])
-        if not re.search(re.escape(name), layer_text):
+        scoped = _cr_scoped_text(layer_text, name)
+        if not scoped:
             findings.append(
-                f"FAIL REVIEW_{level.upper()}_BLOCKED {name}: {REVIEW_LAYER_DOC[level]} has no section for this CR"
+                f"FAIL REVIEW_{level.upper()}_BLOCKED {name}: {REVIEW_LAYER_DOC[level]} has no '## {name} …' section"
             )
-        uncovered = [cp for cp in cp_ids if not re.search(rf"\b{re.escape(cp)}\b", layer_text)]
+        uncovered = [cp for cp in cp_ids if not re.search(rf"\b{re.escape(cp)}\b", scoped)]
         if uncovered:
             findings.append(
                 f"FAIL REVIEW_{level.upper()}_COVERAGE_GAP {name}: {', '.join(uncovered)} not addressed in {REVIEW_LAYER_DOC[level]}"
