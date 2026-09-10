@@ -143,7 +143,7 @@ def run(argv: list[str] | None = None) -> tuple[int, str]:
     if args.command == "verify":
         messages = verify(root)
     elif args.command == "gate":
-        messages = gate(root, args.gate.lower())
+        messages = gate(root, args.gate.lower(), cr=args.cr)
     elif args.command == "snapshot":
         messages = snapshot(root, args.actor)
     elif args.command == "check-changes":
@@ -151,7 +151,15 @@ def run(argv: list[str] | None = None) -> tuple[int, str]:
     elif args.command == "ui":
         messages = check_ui_process_control(root)
     elif args.command == "review":
-        messages = check_review(root, args.level.lower())
+        messages = check_review(root, args.level.lower(), cr=args.cr)
+    elif args.command == "check":
+        messages = check_stage(root, args.stage, cr=args.cr)
+    elif args.command == "check-specs":
+        messages = check_specs(root)
+    elif args.command == "new-cr":
+        messages = new_cr(root, args.name)
+    elif args.command == "matrix":
+        messages = build_matrices(root, args.cr_name, force=args.force)
     else:
         parser.error("unknown command")
 
@@ -169,6 +177,7 @@ def build_parser() -> argparse.ArgumentParser:
     gate_parser = subparsers.add_parser("gate", help="run a governance gate")
     gate_parser.add_argument("gate", choices=["g1", "g2", "g3", "g3.5", "g4"])
     gate_parser.add_argument("--root", default=".", help="project root")
+    gate_parser.add_argument("--cr", default=None, help="narrow the judgement to one change record (not for g4)")
 
     snapshot_parser = subparsers.add_parser("snapshot", help="write baseline hashes and append a ledger event")
     snapshot_parser.add_argument("--root", default=".", help="project root")
@@ -185,6 +194,24 @@ def build_parser() -> argparse.ArgumentParser:
     )
     review_parser.add_argument("level", choices=["r1", "r2", "r3", "r4"])
     review_parser.add_argument("--root", default=".", help="project root")
+    review_parser.add_argument("--cr", default=None, help="narrow the judgement to one change record")
+
+    check_parser = subparsers.add_parser("check", help="run every gate a stage requires (p1|p2|p3|release)")
+    check_parser.add_argument("stage", choices=["p1", "p2", "p3", "release"])
+    check_parser.add_argument("--root", default=".", help="project root")
+    check_parser.add_argument("--cr", default=None, help="narrow the judgement to one change record (not for release)")
+
+    specs_parser = subparsers.add_parser("check-specs", help="validate the spec structure contract (DEC-020)")
+    specs_parser.add_argument("--root", default=".", help="project root")
+
+    new_cr_parser = subparsers.add_parser("new-cr", help="scaffold a compliant change record")
+    new_cr_parser.add_argument("name", help="change record name, e.g. CR-20260911-my-change")
+    new_cr_parser.add_argument("--root", default=".", help="project root")
+
+    matrix_parser = subparsers.add_parser("matrix", help="generate R2/R3/R4 review matrix skeletons from the CP registry")
+    matrix_parser.add_argument("cr_name", metavar="cr", help="change record name")
+    matrix_parser.add_argument("--root", default=".", help="project root")
+    matrix_parser.add_argument("--force", action="store_true", help="rewrite matrices that already exist")
 
     return parser
 
@@ -201,7 +228,7 @@ def verify(root: Path) -> list[str]:
     return ["OK VERIFY_PASS governance files and integrity checks passed"]
 
 
-def gate(root: Path, gate_name: str) -> list[str]:
+def gate(root: Path, gate_name: str, cr: str | None = None) -> list[str]:
     structure_findings = check_required_structure(root)
     if structure_findings:
         return structure_findings
@@ -217,13 +244,17 @@ def gate(root: Path, gate_name: str) -> list[str]:
         g2 = gate(root, "g2")
         if not is_ok(g2):
             return ["FAIL G3_BLOCKED G2 must pass before implementation validation"] + g2
-        return check_g3(root)
+        return check_g3(root, cr=cr)
     if gate_name == "g3.5":
-        g3 = gate(root, "g3")
+        g3 = gate(root, "g3", cr=cr)
         if not is_ok(g3):
             return ["FAIL G3_5_BLOCKED G3 must pass before real-entry smoke validation"] + g3
-        return check_g35(root)
+        return check_g35(root, cr=cr)
     if gate_name == "g4":
+        # A release is judged at full scope by definition: a narrowing view must
+        # never be able to relax it (CR-20260910-process-hardening CP-5).
+        if cr:
+            return ["FAIL G4_BLOCKED release must be judged at full scope; --cr is not accepted"]
         lower = gate(root, "g3.5")
         if not is_ok(lower):
             return ["FAIL G4_BLOCKED G3.5 must pass before release"] + lower
@@ -239,7 +270,7 @@ def snapshot(root: Path, actor: str) -> list[str]:
     baseline = {
         "schema_version": 1,
         "created_at": now_utc(),
-        "files": {rel_path: sha256_file(root / rel_path) for rel_path in discover_controlled_files(root)},
+        "files": {rel_path: governed_hash(root / rel_path, rel_path) for rel_path in discover_controlled_files(root)},
     }
     baseline_json = canonical_json(baseline)
     baseline["baseline_sha256"] = sha256_text(baseline_json)
@@ -294,7 +325,7 @@ def check_baseline(root: Path) -> list[str]:
         if not path.exists():
             findings.append(f"FAIL BASELINE_FILE_MISSING {rel_path}")
             continue
-        actual_hash = sha256_file(path)
+        actual_hash = governed_hash(path, rel_path)
         if actual_hash != expected_hash:
             findings.append(f"FAIL BASELINE_CHANGED {rel_path}")
 
@@ -430,8 +461,16 @@ def check_g4(root: Path) -> list[str]:
     return ["OK G4_PASS release control is approved"]
 
 
-def check_g3(root: Path) -> list[str]:
+def check_g3(root: Path, cr: str | None = None) -> list[str]:
     required_tests = extract_ids(read_text(root / "project/04_tests/测试说明书.md"), "TEST")
+    if cr:
+        # CP-5: a narrowing view for an in-flight CR. The default (cr=None) keeps the
+        # full-scope semantics untouched — another CR's unfinished work must still
+        # block a release, it just should not block this CR's own self-check.
+        scoped = cr_related_tests(root, cr)
+        if scoped is None:
+            return [f"FAIL G3_BLOCKED unknown change record: {cr}"]
+        required_tests = required_tests & scoped
     evidence = load_test_results(root)
     if isinstance(evidence, str):
         return [evidence]
@@ -497,10 +536,16 @@ def check_g3(root: Path) -> list[str]:
     return ["OK G3_PASS all required tests have current PASS evidence"]
 
 
-def check_g35(root: Path) -> list[str]:
+def check_g35(root: Path, cr: str | None = None) -> list[str]:
     evidence = load_test_results(root)
     if isinstance(evidence, str):
         return [evidence.replace("G3_BLOCKED", "G3_5_BLOCKED")]
+
+    if cr:
+        scoped = cr_related_tests(root, cr)
+        if scoped is None:
+            return [f"FAIL G3_5_BLOCKED unknown change record: {cr}"]
+        evidence = [item for item in evidence if item.get("id") in scoped]
 
     for item in evidence:
         if str(item.get("result", "")).upper() == "PASS" and item.get("real_entry") is True:
@@ -612,12 +657,16 @@ def parse_cp_registry(cr_text: str) -> list[dict[str, str]]:
     return out
 
 
-def check_review(root: Path, level: str) -> list[str]:
+def check_review(root: Path, level: str, cr: str | None = None) -> list[str]:
     changes_dir = root / "project/06_changes"
     records = sorted(path for path in changes_dir.glob("CR-*.md") if path.is_file())
 
     with_model = [(path, parse_cp_registry(read_text(path))) for path in records]
     with_model = [(path, cps) for path, cps in with_model if cps]
+    if cr:
+        if not (changes_dir / f"{cr}.md").exists():
+            return [f"FAIL REVIEW_{level.upper()}_BLOCKED unknown change record: {cr}"]
+        with_model = [(path, cps) for path, cps in with_model if path.stem == cr]
     if not with_model:
         return [f"OK REVIEW_{level.upper()}_PASS no change record uses the CP-registry model yet"]
 
@@ -687,6 +736,212 @@ def check_review(root: Path, level: str) -> list[str]:
     return [
         f"OK REVIEW_{level.upper()}_PASS {len(with_model)} change record(s) satisfy the {level.upper()} consensus gate"
     ]
+
+
+# --- CR-20260910-process-hardening: scoping, stages, scaffolding, spec contract ---
+
+def cr_related_tests(root: Path, cr: str) -> set[str] | None:
+    """
+    The TEST ids a change record claims, read from its `- 影响测试:` label.
+    None when the change record does not exist.
+    """
+    path = root / "project/06_changes" / f"{cr}.md"
+    if not path.exists():
+        return None
+    for line in read_text(path).splitlines():
+        stripped = line.strip()
+        if stripped.startswith("- 影响测试"):
+            return extract_ids(stripped, "TEST")
+    return set()
+
+
+# Which gates each stage must clear. `release` is deliberately the only one that
+# runs g4, and it refuses --cr so a narrowing view can never relax a release.
+STAGE_GATES: dict[str, list[str]] = {
+    "p1": ["verify", "check-changes", "review r1"],
+    "p2": ["verify", "check-changes", "check-specs", "gate g1", "gate g2",
+           "review r1", "review r2", "review r3", "review r4"],
+    "p3": ["verify", "check-changes", "check-specs", "ui", "gate g1", "gate g2", "gate g3", "gate g3.5",
+           "review r1", "review r2", "review r3", "review r4"],
+    "release": ["verify", "check-changes", "check-specs", "ui", "gate g1", "gate g2", "gate g3", "gate g3.5",
+                "gate g4", "review r1", "review r2", "review r3", "review r4"],
+}
+
+
+def check_stage(root: Path, stage: str, cr: str | None = None) -> list[str]:
+    """Run every gate a stage requires (CP-3). One command instead of a dozen."""
+    if stage == "release" and cr:
+        return ["FAIL STAGE_INVALID release must be judged at full scope; --cr is not accepted"]
+
+    findings: list[str] = []
+    for step in STAGE_GATES[stage]:
+        head, _, arg = step.partition(" ")
+        if head == "verify":
+            messages = verify(root)
+        elif head == "check-changes":
+            messages = check_changes(root)
+        elif head == "check-specs":
+            messages = check_specs(root)
+        elif head == "ui":
+            messages = check_ui_process_control(root)
+        elif head == "gate":
+            messages = gate(root, arg, cr=cr)
+        elif head == "review":
+            messages = check_review(root, arg, cr=cr)
+        else:
+            messages = [f"FAIL STAGE_INVALID unknown step: {step}"]
+        if not is_ok(messages):
+            findings.extend(f"{m}  [{step}]" for m in messages if not m.startswith("OK "))
+    if findings:
+        return findings
+    scope = f" for {cr}" if cr else ""
+    return [f"OK STAGE_{stage.upper().replace('.', '_')}_PASS all {len(STAGE_GATES[stage])} gate(s) passed{scope}"]
+
+
+def new_cr(root: Path, name: str) -> list[str]:
+    """Scaffold a compliant change record (CP-4) — all 13 labels, half-width colons."""
+    if not name.startswith("CR-"):
+        return [f"FAIL NEW_CR_INVALID name must start with 'CR-': {name}"]
+    path = root / "project/06_changes" / f"{name}.md"
+    if path.exists():
+        return [f"FAIL NEW_CR_EXISTS {to_posix(path.relative_to(root))} already exists"]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(cr_template(name), encoding="utf-8", newline="")
+    return [f"OK NEW_CR_WRITTEN {to_posix(path.relative_to(root))} - fill the labels, then `matrix {name}`"]
+
+
+def cr_template(name: str) -> str:
+    """All 13 labels CHANGE_REQUIRED_LABELS wants, with half-width colons."""
+    lines = [
+        f"# {name}",
+        "",
+        "- 级别: <L1|L2|L3>",
+        "- 提出人: <user | 角色>",
+        "- 状态: R1 待人工终裁",
+        "- 评审模型: R1-R4 + G3/G3.5/G4",
+        "- 影响需求: <REQ-... | 无>",
+        "- 影响模块: <MOD-... | 无>",
+        "- 影响任务: <TASK-... | 无>",
+        "- 影响测试: <TEST-... | 无>",
+        "- 当前证据: `project/05_evidence/EV-<date>-<slug>.md`",
+        "- 方案选项:",
+        "  - A. <被否决的选项及其理由>",
+        "  - B. **<选中的方案>**",
+        "- 选择理由: <为什么选 B - 用证据而非偏好>",
+        "- 回滚方式: <文档回滚 + 运行回滚；回滚后重跑 verify | check-changes | review r1..r4 并重新 snapshot>",
+        "- 验收条件:",
+        "  - R1: 本文件有 `## 变化点登记` 表（每行有来源角色）+ R1 人工终裁痕迹；`review r1` PASS。",
+        f"  - R2/R3/R4: 三层说明书各含 `变更响应 · {name}` 节逐一响应全部 CP；本文件三张矩阵无空、无 REJECTED；`review r2|r3|r4` PASS。",
+        "  - P3/P4: <任务 DONE、测试 PASS、门禁通过>",
+        "- 评审记录: R1 四角色（产品 / 架构 / 模块开发 / 测试）独立评审。**R1 人工终裁**：待用户拍板。",
+        "",
+        "## 变化点登记",
+        "",
+        "| CP | 来源角色 | 一句话 | 关联 ID | 类型 |",
+        "|---|---|---|---|---|",
+        "| CP-1 | 产品 | <一句话> | <REQ-/DEC-/TASK-/TEST-> | <新增/小改/大改/缺陷修复/回归> |",
+        "",
+        "## R2 / R3 / R4 评审矩阵",
+        "",
+        f"P2 产出。三层说明书写 `变更响应 · {name}` 节后，跑 `governance.py matrix {name}` 生成矩阵骨架，再逐格填裁决。",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def build_matrices(root: Path, cr: str, force: bool = False) -> list[str]:
+    """
+    Generate R2/R3/R4 matrix skeletons from the CP registry (CP-10).
+
+    Cells are filled with `TODO`, which is not one of the three verdicts - so an
+    unfilled matrix fails `review` with MATRIX_INVALID rather than passing quietly.
+    """
+    path = root / "project/06_changes" / f"{cr}.md"
+    if not path.exists():
+        return [f"FAIL MATRIX_NO_CR {cr} not found"]
+    text = read_text(path)
+    cps = parse_cp_registry(text)
+    if not cps:
+        return [f"FAIL MATRIX_NO_CPS {cr} has no `## 变化点登记` table"]
+
+    notes: list[str] = []
+    for level in ("2", "3", "4"):
+        heading = f"## R{level} 评审矩阵"
+        if heading in text and not force:
+            notes.append(f"skipped R{level} (already present; --force to rewrite)")
+            continue
+        header = "| CP | " + " | ".join(REVIEW_ROLES) + " |"
+        rule = "|---" * (len(REVIEW_ROLES) + 1) + "|"
+        rows = "\n".join(f"| {entry['cp']} | TODO | TODO | TODO | TODO |" for entry in cps)
+        text = text.rstrip() + "\n\n" + heading + "\n\n" + header + "\n" + rule + "\n" + rows + "\n"
+        notes.append(f"R{level} ({len(cps)} CP rows)")
+    path.write_text(text, encoding="utf-8", newline="")
+    return [f"OK MATRIX_WRITTEN {cr}: " + "; ".join(notes)]
+
+
+# CP-1/CP-12: each spec is "current baseline + per-CR change response + approval".
+SPEC_BASELINE_SECTIONS: dict[str, list[str]] = {
+    "project/01_specification/产品需求说明书.md": [
+        "产品目标", "用户范围", "功能需求", "非功能需求", "非目标", "批准状态",
+    ],
+    "project/02_solution/架构设计说明书.md": [
+        "设计目标", "架构角色定位与文档范围", "技术栈与部署形态", "总体架构", "架构决策",
+        "模块边界", "接口契约", "外部 API 证据", "批准状态",
+    ],
+    "project/03_modules/模块任务开发说明书.md": ["模块任务总览", "关键接口", "批准状态"],
+    "project/04_tests/测试说明书.md": ["制定依据", "测试矩阵", "真实入口冒烟", "批准状态"],
+}
+
+CHANGE_RESPONSE_PREFIX = "变更响应 · "
+
+# Review content belongs to the change record, never to a spec (CP-2).
+REVIEW_HEADING_PATTERNS = [
+    re.compile(r"多角色评审"),
+    re.compile(r"复盘迭代"),
+    re.compile(r"评审（R[1-4]"),
+    re.compile(r"R[1-4] 四角色审查"),
+    re.compile(r"^CR-\S+\s*评审"),
+]
+
+
+def check_specs(root: Path) -> list[str]:
+    """Machine-check the spec structure contract (CP-12, DEC-020 (1))."""
+    findings: list[str] = []
+    for rel_path, allowed in SPEC_BASELINE_SECTIONS.items():
+        path = root / rel_path
+        if not path.exists():
+            findings.append(f"FAIL SPECS_MISSING {rel_path}")
+            continue
+        seen: dict[str, int] = {}
+        for line in read_text(path).splitlines():
+            match = re.match(r"^(#{2,3})\s+(.*?)\s*$", line)
+            if not match:
+                continue
+            level, title = len(match.group(1)), match.group(2)
+            if any(pattern.search(title) for pattern in REVIEW_HEADING_PATTERNS):
+                findings.append(
+                    f"FAIL SPECS_REVIEW_IN_SPEC {rel_path}: review sections belong to the CR - '{title}'"
+                )
+                continue
+            if level != 2:
+                continue
+            if title.startswith(CHANGE_RESPONSE_PREFIX):
+                cr = title[len(CHANGE_RESPONSE_PREFIX):].strip()
+                seen[cr] = seen.get(cr, 0) + 1
+                continue
+            if title not in allowed:
+                findings.append(
+                    f"FAIL SPECS_UNKNOWN_SECTION {rel_path}: '{title}' is neither a baseline section "
+                    f"nor a '{CHANGE_RESPONSE_PREFIX}<CR>' section"
+                )
+        for cr, count in seen.items():
+            if count > 1:
+                findings.append(
+                    f"FAIL SPECS_DUPLICATE_RESPONSE {rel_path}: {cr} has {count} change-response sections (expected 1)"
+                )
+    if findings:
+        return findings
+    return [f"OK SPECS_PASS {len(SPEC_BASELINE_SECTIONS)} spec(s) match the structure contract"]
 
 
 def check_ui_process_control(root: Path) -> list[str]:
@@ -817,6 +1072,38 @@ def is_ok(messages: Iterable[str]) -> bool:
 
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def governed_hash(path: Path, rel_path: str) -> str:
+    """
+    Baseline hash for a controlled file.
+
+    `tsconfig.json` is special-cased (CR-20260910-process-hardening CP-7): Next.js
+    rewrites its `include` array on every build to add whichever `NEXT_DIST_DIR`
+    was used, which produced a BASELINE_CHANGED that meant nothing. Only that
+    churn is normalised away — every other byte of the file stays controlled.
+    """
+    if rel_path == "tsconfig.json":
+        normalised = normalized_tsconfig(path)
+        if normalised is not None:
+            return sha256_text(normalised)
+    return sha256_file(path)
+
+
+def normalized_tsconfig(path: Path) -> str | None:
+    """Canonical tsconfig text with build-dir type globs dropped from `include`; None when unparseable."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    include = data.get("include")
+    if isinstance(include, list):
+        data["include"] = sorted(
+            entry
+            for entry in include
+            if not (isinstance(entry, str) and re.fullmatch(r"\.next[^/]*/types/\*\*/\*\.ts", entry))
+        )
+    return canonical_json(data)
 
 
 def sha256_file(path: Path) -> str:
