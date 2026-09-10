@@ -2,7 +2,7 @@
 
 - 级别: L3（改治理模型本身：门禁作用域、说明书结构契约、新增可执行流程命令；触及 `tools/governance.py`、`docs/`、全部四本说明书）
 - 提出人: user（「1. 理解流程。进一步优化流程，并把流程固化为可执行脚本，并提高效率。2. 理解项目，重新梳理各个环节的说明书，保持一致与每个环节的说明书格式。评审放在 CR 变更里。」）
-- 状态: R1 待人工终裁（四角色评审已闭环至全 APPROVED）
+- 状态: R1 人工终裁完成（用户 2026-09-10「好的。按你的建议来。」）；P2 完成、R2/R3/R4 四角色全 APPROVED；P3 待实现
 - 评审模型: R1–R4 + G3/G3.5/G4
 - 影响需求: 无（不动任何产品需求；改的是流程控制层与文档结构契约）
 - 影响模块: 无 `src/` 变更。治理工具 `tools/governance.py`；文档 `docs/WORKFLOW.md`、`docs/CONTROLS.md`、`docs/AI_STANDARD.md`；四本说明书的**结构**（内容不减）
@@ -21,11 +21,11 @@
   - 回滚后重跑 `verify | check-changes | ui | review r1..r4` 并重新 `snapshot`。
 - 验收条件:
   - R1：本文件有 `## 变化点登记` 表（CP-1..CP-12，每行有来源角色）+ R1 人工终裁痕迹；`review r1` PASS。
-  - R2/R3/R4（P2 产出）：三层说明书各含 `CR-20260910-process-hardening` 变更响应节逐一响应 CP-1..CP-12；本文件补三张评审矩阵；`review r2|r3|r4` PASS。
+  - R2/R3/R4（P2 产出，**已完成**）：三层说明书各含 `变更响应 · CR-20260910-process-hardening` 节逐一响应 CP-1..CP-12；本文件三张矩阵全 APPROVED；`review r1|r2|r3|r4` PASS。
   - P3/P4：TASK-044..047 DONE；TEST-051..054 PASS；`check-specs` 对四本说明书 0 FAIL。
   - **向后兼容硬门**：迁移后 `review r1|r2|r3|r4` 对**全部 4 个 CP-model CR**（skills / display-screen / skill-intake / ui-foundation）仍全 PASS —— 迁移不得破坏任何在途 CR。
   - **信息不丢**：迁移是**移动与去重**，不是删除；每份被移走的评审文字必须能在对应 CR 内找到。
-- 评审记录: R1 四角色独立 ReAct 评审，架构与模块的 CONDITIONAL 经 1 轮反馈闭环转 APPROVED。**R1 人工终裁**：待用户拍板。
+- 评审记录: R1 四角色独立 ReAct 评审，架构与模块的 CONDITIONAL 经 1 轮反馈闭环转 APPROVED。**R1 人工终裁**：用户 2026-09-10「好的。按你的建议来。」—— 确认 CP-1..CP-12、两段式目标结构与小节白名单、评审归位 CR、`--cr` 缺省全量语义、四条新命令，并确认**迁移排在 CR-20260910-ui-foundation 实施之前**。
   - **产品 owner**：①这是流程 CR，不动任何产品需求——必须显式声明，避免读者以为功能有变。②「评审归位到 CR」的前提是不丢信息：已核实**每个 CP-model CR 本就自带 R2/R3/R4 矩阵**，说明书里的评审表是纯重复；但表里的**文字意见**比矩阵格更详细，必须迁入 CR 而非删除。③统一格式的收益是可读性——说明书应回答「系统现在是什么样」，变更史归 CR。结论：**APPROVED**。
   - **架构角色（R1 → 闭环后 APPROVED）**：
     - R1 CONDITIONAL：①迁移会改动 `review r2/r3/r4` 赖以判定覆盖的节标题，**必须先证明向后兼容**再动手；②`--cr` 作用域不能削弱现有全量门禁——默认行为必须仍是全量，`--cr` 只是附加的收窄视图。
@@ -69,6 +69,63 @@
 
 （产品 CP-1..CP-4 + 架构派生 CP-5..CP-7 + 模块派生 CP-8..CP-10 + 测试派生 CP-11/CP-12。R2/R3/R4 各层须逐一响应 CP-1..CP-12。）
 
-## R2 / R3 / R4 评审矩阵
+## R2 评审矩阵
 
-P2 产出。三层说明书写 `CR-20260910-process-hardening` 变更响应节逐一响应 CP-1..CP-12 后，在此补三张矩阵，再跑 `review r2|r3|r4`。
+评审对象：`架构设计说明书.md` 的 `变更响应 · CR-20260910-process-hardening` 节 + DEC-020。
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | APPROVED 结构服务可读性 | APPROVED 白名单入 DEC-020 ①（自审） | APPROVED 脚本执行不手改 | APPROVED check-specs 可验 |
+| CP-2 | APPROVED 迁入不删除，信息不丢 | APPROVED 评审矩阵本就在 CR 内被读取 | APPROVED 剪切+路由到对应 CR | APPROVED TEST-054 检索断言 |
+| CP-3 | APPROVED 12 条命令降为 1 条 | APPROVED 纯编排，不新增判定 | APPROVED STAGE_GATES 表驱动 | APPROVED 任一子门 FAIL 即整体 FAIL 可断言 |
+| CP-4 | APPROVED 消除格式事故 | APPROVED 产物须过 check-changes | APPROVED 模板字符串 + 拒绝覆盖 | APPROVED TEST-052 ①② |
+| CP-5 | APPROVED 不改产品语义 | APPROVED **缺省语义不变**，g4/release 拒绝 --cr（自审） | APPROVED 在既有集合上加筛选层 | APPROVED TEST-051 ① 证明未削弱 |
+| CP-6 | APPROVED 在途 CR 不受伤 | APPROVED _cr_scoped_text 天然兼容（自审） | APPROVED 无代码，纯约束 | APPROVED **TEST-054 硬门** |
+| CP-7 | APPROVED 消除假告警 | APPROVED 归一化仅限 include 数组，其余仍受控（自审） | APPROVED 一个文件特例，边界清晰 | APPROVED TEST-051 ⑤ 双向断言 |
+| CP-8 | APPROVED 1663 行手改必错 | APPROVED 脚本留档可复核可回滚 | APPROVED 幂等要求写进 TASK-046 | APPROVED TEST-053 ⑤ 幂等断言 |
+| CP-9 | APPROVED 不增加要记的东西 | APPROVED 单一 CLI 入口 | APPROVED 全挂 governance.py（自审） | APPROVED package.json 只加一条可验 |
+| CP-10 | APPROVED 人只填裁决 | APPROVED TODO 非法裁决 → 未填完必阻断 | APPROVED 复用 parse_cp_registry | APPROVED TEST-052 ④ |
+| CP-11 | APPROVED 防「写了没实现」 | APPROVED 每子命令有断言 | APPROVED 落 tests/test_governance.py | APPROVED TEST-051..053（自审） |
+| CP-12 | APPROVED 防第 6 种节名 | APPROVED 新增一条机器门 | APPROVED check_specs 纯解析 | APPROVED TEST-053 四类违规（自审） |
+
+## R3 评审矩阵
+
+评审对象：`模块任务开发说明书.md` 的 `变更响应 · CR-20260910-process-hardening` 节 + TASK-044..047。
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | APPROVED 无发散 | APPROVED 结构契约成文 | APPROVED TASK-046 ①（自审） | APPROVED TEST-053 |
+| CP-2 | APPROVED 移动非删除 | APPROVED 路由到对应 CR | APPROVED TASK-046 ②（自审） | APPROVED TEST-054 信息不丢 |
+| CP-3 | APPROVED | APPROVED 表驱动编排 | APPROVED TASK-044 ②（自审） | APPROVED TEST-051 ④ |
+| CP-4 | APPROVED | APPROVED 半角冒号写进模板 | APPROVED TASK-045 ①（自审） | APPROVED TEST-052 ①② |
+| CP-5 | APPROVED | APPROVED 缺省分支不变 | APPROVED TASK-044 ① 只加可选参数（自审） | APPROVED TEST-051 ①②③ |
+| CP-6 | APPROVED | APPROVED 硬门写进验收 | APPROVED TASK-046 ④（自审） | APPROVED TEST-054 |
+| CP-7 | APPROVED | APPROVED normalized_bytes 旁挂 sha256_file | APPROVED TASK-047 ①（自审） | APPROVED TEST-051 ⑤ |
+| CP-8 | APPROVED | APPROVED 脚本非 CLI 子命令，边界清楚 | APPROVED TASK-046 ① 幂等（自审） | APPROVED TEST-053 ⑤ |
+| CP-9 | APPROVED | APPROVED 无第二入口 | APPROVED TASK-047 ②（自审） | APPROVED package.json 可验 |
+| CP-10 | APPROVED | APPROVED 骨架预填 TODO | APPROVED TASK-045 ②（自审） | APPROVED TEST-052 ③④⑤ |
+| CP-11 | APPROVED | APPROVED | APPROVED 四子命令各绑断言（自审） | APPROVED TEST-051..053 |
+| CP-12 | APPROVED | APPROVED | APPROVED TASK-046 ③（自审） | APPROVED TEST-053 |
+
+## R4 评审矩阵
+
+评审对象：`测试说明书.md` 的 `变更响应 · CR-20260910-process-hardening` 节 + TEST-051..054。
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | APPROVED 结构可断言 | APPROVED check-specs 覆盖 | APPROVED TASK-046 ① 绑 TEST-053 | APPROVED TEST-053 ①②（自审） |
+| CP-2 | APPROVED 信息不丢有断言 | APPROVED 文本检索断言 | APPROVED TASK-046 ② 绑 TEST-054 | APPROVED TEST-053 ④ + TEST-054（自审） |
+| CP-3 | APPROVED | APPROVED 子门失败传播可断言 | APPROVED TASK-044 ② 绑 TEST-051 ④ | APPROVED TEST-051 ④（自审） |
+| CP-4 | APPROVED | APPROVED 产物过 check-changes | APPROVED TASK-045 ① 绑 TEST-052 | APPROVED TEST-052 ①②（自审） |
+| CP-5 | APPROVED | APPROVED **必须断言 --cr PASS 时缺省仍 FAIL** | APPROVED TASK-044 ① 绑 TEST-051 | APPROVED TEST-051 ①③ 已含该断言（自审） |
+| CP-6 | APPROVED | APPROVED 迁移前后比对而非只跑一遍 | APPROVED TASK-046 ④ 绑 TEST-054 | APPROVED TEST-054 双断言（自审） |
+| CP-7 | APPROVED | APPROVED 双向断言（该忽略的忽略、该报的仍报） | APPROVED TASK-047 ① 绑 TEST-051 ⑤ | APPROVED TEST-051 ⑤（自审） |
+| CP-8 | APPROVED | APPROVED 幂等是硬要求 | APPROVED TASK-046 ① 绑 TEST-053 ⑤ | APPROVED TEST-053 ⑤（自审） |
+| CP-9 | APPROVED | APPROVED | APPROVED 代码审查项 | APPROVED 测试设计 CP-9（自审） |
+| CP-10 | APPROVED | APPROVED 未填完必阻断 | APPROVED TASK-045 ② 绑 TEST-052 | APPROVED TEST-052 ④（自审） |
+| CP-11 | APPROVED | APPROVED | APPROVED 派生矩阵按子项列行 | APPROVED TEST-051..053（自审） |
+| CP-12 | APPROVED | APPROVED | APPROVED TASK-046 ③ 绑 TEST-053 | APPROVED TEST-053 四类（自审） |
+
+**R2/R3/R4 结果**：CP-1..CP-12 × 4 角色 **全 APPROVED，无 REJECTED、无遗留 CONDITIONAL**。R1 阶段架构的两条与模块的两条 CONDITIONAL 已在 P2 全部成文（DEC-020 ①②③、验收「向后兼容硬门」、CP-8 脚本留档、CP-9 单一入口）。
+
+**P3 出口义务清单（实现前逐条清零）**：① `--cr` 缺省语义不得变——TEST-051 ① 必须断言「`--cr` 给 PASS 时缺省仍 FAIL」；② `gate g4` / `check release` 必须拒绝 `--cr`；③ 迁移**前后**跑 `review r1..r4` 结果比对，四个在途 CR 全 PASS（TEST-054 硬门）；④ 被移走的评审文字必须能在对应 CR 内检索到；⑤ `migrate_specs.py` 幂等（二次运行零 diff）；⑥ 迁移后全量回归 TEST-001..050。
