@@ -5,6 +5,7 @@
 
 # Dependencies
 node_modules/
+.worktrees/
 
 # Next.js build output (interactive + the isolated dirs used by smoke/e2e/verify)
 .next/
