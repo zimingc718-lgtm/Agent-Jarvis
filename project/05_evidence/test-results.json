@@ -348,6 +348,34 @@
       "command": "npm run test:auth-ui && npm run test:e2e",
       "real_entry": true,
       "evidence": "tests/skill-list.test.tsx (5): list renders name — description, empty state 尚未注册技能, refetch on jarvis:skills-changed without a reload, read-only guard (no buttons/inputs), last-good list kept when a refetch fails. tests/floating-chat.test.tsx: 本轮使用技能：X appears on a skill turn and is absent otherwise. e2e asserts the ☰ list picks up a fresh registration with no reload."
+    },
+    {
+      "id": "TEST-051",
+      "result": "PASS",
+      "command": "python -m unittest tests.test_governance",
+      "real_entry": true,
+      "evidence": "ScopeAndStageTests (7): ① gate g3 --cr CR-2099-mine PASS while the default run still FAILs on the other CR's evidence-less TEST-090 — proves the narrowing view does not weaken the default; ①b an unknown --cr is rejected; ② review r2 --cr isolates a REJECTED verdict in a sibling CR; ③ gate g4 --cr and check release --cr both refuse with '--cr is not accepted'; ④ check p1 PASS / check p3 FAIL naming '[gate g3]', ④b check p2 --cr PASS on the same tree; ⑤ appending '.next-verify/types/**/*.ts' and '.next/types/**/*.ts' to tsconfig include leaves verify green, while flipping compilerOptions.strict still raises BASELINE_CHANGED."
+    },
+    {
+      "id": "TEST-052",
+      "result": "PASS",
+      "command": "python -m unittest tests.test_governance",
+      "real_entry": true,
+      "evidence": "ScaffoldingTests (5): ① new-cr output passes check-changes with all 13 required labels present as half-width '- <label>:'; ② a second new-cr on an existing name returns NEW_CR_EXISTS and the hand-written file is byte-identical afterwards; ③ matrix emits R2/R3/R4 with all four role columns and exactly 6 TODO rows for 2 CPs × 3 matrices; ④ an unfilled matrix makes review r2 report MATRIX_INVALID rather than passing quietly; ⑤ matrix skips an existing matrix (filled verdicts survive) and only --force rewrites it."
+    },
+    {
+      "id": "TEST-053",
+      "result": "PASS",
+      "command": "python -m unittest tests.test_governance && python tools/governance.py check-specs",
+      "real_entry": true,
+      "evidence": "SpecStructureTests (5): ① a conforming spec set returns SPECS_PASS; ② an invented section name returns SPECS_UNKNOWN_SECTION naming that section; ③ two change-response sections for one CR return SPECS_DUPLICATE_RESPONSE; ④ all five historical review heading shapes (多角色评审 / 复盘迭代 / 评审（R2） / R2 四角色审查 / CR-… 评审) each return SPECS_REVIEW_IN_SPEC; ⑤ migrate_specs.py --dry-run on the real working tree reports 'already migrated - nothing to do' (idempotent). Live run: check-specs on the repo returns OK SPECS_PASS 4 spec(s)."
+    },
+    {
+      "id": "TEST-054",
+      "result": "PASS",
+      "command": "python -m unittest tests.test_governance && python tools/governance.py review r1",
+      "real_entry": true,
+      "evidence": "Hard gate, two halves. (a) One-shot before/after comparison run during P3: the 20 combinations review r1|r2|r3|r4 × {skills, display-screen, skill-intake, ui-foundation, process-hardening} were captured before the migration and re-run after it — normalised diff is empty and all 20 are PASS, so the migration broke no in-flight CR. Information loss was checked by extracting every review line (len ≥ 12, non-heading) from the pre-migration specs at git HEAD and searching for it whitespace-insensitively across all change records: 250/250 found. (b) Repeatable invariant in MigrationCompatibilityTests (4): all 20 review combinations still PASS against the real repo root; check-specs PASSes; every CR carrying a '（迁移自 …）' provenance marker has an '## R{n} 评审意见' heading (12 such CRs); no spec heading matches any review pattern."
     }
   ],
   "executed_commands": [
@@ -400,6 +428,26 @@
       "command": "npm run build:verify (with interactive next dev live)",
       "result": "PASS",
       "summary": "isolated .next-verify; dev server /api/auth/csrf stayed 200 before and after"
+    },
+    {
+      "command": "python -m unittest tests.test_governance",
+      "result": "PASS",
+      "summary": "44 governance tests passed (16 pre-existing + 21 new for TEST-051..054, incl. subtests)"
+    },
+    {
+      "command": "python tools/migrate_specs.py",
+      "result": "PASS",
+      "summary": "4 specs rewritten to the DEC-020 shape; 34 review blocks moved into 12 change records; second run reports 'already migrated'"
+    },
+    {
+      "command": "python tools/governance.py check-specs",
+      "result": "PASS",
+      "summary": "OK SPECS_PASS 4 spec(s) match the structure contract"
+    },
+    {
+      "command": "python tools/governance.py review r1|r2|r3|r4 --cr <5 CP-model CRs>",
+      "result": "PASS",
+      "summary": "20/20 PASS, normalised diff against the pre-migration capture is empty (TEST-054 hard gate)"
     }
   ],
   "known_warnings": [

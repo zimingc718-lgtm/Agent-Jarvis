@@ -69,20 +69,47 @@ AI 不得用推测替代证据。无法定位证据的问题必须标记为证�
 
 项目技术栈尚未确认，产品测试命令暂不冻结。治理流程命令已经可执行：
 
+**首选按阶段整体跑**，不要逐条敲门（CR-20260910-process-hardening CP-3）：
+
+```powershell
+python tools/governance.py check p1        # R1 阶段
+python tools/governance.py check p2        # R2/R3/R4 阶段
+python tools/governance.py check p3        # 实现验证阶段
+python tools/governance.py check release   # 发布（拒绝 --cr）
+npm run verify:all                         # 全量：类型 + 单测 + 治理单测 + 视觉 + UI 契约 + 冒烟 + check p3
+```
+
+单门仍可单独执行：
+
 ```powershell
 python -m unittest tests.test_governance -v
 python tools/governance.py verify
 python tools/governance.py check-changes
-python tools/governance.py review r1
-python tools/governance.py review r2
-python tools/governance.py review r3
-python tools/governance.py review r4
-python tools/governance.py gate g3
-python tools/governance.py gate g3.5
-python tools/governance.py gate g4
+python tools/governance.py check-specs
+python tools/governance.py review r1|r2|r3|r4
+python tools/governance.py gate g3|g3.5|g4
 ```
 
 `gate g1` / `gate g2` 保留为结构前置检查（`review r*` 的前提），不再是设计阶段的终门。
+
+### `--cr` 作用域（CP-5）
+
+`gate g3|g3.5`、`review r1..r4`、`check p1|p2|p3` 都接受 `--cr <名称>`，把判定收窄到该变更记录 `- 影响测试:` 声明的 TEST 上。用途只有一个：**在途 CR 自查时不被别的 CR 的未完成工作挡住**。
+
+三条不可突破的约束：
+
+1. **缺省语义不变**——不带 `--cr` 时仍是全量判定，别的 CR 的欠账照样阻断。
+2. **`gate g4` 与 `check release` 拒绝 `--cr`**——发布按定义就是全量判定，收窄视角不得放松发布门。
+3. `--cr` 是**自查工具，不是交付凭证**。P3/P4 收口、快照、提交，一律以缺省全量结果为准；用 `--cr` 通过的 CR 必须在记录里如实写明全量为何仍红。
+
+### 脚手架（CP-4 / CP-10）
+
+```powershell
+python tools/governance.py new-cr CR-<日期>-<slug>   # 13 个标签齐全的变更记录骨架
+python tools/governance.py matrix CR-<日期>-<slug>   # 依 CP 登记表生成 R2/R3/R4 矩阵骨架
+```
+
+`matrix` 生成的格子填的是 `TODO`，而 `TODO` **不是合法裁决**——矩阵没填完跑 `review` 必报 `MATRIX_INVALID`，不会静默通过。已有矩阵默认跳过，`--force` 才重写。
 
 技术栈确认后，产品实现相关命令必须写入 `project/04_tests/测试说明书.md`。
 
@@ -103,6 +130,25 @@ npm run test:auth-ui
 npm run test:visual
 npm run test:e2e
 `
+
+## 说明书结构契约（DEC-020）
+
+四本层级说明书（产品需求 / 架构设计 / 模块任务开发 / 测试）统一为**两段式**：
+
+```
+# <标题>
+## <本层基线节>        ← 当前生效的事实，白名单节名，不按 CR 分叉
+## 变更响应 · <CR>     ← 每个变更记录一节，节内用 ### 装白名单子节
+## 批准状态
+```
+
+三条规则：
+
+1. **说明书写「现在是什么」，变更记录写「为什么变成这样」。**评审意见、复盘、四角色裁决**一律不留在说明书里**，全部归位到对应 CR 的 `## R{n} 评审意见` / `## R{n} 评审矩阵`。
+2. 同一个 CR 在同一层**只能有一节**变更响应，节名必须是 `变更响应 · <CR 全名>`。
+3. 结构由 `python tools/governance.py check-specs` 机器校验，已接入 `check p2` / `check p3` / `check release`。
+
+历史文档由 `python tools/migrate_specs.py` 一次性迁移（幂等，二次运行零 diff）；被移走的评审文字带 `（迁移自 \`<说明书>\`）` 溯源标记，可在 CR 内检索到，**不删除**。
 
 ## 构建目录隔离（DEC-009）
 

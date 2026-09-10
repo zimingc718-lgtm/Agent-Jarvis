@@ -49,3 +49,13 @@
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 https://claude.ai/code/session_019PmfK8ePNkNZmrtMS2CQGP
+
+## R4 评审意见
+
+**复盘迭代（CR-20260909-config-preflight-and-manual-auth）**（迁移自 `测试说明书.md`）
+
+| 角色 | 检查重点 | 反馈 | 处理结果 | 结论 |
+|---|---|---|---|---|
+| 测试角色 | TEST-001/002 被挂在 REQ-F-001 上，但从未验证成功登录 | 全部自动化都走 `JARVIS_TEST_USER_ID` 旁路；REQ-F-001 正向验收无证据（违反原则 12） | TEST-001/002 明确标注覆盖边界；新增 TEST-022 人工验证项，`governance.py gate g3` 识别 `verification: manual` 并要求 `verified_by`/`verified_at`，未完成即阻断 | APPROVED |
+| 架构角色 | 配置缺失的失败方式 | 缺 OAuth 会体面阻断，缺 `JARVIS_SECRET_KEY` 却在登录成功后 500 | 新增 `getStorageConfig` 与 `storageUnavailable()`，首页/弹窗显示具名阻断态，8 个 store 路由返回 503 | APPROVED |
+| 开发角色 | 配置诊断可信度 | dotenv 不覆盖已存在环境变量（空值也算存在）；`NODE_ENV=test` 与 `__NEXT_PROCESSED_ENV` 会让检查误报 | `scripts/check-config.mjs` 三者全部处理并有 TEST-023 覆盖 | APPROVED |

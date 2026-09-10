@@ -2,11 +2,11 @@
 
 - 级别: L3（改治理模型本身：门禁作用域、说明书结构契约、新增可执行流程命令；触及 `tools/governance.py`、`docs/`、全部四本说明书）
 - 提出人: user（「1. 理解流程。进一步优化流程，并把流程固化为可执行脚本，并提高效率。2. 理解项目，重新梳理各个环节的说明书，保持一致与每个环节的说明书格式。评审放在 CR 变更里。」）
-- 状态: R1 人工终裁完成（用户 2026-09-10「好的。按你的建议来。」）；P2 完成、R2/R3/R4 四角色全 APPROVED；P3 待实现
+- 状态: R1 人工终裁完成（用户 2026-09-10「好的。按你的建议来。」）；P2 完成、R2/R3/R4 四角色全 APPROVED；**P3/P4 完成**（TASK-049..052 DONE、TEST-051..054 PASS、出口义务 ①..⑥ 清零）
 - 评审模型: R1–R4 + G3/G3.5/G4
 - 影响需求: 无（不动任何产品需求；改的是流程控制层与文档结构契约）
-- 影响模块: 无 `src/` 变更。治理工具 `tools/governance.py`；文档 `docs/WORKFLOW.md`、`docs/CONTROLS.md`、`docs/AI_STANDARD.md`；四本说明书的**结构**（内容不减）
-- 影响任务: 新增 TASK-044（门禁按 CR 切分 + 阶段聚合命令）、TASK-045（`new-cr` / `matrix` 脚手架）、TASK-046（说明书结构迁移脚本 + 结构检查 `check-specs`）、TASK-047（基线忽略 `tsconfig.json` include 抖动 + `verify:all` 聚合脚本）
+- 影响模块: MOD-GOVERNANCE（本 CR 登记，零 `src/` 变更）。治理工具 `tools/governance.py`；文档 `docs/WORKFLOW.md`、`docs/CONTROLS.md`、`docs/AI_STANDARD.md`；四本说明书的**结构**（内容不减）
+- 影响任务: 新增 TASK-049（门禁按 CR 切分 + 阶段聚合命令）、TASK-050（`new-cr` / `matrix` 脚手架）、TASK-051（说明书结构迁移脚本 + 结构检查 `check-specs`）、TASK-052（基线忽略 `tsconfig.json` include 抖动 + `verify:all` 聚合脚本）
 - 影响测试: 新增 TEST-051（`--cr` 作用域与 `check <stage>`）、TEST-052（`new-cr` / `matrix` 脚手架产物合规）、TEST-053（`check-specs` 结构契约）、TEST-054（迁移向后兼容：四个 CP-model CR 的 `review r1..r4` 迁移后仍全 PASS）
 - 当前证据: `project/05_evidence/EV-2026-09-10-process-hardening.md`（本会话实测到的 7 个摩擦点 + R1 四角色评审）
 - 方案选项:
@@ -22,7 +22,7 @@
 - 验收条件:
   - R1：本文件有 `## 变化点登记` 表（CP-1..CP-12，每行有来源角色）+ R1 人工终裁痕迹；`review r1` PASS。
   - R2/R3/R4（P2 产出，**已完成**）：三层说明书各含 `变更响应 · CR-20260910-process-hardening` 节逐一响应 CP-1..CP-12；本文件三张矩阵全 APPROVED；`review r1|r2|r3|r4` PASS。
-  - P3/P4：TASK-044..047 DONE；TEST-051..054 PASS；`check-specs` 对四本说明书 0 FAIL。
+  - P3/P4：TASK-049..047 DONE；TEST-051..054 PASS；`check-specs` 对四本说明书 0 FAIL。
   - **向后兼容硬门**：迁移后 `review r1|r2|r3|r4` 对**全部 4 个 CP-model CR**（skills / display-screen / skill-intake / ui-foundation）仍全 PASS —— 迁移不得破坏任何在途 CR。
   - **信息不丢**：迁移是**移动与去重**，不是删除；每份被移走的评审文字必须能在对应 CR 内找到。
 - 评审记录: R1 四角色独立 ReAct 评审，架构与模块的 CONDITIONAL 经 1 轮反馈闭环转 APPROVED。**R1 人工终裁**：用户 2026-09-10「好的。按你的建议来。」—— 确认 CP-1..CP-12、两段式目标结构与小节白名单、评审归位 CR、`--cr` 缺省全量语义、四条新命令，并确认**迁移排在 CR-20260910-ui-foundation 实施之前**。
@@ -82,7 +82,7 @@
 | CP-5 | APPROVED 不改产品语义 | APPROVED **缺省语义不变**，g4/release 拒绝 --cr（自审） | APPROVED 在既有集合上加筛选层 | APPROVED TEST-051 ① 证明未削弱 |
 | CP-6 | APPROVED 在途 CR 不受伤 | APPROVED _cr_scoped_text 天然兼容（自审） | APPROVED 无代码，纯约束 | APPROVED **TEST-054 硬门** |
 | CP-7 | APPROVED 消除假告警 | APPROVED 归一化仅限 include 数组，其余仍受控（自审） | APPROVED 一个文件特例，边界清晰 | APPROVED TEST-051 ⑤ 双向断言 |
-| CP-8 | APPROVED 1663 行手改必错 | APPROVED 脚本留档可复核可回滚 | APPROVED 幂等要求写进 TASK-046 | APPROVED TEST-053 ⑤ 幂等断言 |
+| CP-8 | APPROVED 1663 行手改必错 | APPROVED 脚本留档可复核可回滚 | APPROVED 幂等要求写进 TASK-051 | APPROVED TEST-053 ⑤ 幂等断言 |
 | CP-9 | APPROVED 不增加要记的东西 | APPROVED 单一 CLI 入口 | APPROVED 全挂 governance.py（自审） | APPROVED package.json 只加一条可验 |
 | CP-10 | APPROVED 人只填裁决 | APPROVED TODO 非法裁决 → 未填完必阻断 | APPROVED 复用 parse_cp_registry | APPROVED TEST-052 ④ |
 | CP-11 | APPROVED 防「写了没实现」 | APPROVED 每子命令有断言 | APPROVED 落 tests/test_governance.py | APPROVED TEST-051..053（自审） |
@@ -90,22 +90,22 @@
 
 ## R3 评审矩阵
 
-评审对象：`模块任务开发说明书.md` 的 `变更响应 · CR-20260910-process-hardening` 节 + TASK-044..047。
+评审对象：`模块任务开发说明书.md` 的 `变更响应 · CR-20260910-process-hardening` 节 + TASK-049..047。
 
 | CP | 产品 | 架构 | 模块 | 测试 |
 |---|---|---|---|---|
-| CP-1 | APPROVED 无发散 | APPROVED 结构契约成文 | APPROVED TASK-046 ①（自审） | APPROVED TEST-053 |
-| CP-2 | APPROVED 移动非删除 | APPROVED 路由到对应 CR | APPROVED TASK-046 ②（自审） | APPROVED TEST-054 信息不丢 |
-| CP-3 | APPROVED | APPROVED 表驱动编排 | APPROVED TASK-044 ②（自审） | APPROVED TEST-051 ④ |
-| CP-4 | APPROVED | APPROVED 半角冒号写进模板 | APPROVED TASK-045 ①（自审） | APPROVED TEST-052 ①② |
-| CP-5 | APPROVED | APPROVED 缺省分支不变 | APPROVED TASK-044 ① 只加可选参数（自审） | APPROVED TEST-051 ①②③ |
-| CP-6 | APPROVED | APPROVED 硬门写进验收 | APPROVED TASK-046 ④（自审） | APPROVED TEST-054 |
-| CP-7 | APPROVED | APPROVED normalized_bytes 旁挂 sha256_file | APPROVED TASK-047 ①（自审） | APPROVED TEST-051 ⑤ |
-| CP-8 | APPROVED | APPROVED 脚本非 CLI 子命令，边界清楚 | APPROVED TASK-046 ① 幂等（自审） | APPROVED TEST-053 ⑤ |
-| CP-9 | APPROVED | APPROVED 无第二入口 | APPROVED TASK-047 ②（自审） | APPROVED package.json 可验 |
-| CP-10 | APPROVED | APPROVED 骨架预填 TODO | APPROVED TASK-045 ②（自审） | APPROVED TEST-052 ③④⑤ |
+| CP-1 | APPROVED 无发散 | APPROVED 结构契约成文 | APPROVED TASK-051 ①（自审） | APPROVED TEST-053 |
+| CP-2 | APPROVED 移动非删除 | APPROVED 路由到对应 CR | APPROVED TASK-051 ②（自审） | APPROVED TEST-054 信息不丢 |
+| CP-3 | APPROVED | APPROVED 表驱动编排 | APPROVED TASK-049 ②（自审） | APPROVED TEST-051 ④ |
+| CP-4 | APPROVED | APPROVED 半角冒号写进模板 | APPROVED TASK-050 ①（自审） | APPROVED TEST-052 ①② |
+| CP-5 | APPROVED | APPROVED 缺省分支不变 | APPROVED TASK-049 ① 只加可选参数（自审） | APPROVED TEST-051 ①②③ |
+| CP-6 | APPROVED | APPROVED 硬门写进验收 | APPROVED TASK-051 ④（自审） | APPROVED TEST-054 |
+| CP-7 | APPROVED | APPROVED normalized_bytes 旁挂 sha256_file | APPROVED TASK-052 ①（自审） | APPROVED TEST-051 ⑤ |
+| CP-8 | APPROVED | APPROVED 脚本非 CLI 子命令，边界清楚 | APPROVED TASK-051 ① 幂等（自审） | APPROVED TEST-053 ⑤ |
+| CP-9 | APPROVED | APPROVED 无第二入口 | APPROVED TASK-052 ②（自审） | APPROVED package.json 可验 |
+| CP-10 | APPROVED | APPROVED 骨架预填 TODO | APPROVED TASK-050 ②（自审） | APPROVED TEST-052 ③④⑤ |
 | CP-11 | APPROVED | APPROVED | APPROVED 四子命令各绑断言（自审） | APPROVED TEST-051..053 |
-| CP-12 | APPROVED | APPROVED | APPROVED TASK-046 ③（自审） | APPROVED TEST-053 |
+| CP-12 | APPROVED | APPROVED | APPROVED TASK-051 ③（自审） | APPROVED TEST-053 |
 
 ## R4 评审矩阵
 
@@ -113,19 +113,54 @@
 
 | CP | 产品 | 架构 | 模块 | 测试 |
 |---|---|---|---|---|
-| CP-1 | APPROVED 结构可断言 | APPROVED check-specs 覆盖 | APPROVED TASK-046 ① 绑 TEST-053 | APPROVED TEST-053 ①②（自审） |
-| CP-2 | APPROVED 信息不丢有断言 | APPROVED 文本检索断言 | APPROVED TASK-046 ② 绑 TEST-054 | APPROVED TEST-053 ④ + TEST-054（自审） |
-| CP-3 | APPROVED | APPROVED 子门失败传播可断言 | APPROVED TASK-044 ② 绑 TEST-051 ④ | APPROVED TEST-051 ④（自审） |
-| CP-4 | APPROVED | APPROVED 产物过 check-changes | APPROVED TASK-045 ① 绑 TEST-052 | APPROVED TEST-052 ①②（自审） |
-| CP-5 | APPROVED | APPROVED **必须断言 --cr PASS 时缺省仍 FAIL** | APPROVED TASK-044 ① 绑 TEST-051 | APPROVED TEST-051 ①③ 已含该断言（自审） |
-| CP-6 | APPROVED | APPROVED 迁移前后比对而非只跑一遍 | APPROVED TASK-046 ④ 绑 TEST-054 | APPROVED TEST-054 双断言（自审） |
-| CP-7 | APPROVED | APPROVED 双向断言（该忽略的忽略、该报的仍报） | APPROVED TASK-047 ① 绑 TEST-051 ⑤ | APPROVED TEST-051 ⑤（自审） |
-| CP-8 | APPROVED | APPROVED 幂等是硬要求 | APPROVED TASK-046 ① 绑 TEST-053 ⑤ | APPROVED TEST-053 ⑤（自审） |
+| CP-1 | APPROVED 结构可断言 | APPROVED check-specs 覆盖 | APPROVED TASK-051 ① 绑 TEST-053 | APPROVED TEST-053 ①②（自审） |
+| CP-2 | APPROVED 信息不丢有断言 | APPROVED 文本检索断言 | APPROVED TASK-051 ② 绑 TEST-054 | APPROVED TEST-053 ④ + TEST-054（自审） |
+| CP-3 | APPROVED | APPROVED 子门失败传播可断言 | APPROVED TASK-049 ② 绑 TEST-051 ④ | APPROVED TEST-051 ④（自审） |
+| CP-4 | APPROVED | APPROVED 产物过 check-changes | APPROVED TASK-050 ① 绑 TEST-052 | APPROVED TEST-052 ①②（自审） |
+| CP-5 | APPROVED | APPROVED **必须断言 --cr PASS 时缺省仍 FAIL** | APPROVED TASK-049 ① 绑 TEST-051 | APPROVED TEST-051 ①③ 已含该断言（自审） |
+| CP-6 | APPROVED | APPROVED 迁移前后比对而非只跑一遍 | APPROVED TASK-051 ④ 绑 TEST-054 | APPROVED TEST-054 双断言（自审） |
+| CP-7 | APPROVED | APPROVED 双向断言（该忽略的忽略、该报的仍报） | APPROVED TASK-052 ① 绑 TEST-051 ⑤ | APPROVED TEST-051 ⑤（自审） |
+| CP-8 | APPROVED | APPROVED 幂等是硬要求 | APPROVED TASK-051 ① 绑 TEST-053 ⑤ | APPROVED TEST-053 ⑤（自审） |
 | CP-9 | APPROVED | APPROVED | APPROVED 代码审查项 | APPROVED 测试设计 CP-9（自审） |
-| CP-10 | APPROVED | APPROVED 未填完必阻断 | APPROVED TASK-045 ② 绑 TEST-052 | APPROVED TEST-052 ④（自审） |
+| CP-10 | APPROVED | APPROVED 未填完必阻断 | APPROVED TASK-050 ② 绑 TEST-052 | APPROVED TEST-052 ④（自审） |
 | CP-11 | APPROVED | APPROVED | APPROVED 派生矩阵按子项列行 | APPROVED TEST-051..053（自审） |
-| CP-12 | APPROVED | APPROVED | APPROVED TASK-046 ③ 绑 TEST-053 | APPROVED TEST-053 四类（自审） |
+| CP-12 | APPROVED | APPROVED | APPROVED TASK-051 ③ 绑 TEST-053 | APPROVED TEST-053 四类（自审） |
 
 **R2/R3/R4 结果**：CP-1..CP-12 × 4 角色 **全 APPROVED，无 REJECTED、无遗留 CONDITIONAL**。R1 阶段架构的两条与模块的两条 CONDITIONAL 已在 P2 全部成文（DEC-020 ①②③、验收「向后兼容硬门」、CP-8 脚本留档、CP-9 单一入口）。
 
 **P3 出口义务清单（实现前逐条清零）**：① `--cr` 缺省语义不得变——TEST-051 ① 必须断言「`--cr` 给 PASS 时缺省仍 FAIL」；② `gate g4` / `check release` 必须拒绝 `--cr`；③ 迁移**前后**跑 `review r1..r4` 结果比对，四个在途 CR 全 PASS（TEST-054 硬门）；④ 被移走的评审文字必须能在对应 CR 内检索到；⑤ `migrate_specs.py` 幂等（二次运行零 diff）；⑥ 迁移后全量回归 TEST-001..050。
+
+## P3/P4 执行记录
+
+**结论**：TASK-049..052 全部 DONE，TEST-051..054 全部 PASS，出口义务 ①..⑥ 逐条清零。
+
+### 出口义务逐条销账
+
+| # | 义务 | 证据 |
+|---|---|---|
+| ① | `--cr` 缺省语义不得变 | `test_051_1`：同一棵树上 `gate g3 --cr CR-2099-mine` PASS，而**缺省 `gate g3` 仍 FAIL** 并点名别的 CR 的 `TEST-090`。这条断言就是「未削弱」的证明本身 |
+| ② | `gate g4` / `check release` 拒绝 `--cr` | `test_051_3`：两条命令都返回 `--cr is not accepted`，退出码 1 |
+| ③ | 迁移前后 `review r1..r4` 比对 | 迁移**前**捕获 5 个 CP-model CR × 4 级 = 20 组结果全 PASS；迁移**后**重跑，归一化后 diff **为空**。renumber（见下）之后再跑一次，仍 20/20 一致 |
+| ④ | 被移走的评审文字可检索 | 从 git HEAD 的迁移前说明书抽出全部评审正文行（长度 ≥ 12、非标题），逐行在全部变更记录里做忽略空白的检索：**250/250 命中** |
+| ⑤ | `migrate_specs.py` 幂等 | 二次运行输出 `already migrated - nothing to do`，零 diff；该断言已固化为 `test_053_5`，对**工作树真实文档**跑 |
+| ⑥ | 迁移后全量回归 | `tsc --noEmit` PASS；`vitest` 27 文件 / **194 测试** PASS；`test:visual` 3 PASS；`test:ui-contract` **49 passed · 0 failed**；`test:smoke` PASS；`python -m unittest tests.test_governance` **44 PASS** |
+
+### 实现与设计的偏差（如实记录）
+
+1. **`migrate_specs.py` 的容器节 bug（实现期发现并修）**。产品/架构说明书的 `## 多角色评审` 是**容器**，各 CR 的评审以 `###` 挂在它下面。首版脚本把整块当成一条塞进 fallback CR，等于把 7 个 CR 的评审全堆到 `CR-20260908-floating-llm-chat`。修法是遇到评审容器先按 `###` 拆开、逐条按标题路由到各自的 CR；命中不了 CR 名的子节退回 `<容器> / <子节>` 复合标题。修后 34 个评审块各回各家。
+
+2. **TASK 编号撞车（实现期发现）**。并行会话的 `CR-20260910-ui-foundation`（`6408b56`，已批准未实施）**已经占用 TASK-044..048**，而本 CR 在 P2 同样声明了 TASK-044..047——两组完全不同的工作抢同一批 ID。ui-foundation 先落库且已批准，按先到先得保留其编号；本 CR 的四个任务整体改号为 **TASK-049..052**，改号范围严格限定在本 CR 自己的文件与各说明书里**本 CR 的变更响应节**，其余章节一个字节没动。
+
+3. **本 CR 的任务此前没有总览表行**。P2 只把 TASK-044..047 写进了「变化点影响矩阵」，忘了往「模块任务总览」加行——`review r3` 查的是 CP 覆盖不是任务行，所以没拦住。P3 补齐 TASK-049..052 四行，并为此在架构说明书登记 **MOD-GOVERNANCE** 模块边界（零 `src/` 依赖、不参与产品运行）。覆盖需求列如实写「无（流程控制）」，不硬蹭一个不相干的 REQ。
+
+4. **迁移暴露了 REQ-F-025 的假覆盖（重要）**。迁移后 `gate g2` 报 `REQ-F-025 missing test coverage`。查因：迁移前 REQ-F-025 在测试说明书里的**唯一**出现位置是一张**评审表的表格行**，而不是任何测试行——G2 的覆盖检查是全文扫 REQ id，于是一直被这条评审文字"喂饱"。评审归位把它带走，假覆盖就露了原形。**这不是迁移造成的回归，是迁移暴露的既有缺陷。**修法不是把评审塞回去，而是补真覆盖：`TEST-040 ②③` 本来就在断言「`<iframe>` 无 `sandbox` 属性」和「提示条无关闭途径、Esc 无效」——正是 REQ-F-025 验收标准 ①②，只是 TEST-040 的覆盖需求列漏写了 REQ-F-025。补进该列后 `gate g2` 恢复 `G2_PASS`。
+
+   **流程教训**：CP 覆盖与 REQ 覆盖都是**全文关键字匹配**，评审文字里出现的 ID 会被算作覆盖。TEST-054 的硬门只比对了 `review r1..r4`，**没有比对 `gate g2`**，所以这条是靠迁移后跑全量门禁才发现的，不是硬门抓出来的。后续 CR 若再做文档结构迁移，前后比对集合应扩到 `check p3` 全量而不止 `review r*`。
+
+### 门禁状态（如实）
+
+- `check-specs`：`OK SPECS_PASS 4 spec(s)`。
+- `check-changes`：`OK CHANGE_RECORDS_PASS validated 15 change record(s)`。
+- `gate g1` / `gate g2`：PASS。
+- `review r1..r4 --cr CR-20260910-process-hardening`：**全 PASS**。
+- `gate g3`**全量仍 FAIL**：`missing PASS evidence for: TEST-047, TEST-048, TEST-049, TEST-050`。这四条属于 `CR-20260910-ui-foundation`（已批准、**未实施**），与本 CR 无关，本 CR 零 `src/` 变更。按 CP-5 的规矩，`--cr` 只是自查视角，**不作为交付凭证**——本 CR 的收口结论是「本 CR 范围内全绿，仓库全量 g3 因另一在途 CR 未实施而红」，不写成「g1-g4 全绿」。

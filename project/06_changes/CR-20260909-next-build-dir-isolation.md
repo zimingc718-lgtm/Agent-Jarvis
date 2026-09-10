@@ -64,3 +64,13 @@
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 https://claude.ai/code/session_019PmfK8ePNkNZmrtMS2CQGP
+
+## R4 评审意见
+
+**复盘迭代（CR-20260909-next-build-dir-isolation）**（迁移自 `测试说明书.md`）
+
+| 角色 | 检查重点 | 反馈 | 处理结果 | 结论 |
+|---|---|---|---|---|
+| 测试角色 | `/api/auth/[...nextauth]` 从无真实 HTTP 覆盖 | 全套测试走 `JARVIS_TEST_USER_ID` 旁路，NextAuth 路由处理器整体 500（`vendor-chunks/jose.js` MODULE_NOT_FOUND）对 `npm test`+smoke+e2e+gates 完全不可见（原则 12） | 新增 TEST-024：smoke 断言 `/api/auth/csrf`/`providers`，e2e 断言 `/api/auth/signin` 非 500 | APPROVED |
+| 架构角色 | `.next` 污染来源 | `next build`（含验证循环）与交互 `next dev` 共用 `.next/`；smoke 与 e2e 各起 `next dev` 也共用 `.next/` | DEC-009：`NEXT_DIST_DIR` 隔离，`build:verify` 用 `.next-verify/`，smoke/e2e 各自目录 | APPROVED |
+| 开发角色 | 验证流程本身是破坏源 | 会话内多次 `npx next build` 直接打在用户运行中的 dev server 的 `.next/` 上 | WORKFLOW「构建目录隔离」章节禁止该操作；`npm run build:verify` 为唯一验证构建入口 | APPROVED |

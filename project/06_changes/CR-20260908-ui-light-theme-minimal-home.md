@@ -45,3 +45,25 @@
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 https://claude.ai/code/session_019PmfK8ePNkNZmrtMS2CQGP
+
+## R3 评审意见
+
+**复盘迭代（CR-20260908-ui-light-theme-minimal-home）**（迁移自 `模块任务开发说明书.md`）
+
+| 角色 | 检查重点 | 反馈 | 处理结果 | 结论 |
+|---|---|---|---|---|
+| 产品 owner | 首页收敛是否删除了已批准能力 | 知识库概览为暂缓展示，非删除；设置改弹窗后 `/settings/models` 仍在 | 记入 REQ-F-015 与验收澄清 | APPROVED |
+| 架构角色 | 主题、弹窗、Markdown 三处是否引入依赖或越界 | 全部零依赖（CSS 自定义属性 / 原生 `<dialog>` / 自写渲染器），未触碰 CONTROLS L3「外部依赖」 | 记入 DEC-006/007/008 | APPROVED |
+| 模块开发角色 | `ModelSettings` 同时用于弹窗与页面是否安全 | 根元素改 `<div>`、标题降为 `<h2>`，由页面提供 `<main>`/`<h1>`，避免嵌套地标与双 h1 | TASK-016 落实 | APPROVED |
+| 测试角色 | 新增行为是否有真实入口断言 | 主题持久化、弹窗开合、Markdown 渲染均已在 Playwright 真实浏览器覆盖 | TEST-019/020/021 登记 | APPROVED |
+
+## R4 评审意见
+
+**复盘迭代（CR-20260908-ui-light-theme-minimal-home）**（迁移自 `测试说明书.md`）
+
+| 角色 | 检查重点 | 反馈 | 处理结果 | 结论 |
+|---|---|---|---|---|
+| 测试角色 | 主题切换是纯客户端行为，易只测组件 | 按原则 12，持久化必须经真实浏览器刷新验证 | TEST-019 同时绑定组件测试与 e2e 刷新断言 | APPROVED |
+| 架构角色 | Markdown 渲染引入注入面 | 渲染器输出 React 元素、不用 innerHTML；须有断言证明原始 HTML 被转义 | TEST-020 增加转义与链接白名单断言 | APPROVED |
+| 产品 owner | 首页收敛后旧入口是否失效 | `/settings/models` 深链保留，冒烟仍走该链路，e2e 走弹窗 | TEST-013 与 TEST-021 分别覆盖两个真实入口 | APPROVED |
+| 开发角色 | 双主题对比度回归风险 | 浅色控件边框最易掉到 3:1 以下 | TEST-012/TEST-018 对两套调色板各跑一次 | APPROVED |

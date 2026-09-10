@@ -50,3 +50,23 @@
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 https://claude.ai/code/session_019PmfK8ePNkNZmrtMS2CQGP
+
+## R3 评审意见
+
+**复盘迭代（CR-20260908-floating-chat-functional-fixes）**（迁移自 `模块任务开发说明书.md`）
+
+| 角色 | 检查重点 | 反馈 | 处理结果 | 结论 |
+|---|---|---|---|---|
+| 架构角色 | 新增 TASK-009..014 是否越出模块边界或引入隐藏业务 | 均为已批准需求的实现修正；`/api/providers/[id]` 与 `/api/conversations/[id]/messages` 属既有 MOD-PROVIDER/MOD-CHAT | 边界不变，接口契约表已更新 | APPROVED |
+| 开发角色 | TASK-001..008 由 TODO 直接标 DONE 是否有据 | 首版实现已在 CR-20260908-floating-llm-chat 完成但未回填状态 | 结合当前 PASS 证据回填 DONE | APPROVED |
+| 测试角色 | 每个新任务是否绑定真实入口测试 | TASK-009..014 均绑定 route/e2e/smoke 级测试，非纯函数 | TEST-014..018 已登记 | APPROVED |
+
+## R4 评审意见
+
+**复盘迭代（CR-20260908-floating-chat-functional-fixes）**（迁移自 `测试说明书.md`）
+
+| 角色 | 检查重点 | 反馈 | 处理结果 | 结论 |
+|---|---|---|---|---|
+| 测试角色 | 首版 TEST-006 以 `adapters-stream.test.ts` 充当 `/api/providers/test` 覆盖；TEST-009 仅纯函数测停止 | 违反“真实入口对应原则”（AI_STANDARD 原则 12） | TEST-006 重挂真实路由测试；TEST-009 增加 e2e 真实浏览器 Stop 断言；新增 TEST-014..018 | APPROVED |
+| 架构角色 | `model` 参数、`/api/conversations/recent` 两端未对接 | 违反“契约无悬空原则”（原则 13） | 新增 `/api/conversations/[id]/messages` 与前端注水，切换器发送 `model`，smoke/e2e 双端验证 | APPROVED |
+| 产品 owner | REQ-F-006/007/013 验收标准被整体判定，未逐条断言 | 违反“验收标准逐条断言原则”（原则 15） | TEST-010/011/013/016 按“新增/编辑/启用/停用/删除/测试/多轮/恢复”逐动作断言 | APPROVED |

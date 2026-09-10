@@ -44,7 +44,13 @@
     "clean": "node -e \"const fs=require('fs');for(const d of ['.next','.next-smoke','.next-e2e','.next-verify'])fs.rmSync(d,{recursive:true,force:true})\"",
     "test:skills": "vitest run tests/skills.test.ts tests/skills-route.test.ts",
     "test:display": "vitest run tests/display.test.ts",
-    "test:zip": "vitest run tests/zip.test.ts"
+    "test:zip": "vitest run tests/zip.test.ts",
+    "test:governance": "python -m unittest tests.test_governance",
+    "governance:check-specs": "python tools/governance.py check-specs",
+    "governance:p2": "python tools/governance.py check p2",
+    "governance:p3": "python tools/governance.py check p3",
+    "governance:release": "python tools/governance.py check release",
+    "verify:all": "npm run test:typecheck && npm run test && npm run test:governance && npm run test:visual && npm run test:ui-contract && npm run test:smoke && npm run governance:p3"
   },
   "dependencies": {
     "next": "^15.5.2",

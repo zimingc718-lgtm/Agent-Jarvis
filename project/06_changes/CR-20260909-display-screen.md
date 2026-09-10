@@ -166,3 +166,59 @@
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 https://claude.ai/code/session_01Ckbi5GYRRH4HyTHLEWnrtZ
+
+## R1 评审意见
+
+**CR-20260909-display-screen 评审（R1，第二个按新共识门禁模型执行）**（迁移自 `产品需求说明书.md`）
+
+R1 四角色（产品 / 架构 / 模块开发 / 测试）独立 ReAct 评审。完整记录见 `project/05_evidence/EV-2026-09-09-display-screen-requirements.md §3`。CP 逐条响应见 `project/06_changes/CR-20260909-display-screen.md` 的「变化点登记」表（CP-1..CP-15）。
+
+| 角色 | 反馈（本角色视角） | 处理结果 | 结论 |
+|---|---|---|---|
+| 产品 owner | ①REQ-F-015 从"极简空首页"变"全屏动态展示屏"是 MUST 验收重写，须记为用户确认变更。②展示屏是"一块屏幕"（全局单行 `display_state`），非 per-conversation——与用户"Jarvis 的动态显示屏"一致。③非目标须锁：不做多屏/分屏、展示历史回看、手动编辑、内容导出。 | REQ-F-015 重写 + 用户确认行；REQ-F-026 写明全局单行；非目标新增 4 行 | APPROVED |
+| 架构角色 | ①`display_state` 全局单行 = get-or-create（固定主键 + `INSERT OR REPLACE`）。②未沙箱化 `<iframe srcdoc>` 在此 CR 从 DEC-015"立项"变"实际渲染"——信任面真实打开，唯一缓解是提示条 + known warning；提示条须**不可关闭**且**渲染 insight 时常驻**（不是"首次后消失"）。③`routeTurn` 扩 `display` 字段复用 F1 同一次独立调用，不加第二次 LLM 调用。④展示屏内容流用 `jarvis:display-changed` 事件 + 重取，不加轮询/SSE。 | REQ-F-025 ② 改"渲染时常驻不可关闭"；DEC-017 立项（P2）；REQ-F-027 复用同一路由调用 | CONDITIONAL（提示条不可关闭常驻；DEC-017 成文） |
+| 模块开发角色 | ①`page.tsx` 首页重写是大改（header+空 → 全屏 DisplayScreen + 浮层 + z-index 层叠 + `<h1>` 迁入 home 视图）——按 2 子项：Ⅰ DisplayScreen + 数据流；Ⅱ 首页布局重写 + 回归。②`DisplayScreen` client 组件但首帧 SSR `display_state` 避免闪烁（同 DEC-011）。③`routeSkill`→`routeTurn` 是签名变更，与 F1 的 TASK-035 调用点须同步（F1 未 P3 落地则并入 F1 实现）。 | CP-12 写明 2 子项；CP-13 写明 SSR 首帧；CP-10 写明签名同步 | CONDITIONAL（`page.tsx` 2 子项；`routeTurn` 签名同步 F1） |
+| 测试角色 | ①"刷新保持"必须真实浏览器 e2e（原则 12）。②提示条存在性须断言——渲染 insight 时在 DOM、无 close 按钮、Esc 无效。③`routeTurn` `display` fail-open 须单测（判不出 → 展示屏不变）。④REQ-F-015 重写碰 TEST-021/032（首页结构）——回归门。 | TEST-039..042 + TEST-021/032 回归 | APPROVED |
+
+**R1 人工终裁**：待用户拍板——确认 CP-1..CP-15、REQ-F-015 重写、未沙箱化渲染 + 不可关闭提示条、`display_state` 全局单行、`routeTurn` 扩 `display` 字段。两个 CONDITIONAL 均为可实现前置（DEC-017、提示条常驻、`page.tsx` 2 子项、签名同步），无 REJECTED。
+
+**动态展示屏实现细节（CR-20260909-display-screen，随 P2 细化）**：`display_state` 全局单行表（`kind` + `ref_id` + `updated_at`）。`src/components/DisplayScreen.tsx`（client）+ `src/lib/display.ts` + `GET /api/display`。`kind:"home"` → 标题视图（含产品名，取代 header `<h1>`）；`kind:"insight"` → `<iframe srcdoc>`（无 sandbox）+ 不可关闭提示条。内容变更经 `jarvis:display-changed` 事件（`FloatingChat` 收到 `insight` 尾事件 / display 指令时派发）→ 重新 `GET /api/display`。`routeTurn`（F1 `routeSkill` 扩展）一次调用返回 `{skill, display}`，`display` fail-open。层叠：DisplayScreen 基底 / FloatingChat 20 / CornerMenu 30。
+
+## R2 评审意见
+
+**CR-20260909-display-screen 评审（R2，架构说明书）**（迁移自 `架构设计说明书.md`）
+
+各角色对本节「CR-20260909-display-screen 方案」表 + DEC-017 + DEC-016 修订 + MOD-DISPLAY 独立评审。逐 CP 裁决见 CR 的 `## R2 评审矩阵`。R1 阶段架构 CONDITIONAL 的两条（提示条不可关闭常驻 / DEC-017 成文）在此闭环——REQ-F-025 ② 已收紧、DEC-017 已成文。
+
+| 角色 | 反馈（本角色视角） | 处理结果 | 结论 |
+|---|---|---|---|
+| 架构角色（自审） | ①`display_state` 全局单行 + get-or-create（固定主键）——`node:sqlite` 无框架下最简。②DEC-017 内容流（事件 + 重取，无轮询/SSE）成文，首帧 SSR 走 DEC-011 模式。③`<iframe srcDoc>` 无 sandbox 是 DEC-015 的落地——信任面真实打开，提示条不可关闭常驻是唯一缓解、出口义务保留。④`routeTurn` `display` 字段复用 F1 同一次调用。 | DEC-017 立项；REQ-F-025 ② 已收紧 | APPROVED |
+| 产品 owner | 方案无 CR 外行为；标题移入 home 视图符合"回到标题首页"表述；`kind` 扩展点未做过度设计（switch + default）。 | 确认 | APPROVED |
+| 模块开发角色 | ①`page.tsx` 重写按 2 子项（CP-12）——认可。②`DisplayScreen` 与 `FloatingChat` 解耦（后者只派发事件）——边界干净。③`GET /api/display` 在 `kind:"insight"` 时附 html，省一次 `GET /api/insights` 往返——合理。 | 记入 TASK-037/038 | APPROVED |
+| 测试角色 | ①`GET /api/display` 是真实入口，"刷新保持"可 e2e。②提示条不可关闭须断言（无 close 按钮 + Esc 无效）。③`display` fail-open 单测。④DEC-016 修订后 F1 的 TEST-034 仍只测 `skill`，`display` 归 TEST-042——无重叠。 | TEST-039..042 | APPROVED |
+
+## R3 评审意见
+
+**CR-20260909-display-screen 评审（R3，模块任务开发说明书）**（迁移自 `模块任务开发说明书.md`）
+
+各角色对本 CR 的「变化点影响矩阵」+「技术设计」两表 + TASK-036..039 独立评审。逐 CP 裁决见 CR 的 `## R3 评审矩阵`。R1 阶段模块 CONDITIONAL 两条（`page.tsx` 2 子项 / `routeTurn` 签名 churn）在此闭环。
+
+| 角色 | 反馈（本角色视角） | 处理结果 | 结论 |
+|---|---|---|---|
+| 模块开发角色（自审） | ①影响矩阵与架构 CP-1..CP-15 逐行对应，无遗漏。②`page.tsx` 重写按 2 子项写死 TASK-038（Ⅰ 组件/数据层不碰现有首页 → 可先单测；Ⅱ 布局 + 回归）。③`routeTurn` 从 TASK-035 第一行即 `{skill, display}` 签名——F1/F2 合并 P3，无 `routeSkill` 命名、无 rename churn。④`FloatingChat` 只 `dispatchEvent`、不 import `DisplayScreen`——解耦。 | TASK-036..039 + 2 子项 + 合并 P3 顺序 | APPROVED |
+| 架构角色 | ①`display_state` get-or-create（`ON CONFLICT DO UPDATE`）+ 单行——符合 DEC-017。②`GET /api/display` 在 `kind:"insight"` 时附 html，省一次往返——合理。③`<iframe srcDoc>` 无 sandbox 是 DEC-015 落地，提示条不可关闭在 TASK-037 ①（无按钮/无 Esc）——满足。 | 记入 TASK-037 | APPROVED |
+| 产品 owner | ①标题移入 `DisplayScreen` home 视图——符合"回到标题首页"。②`kind` `switch + default` 不过度设计。③无展示屏编辑/历史——非目标一致。 | 确认 | APPROVED |
+| 测试角色 | ①TASK-036 `display_state` get-or-create 单测（无行→默认 / 有行→更新）。②TASK-037 提示条断言（无 close 按钮 + Esc 无效）。③TASK-038 Ⅱ 触发 TEST-021/032 回归——须真覆盖新结构。④TASK-039 `display:"home"` fail-open 单测。 | TEST-039..042 + 回归 | APPROVED |
+
+## R4 评审意见
+
+**复盘迭代（CR-20260909-display-screen）**（迁移自 `测试说明书.md`）
+
+评审立场：测试角色以 AI_STANDARD 原则 12/13/15 为立场独立评审 R4（本测试说明书）。R1 阶段测试即 APPROVED；本轮确认 P2 测试设计闭合。
+
+| 角色 | 反馈（本角色视角） | 处理结果 | 结论 |
+|---|---|---|---|
+| 测试角色（自审） | ①"刷新保持"jsdom 测不出 → TEST-041 走真实浏览器 `page.reload()`。②提示条"不可关闭"须断言无 close 途径（无按钮 + Esc 无效），不能只断言"存在"。③`routeTurn` `display` 字段与 F1 的 `skill` 分测（TEST-042 vs TEST-034），无重叠。④REQ-F-015 重写是行为回归 → TEST-021/032 作回归门重写、点名。 | TEST-039..042 + TEST-021/032 回归 | APPROVED |
+| 架构角色 | DEC-017 的"无轮询/SSE"须可验 → TEST-040 ⑤ 断言"一次事件 → 一次重取" + 代码审查 `DisplayScreen` 无 `setInterval`/`EventSource` | 记入 TEST-040 + 测试设计 CP-9 | APPROVED |
+| 模块开发角色 | 每个任务/子项绑定断言：TASK-036→TEST-039、TASK-037→TEST-040/041、TASK-038 Ⅱ→TEST-021/032 回归、TASK-039→TEST-042。派生矩阵无遗漏 | 确认 | APPROVED |
+| 产品 owner | REQ-F-015/026/027 的可观察动作（全屏展示屏 / 洞察上屏 / 刷新保持 / 显示首页回标题 / 提示条）在 TEST-040/041/042 逐条落点 | 确认 | APPROVED |

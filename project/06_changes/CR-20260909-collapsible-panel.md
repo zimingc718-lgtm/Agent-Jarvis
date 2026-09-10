@@ -87,3 +87,48 @@
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 https://claude.ai/code/session_01Ckbi5GYRRH4HyTHLEWnrtZ
+
+## R1 评审意见
+
+**CR-20260909-collapsible-panel 评审**（迁移自 `产品需求说明书.md`）
+
+评审立场：各角色以本职说明书 + 行业惯例独立评审，允许 CONDITIONAL / 反对。完整评审见 `project/06_changes/CR-20260909-collapsible-panel.md`。
+
+| 角色 | 反馈（本角色视角） | 处理结果 | 结论 |
+|---|---|---|---|
+| 产品 owner | ①范围内，SHOULD 合理。②REQ-F-003「发送后**必须**展开」→「触发展开、可手动收起」是一次 MUST 验收放宽，须记为用户确认变更。③**反对「折叠 + 完全沉默」**——折叠后回复完成，唯一信号是与「空闲就绪」同色的常亮绿灯，用户无法区分「可以聊」和「答案在等你」。 | 加状态灯完成瞬时提示（甲案，非角标非持久新态）；REQ-F-003 放宽记为用户确认变更；新增非目标锁定「无未读角标/计数」 | APPROVED |
+| 架构角色 | ①**`expanded` 状态必须解耦**为 `hasTranscript`（派生）+ `userCollapsed`（持久），否则 `rollbackOptimistic`/`handleNewConversation`/发送路径要各自打补丁。②`localStorage` 服务端不可读，SSR 首帧只能按默认渲染 + client 校正——与 DEC-011（`sessionStorage`）同类。③纯 MOD-CHAT-UI，与 DEC-005「保持主界面可见」方向一致。④a11y：折叠时 `aria-live` 记录区移除，屏幕阅读器折叠期间不朗读流式回复——与视力用户对等，非缺陷。 | REQ-F-019 实现约束写明状态解耦；新增 DEC-013（含 SSR/hydration 处理）；澄清小节记 a11y | APPROVED |
+| 模块开发角色 | ①**任务不能是「加个按钮」**——必须含 `expanded`→`showTranscript` 重构，写死在 TASK-030。②持久化集中为一个 `setUserCollapsed` helper（try/catch，镜像 `markSessionEnded`），键 `jarvis:chat-collapsed`。③**决策 D**：`max-height` 到 `auto` 不能 transition——v1 瞬时切换无动画。 | 条件并入 TASK-030 描述与 DEC-013 | APPROVED |
+| 测试角色 | ①**`expanded`→`showTranscript` 是行为相邻重构**，会碰 REQ-F-003 的「发送后展开」e2e 和 TEST-030「新对话清空 + 刷新空白」——两者须在重构后重跑，作为 CR 回归门。②REQ-F-019 七条验收 → 七组独立断言。③**持久化跨刷新必须真实浏览器**（原则 12），因 SSR 首帧展开 / client 校正折叠这条路径 jsdom 测不出。④陈旧偏好（`collapsed=true` 但无记录）须显式断言不出现「折叠了却空白」的中间态。 | TEST-031 承载折叠行为；测试说明书点名 TEST-030 / REQ-F-003 e2e 重验；持久化跨刷新走 e2e | APPROVED |
+
+## R2 评审意见
+
+**CR-20260909-collapsible-panel 评审**（迁移自 `架构设计说明书.md`）
+
+| 角色 | 反馈 | 处理结果 | 结论 |
+|---|---|---|---|
+| 架构角色 | REQ-F-019 的 `expanded` 状态过载是本 CR 的核心技术风险；`localStorage` 与 SSR 的一致性须与 DEC-011 保持同一模式 | 立 DEC-013：`expanded`→`hasTranscript` + `userCollapsed`，`showTranscript` 为唯一真源；SSR 首帧默认渲染 + hydration 校正；瞬时切换无动画 | APPROVED |
+| 模块开发角色 | 任务须含状态重构而非 bolt-on；持久化集中一个 helper | 记入 DEC-013 与 TASK-030 | APPROVED |
+| 产品 owner | 折叠纯 UI 态，不得影响会话生命周期 | DEC-013 明确与 `conversationId`/`jarvis:chat-session-ended`/「新对话」正交 | APPROVED |
+| 测试角色 | 状态重构会碰既有 e2e | DEC-013 落地后 TEST-030 与「发送后展开」e2e 须重验（记入测试说明书） | APPROVED |
+
+## R3 评审意见
+
+**复盘迭代（CR-20260909-collapsible-panel）**（迁移自 `模块任务开发说明书.md`）
+
+| 角色 | 反馈（本角色视角） | 处理结果 | 结论 |
+|---|---|---|---|
+| 模块开发角色 | REQ-F-003 放宽 + REQ-F-019 新增 → 影响矩阵：REQ-F-003 = **小改**（发送后不再强制 `expanded`，由 `showTranscript` 派生）；REQ-F-019 = **新增**。TASK-030 **必须含 `expanded`→`showTranscript` 重构**，不能是 bolt-on flag，否则 `handleNewConversation`/`rollbackOptimistic`/发送路径要各自打补丁 | 重构写死进 TASK-030 描述①；持久化集中为 `setUserCollapsed` helper（描述②） | APPROVED |
+| 模块开发角色 | 折叠动画的 CSS 成本 | `max-height`→`auto` 不能 transition，grid 子项高度动画需 `0fr↔1fr` 技巧——v1 瞬时切换（描述⑥） | APPROVED |
+| 测试角色 | `expanded`→`showTranscript` 是行为相邻重构，会碰 TEST-030 与「发送后展开」e2e | TASK-030 覆盖测试列 TEST-031；测试说明书派生矩阵点名 TEST-030 与 REQ-F-003 e2e 在重构后重验 | APPROVED |
+| 架构角色 | TASK-030 是否越界 | 纯 MOD-CHAT-UI，无 API/store/schema；`localStorage` 处理同 DEC-011 模式 | APPROVED |
+
+## R4 评审意见
+
+**复盘迭代（CR-20260909-collapsible-panel）**（迁移自 `测试说明书.md`）
+
+| 角色 | 反馈（本角色视角） | 处理结果 | 结论 |
+|---|---|---|---|
+| 测试角色 | ①**`expanded`→`showTranscript`（DEC-013/TASK-030）是行为相邻重构**——TEST-030 与「发送后展开」e2e 必须在重构后重跑，作为 CR 回归门，不是"顺带"。②REQ-F-019 七条验收 → TEST-031 七组独立断言（原则 15）。③**折叠偏好跨刷新只能真实浏览器验证**（原则 12）：SSR 首帧展开 / client 读 `localStorage` 校正折叠这条路径 jsdom 测不出，必须 e2e `page.reload()`。④陈旧偏好（`collapsed=true` 无记录）须显式断言无空白中间态。 | TEST-031 承载①-④；派生矩阵点名 TEST-030 / REQ-F-003 e2e 回归；TEST-030 描述补重构后重跑说明 | APPROVED |
+| 产品 owner | 折叠期间回复完成的"瞬时提示"是否可观察 | TEST-031 断言④：折叠 + 流式时灯 `--busy`，完成后灯做一次瞬时提示再落定——瞬时提示的存在可断言（class 或 data 属性短暂出现） | 记入 TEST-031 断言④ | APPROVED |
+| 架构角色 | 折叠是否可能影响会话生命周期测试 | TEST-031 断言②显式验证 `conversationId` 不变、`jarvis:chat-session-ended` 未置位——折叠与会话生命周期正交有守卫 | APPROVED |

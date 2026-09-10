@@ -26,21 +26,45 @@ CR-20260909-consensus-review-gates 起：设计阶段门禁为 R1–R4（共识�
 当前项目使用 `tools/governance.py` 执行门禁检查：
 
 ```powershell
+python tools/governance.py check p1|p2|p3|release   # 阶段聚合，首选入口
 python tools/governance.py verify
 python tools/governance.py check-changes
-python tools/governance.py review r1
-python tools/governance.py review r2
-python tools/governance.py review r3
-python tools/governance.py review r4
-python tools/governance.py gate g3
-python tools/governance.py gate g3.5
-python tools/governance.py gate g4
+python tools/governance.py check-specs
+python tools/governance.py review r1|r2|r3|r4
+python tools/governance.py gate g3|g3.5|g4
+python tools/governance.py new-cr <CR 名>
+python tools/governance.py matrix <CR 名> [--force]
 python tools/governance.py snapshot --actor <name>
+npm run verify:all
 ```
 
 `gate g1` / `gate g2` 仍可执行，作为 `review r*` 的结构前置。
 
+**阶段 → 门禁集合**（`check <stage>`，任一子门 FAIL 则整体 FAIL 并标出是哪一步）：
+
+| 阶段 | 门禁集合 |
+|---|---|
+| `p1` | `verify` `check-changes` `review r1` |
+| `p2` | `p1` 全部 + `check-specs` `gate g1` `gate g2` `review r2\|r3\|r4` |
+| `p3` | `p2` 全部 + `ui` `gate g3` `gate g3.5` |
+| `release` | `p3` 全部 + `gate g4` |
+
+**`--cr <名称>` 作用域**：`gate g3\|g3.5`、`review r1..r4`、`check p1\|p2\|p3` 可收窄到单个变更记录声明的 TEST 集合，供在途 CR 自查。缺省语义不变；**`gate g4` 与 `check release` 明确拒绝 `--cr`**（发布按定义全量判定）；用 `--cr` 通过不构成交付凭证。
+
 `verify` 检查必需治理文件、基线快照和哈希链台账。`snapshot` 写入 `project/.governance/baseline.json` 并追加 `project/.governance/ledger.jsonl`。写入基线后，受控文件发生变化会被 `verify` 阻断，直到经过正式变更并重新快照。
+
+## 说明书结构控制（DEC-020）
+
+`python tools/governance.py check-specs` 对四本层级说明书执行结构契约，四类违规各自阻断：
+
+| 代码 | 含义 |
+|---|---|
+| `SPECS_UNKNOWN_SECTION` | `##` 节名既不在本层基线白名单，也不是 `变更响应 · <CR>` |
+| `SPECS_DUPLICATE_RESPONSE` | 同一 CR 在同一层出现多个变更响应节 |
+| `SPECS_REVIEW_IN_SPEC` | 说明书里残留评审 / 复盘节（评审意见只能在 CR 内） |
+| `SPECS_MISSING` | 层级说明书缺失 |
+
+结构迁移由 `python tools/migrate_specs.py` 执行，**幂等**；评审文字是**移动**不是删除，带 `（迁移自 …）` 溯源标记。
 
 ## 一致性控制
 

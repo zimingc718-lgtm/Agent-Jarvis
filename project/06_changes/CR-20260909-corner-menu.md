@@ -42,3 +42,49 @@
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 https://claude.ai/code/session_01Ckbi5GYRRH4HyTHLEWnrtZ
+
+## R1 评审意见
+
+**CR-20260909-corner-menu 评审**（迁移自 `产品需求说明书.md`）
+
+各角色以本职说明书 + 行业惯例独立评审。完整评审见 `project/06_changes/CR-20260909-corner-menu.md`。
+
+| 角色 | 反馈（本角色视角） | 处理结果 | 结论 |
+|---|---|---|---|
+| 产品 owner | ①REQ-F-015「两个弹窗按钮」是 MUST 验收改写，须记为用户确认变更。②主题开关移出「配置」外观分区（APPROVED 澄清作废）——净收益真实；「配置」弹窗此后只剩 Provider 设置，与 `/settings/models` 深链对齐。③设置放左下角非惯例，记为已接受取舍（单一本地管理员）。 | REQ-F-015 改写；「配置」→「模型」；澄清小节记外观分区移除 + 可发现性取舍 | APPROVED |
+| 架构角色 | ①零部署/后端/数据库变更。②☰ 菜单 + `ThemeToggle` 迁移归 MOD-SETTINGS-UI。③**反对组件里按 `NODE_ENV` 偏移**——改 `next.config.mjs devIndicators` 把 Next 指示器挪 `bottom-right`。 | 新增 DEC-014（☰ 菜单 + z-index 刻度 + `devIndicators`）；DEC-005 修订；用户采纳 `bottom-right` | APPROVED |
+| 模块开发角色 | **不是「加个菜单」**——含 `CornerMenu` 新组件 + `ThemeToggle` 迁宿主 + `SettingsDialog` 删外观分区 + `page.tsx` 删 `home__actions` + `next.config.mjs`；测试返工是硬活。 | TASK-031 含全部；按 2 子项提交 | CONDITIONAL（条件并入 TASK-031） |
+| 测试角色 | TEST-021「首页仅标题 + 两按钮」断言**反转**、TEST-019（主题位置）须作回归门重写；主题持久化走真实浏览器；对话展开时 ☰ 可点须真实浏览器。 | 新增 TEST-032；TEST-019/021 + appearance e2e 回归门 | APPROVED |
+
+## R2 评审意见
+
+**CR-20260909-corner-menu 评审**（迁移自 `架构设计说明书.md`）
+
+| 角色 | 反馈 | 处理结果 | 结论 |
+|---|---|---|---|
+| 架构角色 | ☰ 菜单是首页 chrome，需明确模块归属、z-index 层级、dev 指示器处理方式 | DEC-014：`CornerMenu` 归 MOD-SETTINGS-UI；z-index 刻度成文（对话 20 / ☰+浮层 30 / 模态 top-layer）；`next.config.mjs devIndicators` 而非组件 `NODE_ENV` 分支 | APPROVED |
+| 模块开发角色 | `CornerMenu` 应与业务解耦 | `page.tsx` 把三个组件作 `children` 传入，`CornerMenu` 不感知 props | APPROVED |
+| 产品 owner | 「配置」弹窗删外观分区后是否还成立 | 与 `/settings/models` 深链（本就只有 ModelSettings）对齐，更一致 | APPROVED |
+| 测试角色 | 浮层是新交互模式 | 需 `aria-haspopup`/`aria-expanded` + Esc + 焦点回归断言（TEST-032）；机制留 P3 不影响验收面 | APPROVED |
+
+## R3 评审意见
+
+**复盘迭代（CR-20260909-corner-menu）**（迁移自 `模块任务开发说明书.md`）
+
+| 角色 | 反馈（本角色视角） | 处理结果 | 结论 |
+|---|---|---|---|
+| 模块开发角色 | 影响矩阵：REQ-F-015 = **大改**（header 重构 + 新组件）；「配置」→「模型」= 小改（字面量）；主题内联 = 小改（`ThemeToggle` 换宿主）。**任务须含 SettingsDialog 删外观分区 + 测试返工**，不是「加个菜单」 | TASK-031 描述含全部 6 项；按 2 子项提交（Ⅰ 组件/接线/config，Ⅱ 瘦身/返工） | APPROVED |
+| 模块开发角色 | `CornerMenu` 与业务耦合风险 | `page.tsx` 用 `children` 传三个组件，`CornerMenu` 零 import 业务 | APPROVED |
+| 测试角色 | TEST-019/021 断言反转是行为回归 | TEST-032 承载菜单行为；测试说明书点名 TEST-019/021 + appearance/account e2e 作回归门 | APPROVED |
+| 架构角色 | dev 指示器方案 | `next.config.mjs devIndicators` 而非组件 `NODE_ENV` 分支（DEC-014） | APPROVED |
+
+## R4 评审意见
+
+**复盘迭代（CR-20260909-corner-menu）**（迁移自 `测试说明书.md`）
+
+| 角色 | 反馈（本角色视角） | 处理结果 | 结论 |
+|---|---|---|---|
+| 测试角色 | TEST-021「首页仅标题 + 两按钮」、TEST-019「主题在弹窗外观分区」断言**反转**——是行为回归，须作回归门重写，不能删了旧断言就算 | TEST-021/019 改写（覆盖新结构）；TEST-032 新增（菜单行为）；appearance/account e2e 经 ☰ | APPROVED |
+| 测试角色 | 主题内联「不打开弹窗」如何断言 | TEST-032 断言④：点「深色」后 `document.querySelector("dialog[open]")` 为 null | APPROVED |
+| 架构角色 | dev 指示器位置的可测性 | Next shadow DOM，Playwright 不断言；顶多静态查 `next.config.mjs` 键——接受 | APPROVED |
+| 产品 owner | 「模型」弹窗删外观分区后覆盖是否有缺口 | ModelSettings 的 Provider 断言不变（TEST-010/016/025）；外观移到 TEST-032/019 | APPROVED |

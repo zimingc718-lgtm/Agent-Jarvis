@@ -1,6 +1,6 @@
 """
 One-shot, idempotent migration of the four layer specs to the DEC-020 structure
-(CR-20260910-process-hardening, TASK-046).
+(CR-20260910-process-hardening, TASK-051).
 
 Target shape for every spec:
 
