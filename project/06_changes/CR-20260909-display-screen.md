@@ -3,6 +3,7 @@
 - 级别: L3（重写首页形态 REQ-F-015 + 新增全屏渲染层 + 落地 DEC-015 未沙箱化 `<iframe srcdoc>` 的实际渲染 + 修订路由契约）
 - 提出人: user（"skill 会输出一个 html，将其结果在首页上显示…底下是根据对话框显示出固定的知识呈现或者动态内容显示…可以理解为 Jarvis 的动态显示屏…全屏。对话框在它的上面…刷新还在，除非对话出现其他指令…让它显示首页，那么就回到标题首页" → msg 50-6 / 51-12 / 51-13 / 51-15；F1/F2 拆分见 CR-20260909-skills CP-12）
 - 状态: CLOSED（R1 四角色 APPROVED（1 轮反馈闭环）+ 用户 2026-09-10 人工终裁「确认，开始执行」+ R2/R3/R4 机器门 PASS + P3/P4 完成：TASK-036..039 DONE、TEST-039..042 PASS、g1-g4 全绿。与 CR-20260909-skills 合并实现）
+- 占用 ID: DEC-017, TASK-036..039, TEST-039..042 （由 CR-20260910-risk-scaled-gates 回填，只登记本 CR **创建**的 ID，不含其引用或修订的既有 ID；DEC-001..014 的创建归属无法从现有记录复原，故未登记。）
 - 评审模型: R1–R4 + G3/G3.5/G4（第二个按新共识门禁模型执行的 CR；R1 四角色）
 - 影响需求: 新增 REQ-F-026、REQ-F-027；**重写 REQ-F-015**（极简首页 → 全屏动态展示屏）；落地 REQ-F-025 ②（未沙箱化 HTML 的首渲提示条）
 - 影响模块: **新增 MOD-DISPLAY**（`src/components/DisplayScreen.tsx` + `src/lib/display.ts`）、MOD-DB（新增 `display_state` 单行表）、MOD-CHAT（`routeSkill` → `routeTurn` 返回 `{skill, display}`；路由层写 `display_state`）、MOD-CHAT-UI（`FloatingChat` 派发 `jarvis:display-changed`）、MOD-SETTINGS-UI（`page.tsx` 首页布局重写，层叠关系）

@@ -1,3 +1,4 @@
+import datetime as dt
 import json
 import os
 import subprocess
@@ -532,10 +533,16 @@ class ChangePointReviewFixtures:
 
 
 def _cr_with_labels(name: str, tests: str) -> str:
-    """A change record complete enough for check-changes, carrying an 影响测试 label."""
+    """A change record complete enough for check-changes, carrying an 影响测试 label.
+
+    L1 because it carries no CP registry: since DEC-021 ⑤ a record that skips the
+    CP chain must be an L1 change, and `review` blocks anything else rather than
+    passing over it in silence. The level is incidental to what these tests probe
+    (`--cr` scoping and stage aggregation).
+    """
     return (
         "# " + name + "\n\n"
-        "- 级别: L2\n"
+        "- 级别: L1\n"
         "- 提出人: tester\n"
         "- 状态: R1 已人工终裁\n"
         "- 影响需求: REQ-F-001\n"
@@ -1010,6 +1017,316 @@ class MigrationCompatibilityTests(unittest.TestCase):
                 for pattern in governance.REVIEW_HEADING_PATTERNS:
                     self.assertIsNone(pattern.search(title), rel_path + ": " + line)
 
+def _cr(name: str, *, level: str = "L3", rows: str, rollback: str = "文档回滚 + 运行回滚，重跑 verify 与 review 后重新 snapshot", reserve: str | None = None) -> str:
+    """A change record carrying a CP registry, for the door/id checks."""
+    head = [
+        f"# {name}",
+        "",
+        f"- 级别: {level}",
+        "- 提出人: user",
+        "- 状态: APPROVED",
+    ]
+    if reserve is not None:
+        head.append(f"- 占用 ID: {reserve}")
+    head += [
+        "- 影响需求: 无",
+        "- 影响模块: 无",
+        "- 影响任务: 无",
+        "- 影响测试: 无",
+        "- 当前证据: `project/05_evidence/EV.md`",
+        "- 方案选项:",
+        "  - A. 否决项",
+        "  - B. **选中项**",
+        "- 选择理由: 证据",
+        f"- 回滚方式: {rollback}",
+        "- 验收条件:",
+        "  - R1: 有 CP 表与人工终裁痕迹。",
+        "- 评审记录: R1 四角色。**R1 终裁**：用户已拍板。",
+        "",
+        "## 变化点登记",
+        "",
+    ]
+    return "\n".join(head) + rows + "\n"
+
+
+DOOR_HEADER = (
+    "| CP | 来源角色 | 一句话 | 关联 ID | 类型 | 门 | 发现方式 |\n"
+    "|---|---|---|---|---|---|---|\n"
+)
+
+
+class DoorClassificationTests(unittest.TestCase):
+    """TEST-055 - every change point declares a door and a detection route."""
+
+    def test_055_1_the_real_repository_passes(self) -> None:
+        code, output = governance.run(["check-doors", "--root", str(REPO_ROOT)])
+        self.assertEqual(code, 0, output)
+        self.assertIn("CHECK_DOORS_PASS", output)
+
+    def _run(self, rows: str, **kwargs) -> tuple[int, str]:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            (root / "project/06_changes/CR-2099-demo.md").write_text(
+                _cr("CR-2099-demo", rows=rows, **kwargs), encoding="utf-8"
+            )
+            return governance.run(["check-doors", "--root", str(root)])
+
+    def test_055_2_undetectable_may_not_be_called_a_two_way_door(self) -> None:
+        # The whole point of the column: if nobody would notice the mistake, the
+        # change cannot be reversed, whatever `git revert` can do.
+        code, output = self._run(
+            DOOR_HEADER + "| CP-1 | 产品 | 改动 | REQ-F-001 | 新增 | 双向 | 发现不了 |\n"
+        )
+        self.assertEqual(code, 1, output)
+        self.assertIn("CHECK_DOORS_UNDETECTABLE_TWO_WAY", output)
+        self.assertIn("CP-1", output)
+
+    def test_055_3_a_one_way_door_needs_a_substantive_rollback(self) -> None:
+        code, output = self._run(
+            DOOR_HEADER + "| CP-1 | 架构 | 引入外部依赖 | DEC-001 | 新增 | 单向 | 机器：check-ids |\n",
+            rollback="<待填>",
+        )
+        self.assertEqual(code, 1, output)
+        self.assertIn("CHECK_DOORS_MISSING_ROLLBACK", output)
+
+    def test_055_4_the_door_value_is_constrained(self) -> None:
+        code, output = self._run(
+            DOOR_HEADER + "| CP-1 | 产品 | 改动 | REQ-F-001 | 新增 | 也许 | 机器：check-doors |\n"
+        )
+        self.assertEqual(code, 1, output)
+        self.assertIn("CHECK_DOORS_BAD_VALUE", output)
+
+    def test_055_5_a_missing_detection_column_blocks(self) -> None:
+        code, output = self._run(
+            DOOR_HEADER + "| CP-1 | 产品 | 改动 | REQ-F-001 | 新增 | 双向 |  |\n"
+        )
+        self.assertEqual(code, 1, output)
+        self.assertIn("CHECK_DOORS_MISSING_COLUMN", output)
+
+    def test_055_6_an_escaped_pipe_does_not_shift_the_columns(self) -> None:
+        # Regression: `check p1\|p2` inside a cell used to split into extra cells,
+        # so the 门 column read whatever happened to land at index 5.
+        code, output = self._run(
+            DOOR_HEADER
+            + "| CP-1 | 产品 | 一条命令跑完 `check p1\\|p2\\|p3\\|release` | REQ-F-001 | 新增 | 双向 | 机器：check-doors |\n"
+        )
+        self.assertEqual(code, 0, output)
+
+
+class IdReservationTests(unittest.TestCase):
+    """TEST-056 - ids are reserved at draft time and cannot collide."""
+
+    def test_056_1_the_real_repository_passes(self) -> None:
+        code, output = governance.run(["check-ids", "--root", str(REPO_ROOT)])
+        self.assertEqual(code, 0, output)
+        self.assertIn("CHECK_IDS_PASS", output)
+
+    def test_056_2_two_records_claiming_the_same_range_is_blocked(self) -> None:
+        # The 2026-09-10 accident, reproduced: CR-20260910-ui-foundation and
+        # CR-20260910-process-hardening both claimed TASK-044..047 while drafted
+        # in parallel, and every gate passed.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            tasks = "\n".join(
+                f"| TASK-{n:03d} | MOD-001 | 任务 | DONE | 无 | REQ-F-001 | TEST-001 |"
+                for n in range(44, 48)
+            )
+            (root / "project/03_modules/模块任务开发说明书.md").write_text(
+                "# 模块任务开发说明书\n\n## 模块任务总览\n\n"
+                "| 任务 ID | 模块 | 任务 | 状态 | 依赖 | 覆盖需求 | 覆盖测试 |\n"
+                "|---|---|---|---|---|---|---|\n" + tasks + "\n",
+                encoding="utf-8",
+            )
+            for name in ("CR-2099-alpha", "CR-2099-beta"):
+                (root / f"project/06_changes/{name}.md").write_text(
+                    _cr(name, rows=DOOR_HEADER, reserve="TASK-044..047"), encoding="utf-8"
+                )
+            code, output = governance.run(["check-ids", "--root", str(root)])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("CHECK_IDS_OVERLAP", output)
+        self.assertIn("TASK-044", output)
+
+    def test_056_3_claiming_an_id_nothing_defines_is_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            (root / "project/06_changes/CR-2099-demo.md").write_text(
+                _cr("CR-2099-demo", rows=DOOR_HEADER, reserve="TASK-999"), encoding="utf-8"
+            )
+            code, output = governance.run(["check-ids", "--root", str(root)])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("CHECK_IDS_DANGLING", output)
+        self.assertIn("TASK-999", output)
+
+    def test_056_4_two_definition_rows_for_one_id_are_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            row = "| TASK-001 | MOD-001 | 任务 | DONE | 无 | REQ-F-001 | TEST-001 |"
+            (root / "project/03_modules/模块任务开发说明书.md").write_text(
+                "# 模块任务开发说明书\n\n## 模块任务总览\n\n"
+                "| 任务 ID | 模块 | 任务 | 状态 | 依赖 | 覆盖需求 | 覆盖测试 |\n"
+                "|---|---|---|---|---|---|---|\n" + row + "\n" + row + "\n",
+                encoding="utf-8",
+            )
+            code, output = governance.run(["check-ids", "--root", str(root)])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("CHECK_IDS_DUPLICATE", output)
+
+    def test_056_5_a_design_table_repeating_an_id_is_not_a_duplicate(self) -> None:
+        # TASK-044 legitimately appears twice in the real spec: once in the task
+        # register, once in a change-response 技术设计 table. Only the register defines.
+        counts = governance._definition_rows(REPO_ROOT, "TASK")
+        self.assertEqual(counts.get("TASK-044"), 1, counts.get("TASK-044"))
+
+    def test_056_6_the_backfill_left_every_review_gate_untouched(self) -> None:
+        # Invariant the module role attached in R1: reserving ids across the 17
+        # existing records must not move any R1..R4 verdict.
+        for level in ("r1", "r2", "r3", "r4"):
+            code, output = governance.run(["review", level, "--root", str(REPO_ROOT)])
+            self.assertEqual(code, 0, output)
+            self.assertIn("8 change record(s)", output)
+
+
+class KnownWarningTests(unittest.TestCase):
+    """TEST-057 - a warning may not assert something the tools contradict."""
+
+    def test_057_1_the_real_repository_passes(self) -> None:
+        code, output = governance.run(["check-warnings", "--root", str(REPO_ROOT)])
+        self.assertEqual(code, 0, output)
+        self.assertIn("CHECK_WARNINGS_PASS", output)
+
+    def _with_warnings(self, warnings: list) -> tuple[int, str]:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            (root / "package.json").write_text(
+                json.dumps({"name": "fixture", "devDependencies": {"axe-core": "4.11.0"}}),
+                encoding="utf-8",
+            )
+            (root / "project/05_evidence/test-results.json").write_text(
+                json.dumps({"tests": [], "known_warnings": warnings}, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            return governance.run(["check-warnings", "--root", str(root)])
+
+    def test_057_2_claiming_a_gate_is_red_while_it_passes_is_blocked(self) -> None:
+        # The 2026-09-10 accident: "gate g3 is intentionally red until TEST-022"
+        # stayed in the file long after g3 went green, and nothing re-checked it.
+        code, output = self._with_warnings(
+            [{"text": "gate g1 is intentionally red", "check": "gate_red:g1"}]
+        )
+        self.assertEqual(code, 1, output)
+        self.assertIn("CHECK_WARNINGS_STALE", output)
+
+    def test_057_3_claiming_a_present_dependency_is_absent_is_blocked(self) -> None:
+        # The other half of the same accident: LV-AXE "skipped, axe-core is not a
+        # dependency" while axe-core sat in devDependencies.
+        code, output = self._with_warnings(
+            [{"text": "axe-core is not a dependency", "check": "dep_absent:axe-core"}]
+        )
+        self.assertEqual(code, 1, output)
+        self.assertIn("CHECK_WARNINGS_STALE", output)
+        self.assertIn("axe-core", output)
+
+    def test_057_4_a_manual_warning_expires(self) -> None:
+        stale = (dt.date.today() - dt.timedelta(days=governance.WARNING_MAX_AGE_DAYS + 1)).isoformat()
+        code, output = self._with_warnings(
+            [{"text": "standing caveat", "check": "manual", "reviewed_at": stale}]
+        )
+        self.assertEqual(code, 1, output)
+        self.assertIn("CHECK_WARNINGS_STALE", output)
+
+        code, output = self._with_warnings(
+            [{"text": "standing caveat", "check": "manual", "reviewed_at": dt.date.today().isoformat()}]
+        )
+        self.assertEqual(code, 0, output)
+
+    def test_057_5_free_text_is_reported_unverifiable_but_does_not_block(self) -> None:
+        code, output = self._with_warnings(["a legacy free-text caveat"])
+        self.assertEqual(code, 0, output)
+        self.assertIn("UNVERIFIABLE", output)
+
+    def test_057_6_an_unknown_predicate_is_blocked(self) -> None:
+        code, output = self._with_warnings([{"text": "x", "check": "vibes:good"}])
+        self.assertEqual(code, 1, output)
+        self.assertIn("CHECK_WARNINGS_BAD_CHECK", output)
+
+
+class CanonicalSpecTests(unittest.TestCase):
+    """TEST-059 - one implementation of the structure contract, not two."""
+
+    def test_059_1_the_real_specs_are_canonical(self) -> None:
+        code, output = governance.run(["check-specs", "--root", str(REPO_ROOT)])
+        self.assertEqual(code, 0, output)
+
+    def test_059_2_a_misplaced_change_response_section_is_blocked(self) -> None:
+        # Reproduces 2026-09-10: a 变更响应 section written just above 批准状态
+        # passed check-specs while migrate_specs.py judged the file needed a rewrite.
+        import shutil
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for rel in ("docs", "project", "tools", "tests"):
+                shutil.copytree(REPO_ROOT / rel, root / rel, dirs_exist_ok=True)
+            for name in ("AGENTS.md", "package.json"):
+                shutil.copy2(REPO_ROOT / name, root / name)
+
+            path = root / "project/04_tests/测试说明书.md"
+            text = path.read_text(encoding="utf-8")
+            section = "\n## 变更响应 · CR-20260910-record-accuracy\n"
+            start = text.index(section)
+            end = text.index("\n## ", start + len(section))
+            block, text = text[start:end], text[:start] + text[end:]
+            text = text.replace("\n## 批准状态", block + "\n## 批准状态", 1)
+            path.write_text(text, encoding="utf-8")
+
+            code, output = governance.run(["check-specs", "--root", str(root)])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("SPECS_NOT_CANONICAL", output)
+
+
+class ReviewReportingTests(unittest.TestCase):
+    """TEST-060 - a skipped record is named, never silent."""
+
+    def test_060_1_records_without_a_cp_chain_are_named(self) -> None:
+        code, output = governance.run(["review", "r1", "--root", str(REPO_ROOT)])
+        self.assertEqual(code, 0, output)
+        self.assertIn("SKIPPED_BY_LEVEL", output)
+        self.assertIn("CR-20260909-corner-menu", output)
+
+    def test_060_2_skipping_is_only_legitimate_for_an_l1_change(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            (root / "project/06_changes/CR-2099-sneaky.md").write_text(
+                _cr("CR-2099-sneaky", level="L3", rows="").replace("## 变化点登记\n", ""),
+                encoding="utf-8",
+            )
+            code, output = governance.run(["review", "r1", "--root", str(root)])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("REVIEW_R1_BLOCKED", output)
+        self.assertIn("CR-2099-sneaky", output)
+
+    def test_060_3_an_l1_record_may_legitimately_carry_no_cp_chain(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            (root / "project/06_changes/CR-2099-small.md").write_text(
+                _cr("CR-2099-small", level="L1", rows="").replace("## 变化点登记\n", ""),
+                encoding="utf-8",
+            )
+            code, output = governance.run(["review", "r1", "--root", str(root)])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("SKIPPED_BY_LEVEL", output)
 
 if __name__ == "__main__":
     unittest.main()

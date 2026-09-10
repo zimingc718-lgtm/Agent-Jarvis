@@ -3,6 +3,7 @@
 - 级别: L2
 - 提出人: user
 - 状态: APPROVED
+- 占用 ID: TASK-009..014, TEST-014..018 （由 CR-20260910-risk-scaled-gates 回填，只登记本 CR **创建**的 ID，不含其引用或修订的既有 ID；DEC-001..014 的创建归属无法从现有记录复原，故未登记。）
 - 评审模型: pre-R1234（旧 G0/G1/G2/G3/G3.5/G4；CR-20260909-consensus-review-gates 起改为 R1–R4 + G3/G3.5/G4，不追溯本 CR）
 - 影响需求: REQ-F-005、REQ-F-006、REQ-F-007、REQ-F-009、REQ-F-013、REQ-NF-002（均为实现修正，不新增需求；澄清 REQ-F-006/013 的验收在 UI 上必须可观察）
 - 影响模块: MOD-ADAPTER、MOD-CHAT、MOD-CHAT-UI、MOD-PROVIDER、MOD-SETTINGS-UI、MOD-DB

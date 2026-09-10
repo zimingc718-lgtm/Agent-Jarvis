@@ -3,6 +3,7 @@
 - 级别: L2
 - 提出人: user
 - 状态: CLOSED
+- 占用 ID: 无（流程控制，未创建 TASK/TEST/DEC） （由 CR-20260910-risk-scaled-gates 回填，只登记本 CR **创建**的 ID，不含其引用或修订的既有 ID；DEC-001..014 的创建归属无法从现有记录复原，故未登记。）
 - 评审模型: pre-R1234（旧 G0/G1/G2/G3/G3.5/G4；CR-20260909-consensus-review-gates 起改为 R1–R4 + G3/G3.5/G4，不追溯本 CR）
 - 影响需求: 不新增产品功能需求；仅影响 UI 开发治理基线。
 - 影响模块: tools/governance.py, docs/UI_STANDARD.md, docs/AI_STANDARD.md, docs/WORKFLOW.md, docs/CONTROLS.md, AGENTS.md, package.json

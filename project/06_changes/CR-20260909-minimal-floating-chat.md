@@ -3,6 +3,7 @@
 - 级别: L3
 - 提出人: user（"现在先不做用户账号登录。仅作模型key配置。单一管理员用户。" → 多轮需求讨论 → "确认。落地后，给我看各个流程的变化点方案及角色评审的意见。" → "按开发流程执行。"）
 - 状态: CLOSED（P1-P4 完成；TASK-021..029 DONE、TEST-025..030 PASS、g1-g4 全绿）
+- 占用 ID: TASK-021..029, TEST-025..030 （由 CR-20260910-risk-scaled-gates 回填，只登记本 CR **创建**的 ID，不含其引用或修订的既有 ID；DEC-001..014 的创建归属无法从现有记录复原，故未登记。）
 - 评审模型: pre-R1234（旧 G0/G1/G2/G3/G3.5/G4；CR-20260909-consensus-review-gates 起改为 R1–R4 + G3/G3.5/G4，不追溯本 CR）
 - 影响需求: REQ-F-001（暂缓）、REQ-F-002、REQ-F-003、REQ-F-004、REQ-F-005、REQ-F-006（重写）、REQ-F-007、REQ-F-013、REQ-F-014（重写）、REQ-F-015、REQ-F-016、REQ-NF-002（暂缓）、REQ-NF-004；新增 REQ-F-017、REQ-F-018
 - 影响模块: MOD-AUTH（单管理员形态）、MOD-PROVIDER（优先级）、MOD-CHAT（会话生命周期、优先级解析）、MOD-CHAT-UI（浮窗收敛、状态灯四态、新对话、错误行、视觉简约化）、MOD-SETTINGS-UI（优先级 UI）

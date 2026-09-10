@@ -47,6 +47,33 @@ CR-20260909-consensus-review-gates 起：设计阶段门禁由 R1–R4 四门取
 10. 发布前启动真实构建物，通过主路径冒烟验证。
 11. 发布后用运行证据和用户反馈创建新需求、变更或问题闭环。
 
+## 分支与合并（CR-20260910-risk-scaled-gates）
+
+**一个 CR 一条分支**：`git switch -c cr/<name> main`，当天到几天内合掉。不开长寿功能分支，也不开常驻角色分支——R1→R2→R3→R4 是依赖链，四个角色并行产出的是四份互不承接的文档。
+
+**`snapshot` 全流程只跑一次**，在 CR 分支上、合并前的最后一步。`project/.governance/ledger.jsonl` 是**哈希链**（`seq` + `prev_hash`），两条分支各自 snapshot 会产生 `seq` 与 `prev_hash` 相同的两条记录——git 能把两行都留下，但链已分叉，合并后 `verify` 报 `LEDGER_BAD_SEQUENCE` / `LEDGER_BROKEN_CHAIN` 且**没有正确的手工修法**。`baseline.json` 是全量哈希表的整文件重写，同理。
+
+顺序不能反：**先把 main 合进 CR 分支 → 再 snapshot → 再合回 main**。反过来做，基线会漏掉 main 上新增的文件，合并后 `verify` 报 `UNBASELINED_FILE`。
+
+### 合并前检查清单
+
+```powershell
+git switch cr/<name>
+git merge main                              # 先拉 main，不是反过来
+python tools/migrate_specs.py --dry-run     # 必须 already migrated
+npm run verify:all
+python tools/governance.py check release
+python tools/governance.py snapshot --actor <name>   # 全流程唯一一次
+git commit -am "CR-<name> P4"
+git switch main; git merge --no-ff cr/<name>
+python tools/governance.py verify           # 合并后立即复验——唯一能发现「合并把基线合坏了」的检查
+git push origin main; git branch -d cr/<name>
+```
+
+### 构建配置与长跑进程
+
+新增或修改 `postcss.config.*`、`next.config.*` 后**必须重启 dev server**。Next 只在启动时读一次这些配置：2026-09-10 一个前一晚启动的 server 带着空 PostCSS 流水线服务已迁移的 UI，`@import "tailwindcss"` 从未被处理，所有工具类为空，页面元素全部退回文档流堆到左上角，而磁盘上的测试全绿——因为测试读文件，浏览器读服务器返回的字节。用 `node scripts/check-dev-server.mjs` 核对真实入口（PASS=0 / FAIL=1 / **SKIP=2，不伪装成通过**）。
+
 ## 变更分流
 
 - L1 局部实现：不改变需求、架构、接口和测试基线的小修复。

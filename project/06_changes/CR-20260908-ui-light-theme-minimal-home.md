@@ -3,6 +3,7 @@
 - 级别: L2
 - 提出人: user
 - 状态: APPROVED
+- 占用 ID: TASK-015..018, TEST-019..021 （由 CR-20260910-risk-scaled-gates 回填，只登记本 CR **创建**的 ID，不含其引用或修订的既有 ID；DEC-001..014 的创建归属无法从现有记录复原，故未登记。）
 - 评审模型: pre-R1234（旧 G0/G1/G2/G3/G3.5/G4；CR-20260909-consensus-review-gates 起改为 R1–R4 + G3/G3.5/G4，不追溯本 CR）
 - 影响需求: REQ-F-014（措辞与验收标准变更：科幻深色 → 克制浅色 + 深色开关）；新增 REQ-F-015（极简首页）、REQ-F-016（回复 Markdown 渲染）；REQ-F-007 增加首页弹窗入口（深链页面保留）
 - 影响模块: MOD-CHAT-UI、MOD-SETTINGS-UI

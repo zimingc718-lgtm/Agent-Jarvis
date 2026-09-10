@@ -156,6 +156,12 @@ def run(argv: list[str] | None = None) -> tuple[int, str]:
         messages = check_stage(root, args.stage, cr=args.cr)
     elif args.command == "check-specs":
         messages = check_specs(root)
+    elif args.command == "check-doors":
+        messages = check_doors(root)
+    elif args.command == "check-ids":
+        messages = check_ids(root)
+    elif args.command == "check-warnings":
+        messages = check_warnings(root)
     elif args.command == "new-cr":
         messages = new_cr(root, args.name)
     elif args.command == "matrix":
@@ -203,6 +209,21 @@ def build_parser() -> argparse.ArgumentParser:
 
     specs_parser = subparsers.add_parser("check-specs", help="validate the spec structure contract (DEC-020)")
     specs_parser.add_argument("--root", default=".", help="project root")
+
+    doors_parser = subparsers.add_parser(
+        "check-doors", help="every change point declares its door and detection route (DEC-021)"
+    )
+    doors_parser.add_argument("--root", default=".", help="project root")
+
+    ids_parser = subparsers.add_parser(
+        "check-ids", help="no two change records claim the same id, and claimed ids exist (DEC-021)"
+    )
+    ids_parser.add_argument("--root", default=".", help="project root")
+
+    warnings_parser = subparsers.add_parser(
+        "check-warnings", help="re-check known_warnings against the tools they talk about (DEC-021)"
+    )
+    warnings_parser.add_argument("--root", default=".", help="project root")
 
     new_cr_parser = subparsers.add_parser("new-cr", help="scaffold a compliant change record")
     new_cr_parser.add_argument("name", help="change record name, e.g. CR-20260911-my-change")
@@ -615,7 +636,14 @@ def _section(text: str, heading_pattern: str) -> str:
 def _table_rows(section: str) -> list[list[str]]:
     """Data rows of the first markdown table in a section (skips header + separator)."""
     lines = [line.strip() for line in section.splitlines() if line.strip().startswith("|")]
-    rows = [[cell.strip() for cell in line.strip().strip("|").split("|")] for line in lines]
+    # Split on unescaped pipes only: a cell may carry `\|` inside a code span
+    # (e.g. `check p1\|p2\|p3`), and treating those as separators shifts every
+    # column after them — which silently mis-read the 门 column when the door
+    # check first ran against CR-20260910-process-hardening.
+    rows = [
+        [cell.strip().replace("\\|", "|") for cell in re.split(r"(?<!\\)\|", line.strip().strip("|"))]
+        for line in lines
+    ]
     # Drop the header row and the |---|---| separator row.
     return [row for row in rows[2:] if any(cell for cell in row)]
 
@@ -653,7 +681,53 @@ def parse_cp_registry(cr_text: str) -> list[dict[str, str]]:
     for row in _table_rows(section):
         cp = re.search(r"\bCP-\d+\b", row[0]) if row else None
         if cp:
-            out.append({"cp": cp.group(0), "role": row[1] if len(row) > 1 else ""})
+            out.append({
+                "cp": cp.group(0),
+                "role": row[1] if len(row) > 1 else "",
+                # DEC-021 ②: the door, and how a mistake would surface. Absent on
+                # change records that predate the columns — reported, never silent.
+                "door": _plain(row[5]) if len(row) > 5 else "",
+                "detect": _plain(row[6]) if len(row) > 6 else "",
+            })
+    return out
+
+
+def _plain(cell: str) -> str:
+    """Cell text without markdown emphasis or spaces, for comparing fixed values."""
+    return re.sub(r"[*`\s]", "", cell or "")
+
+
+def cr_label(cr_text: str, label: str) -> str:
+    """Value of a `- <label>: ...` header line (ASCII or full-width colon)."""
+    match = re.search(rf"^-\s*{re.escape(label)}\s*[:：]\s*(.+)$", cr_text, re.MULTILINE)
+    return match.group(1).strip() if match else ""
+
+
+def parse_id_reservation(cr_text: str) -> set[str]:
+    """IDs a change record claims through `- 占用 ID:` (DEC-021 ④).
+
+    Accepts single ids and ranges: `TASK-053..058, TEST-055..060, DEC-021`.
+    Reserving at draft time is what stops two records from silently claiming the
+    same number, as CR-20260910-ui-foundation and -process-hardening both did.
+    """
+    raw = cr_label(cr_text, "占用 ID")
+    if not raw or _plain(raw) in {"无", "-", "—"}:
+        return set()
+    out: set[str] = set()
+    for token in re.split(r"[,，;；、]", raw):
+        token = _plain(token)
+        if not token:
+            continue
+        span = re.fullmatch(r"([A-Z]+)-(\d+)\.\.(\d+)", token)
+        if span:
+            prefix, start, end = span.group(1), int(span.group(2)), int(span.group(3))
+            width = len(span.group(2))
+            if end >= start:
+                out.update(f"{prefix}-{n:0{width}d}" for n in range(start, end + 1))
+            continue
+        single = re.fullmatch(r"[A-Z]+-\d+", token)
+        if single:
+            out.add(single.group(0))
     return out
 
 
@@ -661,16 +735,47 @@ def check_review(root: Path, level: str, cr: str | None = None) -> list[str]:
     changes_dir = root / "project/06_changes"
     records = sorted(path for path in changes_dir.glob("CR-*.md") if path.is_file())
 
-    with_model = [(path, parse_cp_registry(read_text(path))) for path in records]
-    with_model = [(path, cps) for path, cps in with_model if cps]
+    parsed = [(path, parse_cp_registry(read_text(path))) for path in records]
+    with_model = [(path, cps) for path, cps in parsed if cps]
+
+    # DEC-021 ⑤: records without a CP registry used to vanish from this gate in
+    # silence. Silence is what let CR-20260910-record-accuracy talk itself into
+    # a full CP chain for a three-sentence fix. Name them, and prove the omission
+    # is legitimate: an L1 change, or a record that predates the R1–R4 model.
+    skipped: list[str] = []
+    illegitimate: list[str] = []
+    for path, cps in parsed:
+        if cps:
+            continue
+        text = read_text(path)
+        # NB: not `level` — that is this function's review-level parameter.
+        cr_level = _plain(cr_label(text, "级别"))[:2].upper()
+        if cr_level == "L1" or "pre-R1234" in text:
+            skipped.append(path.stem)
+        else:
+            illegitimate.append(f"{path.stem} ({cr_level or 'no 级别'})")
+
     if cr:
         if not (changes_dir / f"{cr}.md").exists():
             return [f"FAIL REVIEW_{level.upper()}_BLOCKED unknown change record: {cr}"]
         with_model = [(path, cps) for path, cps in with_model if path.stem == cr]
-    if not with_model:
-        return [f"OK REVIEW_{level.upper()}_PASS no change record uses the CP-registry model yet"]
-
     findings: list[str] = []
+
+    if not with_model:
+        # Still report the skips: an early return here is how the silence this
+        # gate is meant to remove would creep back in through another branch.
+        if illegitimate and not cr:
+            return [
+                f"FAIL REVIEW_{level.upper()}_BLOCKED no CP registry, and not an L1 change: "
+                + ", ".join(illegitimate)
+            ]
+        messages = [f"OK REVIEW_{level.upper()}_PASS no change record uses the CP-registry model yet"]
+        if skipped and not cr:
+            messages.append(
+                f"OK REVIEW_{level.upper()}_SKIPPED_BY_LEVEL {len(skipped)} record(s) carry no CP chain by design: "
+                + ", ".join(skipped)
+            )
+        return messages
     for path, cps in with_model:
         name = path.stem  # e.g. CR-20260909-corner-menu
         cr_text = read_text(path)
@@ -731,11 +836,21 @@ def check_review(root: Path, level: str, cr: str | None = None) -> list[str]:
                         f"FAIL REVIEW_{level.upper()}_MATRIX_INVALID {name}: {cp_cell.group(0)} has a CONDITIONAL with no condition text"
                     )
 
+    if illegitimate and not cr:
+        findings.append(
+            f"FAIL REVIEW_{level.upper()}_BLOCKED no CP registry, and not an L1 change: {', '.join(illegitimate)}"
+        )
     if findings:
         return findings
-    return [
+    messages = [
         f"OK REVIEW_{level.upper()}_PASS {len(with_model)} change record(s) satisfy the {level.upper()} consensus gate"
     ]
+    if skipped and not cr:
+        messages.append(
+            f"OK REVIEW_{level.upper()}_SKIPPED_BY_LEVEL {len(skipped)} record(s) carry no CP chain by design: "
+            + ", ".join(skipped)
+        )
+    return messages
 
 
 # --- CR-20260910-process-hardening: scoping, stages, scaffolding, spec contract ---
@@ -758,12 +873,14 @@ def cr_related_tests(root: Path, cr: str) -> set[str] | None:
 # Which gates each stage must clear. `release` is deliberately the only one that
 # runs g4, and it refuses --cr so a narrowing view can never relax a release.
 STAGE_GATES: dict[str, list[str]] = {
-    "p1": ["verify", "check-changes", "review r1"],
-    "p2": ["verify", "check-changes", "check-specs", "gate g1", "gate g2",
+    "p1": ["verify", "check-changes", "check-doors", "check-ids", "review r1"],
+    "p2": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "gate g1", "gate g2",
            "review r1", "review r2", "review r3", "review r4"],
-    "p3": ["verify", "check-changes", "check-specs", "ui", "gate g1", "gate g2", "gate g3", "gate g3.5",
+    "p3": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "check-warnings", "ui",
+           "gate g1", "gate g2", "gate g3", "gate g3.5",
            "review r1", "review r2", "review r3", "review r4"],
-    "release": ["verify", "check-changes", "check-specs", "ui", "gate g1", "gate g2", "gate g3", "gate g3.5",
+    "release": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "check-warnings", "ui",
+                "gate g1", "gate g2", "gate g3", "gate g3.5",
                 "gate g4", "review r1", "review r2", "review r3", "review r4"],
 }
 
@@ -782,6 +899,12 @@ def check_stage(root: Path, stage: str, cr: str | None = None) -> list[str]:
             messages = check_changes(root)
         elif head == "check-specs":
             messages = check_specs(root)
+        elif head == "check-doors":
+            messages = check_doors(root)
+        elif head == "check-ids":
+            messages = check_ids(root)
+        elif head == "check-warnings":
+            messages = check_warnings(root)
         elif head == "ui":
             messages = check_ui_process_control(root)
         elif head == "gate":
@@ -818,6 +941,7 @@ def cr_template(name: str) -> str:
         "- 级别: <L1|L2|L3>",
         "- 提出人: <user | 角色>",
         "- 状态: R1 待人工终裁",
+        "- 占用 ID: <DEC-0xx, TASK-0xx..0yy, TEST-0xx..0yy | 无（未创建 ID）>",
         "- 评审模型: R1-R4 + G3/G3.5/G4",
         "- 影响需求: <REQ-... | 无>",
         "- 影响模块: <MOD-... | 无>",
@@ -837,9 +961,13 @@ def cr_template(name: str) -> str:
         "",
         "## 变化点登记",
         "",
-        "| CP | 来源角色 | 一句话 | 关联 ID | 类型 |",
-        "|---|---|---|---|---|",
-        "| CP-1 | 产品 | <一句话> | <REQ-/DEC-/TASK-/TEST-> | <新增/小改/大改/缺陷修复/回归> |",
+        "「门」按撤回代价逐 CP 判定（`docs/CONTROLS.md`「分档判据」）。「发现方式」只有三种合法答案：",
+        "某条机器检查、某个真实入口操作、或 `发现不了` —— 填 `发现不了` 即风险登记项，强制按单向门处理。",
+        "",
+        "| CP | 来源角色 | 一句话 | 关联 ID | 类型 | 门 | 发现方式 |",
+        "|---|---|---|---|---|---|---|",
+        "| CP-1 | 产品 | <一句话> | <REQ-/DEC-/TASK-/TEST-> | <新增/小改/大改/缺陷修复/回归> "
+        "| <单向|双向> | <机器：某条检查 / 真实入口：某步操作 / 发现不了> |",
         "",
         "## R2 / R3 / R4 评审矩阵",
         "",
@@ -939,9 +1067,266 @@ def check_specs(root: Path) -> list[str]:
                 findings.append(
                     f"FAIL SPECS_DUPLICATE_RESPONSE {rel_path}: {cr} has {count} change-response sections (expected 1)"
                 )
+    # Only worth asking "is this canonical?" once the section names themselves are
+    # valid — the migrator refuses to classify an unknown section, and reporting
+    # that twice buries the actual violation.
+    if not findings:
+        findings.extend(_check_specs_canonical(root))
     if findings:
         return findings
     return [f"OK SPECS_PASS {len(SPEC_BASELINE_SECTIONS)} spec(s) match the structure contract"]
+
+
+def _load_migrator():
+    """Load tools/migrate_specs.py by path, so this works both as a module and a script."""
+    import importlib.util
+
+    path = Path(__file__).resolve().parent / "migrate_specs.py"
+    spec = importlib.util.spec_from_file_location("_jarvis_migrate_specs", path)
+    if spec is None or spec.loader is None:
+        return None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _check_specs_canonical(root: Path) -> list[str]:
+    """The structure contract has one implementation, not two (DEC-021 ⑤).
+
+    `check-specs` used to validate section *names* while `migrate_specs.py`
+    decided section *order*; a change-response section placed just above 批准状态
+    passed the first and was rewritten by the second. Judge against the migrator's
+    own output so the two can never disagree again.
+    """
+    migrator = _load_migrator()
+    if migrator is None:  # pragma: no cover - only if the tool is removed
+        return ["FAIL SPECS_NO_MIGRATOR tools/migrate_specs.py is missing"]
+    findings: list[str] = []
+    crs = migrator.known_crs(root)
+    for rel_path, layer in migrator.LAYERS.items():
+        path = root / rel_path
+        if not path.exists():
+            continue
+        try:
+            canonical, reviews = migrator.migrate_spec(root, rel_path, layer, crs)
+        except (Exception, SystemExit) as exc:
+            # migrate_specs raises SystemExit for an unclassifiable section, and
+            # SystemExit is not an Exception — catching only Exception would let it
+            # abort the whole gate instead of reporting a finding.
+            findings.append(f"FAIL SPECS_NOT_CANONICAL {rel_path}: migrator could not classify it: {exc}")
+            continue
+        if reviews:
+            findings.append(
+                f"FAIL SPECS_REVIEW_IN_SPEC {rel_path}: review text still lives in the spec, not the change record"
+            )
+        if canonical != read_text(path):
+            findings.append(
+                f"FAIL SPECS_NOT_CANONICAL {rel_path}: section order differs from tools/migrate_specs.py — "
+                "run it to normalise (change-response sections group before the review/approval sections)"
+            )
+    return findings
+
+
+def _cp_model_records(root: Path) -> list[tuple[Path, str, list[dict[str, str]]]]:
+    """(path, text, cp rows) for every change record using the CP-registry model."""
+    out = []
+    for path in sorted((root / "project/06_changes").glob("CR-*.md")):
+        if not path.is_file():
+            continue
+        text = read_text(path)
+        cps = parse_cp_registry(text)
+        if cps:
+            out.append((path, text, cps))
+    return out
+
+
+DOOR_VALUES = {"单向", "双向"}
+UNDETECTABLE = "发现不了"
+
+
+def check_doors(root: Path) -> list[str]:
+    """Every change point declares its door and how a mistake would surface (DEC-021 ①②).
+
+    The door is judged per CP, not per CR: CR-20260910-ui-foundation was 95%
+    two-way (a CSS rewrite a revert undoes) with exactly one one-way point (new
+    dependencies in the lockfile). One label for the whole record would hide it.
+    """
+    findings: list[str] = []
+    legacy: list[str] = []
+    checked = 0
+    for path, text, cps in _cp_model_records(root):
+        name = path.stem
+        if not any(entry["door"] for entry in cps):
+            # Predates the columns. Closed records are archaeology, but they are
+            # named rather than skipped in silence.
+            legacy.append(name)
+            continue
+        one_way = False
+        for entry in cps:
+            cp, door, detect = entry["cp"], entry["door"], entry["detect"]
+            if not door:
+                findings.append(f"FAIL CHECK_DOORS_MISSING_COLUMN {name}: {cp} has no 门")
+                continue
+            if door not in DOOR_VALUES:
+                findings.append(
+                    f"FAIL CHECK_DOORS_BAD_VALUE {name}: {cp} 门='{door}' is not 单向/双向"
+                )
+                continue
+            if not detect:
+                findings.append(f"FAIL CHECK_DOORS_MISSING_COLUMN {name}: {cp} has no 发现方式")
+                continue
+            if UNDETECTABLE in detect and door != "单向":
+                findings.append(
+                    f"FAIL CHECK_DOORS_UNDETECTABLE_TWO_WAY {name}: {cp} is 双向 but says '{UNDETECTABLE}' — "
+                    "a mistake nobody detects cannot be reversed, so it is a one-way door"
+                )
+            if door == "单向":
+                one_way = True
+            checked += 1
+        if one_way:
+            rollback = cr_label(text, "回滚方式")
+            if not rollback or contains_placeholder_state(rollback) or len(rollback) < 20:
+                findings.append(
+                    f"FAIL CHECK_DOORS_MISSING_ROLLBACK {name}: has a 单向 change point but no substantive 回滚方式"
+                )
+    if findings:
+        return findings
+    note = f"; {len(legacy)} record(s) predate the columns: {', '.join(legacy)}" if legacy else ""
+    return [f"OK CHECK_DOORS_PASS {checked} change point(s) declare a door and a detection route{note}"]
+
+
+# Where an id is *defined*: the layer doc plus the baseline section holding the
+# authoritative table. Scoping matters — the same id legitimately appears again
+# in a change-response 技术设计 table, which is a design note, not a definition.
+ID_SPEC_TABLE = {
+    "TASK": ("project/03_modules/模块任务开发说明书.md", "模块任务总览"),
+    "TEST": ("project/04_tests/测试说明书.md", "测试矩阵"),
+    "DEC": ("project/02_solution/架构设计说明书.md", "架构决策"),
+}
+
+
+def _definition_rows(root: Path, prefix: str) -> dict[str, int]:
+    """How many rows of the authoritative table *define* each id."""
+    rel_path, heading = ID_SPEC_TABLE[prefix]
+    section = _section(read_text(root / rel_path), re.escape(heading))
+    counts: dict[str, int] = {}
+    for line in section.splitlines():
+        match = re.match(rf"^\|\s*\**\s*({prefix}-\d+)\s*\**\s*\|", line.strip())
+        if match:
+            counts[match.group(1)] = counts.get(match.group(1), 0) + 1
+    return counts
+
+
+def check_ids(root: Path) -> list[str]:
+    """No two change records claim the same id, and claimed ids really exist (DEC-021 ④).
+
+    CR-20260910-ui-foundation and CR-20260910-process-hardening both claimed
+    TASK-044..047 while drafted in parallel; g1..g4 all passed. Reserving ids in
+    the record header makes the clash mechanically visible.
+    """
+    findings: list[str] = []
+    unreserved: list[str] = []
+    owner: dict[str, str] = {}
+    for path in sorted((root / "project/06_changes").glob("CR-*.md")):
+        if not path.is_file():
+            continue
+        name = path.stem
+        text = read_text(path)
+        if not cr_label(text, "占用 ID"):
+            unreserved.append(name)
+            continue
+        for ident in sorted(parse_id_reservation(text)):
+            if ident in owner and owner[ident] != name:
+                findings.append(
+                    f"FAIL CHECK_IDS_OVERLAP {ident} claimed by both {owner[ident]} and {name}"
+                )
+                continue
+            owner[ident] = name
+            prefix = ident.split("-")[0]
+            if prefix in ID_SPEC_TABLE and ident not in _definition_rows(root, prefix):
+                findings.append(
+                    f"FAIL CHECK_IDS_DANGLING {name} claims {ident} but no row defines it in {ID_SPEC_TABLE[prefix][0]}"
+                )
+    for prefix in ID_SPEC_TABLE:
+        for ident, count in sorted(_definition_rows(root, prefix).items()):
+            if count > 1:
+                findings.append(
+                    f"FAIL CHECK_IDS_DUPLICATE {ident} has {count} definition rows in {ID_SPEC_TABLE[prefix][0]} (expected 1)"
+                )
+    if findings:
+        return findings
+    note = f"; {len(unreserved)} record(s) declare no 占用 ID: {', '.join(unreserved)}" if unreserved else ""
+    return [f"OK CHECK_IDS_PASS {len(owner)} reserved id(s), no overlap or dangling reference{note}"]
+
+
+WARNING_MAX_AGE_DAYS = 90
+
+
+def check_warnings(root: Path) -> list[str]:
+    """`known_warnings` must not assert something the tools contradict (DEC-021 ③).
+
+    Two entries claimed LV-AXE was skipped for a missing dependency and that g3
+    was red; both were false for a whole day and no gate noticed, because a
+    free-text warning asserts nothing a machine can re-check.
+    """
+    results = load_test_results(root)
+    if isinstance(results, str):
+        return [f"FAIL CHECK_WARNINGS_UNREADABLE {results}"]
+    path = root / "project/05_evidence/test-results.json"
+    try:
+        payload = json.loads(read_text(path))
+    except json.JSONDecodeError as exc:
+        return [f"FAIL CHECK_WARNINGS_UNREADABLE {exc}"]
+
+    findings: list[str] = []
+    unverifiable: list[str] = []
+    verified = 0
+    for entry in payload.get("known_warnings", []):
+        if isinstance(entry, str):
+            unverifiable.append(entry[:60])
+            continue
+        if not isinstance(entry, dict) or "check" not in entry:
+            continue  # change-record notes, not warnings
+        claim = str(entry.get("check", ""))
+        text = str(entry.get("text", ""))[:60]
+        kind, _, arg = claim.partition(":")
+        if kind == "gate_red":
+            if is_ok(gate(root, arg.strip().lower())):
+                findings.append(
+                    f"FAIL CHECK_WARNINGS_STALE claims gate {arg.strip()} is red, but it passes: {text}"
+                )
+            else:
+                verified += 1
+        elif kind == "dep_absent":
+            pkg = arg.strip()
+            manifest = json.loads(read_text(root / "package.json"))
+            present = pkg in {**manifest.get("dependencies", {}), **manifest.get("devDependencies", {})}
+            if present:
+                findings.append(
+                    f"FAIL CHECK_WARNINGS_STALE claims {pkg} is not a dependency, but package.json has it: {text}"
+                )
+            else:
+                verified += 1
+        elif kind == "manual":
+            reviewed = str(entry.get("reviewed_at", ""))
+            try:
+                seen = dt.date.fromisoformat(reviewed[:10])
+            except ValueError:
+                findings.append(f"FAIL CHECK_WARNINGS_STALE manual warning has no valid reviewed_at: {text}")
+                continue
+            age = (dt.date.today() - seen).days
+            if age > WARNING_MAX_AGE_DAYS:
+                findings.append(
+                    f"FAIL CHECK_WARNINGS_STALE manual warning unreviewed for {age} days (max {WARNING_MAX_AGE_DAYS}): {text}"
+                )
+            else:
+                verified += 1
+        else:
+            findings.append(f"FAIL CHECK_WARNINGS_BAD_CHECK unknown predicate '{claim}': {text}")
+    if findings:
+        return findings
+    note = f"; {len(unverifiable)} free-text entry(ies) UNVERIFIABLE" if unverifiable else ""
+    return [f"OK CHECK_WARNINGS_PASS {verified} warning(s) re-checked against the tools{note}"]
 
 
 def check_ui_process_control(root: Path) -> list[str]:

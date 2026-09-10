@@ -404,6 +404,54 @@
       "command": "npm run test:floating-chat && npm run test:markdown && npm run test:e2e && npm run test:ui-contract:live",
       "real_entry": true,
       "evidence": "① floating-chat 25/25 and markdown 8/8: streaming, stop, new conversation, collapse/reload, the four status-light states, request-level error line and Markdown rendering are unchanged — only the visual layer was replaced. ② the composer uses Button/Textarea/Tooltip with Lucide icons; the light keeps its four distinct tones and its role=status text. ③ live tier at 320/390/1280px in both themes: no horizontal overflow on / or /settings/models, LV-CONTRAST and LV-CONTRAST-DARK both pass, focus indicators present, targets ≥24px, reduced-motion honoured. ④ e2e 10/10 walks provider priority → chat → display screen → theme → reload in a real browser. ⑤ the P3 upload/skill UI is preserved unchanged but is NOT part of this CR's passing evidence — TEST-043..046 remain its own CR's证据. Live tier total: 68 pass / 0 fail / 0 warn / 0 skip, incl. axe-core with no serious/critical violations."
+    },
+    {
+      "id": "TEST-055",
+      "result": "PASS",
+      "command": "python tools/governance.py check-doors && python -m unittest tests.test_governance",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-risk-scaled-gates；含阳性用例（构造违规输入并断言具体错误码），非仅通过路径。"
+    },
+    {
+      "id": "TEST-056",
+      "result": "PASS",
+      "command": "python tools/governance.py check-ids && python -m unittest tests.test_governance",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-risk-scaled-gates；含阳性用例（构造违规输入并断言具体错误码），非仅通过路径。"
+    },
+    {
+      "id": "TEST-057",
+      "result": "PASS",
+      "command": "python tools/governance.py check-warnings && python -m unittest tests.test_governance",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-risk-scaled-gates；含阳性用例（构造违规输入并断言具体错误码），非仅通过路径。"
+    },
+    {
+      "id": "TEST-058",
+      "result": "PASS",
+      "command": "node scripts/check-dev-server.mjs && npx vitest run tests/check-dev-server.test.ts",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-risk-scaled-gates；含阳性用例（构造违规输入并断言具体错误码），非仅通过路径。"
+    },
+    {
+      "id": "TEST-059",
+      "result": "PASS",
+      "command": "python tools/governance.py check-specs && python tools/migrate_specs.py --dry-run",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-risk-scaled-gates；含阳性用例（构造违规输入并断言具体错误码），非仅通过路径。"
+    },
+    {
+      "id": "TEST-060",
+      "result": "PASS",
+      "command": "python tools/governance.py review r1 && python -m unittest tests.test_governance",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-risk-scaled-gates；含阳性用例（构造违规输入并断言具体错误码），非仅通过路径。"
     }
   ],
   "executed_commands": [
@@ -494,10 +542,26 @@
     }
   ],
   "known_warnings": [
-    "Node.js reports node:sqlite as experimental during tests and build.",
-    "npm audit reports dependency vulnerabilities; no force upgrade applied.",
-    "The Markdown renderer covers the common LLM subset only; tables, images and inline HTML render as literal text by design.",
-    "next build and next dev must not share a build dir: use npm run build:verify / the NEXT_DIST_DIR-isolated smoke and e2e servers. See docs/WORKFLOW.md.",
+    {
+      "text": "Node.js reports node:sqlite as experimental during tests and build.",
+      "check": "manual",
+      "reviewed_at": "2026-09-10"
+    },
+    {
+      "text": "npm audit reports dependency vulnerabilities; no force upgrade applied.",
+      "check": "manual",
+      "reviewed_at": "2026-09-10"
+    },
+    {
+      "text": "The Markdown renderer covers the common LLM subset only; tables, images and inline HTML render as literal text by design.",
+      "check": "manual",
+      "reviewed_at": "2026-09-10"
+    },
+    {
+      "text": "next build and next dev must not share a build dir: use npm run build:verify / the NEXT_DIST_DIR-isolated smoke and e2e servers. See docs/WORKFLOW.md.",
+      "check": "manual",
+      "reviewed_at": "2026-09-10"
+    },
     {
       "id": "CR-20260909-minimal-floating-chat",
       "status": "P1/P2/P3 complete",
@@ -520,7 +584,9 @@
     },
     {
       "id": "skill-html-unsandboxed",
-      "detail": "CR-20260909-skills / CR-20260909-display-screen (DEC-015): skill-generated HTML is rendered in an <iframe srcdoc> WITHOUT a sandbox attribute. Same-origin scripts in that HTML can read localStorage and call same-origin APIs (e.g. DELETE /api/providers/[id]). The user (2026-09-09, msg 54-1) accepted this risk for the local single-admin form; the only mitigation is the non-dismissible notice bar (REQ-F-025 ②). Sandboxing the iframe is a mandatory exit obligation for a future CR."
+      "detail": "CR-20260909-skills / CR-20260909-display-screen (DEC-015): skill-generated HTML is rendered in an <iframe srcdoc> WITHOUT a sandbox attribute. Same-origin scripts in that HTML can read localStorage and call same-origin APIs (e.g. DELETE /api/providers/[id]). The user (2026-09-09, msg 54-1) accepted this risk for the local single-admin form; the only mitigation is the non-dismissible notice bar (REQ-F-025 ②). Sandboxing the iframe is a mandatory exit obligation for a future CR.",
+      "check": "manual",
+      "reviewed_at": "2026-09-10"
     }
   ]
 }
