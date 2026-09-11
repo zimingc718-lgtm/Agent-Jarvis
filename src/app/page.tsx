@@ -4,6 +4,7 @@ import { ConfigWarning } from "@/components/ConfigWarning";
 import { CornerMenu } from "@/components/CornerMenu";
 import { DisplayScreen } from "@/components/DisplayScreen";
 import { FloatingChat, type FloatingMessage } from "@/components/FloatingChat";
+import { KnowledgeList } from "@/components/KnowledgeList";
 import { SearchSettings } from "@/components/SearchSettings";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { SkillList } from "@/components/SkillList";
@@ -11,6 +12,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { authOptions, getGoogleOAuthConfig } from "@/lib/auth";
 import { requireUserId } from "@/lib/auth-guard";
 import { resolveDisplayView } from "@/lib/display";
+import { KNOWLEDGE_ROOT, listKnowledge, listPending } from "@/lib/knowledge";
 import { buildTranscript } from "@/lib/transcript";
 import { getDefaultProviderTemplates } from "@/lib/providers";
 import { STORAGE_CONFIG_HINT, getStorageConfig } from "@/lib/runtime-config";
@@ -36,6 +38,11 @@ export default async function HomePage() {
         .map((skill) => ({ id: skill.id, name: skill.name, description: skill.description }))
     : [];
 
+  // REQ-F-044 ③: the ☰ list is correct on first open, not after a fetch.
+  const knowledge = storeReady
+    ? { entries: await listKnowledge(KNOWLEDGE_ROOT), pending: await listPending(KNOWLEDGE_ROOT) }
+    : { entries: [], pending: [] };
+
   let initialConversationId: string | null = null;
   let initialMessages: FloatingMessage[] = [];
   if (storeReady) {
@@ -58,6 +65,7 @@ export default async function HomePage() {
         <SettingsDialog templates={templates} providers={savedProviders} storage={storage} />
         <AccountDialog authenticated={auth.ok} googleOAuth={googleOAuth} />
         {storeReady ? <SkillList initialSkills={registeredSkills} /> : null}
+        {storeReady ? <KnowledgeList initial={knowledge} /> : null}
         {/* REQ-F-038 ①: its own entry beside 「模型」, not inside that dialog. */}
         {storeReady ? <SearchSettings /> : null}
       </CornerMenu>

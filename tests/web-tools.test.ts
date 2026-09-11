@@ -26,7 +26,7 @@ const context: ToolContext = {
   conversationId: "c1",
   skillCount: 0,
   webEnabled: true,
-  searchConfigured: true,
+  searchConfigured: true, knowledgeCount: 0
 };
 
 describe("web tools", () => {
@@ -86,8 +86,8 @@ describe("web tools", () => {
 
   it("② 未配置地址时 web_search 不注册；总开关关闭时两个工具都不注册", () => {
     const [webSearch, readUrl] = createWebTools({ store });
-    expect(webSearch.available({ ...context, searchConfigured: false })).toBe(false);
-    expect(readUrl.available({ ...context, searchConfigured: false })).toBe(true);
+    expect(webSearch.available({ ...context, searchConfigured: false, knowledgeCount: 0 })).toBe(false);
+    expect(readUrl.available({ ...context, searchConfigured: false, knowledgeCount: 0 })).toBe(true);
     expect(webSearch.available({ ...context, webEnabled: false })).toBe(false);
     expect(readUrl.available({ ...context, webEnabled: false })).toBe(false);
   });

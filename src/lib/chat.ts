@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { repairDanglingToolCalls, runToolLoop } from "./agent-loop";
+import { KNOWLEDGE_ROOT, listKnowledge } from "./knowledge";
 import { estimateMessagesTokens, estimateTokens, sendProviderStream, type StreamProviderConfig, type ToolSpec } from "./adapters";
 import { resolveDisplayView } from "./display";
 import { ProviderSecretError, type SourceRecord, type Store } from "./store";
@@ -22,6 +23,7 @@ import {
 import { ToolRegistry, type ToolContext } from "./tools/registry";
 import { createSkillTools } from "./tools/skill-tools";
 import { createDisplayTools } from "./tools/display-tools";
+import { createKnowledgeTools } from "./tools/knowledge-tools";
 import { createWebTools, readWebSettings } from "./tools/web-tools";
 import type { ChatDelta, ChatMessage, ProviderRuntimeConfig, Source } from "./types";
 
@@ -86,6 +88,9 @@ export function buildRegistry(store: Store, extra?: ToolRegistry): ToolRegistry 
     registry.register(tool);
   }
   for (const tool of createWebTools({ store })) {
+    registry.register(tool);
+  }
+  for (const tool of createKnowledgeTools()) {
     registry.register(tool);
   }
   if (extra) {
@@ -159,12 +164,15 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
   const toolsUsable = support !== "no";
 
   const registry = buildRegistry(input.store, input.extraTools);
+  // Counted once per send like the skills: the toolset is fixed for the turn (DEC-026 ②).
+  const knowledgeCount = (await listKnowledge(KNOWLEDGE_ROOT)).length;
   const toolContext: ToolContext = {
     userId: input.userId,
     conversationId,
     skillCount: skills.length,
     webEnabled: web.enabled,
     searchConfigured: Boolean(web.baseUrl),
+    knowledgeCount,
   };
 
   const window = contextWindowFor({ kind: provider.kind, contextWindow: provider.contextWindow });

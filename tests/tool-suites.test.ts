@@ -30,7 +30,7 @@ describe("skill tools (REQ-F-030)", () => {
     writeFileSync(join(skillDir, "SKILL.md"), "---\nname: reporter\ndescription: 写报告\n---\n\n按季度汇总。");
     store.insertSkill(userId, { name: "reporter", description: "写报告", dirPath: skillDir });
 
-    context = { userId, conversationId: "c1", skillCount: 1, webEnabled: false, searchConfigured: false };
+    context = { userId, conversationId: "c1", skillCount: 1, webEnabled: false, searchConfigured: false, knowledgeCount: 0 };
   });
 
   afterEach(() => {
@@ -88,7 +88,7 @@ describe("display tools (REQ-F-032 / REQ-F-023)", () => {
     store = createStore(join(dir, "db.sqlite"), encryptionKey);
     userId = store.upsertUser({ email: "u@example.com", name: "U" }).id;
     conversationId = store.createConversation(userId, "chat").id;
-    context = { userId, conversationId, skillCount: 0, webEnabled: false, searchConfigured: false };
+    context = { userId, conversationId, skillCount: 0, webEnabled: false, searchConfigured: false, knowledgeCount: 0 };
   });
 
   afterEach(() => {

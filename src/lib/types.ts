@@ -65,7 +65,7 @@ export type ChatDelta =
   | { type: "sources"; sources: Source[] }
   // REQ-F-037 ②: one per model call inside the loop; the client shows the running total.
   | { type: "usage"; usage: TokenUsage }
-  // REQ-F-029 ②: the 10-step ceiling was reached; partial work is kept.
+  // REQ-F-029 ②: the step ceiling (MAX_TOOL_STEPS) was reached; partial work is kept.
   | { type: "truncated"; steps: number }
   // REQ-F-040 ③: the resolved provider cannot call tools, so this turn ran tool-free.
   | { type: "tools-unavailable"; reason: string }
@@ -75,7 +75,10 @@ export type ChatDelta =
   // REQ-F-043 (CR-20260911-context-compaction): this send folded earlier turns into a
   // summary. Sent before the reply so the boundary marker appears where a refresh
   // would rebuild it — after `afterMessageId`, ahead of the `keptTurns` verbatim turns.
-  | { type: "compacted"; summary: string; afterMessageId: string | null; keptTurns: number };
+  | { type: "compacted"; summary: string; afterMessageId: string | null; keptTurns: number }
+  // REQ-F-046 ③ (CR-20260911-knowledge-base): the model proposed a knowledge entry; it
+  // sits in the pending queue until the user adopts it in the ☰ 知识库 list.
+  | { type: "knowledge_pending"; name: string; title: string };
 
 export type ChatMessage = {
   role: "system" | "user" | "assistant" | "tool";

@@ -329,6 +329,7 @@ function buildContext() {
     "CornerMenu.tsx": read("src/components/CornerMenu.tsx"),
     "DisplayScreen.tsx": read("src/components/DisplayScreen.tsx"),
     "ThemeToggle.tsx": read("src/components/ThemeToggle.tsx"),
+    "KnowledgeList.tsx": read("src/components/KnowledgeList.tsx"),
     "markdown.tsx": read("src/lib/markdown.tsx"),
   };
   Object.assign(filesRef, files);
@@ -1428,6 +1429,28 @@ const CONTRACT = [
             return FAIL("compaction toggle lacks aria-expanded or an accessible name");
           }
           return PASS("compaction boundary is a non-bubble marker with an expandable summary");
+        },
+      },
+      {
+        id: "LB-12",
+        ref: "REQ-F-046 (CR-20260911-knowledge-base)",
+        req: "REQ-F-046",
+        title: "Knowledge consolidation and adoption are real, named buttons",
+        guidance:
+          "Keeping a reply and adopting a model proposal are the two human acts the knowledge base depends on; both must be real <button> elements with an accessible name, and the adoption queue must be labelled so a screen reader knows what it is deciding.",
+        check(ctx) {
+          const chat = ctx.files["FloatingChat.tsx"] ?? "";
+          const list = ctx.files["KnowledgeList.tsx"] ?? "";
+          if (!/floating-chat__save-knowledge/.test(chat) || !/aria-label="把这条回复存入知识库"/.test(chat)) {
+            return FAIL("reply bubbles lack a named 存入知识库 button");
+          }
+          if (!/knowledge-list__adopt/.test(list) || !/knowledge-list__discard/.test(list)) {
+            return FAIL("knowledge list lacks adopt / discard controls");
+          }
+          if (!/aria-label=\{`采纳知识提议/.test(list) || !/aria-label="待采纳的知识提议"/.test(list)) {
+            return FAIL("adoption controls or their region lack accessible names");
+          }
+          return PASS("save / adopt / discard are named buttons; the pending queue is a labelled region");
         },
       },
     ],

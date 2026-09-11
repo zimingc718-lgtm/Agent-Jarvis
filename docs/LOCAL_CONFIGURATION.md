@@ -18,6 +18,8 @@ GOOGLE_CLIENT_ID=replace-with-google-oauth-client-id
 GOOGLE_CLIENT_SECRET=replace-with-google-oauth-client-secret
 JARVIS_SECRET_KEY=replace-with-a-long-random-secret-used-for-provider-secret-encryption
 JARVIS_DB_PATH=.data/agent-jarvis.sqlite
+# 本地知识库目录：一个条目一个 .md 文件，可直接手工增删（默认 .data/knowledge）
+JARVIS_KNOWLEDGE_PATH=.data/knowledge
 ```
 
 Generate the two secrets with:
