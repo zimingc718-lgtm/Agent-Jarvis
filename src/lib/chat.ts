@@ -1,47 +1,56 @@
 import { randomUUID } from "node:crypto";
-import { sendProviderStream, type StreamProviderConfig } from "./adapters";
-import { ProviderSecretError, type Store } from "./store";
-import type { ChatDelta, ChatMessage, ProviderRuntimeConfig } from "./types";
+import { repairDanglingToolCalls, runToolLoop } from "./agent-loop";
+import { estimateMessagesTokens, estimateTokens, sendProviderStream, type StreamProviderConfig, type ToolSpec } from "./adapters";
+import { resolveDisplayView } from "./display";
+import { ProviderSecretError, type SourceRecord, type Store } from "./store";
+import {
+  assembleContext,
+  budgetTokens,
+  BUDGET_SHARES,
+  buildStablePrefix,
+  buildVolatileSuffix,
+  contextWindowFor,
+  ContextOverflowError,
+  renderSkillCatalogue,
+  type TurnMessage,
+} from "./tools/budget";
+import { ToolRegistry, type ToolContext } from "./tools/registry";
+import { createSkillTools } from "./tools/skill-tools";
+import { createDisplayTools } from "./tools/display-tools";
+import { createWebTools, readWebSettings } from "./tools/web-tools";
+import type { ChatDelta, ChatMessage, ProviderRuntimeConfig, Source } from "./types";
 
 export const DEFAULT_SYSTEM_PROMPT =
   "You are Agent-Jarvis, a concise assistant running locally on the user's machine. Answer directly and keep prior turns of this conversation in mind.";
 
-/** Assistant turns older than this are still replayed as context; anything not finished cleanly is skipped. */
-const REPLAYABLE_STATUSES = new Set(["complete", "stopped"]);
+/**
+ * Statuses that replay as context. `truncated` joins the set because a turn that hit the
+ * step ceiling still produced real work the next turn should see (REQ-F-029 ②).
+ */
+const REPLAYABLE_STATUSES = new Set(["complete", "stopped", "truncated"]);
 
 type ProviderStreamInput = {
   provider: StreamProviderConfig;
   messages: ChatMessage[];
   model?: string;
   signal?: AbortSignal;
+  tools?: ToolSpec[];
+  includeUsage?: boolean;
 };
 
 type RunChatTurnInput = {
   store: Store;
   userId: string;
-  /**
-   * Optional override (CR-20260909). When omitted, the turn uses the highest-priority
-   * connected provider via `store.resolveActiveProvider`.
-   */
   providerId?: string;
   message: string;
-  /** Continue an existing conversation; when omitted a new one is created. */
   conversationId?: string;
   model?: string;
   systemPrompt?: string;
   signal?: AbortSignal;
   providerStream?: (input: ProviderStreamInput) => AsyncIterable<ChatDelta>;
-  /**
-   * Additional system segment for this turn only (CR-20260909-skills). When set it is
-   * appended after the base system prompt; the persisted conversation is unchanged.
-   */
-  skill?: string;
-  /**
-   * Called once with the final assistant text after it is persisted (CR-20260909).
-   * Returns extra SSE deltas (e.g. `insight` / `display`) to emit before the stream closes.
-   * The insight write itself lives in the route handler, never here.
-   */
-  onFinal?: (finalText: string, status: "complete" | "stopped" | "error", conversationId: string) => ChatDelta[];
+  /** Extra tools, used by tests to register a fake capability (REQ-NF-010 ②). */
+  extraTools?: ToolRegistry;
+  onFinal?: (finalText: string, status: string, conversationId: string) => ChatDelta[];
 };
 
 const encoder = new TextEncoder();
@@ -59,6 +68,36 @@ function formatSse(delta: ChatDelta): string {
   return `event: ${delta.type}\ndata: ${JSON.stringify(delta)}\n\n`;
 }
 
+/** Build the toolset for one send. Composition is fixed for the whole turn (DEC-026 ②). */
+export function buildRegistry(store: Store, extra?: ToolRegistry): ToolRegistry {
+  const registry = new ToolRegistry();
+  for (const tool of createSkillTools(store)) {
+    registry.register(tool);
+  }
+  for (const tool of createDisplayTools(store)) {
+    registry.register(tool);
+  }
+  for (const tool of createWebTools({ store })) {
+    registry.register(tool);
+  }
+  if (extra) {
+    for (const tool of extra.availableFor({} as ToolContext)) {
+      registry.register(tool);
+    }
+  }
+  return registry;
+}
+
+/** Which (provider, model) pairs are known to call tools (REQ-F-040 ①). */
+function toolSupportFor(provider: ProviderRuntimeConfig, model: string): "yes" | "no" | "unknown" {
+  const raw = provider.toolSupport;
+  if (!raw) {
+    return "unknown";
+  }
+  const value = raw[model];
+  return value === "yes" || value === "no" ? value : "unknown";
+}
+
 export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStream<Uint8Array>> {
   const message = input.message.trim();
   if (!message) {
@@ -72,10 +111,7 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
       : input.store.resolveActiveProvider(input.userId);
   } catch (error) {
     if (error instanceof ProviderSecretError) {
-      throw new ChatServiceError(
-        400,
-        "无法读取该 Provider 的凭据，请在模型设置中重新输入 API Key。"
-      );
+      throw new ChatServiceError(400, "无法读取该 Provider 的凭据，请在模型设置中重新输入 API Key。");
     }
     throw error;
   }
@@ -96,116 +132,219 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     conversationId = input.store.createConversation(input.userId, titleFromMessage(message)).id;
   }
 
-  const history: ChatMessage[] = input.store
-    .listMessages(conversationId)
-    .filter((record) => REPLAYABLE_STATUSES.has(record.status))
-    .map((record) => ({ role: record.role, content: record.content }));
+  const model = input.model?.trim() || provider.defaultModel;
+  const skills = input.store.listSkills(input.userId);
+  const web = readWebSettings(input.store);
+  const support = toolSupportFor(provider, model);
+  // REQ-F-040 ③: `no` and `unknown` behave alike — running tool-free beats letting the
+  // user watch an unexplained failure first. Priority order is untouched (REQ-F-006 ⑦).
+  const toolsUsable = support === "yes";
 
-  input.store.addMessage(conversationId, "user", message, "complete");
+  const registry = buildRegistry(input.store, input.extraTools);
+  const toolContext: ToolContext = {
+    userId: input.userId,
+    conversationId,
+    skillCount: skills.length,
+    webEnabled: web.enabled,
+    searchConfigured: Boolean(web.baseUrl),
+  };
 
-  const baseSystemPrompt = input.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
-  // CR-20260909-skills: the skill segment is appended for this turn only, never persisted.
-  const systemPrompt = input.skill ? `${baseSystemPrompt}\n\n${input.skill}` : baseSystemPrompt;
-  const chatMessages: ChatMessage[] = [
-    ...(systemPrompt ? [{ role: "system" as const, content: systemPrompt }] : []),
-    ...history,
-    { role: "user" as const, content: message },
-  ];
+  const window = contextWindowFor({ kind: provider.kind, contextWindow: provider.contextWindow });
+  const catalogue = renderSkillCatalogue(
+    skills.map((skill) => ({ name: skill.name, description: skill.description })),
+    budgetTokens(window, BUDGET_SHARES.skillCatalogue)
+  );
+  const stablePrefix = buildStablePrefix({
+    identity: input.systemPrompt ?? DEFAULT_SYSTEM_PROMPT,
+    skillCatalogue: catalogue.text,
+    toolCatalogue: toolsUsable ? registry.catalogueFor(toolContext) : "",
+  });
+  const volatileSuffix = buildVolatileSuffix({ displayState: describeDisplay() });
+
+  const history = loadHistory(input.store, conversationId);
+  input.store.appendMessage({ conversationId, role: "user", content: message, status: "complete" });
+
+  const currentTurn = history.length > 0 ? Math.max(...history.map((entry) => entry.turn)) + 1 : 1;
+  const turnMessages: TurnMessage[] = [...history, { role: "user", content: message, turn: currentTurn }];
+
+  let assembled: ChatMessage[];
+  try {
+    assembled = assembleContext({
+      stablePrefix,
+      volatileSuffix,
+      messages: turnMessages,
+      currentTurn,
+      contextWindow: window,
+    }).messages;
+  } catch (error) {
+    if (error instanceof ContextOverflowError) {
+      throw new ChatServiceError(413, error.message);
+    }
+    throw error;
+  }
+  assembled = repairDanglingToolCalls(assembled);
 
   const messageId = randomUUID();
   const streamFactory = input.providerStream ?? sendProviderStream;
-  const providerStream = streamFactory({
-    provider: toStreamProviderConfig(provider),
-    messages: chatMessages,
-    model: input.model,
-    signal: input.signal,
-  });
+  const providerConfig = toStreamProviderConfig(provider);
 
   return createStreamingResponse({
     conversationId,
     messageId,
     signal: input.signal,
-    providerStream,
-    onComplete: (content, status) => input.store.addMessage(conversationId, "assistant", content, status),
-    onFinal: input.onFinal
-      ? (content, status) => input.onFinal!(content, status, conversationId)
-      : undefined,
+    toolsUsable,
+    toolsUnavailableReason:
+      support === "unknown"
+        ? "当前模型尚未探测工具调用能力，本轮按普通对话进行。可在「模型」中点「测试」完成探测。"
+        : "当前模型不支持工具调用，本轮按普通对话进行。",
+    run: (emit, persist) =>
+      runToolLoop({
+        registry,
+        toolContext: { ...toolContext, signal: input.signal },
+        messages: assembled,
+        emit,
+        signal: input.signal,
+        persist,
+        providerTurn: ({ messages, tools }) =>
+          streamFactory({
+            provider: providerConfig,
+            messages,
+            model: input.model,
+            signal: input.signal,
+            tools: toolsUsable ? tools : undefined,
+            includeUsage: provider.kind !== "local",
+          }),
+      }),
+    store: input.store,
+    estimateFallback: () => estimateMessagesTokens(assembled),
+    onFinal: input.onFinal,
   });
+}
+
+/** Rebuild conversation messages, tagging each with the user turn it belongs to. */
+function loadHistory(store: Store, conversationId: string): TurnMessage[] {
+  const records = store.listMessages(conversationId).filter((record) => REPLAYABLE_STATUSES.has(record.status));
+  const messages: TurnMessage[] = [];
+  let turn = 0;
+  for (const record of records) {
+    if (record.role === "user") {
+      turn += 1;
+    }
+    if (record.role === "tool") {
+      messages.push({
+        role: "tool",
+        content: record.content,
+        tool_call_id: record.toolCallId ?? undefined,
+        turn,
+      });
+      continue;
+    }
+    messages.push({
+      role: record.role,
+      content: record.content,
+      ...(record.toolCalls ? { tool_calls: record.toolCalls } : {}),
+      turn,
+    });
+  }
+  return messages;
+}
+
+function describeDisplay(): string | null {
+  try {
+    const view = resolveDisplayView();
+    return view.kind === "insight" ? "正在显示一份洞察报告" : "标题视图";
+  } catch {
+    return null;
+  }
 }
 
 function createStreamingResponse(input: {
   conversationId: string;
   messageId: string;
   signal?: AbortSignal;
-  providerStream: AsyncIterable<ChatDelta>;
-  onComplete(content: string, status: "complete" | "stopped" | "error"): void;
-  onFinal?: (content: string, status: "complete" | "stopped" | "error") => ChatDelta[];
+  toolsUsable: boolean;
+  toolsUnavailableReason: string;
+  store: Store;
+  estimateFallback: () => number;
+  run: (
+    emit: (delta: ChatDelta) => void,
+    persist: (message: ChatMessage & { status: string; sources?: Source[] }) => void
+  ) => Promise<{ text: string; status: string; sources: Source[]; errorMessage?: string }>;
+  onFinal?: (finalText: string, status: string, conversationId: string) => ChatDelta[];
 }): ReadableStream<Uint8Array> {
   return new ReadableStream<Uint8Array>({
     async start(controller) {
-      let assistantText = "";
-      let persisted = false;
-
-      const send = (delta: ChatDelta) => controller.enqueue(encoder.encode(formatSse(delta)));
-      const persistOnce = (status: "complete" | "stopped" | "error", content = assistantText) => {
-        if (persisted) {
-          return;
-        }
-        input.onComplete(content, status);
-        persisted = true;
-        try {
-          for (const delta of input.onFinal?.(content, status) ?? []) {
-            send(delta);
-          }
-        } catch {
-          /* a display/insight hook must never break the reply stream */
+      let closed = false;
+      const send = (delta: ChatDelta) => {
+        if (!closed) {
+          controller.enqueue(encoder.encode(formatSse(delta)));
         }
       };
 
+      let sawUsage = false;
+      const emit = (delta: ChatDelta) => {
+        if (delta.type === "usage") {
+          sawUsage = true;
+          input.store.addUsage(input.conversationId, delta.usage);
+          send({ type: "usage", usage: input.store.getUsage(input.conversationId) });
+          return;
+        }
+        send(delta);
+      };
+
+      const persist = (message: ChatMessage & { status: string; sources?: Source[] }) => {
+        input.store.appendMessage({
+          conversationId: input.conversationId,
+          role: message.role === "system" ? "assistant" : message.role,
+          content: message.content,
+          status: message.status,
+          toolCalls: message.tool_calls ?? null,
+          toolCallId: message.tool_call_id ?? null,
+          sources: (message.sources as SourceRecord[] | undefined) ?? null,
+        });
+      };
+
       send({ type: "start", conversationId: input.conversationId, messageId: input.messageId });
+      if (!input.toolsUsable) {
+        send({ type: "tools-unavailable", reason: input.toolsUnavailableReason });
+      }
 
       try {
-        for await (const delta of input.providerStream) {
-          if (input.signal?.aborted) {
-            persistOnce("stopped");
-            send({ type: "stopped" });
-            controller.close();
-            return;
-          }
+        const result = await input.run(emit, persist);
 
-          if (delta.type === "delta") {
-            assistantText += delta.text;
-            send(delta);
-            continue;
-          }
-          if (delta.type === "stopped") {
-            persistOnce("stopped");
-            send({ type: "stopped" });
-            controller.close();
-            return;
-          }
-          if (delta.type === "error") {
-            // The error text goes to the client transiently; the persisted row keeps only whatever
-            // partial answer arrived, marked as errored, so it never re-enters the model context.
-            persistOnce("error");
-            send(delta);
-            controller.close();
-            return;
-          }
+        // REQ-F-039: sources are their own structure, assembled server-side from what the
+        // tools actually returned. The prose already streamed and is never rewritten.
+        if (result.sources.length > 0) {
+          send({ type: "sources", sources: result.sources });
         }
 
-        if (input.signal?.aborted) {
-          persistOnce("stopped");
+        // REQ-F-037 ④: providers that never report usage still get a number, flagged.
+        if (!sawUsage) {
+          const usage = {
+            inputTokens: input.estimateFallback(),
+            outputTokens: estimateTokens(result.text),
+            estimated: true,
+          };
+          input.store.addUsage(input.conversationId, usage);
+          send({ type: "usage", usage: input.store.getUsage(input.conversationId) });
+        }
+
+        for (const delta of input.onFinal?.(result.text, result.status, input.conversationId) ?? []) {
+          send(delta);
+        }
+
+        if (result.status === "stopped") {
           send({ type: "stopped" });
+        } else if (result.status === "error") {
+          send({ type: "error", message: result.errorMessage ?? "Provider stream failed." });
         } else {
-          persistOnce("complete");
           send({ type: "done", messageId: input.messageId });
         }
-        controller.close();
       } catch (error) {
         const message = error instanceof Error ? error.message : "Provider stream failed.";
-        persistOnce("error");
         send({ type: "error", message });
+      } finally {
+        closed = true;
         controller.close();
       }
     },

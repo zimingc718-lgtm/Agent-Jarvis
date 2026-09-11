@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { decryptSecret, encryptSecret, maskSecret } from "./crypto";
+import { migrateUp } from "./migrations";
 import type { ProviderAuthMode, ProviderKind, ProviderRuntimeConfig, ProviderSummary } from "./types";
 
 type UserInput = {
@@ -27,12 +28,49 @@ export type ConversationSummary = {
   updatedAt: string;
 };
 
+/** One tool invocation the model asked for (DEC-024 ①, OpenAI wire shape). */
+export type ToolCallRecord = {
+  id: string;
+  type: "function";
+  function: { name: string; arguments: string };
+};
+
+/** A source the answer cites, produced server-side from this turn's tool results (REQ-F-039). */
+export type SourceRecord = { url: string; title: string };
+
 export type MessageRecord = {
   id: string;
-  role: "user" | "assistant";
+  /** `tool` rows carry a tool result and always have `toolCallId` (DEC-024). */
+  role: "user" | "assistant" | "tool";
   content: string;
   status: string;
   createdAt: string;
+  /** Assistant rows that requested tools. Null on every pre-CR row. */
+  toolCalls: ToolCallRecord[] | null;
+  /** Tool rows: which call this answers. */
+  toolCallId: string | null;
+  /** Order within one `created_at` — same-millisecond tool rounds would otherwise shuffle. */
+  seq: number;
+  /** Assistant rows that cited web sources (REQ-F-039). */
+  sources: SourceRecord[] | null;
+};
+
+export type AddMessageInput = {
+  conversationId: string;
+  role: "user" | "assistant" | "tool";
+  content: string;
+  status: string;
+  toolCalls?: ToolCallRecord[] | null;
+  toolCallId?: string | null;
+  sources?: SourceRecord[] | null;
+};
+
+/** Per-conversation token totals (REQ-F-037). */
+export type UsageTotals = {
+  inputTokens: number;
+  outputTokens: number;
+  /** True when any contributing call fell back to local estimation (REQ-F-037 ④). */
+  estimated: boolean;
 };
 
 /** A registered skill folder (CR-20260909-skills). */
@@ -105,7 +143,18 @@ export type Store = {
   dumpProviderSecretsForTest(): Array<{ id: string; encryptedSecret: string | null }>;
   createConversation(userId: string, title: string): ConversationSummary;
   getConversationForUser(userId: string, conversationId: string): ConversationSummary | null;
+  /** Plain text row. Kept as the narrow call site every pre-CR caller already uses. */
   addMessage(conversationId: string, role: "user" | "assistant", content: string, status: string): string;
+  /** Full row, including tool round-trips and cited sources (DEC-024). */
+  appendMessage(input: AddMessageInput): string;
+  /** Accumulate one model call's usage onto the conversation (REQ-F-037 ②). */
+  addUsage(conversationId: string, usage: UsageTotals): void;
+  getUsage(conversationId: string): UsageTotals;
+  /** Key/value app settings — search backend config today (DEC-027). */
+  getSetting(key: string): string | null;
+  setSetting(key: string, value: string | null): void;
+  deleteSkillForUser(userId: string, name: string): SkillRecord | null;
+  renameSkillForUser(userId: string, from: string, to: string): SkillRecord | null;
   listRecentConversations(userId: string): ConversationSummary[];
   listMessages(conversationId: string): MessageRecord[];
   // --- Skills (CR-20260909-skills) ---
@@ -133,7 +182,9 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
 
   const db = new DatabaseSync(databasePath);
   migrate(db);
-  migrateProviderPriority(db);
+  // DEC-023: every column added after the base schema goes through the versioned
+  // framework, so each one has a `down` and a rollback dump.
+  migrateUp(db);
 
   function readProviderRow(userId: string, providerId: string) {
     return db
@@ -409,13 +460,57 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
     },
 
     addMessage(conversationId, role, content, status) {
+      return this.appendMessage({ conversationId, role, content, status });
+    },
+
+    appendMessage(input) {
       const id = randomUUID();
       const now = new Date().toISOString();
+      // `seq` orders rows inside one millisecond: a tool round writes the assistant
+      // request and every tool result in the same tick, and `created_at` alone would
+      // let them come back shuffled (CP-39).
+      const next = db
+        .prepare("SELECT COALESCE(MAX(seq), -1) + 1 AS seq FROM messages WHERE conversation_id = ?")
+        .get(input.conversationId) as { seq: number };
       db.prepare(
-        "INSERT INTO messages (id, conversation_id, role, content, status, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-      ).run(id, conversationId, role, content, status, now);
-      db.prepare("UPDATE conversations SET updated_at = ? WHERE id = ?").run(now, conversationId);
+        `INSERT INTO messages (id, conversation_id, role, content, status, created_at, tool_calls, tool_call_id, seq, sources)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        id,
+        input.conversationId,
+        input.role,
+        input.content,
+        input.status,
+        now,
+        input.toolCalls ? JSON.stringify(input.toolCalls) : null,
+        input.toolCallId ?? null,
+        next.seq,
+        input.sources ? JSON.stringify(input.sources) : null
+      );
+      db.prepare("UPDATE conversations SET updated_at = ? WHERE id = ?").run(now, input.conversationId);
       return id;
+    },
+
+    addUsage(conversationId, usage) {
+      db.prepare(
+        `UPDATE conversations
+            SET input_tokens = input_tokens + ?,
+                output_tokens = output_tokens + ?,
+                usage_estimated = MAX(usage_estimated, ?)
+          WHERE id = ?`
+      ).run(usage.inputTokens, usage.outputTokens, usage.estimated ? 1 : 0, conversationId);
+    },
+
+    getUsage(conversationId) {
+      const row = db
+        .prepare(
+          "SELECT input_tokens AS inputTokens, output_tokens AS outputTokens, usage_estimated AS estimated FROM conversations WHERE id = ?"
+        )
+        .get(conversationId) as { inputTokens: number; outputTokens: number; estimated: number } | undefined;
+      if (!row) {
+        return { inputTokens: 0, outputTokens: 0, estimated: false };
+      }
+      return { inputTokens: row.inputTokens, outputTokens: row.outputTokens, estimated: row.estimated === 1 };
     },
 
     listRecentConversations(userId) {
@@ -427,14 +522,24 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
     },
 
     listMessages(conversationId) {
-      return db
+      const rows = db
         .prepare(
-          `SELECT id, role, content, status, created_at AS createdAt
+          `SELECT id, role, content, status, created_at AS createdAt,
+                  tool_calls AS toolCalls, tool_call_id AS toolCallId, seq, sources
              FROM messages
             WHERE conversation_id = ?
-            ORDER BY created_at ASC`
+            ORDER BY created_at ASC, seq ASC`
         )
-        .all(conversationId) as MessageRecord[];
+        .all(conversationId) as Array<
+        Omit<MessageRecord, "toolCalls" | "sources"> & { toolCalls: string | null; sources: string | null }
+      >;
+      // Pre-CR rows have NULL in every new column and decode to the old shape (CP-10 ⑤).
+      return rows.map((row) => ({
+        ...row,
+        seq: row.seq ?? 0,
+        toolCalls: parseJsonColumn<ToolCallRecord[]>(row.toolCalls),
+        sources: parseJsonColumn<SourceRecord[]>(row.sources),
+      }));
     },
 
     insertSkill(userId, input) {
@@ -460,6 +565,62 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
              FROM skills WHERE user_id = ? ORDER BY created_at ASC`
         )
         .all(userId) as SkillRecord[];
+    },
+
+    /**
+     * REQ-F-031 ②. Deletes the row and returns it so the caller can remove the folder.
+     * Row first, folder second (CP-3): a leftover folder is inert, whereas a row whose
+     * folder is gone makes `read_skill` fail with nothing the user can see or fix.
+     */
+    deleteSkillForUser(userId, name) {
+      const row = db
+        .prepare(
+          `SELECT id, name, description, dir_path AS dirPath, created_at AS createdAt
+             FROM skills WHERE user_id = ? AND name = ? LIMIT 1`
+        )
+        .get(userId, name) as SkillRecord | undefined;
+      if (!row) {
+        return null;
+      }
+      db.prepare("DELETE FROM skills WHERE id = ?").run(row.id);
+      return row;
+    },
+
+    /** REQ-F-031 ③. Returns the row with its **old** `dirPath` so the caller can move it. */
+    renameSkillForUser(userId, from, to) {
+      const row = db
+        .prepare(
+          `SELECT id, name, description, dir_path AS dirPath, created_at AS createdAt
+             FROM skills WHERE user_id = ? AND name = ? LIMIT 1`
+        )
+        .get(userId, from) as SkillRecord | undefined;
+      if (!row) {
+        return null;
+      }
+      const clash = db.prepare("SELECT id FROM skills WHERE user_id = ? AND name = ?").get(userId, to) as
+        | { id: string }
+        | undefined;
+      if (clash && clash.id !== row.id) {
+        throw new SkillNameConflictError(to);
+      }
+      return row;
+    },
+
+    getSetting(key) {
+      const row = db.prepare("SELECT value FROM app_settings WHERE key = ?").get(key) as
+        | { value: string | null }
+        | undefined;
+      return row?.value ?? null;
+    },
+
+    setSetting(key, value) {
+      if (value === null) {
+        db.prepare("DELETE FROM app_settings WHERE key = ?").run(key);
+        return;
+      }
+      db.prepare(
+        "INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at"
+      ).run(key, value, new Date().toISOString());
     },
 
     getSkill(userId, skillId) {
@@ -525,32 +686,20 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
   };
 }
 
-function ensureUserRecord(db: DatabaseSync, userId: string): void {
-  db.prepare("INSERT OR IGNORE INTO users (id, email, name) VALUES (?, ?, ?)").run(userId, userId, userId);
+/** Columns added by DEC-023 hold JSON; pre-CR rows hold NULL and decode to null. */
+function parseJsonColumn<T>(raw: string | null): T | null {
+  if (!raw) {
+    return null;
+  }
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
 }
 
-/**
- * CR-20260909: providers gain a `priority` column (lower = used first). `node:sqlite`
- * has no migration framework, so add the column only when absent and backfill existing
- * rows per user in creation order (older = higher priority) — an accepted initial order
- * the user can then reorder.
- */
-function migrateProviderPriority(db: DatabaseSync): void {
-  const columns = db.prepare("PRAGMA table_info(providers)").all() as Array<{ name: string }>;
-  if (columns.some((column) => column.name === "priority")) {
-    return;
-  }
-  db.exec("ALTER TABLE providers ADD COLUMN priority INTEGER NOT NULL DEFAULT 1000000");
-  const rows = db
-    .prepare("SELECT id, user_id AS userId FROM providers ORDER BY user_id ASC, created_at ASC, rowid ASC")
-    .all() as Array<{ id: string; userId: string }>;
-  const seen = new Map<string, number>();
-  const update = db.prepare("UPDATE providers SET priority = ? WHERE id = ?");
-  for (const row of rows) {
-    const next = seen.get(row.userId) ?? 0;
-    update.run(next, row.id);
-    seen.set(row.userId, next + 1);
-  }
+function ensureUserRecord(db: DatabaseSync, userId: string): void {
+  db.prepare("INSERT OR IGNORE INTO users (id, email, name) VALUES (?, ?, ?)").run(userId, userId, userId);
 }
 
 function migrate(db: DatabaseSync): void {

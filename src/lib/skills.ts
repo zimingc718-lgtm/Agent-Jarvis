@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+﻿import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { SkillNameConflictError, type Store } from "./store";
 import type { ChatMessage, ProviderRuntimeConfig } from "./types";
@@ -49,12 +49,6 @@ export type Completer = (
   opts: { maxTokens: number; timeoutMs: number }
 ) => Promise<string>;
 
-export type TurnRoute = { skill: string | null; display: "home" | null };
-
-const ROUTE_SYSTEM =
-  'You are a router. Given a list of registered skills (name + description) and one user message, decide two things: ' +
-  'which skill (if any) that message should use, and whether the user is asking to return to the home / title screen. ' +
-  'Reply with ONLY compact JSON and nothing else: {"skill": <exact skill name or null>, "display": "home" or null}.';
 
 const GENERATE_SYSTEM =
   "You are given the raw contents of a skill folder. Write a SKILL.md that captures how to use this skill. " +
@@ -91,40 +85,6 @@ export function makeCompleter(provider: ProviderRuntimeConfig, fetcher: typeof f
     const content = body.choices?.[0]?.message?.content;
     return typeof content === "string" ? content : "";
   };
-}
-
-/**
- * Decide the skill (and any "show the home screen" intent) for one send (DEC-016).
- * Fail-open: no completer, a timeout, unparseable output or an unknown skill name all
- * resolve to `{ skill: null, display: null }` — the send is never blocked.
- */
-export async function routeTurn(
-  userMessage: string,
-  skills: SkillSummary[],
-  complete: Completer | null
-): Promise<TurnRoute> {
-  if (!complete) {
-    return { skill: null, display: null };
-  }
-  try {
-    const list = skills.length
-      ? skills.map((skill) => `- ${skill.name}: ${skill.description}`).join("\n")
-      : "(none registered)";
-    const raw = await complete(
-      [
-        { role: "system", content: ROUTE_SYSTEM },
-        { role: "user", content: `Skills:\n${list}\n\nMessage:\n${userMessage}` },
-      ],
-      { maxTokens: 64, timeoutMs: 10_000 }
-    );
-    const parsed = extractJsonObject(raw);
-    const skillName = typeof parsed?.skill === "string" ? parsed.skill : null;
-    const skill = skillName && skills.some((entry) => entry.name === skillName) ? skillName : null;
-    const display = parsed?.display === "home" ? "home" : null;
-    return { skill, display };
-  } catch {
-    return { skill: null, display: null };
-  }
 }
 
 /**
@@ -277,18 +237,6 @@ export function isSkillTextPath(path: string): boolean {
   return SKILL_TEXT_EXTENSIONS.some((ext) => lower.endsWith(ext));
 }
 
-/** Last fenced ```html block in the reply, or which failure mode applies (REQ-F-023). */
-export function captureSkillHtml(text: string): { html: string } | { missing: "none" | "incomplete" } {
-  const matches = [...text.matchAll(/```html\r?\n([\s\S]*?)```/gi)];
-  if (matches.length > 0) {
-    return { html: matches[matches.length - 1][1].trim() };
-  }
-  if (/```html\r?\n/i.test(text)) {
-    return { missing: "incomplete" };
-  }
-  return { missing: "none" };
-}
-
 function buildSkillMd(doc: GeneratedSkillDoc): string {
   const head = `---\nname: ${doc.name}\ndescription: ${doc.description}\n---\n`;
   if (doc.docGenerated) {
@@ -319,19 +267,6 @@ function parseFrontmatter(text: string): { name: string; description: string; bo
 function stripFrontmatter(text: string): string {
   const match = text.match(/^\s*---\s*\n[\s\S]*?\n---\s*\n?([\s\S]*)$/);
   return match ? match[1] : text;
-}
-
-function extractJsonObject(text: string): { skill?: unknown; display?: unknown } | null {
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start < 0 || end <= start) {
-    return null;
-  }
-  try {
-    return JSON.parse(text.slice(start, end + 1)) as { skill?: unknown; display?: unknown };
-  } catch {
-    return null;
-  }
 }
 
 async function readTextFile(path: string): Promise<string | null> {
