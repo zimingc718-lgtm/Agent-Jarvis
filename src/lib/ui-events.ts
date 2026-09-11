@@ -31,6 +31,28 @@ export const USAGE_CHANGED_EVENT = "jarvis:usage-changed";
 export const KNOWLEDGE_CHANGED_EVENT = "jarvis:knowledge-changed";
 
 /**
+ * Proactive wake-up (CR-20260911-proactive-wake). `WAKE_CHANGED_EVENT` tells the chat
+ * that the schedule changed in the ☰ menu; `WAKE_NOTICE_EVENT` carries a reminder the
+ * menu's 「现在唤醒」 produced, so the chat can show it — `detail` is `{ text, messageId }`.
+ */
+export const WAKE_CHANGED_EVENT = "jarvis:wake-changed";
+export const WAKE_NOTICE_EVENT = "jarvis:wake-notice";
+
+/** What `GET /api/settings/wake` returns (REQ-F-060). */
+export type WakeClientSettings = {
+  enabled: boolean;
+  intervalMinutes: number;
+  dailyTokenCap: number;
+  usage: { date: string; inputTokens: number; outputTokens: number; runs: number; notices: number };
+};
+
+/** What `POST /api/chat/wake` returns (REQ-F-061). */
+export type WakeClientOutcome =
+  | { kind: "skipped"; reason: string; message: string; usage: WakeClientSettings["usage"] }
+  | { kind: "noop"; usage: WakeClientSettings["usage"] }
+  | { kind: "notice"; text: string; conversationId: string; messageId: string; usage: WakeClientSettings["usage"] };
+
+/**
  * What `GET /api/display` returns and what `<DisplayScreen>` renders (DEC-017).
  * `kind` is an extension point — the client falls back to the title view for
  * anything it does not recognise.

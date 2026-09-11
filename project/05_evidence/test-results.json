@@ -35,7 +35,8 @@
     },
     "project/06_changes/CR-20260910-agent-tooling.md",
     "project/06_changes/CR-20260911-context-compaction.md",
-    "project/06_changes/CR-20260911-knowledge-base.md"
+    "project/06_changes/CR-20260911-knowledge-base.md",
+    "project/06_changes/CR-20260911-proactive-wake.md"
   ],
   "tests": [
     {
@@ -693,6 +694,46 @@
       "real_entry": true,
       "date": "2026-09-11",
       "notes": "CR-20260911-knowledge-base；真实入口：API 存知识 → 新对话里模型调 search_knowledge 检到（步骤行 + 回复含 8443）；模型调 save_knowledge → 转录区提示、pending 不在 entries、☰ 待采纳（1）、采纳后进 entries；真实浏览器拖入 .md → 收据 + 条目；刷新后 ☰ 首开含全部条目。e2e 12 PASS。"
+    },
+    {
+      "id": "TEST-100",
+      "result": "PASS",
+      "command": "npm test -- wake.test",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-proactive-wake；默认关/30/20000；写入校验拒绝非法值；日用量按日归零、坏 JSON 视为空。"
+    },
+    {
+      "id": "TEST-101",
+      "result": "PASS",
+      "command": "npm test -- wake.test",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-proactive-wake；未开非手动跳过；手动忽略开关不忽略上限；无对话/无 Provider 跳过；NOOP 不落库但计费且 max_tokens 200；有内容落 system/wake 行并转录为 system 行；提醒不回放（真实下一轮发送内容断言）；失败静默计费；日用量跨次累加达上限跳过；buildWakeMessages 排除工具/摘要/早前提醒并截断。"
+    },
+    {
+      "id": "TEST-102",
+      "result": "PASS",
+      "command": "npm test -- wake-route",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-proactive-wake；GET 默认值+零用量；PUT 校验 400/持久；无 Provider POST 200 skipped；有 Provider：关闭态 manual:false → skipped disabled 零调用；manual:true → 恰一次 stream:false max_tokens:200；401。"
+    },
+    {
+      "id": "TEST-103",
+      "result": "PASS",
+      "command": "npm run test:floating-chat && npm test -- wake-settings && npm run test:ui-contract",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-proactive-wake；开关 role=switch 初值关、间隔/上限/用量同屏；开关即保存并派发事件、非法间隔显示原因；现在唤醒按钮：提醒通告、上限文案、用量刷新；假时钟（仅 setInterval/Date）安静满间隔恰一次唤醒→system 行；默认关无调用；菜单提醒去重；ui-contract LB-13（53/0）。"
+    },
+    {
+      "id": "TEST-104",
+      "result": "PASS",
+      "command": "npm run test:e2e",
+      "real_entry": true,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-proactive-wake；真实入口：默认关、用量可见；现在唤醒 → 模型恰一次非流式调用（max_tokens 200 + 唤醒指令）→ 转录区 system 行；刷新后仍在、GET messages 字段兼容；上限设 1 后零调用并显示已达上限；开关持久。e2e 13 PASS。"
     }
   ],
   "executed_commands": [
@@ -836,6 +877,31 @@
       "command": "python tools/governance.py check-doors && review r1..r4 && check-ids && check-changes && check-specs",
       "result": "PASS",
       "summary": "CR-20260911-knowledge-base: 10 CP rows declare door + detection route; R1 PASS; R2–R4 MATRIX_WAIVED_STANDARD_TIER; 121 ids no overlap"
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "result": "PASS",
+      "summary": "CR-20260911-proactive-wake: no type errors"
+    },
+    {
+      "command": "npm test",
+      "result": "PASS",
+      "summary": "CR-20260911-proactive-wake: 44 test files, 367 tests passed"
+    },
+    {
+      "command": "npm run test:ui-contract",
+      "result": "PASS",
+      "summary": "CR-20260911-proactive-wake: static tier 53/53 incl. new LB-13"
+    },
+    {
+      "command": "npm run test:e2e",
+      "result": "PASS",
+      "summary": "CR-20260911-proactive-wake: 13 Chromium workflows incl. proactive-wake (TEST-104)"
+    },
+    {
+      "command": "python tools/governance.py check-doors && review r1..r4 && check-ids && check-changes && check-specs",
+      "result": "PASS",
+      "summary": "CR-20260911-proactive-wake: 9 CP rows declare door + detection route; R1 PASS; R2–R4 MATRIX_WAIVED_STANDARD_TIER"
     }
   ],
   "known_warnings": [

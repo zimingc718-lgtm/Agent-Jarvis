@@ -9,6 +9,7 @@ import { SearchSettings } from "@/components/SearchSettings";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { SkillList } from "@/components/SkillList";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { WakeSettings } from "@/components/WakeSettings";
 import { authOptions, getGoogleOAuthConfig } from "@/lib/auth";
 import { requireUserId } from "@/lib/auth-guard";
 import { resolveDisplayView } from "@/lib/display";
@@ -68,6 +69,8 @@ export default async function HomePage() {
         {storeReady ? <KnowledgeList initial={knowledge} /> : null}
         {/* REQ-F-038 ①: its own entry beside 「模型」, not inside that dialog. */}
         {storeReady ? <SearchSettings /> : null}
+        {/* REQ-F-060 ②: its own entry, off by default. */}
+        {storeReady ? <WakeSettings /> : null}
       </CornerMenu>
 
       {auth.ok && !storage.configured ? (

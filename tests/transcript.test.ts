@@ -85,6 +85,17 @@ describe("buildTranscript (REQ-F-035 ④)", () => {
     ]);
   });
 
+  // CR-20260911-proactive-wake (REQ-F-061 ②): a persisted wake reminder is a system row —
+  // it was never the user's words, so it must not come back as a user bubble.
+  it("system/wake 行还原为 system 行，不是用户气泡", () => {
+    const rows = buildTranscript([
+      record({ id: "u1", role: "user", content: "问" }),
+      record({ id: "w1", role: "system", content: "主动提醒：记得配 8443。", status: "wake", seq: 1 }),
+    ]);
+    expect(rows.map((row) => row.role)).toEqual(["user", "system"]);
+    expect(rows[1]).toMatchObject({ status: "wake", content: "主动提醒：记得配 8443。" });
+  });
+
   // REQ-F-043: a compaction boundary is a marker, not conversation content.
   it("压缩摘要行还原为 summary 标记，不是消息气泡", () => {
     const rows = buildTranscript([
