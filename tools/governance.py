@@ -509,10 +509,21 @@ def check_g3(root: Path, cr: str | None = None) -> list[str]:
         # and reported, and returns with the deferring CR.
         return str(item.get("result", "")).upper() == "DEFERRED"
 
+    def is_superseded(item: dict[str, object]) -> bool:
+        # The behaviour the test asserted no longer exists, because an approved CR
+        # replaced it (CR-20260910-agent-tooling CP-37: routeTurn deleted, the ```html
+        # fence capture became a tool). Asking for evidence of a deleted behaviour would
+        # be asking for a lie — but the row stays, with a note naming its replacement,
+        # so the trail from the old requirement to the new one is still readable.
+        # Distinct from DEFERRED: deferred work comes back, superseded work does not.
+        return str(item.get("result", "")).upper() == "SUPERSEDED"
+
     pending_manual: list[str] = []
     unattributed_manual: list[str] = []
     deferred: list[str] = []
+    superseded: list[str] = []
     failed: list[str] = []
+    undocumented_supersede: list[str] = []
 
     for test_id in sorted(required_tests):
         item = results.get(test_id)
@@ -521,6 +532,12 @@ def check_g3(root: Path, cr: str | None = None) -> list[str]:
         passed = str(item.get("result", "")).upper() == "PASS"
         if is_deferred(item):
             deferred.append(test_id)
+        elif is_superseded(item):
+            superseded.append(test_id)
+            # A supersede must name the CR that did it, otherwise "SUPERSEDED" is just
+            # a way to silence a red test.
+            if "CR-" not in str(item.get("notes", "")):
+                undocumented_supersede.append(test_id)
         elif is_manual(item):
             # A manual item cannot be satisfied by a bare "PASS": it must name
             # who verified it and when, so it stays auditable and cannot be
@@ -547,13 +564,20 @@ def check_g3(root: Path, cr: str | None = None) -> list[str]:
             "FAIL G3_BLOCKED manual verification marked PASS without verified_by/verified_at: "
             f"{', '.join(unattributed_manual)}"
         )
+    if undocumented_supersede:
+        findings.append(
+            "FAIL G3_BLOCKED marked SUPERSEDED without naming the CR that replaced it "
+            f"(notes must reference a CR-): {', '.join(undocumented_supersede)}"
+        )
     if findings:
         return findings
+    skipped: list[str] = []
     if deferred:
-        return [
-            "OK G3_PASS all non-deferred required tests have current PASS evidence "
-            f"(deferred, tracked by their CR: {', '.join(deferred)})"
-        ]
+        skipped.append(f"deferred, tracked by their CR: {', '.join(deferred)}")
+    if superseded:
+        skipped.append(f"superseded by an approved CR: {', '.join(superseded)}")
+    if skipped:
+        return [f"OK G3_PASS all live required tests have current PASS evidence ({'; '.join(skipped)})"]
     return ["OK G3_PASS all required tests have current PASS evidence"]
 
 

@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -34,9 +34,9 @@ describe("FloatingChat", () => {
         hasEnabledProvider
         probeProviders={readyProbe}
         onStream={async function* () {
-          yield { type: "start", conversationId: "c1" };
+          yield { type: "start", conversationId: "c1", messageId: "m" };
           yield { type: "delta", text: "hello" };
-          yield { type: "done" };
+          yield { type: "done", messageId: "m" };
         }}
       />
     );
@@ -63,8 +63,8 @@ describe("FloatingChat", () => {
         probeProviders={readyProbe}
         onStream={async function* (request) {
           requests.push(request);
-          yield { type: "start", conversationId: "c" };
-          yield { type: "done" };
+          yield { type: "start", conversationId: "c", messageId: "m" };
+          yield { type: "done", messageId: "m" };
         }}
       />
     );
@@ -86,9 +86,9 @@ describe("FloatingChat", () => {
     const requests: ChatStreamRequest[] = [];
     async function* onStream(request: ChatStreamRequest): AsyncIterable<ChatStreamEvent> {
       requests.push(request);
-      yield { type: "start", conversationId: "conv-1" };
+      yield { type: "start", conversationId: "conv-1", messageId: "m" };
       yield { type: "delta", text: request.message === "one" ? "first-answer" : "second-answer" };
-      yield { type: "done" };
+      yield { type: "done", messageId: "m" };
     }
 
     render(<FloatingChat hasEnabledProvider probeProviders={readyProbe} onStream={onStream} />);
@@ -114,7 +114,7 @@ describe("FloatingChat", () => {
       request.signal?.addEventListener("abort", () => {
         aborted = true;
       });
-      yield { type: "start", conversationId: "conv-A" };
+      yield { type: "start", conversationId: "conv-A", messageId: "m" };
       yield { type: "delta", text: "partial" };
       await new Promise((resolve) => setTimeout(resolve, 50));
       yield { type: "delta", text: " more" };
@@ -142,9 +142,9 @@ describe("FloatingChat", () => {
     const requests: ChatStreamRequest[] = [];
     async function* onStream(request: ChatStreamRequest): AsyncIterable<ChatStreamEvent> {
       requests.push(request);
-      yield { type: "start", conversationId: "conv-9" };
+      yield { type: "start", conversationId: "conv-9", messageId: "m" };
       yield { type: "delta", text: "answer-text" };
-      yield { type: "done" };
+      yield { type: "done", messageId: "m" };
     }
 
     render(
@@ -213,7 +213,7 @@ describe("FloatingChat", () => {
         hasEnabledProvider
         probeProviders={readyProbe}
         onStream={async function* () {
-          yield { type: "start", conversationId: "c" };
+          yield { type: "start", conversationId: "c", messageId: "m" };
           yield { type: "delta", text: "half " };
           yield { type: "error", message: "upstream 500" };
         }}
@@ -236,9 +236,9 @@ describe("FloatingChat", () => {
         hasEnabledProvider
         probeProviders={probe}
         onStream={async function* () {
-          yield { type: "start", conversationId: "c" };
+          yield { type: "start", conversationId: "c", messageId: "m" };
           await new Promise((r) => setTimeout(r, 30));
-          yield { type: "done" };
+          yield { type: "done", messageId: "m" };
         }}
       />
     );
@@ -285,9 +285,9 @@ describe("FloatingChat", () => {
   // CR-20260909-collapsible-panel — REQ-F-019 / TEST-031
   describe("collapse panel", () => {
     async function* answer(): AsyncIterable<ChatStreamEvent> {
-      yield { type: "start", conversationId: "conv-c" };
+      yield { type: "start", conversationId: "conv-c", messageId: "m" };
       yield { type: "delta", text: "the answer" };
-      yield { type: "done" };
+      yield { type: "done", messageId: "m" };
     }
 
     it("shows the collapse control only once a transcript exists (TEST-031 ①)", async () => {
@@ -305,7 +305,7 @@ describe("FloatingChat", () => {
       const requests: ChatStreamRequest[] = [];
       async function* onStream(r: ChatStreamRequest) {
         requests.push(r);
-        yield { type: "start", conversationId: "conv-keep" } as ChatStreamEvent;
+        yield { type: "start", conversationId: "conv-keep", messageId: "m" } as ChatStreamEvent;
         yield { type: "delta", text: "kept answer" } as ChatStreamEvent;
         yield { type: "done" } as ChatStreamEvent;
       }
@@ -340,10 +340,10 @@ describe("FloatingChat", () => {
       try {
         let release: () => void = () => {};
         async function* slow(): AsyncIterable<ChatStreamEvent> {
-          yield { type: "start", conversationId: "c" };
+          yield { type: "start", conversationId: "c", messageId: "m" };
           yield { type: "delta", text: "partial" };
           await new Promise<void>((r) => (release = r));
-          yield { type: "done" };
+          yield { type: "done", messageId: "m" };
         }
         const { container } = render(
           <FloatingChat hasEnabledProvider probeProviders={readyProbe} onStream={slow} />
@@ -447,11 +447,39 @@ describe("FloatingChat", () => {
     for await (const event of streamChatDeltas({ message: "hi", conversationId: "c0" })) {
       events.push(event);
     }
+    // CP-40: the parser passes the server's `ChatDelta` through verbatim instead of
+    // re-shaping each type against a local allow-list — the old allow-list silently
+    // dropped any event the client had not been taught about.
     expect(events).toEqual([
-      { type: "start", conversationId: "c9" },
+      { type: "start", conversationId: "c9", messageId: "m" },
       { type: "delta", text: "hi" },
-      { type: "done" },
+      { type: "done", messageId: "m" },
     ]);
+  });
+
+  it("CP-40: 服务端新增的事件类型无需改白名单即可透传", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          new ReadableStream({
+            start(controller) {
+              const enc = new TextEncoder();
+              controller.enqueue(
+                enc.encode('event: tool_call\ndata: {"type":"tool_call","callId":"c1","name":"web_search","argsSummary":"{}"}\n\n')
+              );
+              controller.close();
+            },
+          })
+        )
+    );
+    vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
+
+    const events: ChatStreamEvent[] = [];
+    for await (const event of streamChatDeltas({ message: "hi" })) {
+      events.push(event);
+    }
+    expect(events).toEqual([{ type: "tool_call", callId: "c1", name: "web_search", argsSummary: "{}" }]);
+    vi.unstubAllGlobals();
   });
 
   it("streamChatDeltas throws PreStreamError on a non-ok response", async () => {
@@ -571,38 +599,37 @@ describe("FloatingChat", () => {
   });
 
   // CR-20260910-skill-intake — TEST-046 ④⑤: which skill a turn used.
-  it("announces the skill a turn used, and stays quiet when none was used (TEST-046 ④⑤)", async () => {
-    const { unmount } = render(
-      <FloatingChat
-        hasEnabledProvider
-        probeProviders={readyProbe}
-        onStream={async function* () {
-          yield { type: "start", conversationId: "c1" };
-          yield { type: "delta", text: "answer" };
-          yield { type: "done" };
-          yield { type: "skill", name: "reporter" };
-        }}
-      />
-    );
-    fireEvent.change(screen.getByPlaceholderText("Ask Agent-Jarvis"), { target: { value: "go" } });
-    fireEvent.submit(screen.getByRole("button", { name: "发送" }).closest("form")!);
-    await waitFor(() => expect(screen.getByText("本轮使用技能：reporter")).toBeInTheDocument());
-    unmount();
-
+  // REVERSED by CR-20260910-agent-tooling (CP-9): the `skill` tail event is gone —
+  // "which skill did this turn use" is now visible as a `read_skill` row in the step
+  // stream, where it sits alongside every other tool the turn ran (REQ-F-035 ⑥).
+  it("REQ-F-035 ①②: 工具调用出步骤行，结果到达后更新状态并可展开", async () => {
     render(
       <FloatingChat
         hasEnabledProvider
         probeProviders={readyProbe}
         onStream={async function* () {
-          yield { type: "start", conversationId: "c2" };
-          yield { type: "delta", text: "plain" };
-          yield { type: "done" };
+          yield { type: "start", conversationId: "c1", messageId: "m1" };
+          yield { type: "tool_call", callId: "t1", name: "read_skill", argsSummary: '{"name":"reporter"}' };
+          yield { type: "tool_result", callId: "t1", ok: true, summary: "读取技能 reporter" };
+          yield { type: "delta", text: "answer" };
+          yield { type: "done", messageId: "m1" };
         }}
       />
     );
     fireEvent.change(screen.getByPlaceholderText("Ask Agent-Jarvis"), { target: { value: "go" } });
     fireEvent.submit(screen.getByRole("button", { name: "发送" }).closest("form")!);
-    await waitFor(() => expect(screen.getByText("plain")).toBeInTheDocument());
+
+    await waitFor(() => expect(screen.getByText("read_skill")).toBeInTheDocument());
+    const row = document.querySelector(".floating-chat__step");
+    expect(row?.getAttribute("data-state")).toBe("ok");
+
+    // Detail is collapsed until asked for, so a 10-step turn cannot bury the reply.
+    const toggle = screen.getByRole("button", { name: /展开 read_skill 的结果/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(toggle);
+    await waitFor(() => expect(screen.getByText("读取技能 reporter")).toBeInTheDocument());
+
+    // The superseded per-turn notice must not come back.
     expect(screen.queryByText(/本轮使用技能/)).not.toBeInTheDocument();
   });
 });

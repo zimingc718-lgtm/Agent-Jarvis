@@ -4,8 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
 import { ChatServiceError, runChatTurn } from "@/lib/chat";
-import { showHome, showInsight } from "@/lib/display";
-import { captureSkillHtml, makeCompleter, resolveSkillForTurn, routeTurn, type TurnRoute } from "@/lib/skills";
 import { getStore } from "@/lib/store-singleton";
 import type { ChatDelta } from "@/lib/types";
 
@@ -31,31 +29,10 @@ export async function POST(request: Request) {
 
   const store = getStore();
 
-  // CR-20260909-skills / DEC-016: one independent minimal call decides the skill
-  // and any "show the home screen" intent for this send. Fail-open throughout.
-  let route: TurnRoute = { skill: null, display: null };
-  let skillSegment: string | undefined;
-  const skills = store.listSkills(auth.userId);
-  if (skills.length > 0 && message.trim()) {
-    let completer = null;
-    try {
-      const provider = store.resolveActiveProvider(auth.userId);
-      completer = provider ? makeCompleter(provider) : null;
-    } catch {
-      completer = null;
-    }
-    route = await routeTurn(
-      message,
-      skills.map((skill) => ({ id: skill.id, name: skill.name, description: skill.description })),
-      completer
-    );
-    if (route.skill) {
-      const hit = skills.find((skill) => skill.name === route.skill);
-      if (hit) {
-        skillSegment = await resolveSkillForTurn(hit.dirPath);
-      }
-    }
-  }
+  // CR-20260910-agent-tooling: the pre-send routing call is gone (DEC-016 SUPERSEDED).
+  // Skill selection, display control and insight capture are tools the model calls
+  // inside the loop, so this handler only wires transport.
+  const skillCount = store.listSkills(auth.userId).length;
 
   try {
     const stream = await runChatTurn({
@@ -66,32 +43,16 @@ export async function POST(request: Request) {
       message,
       model,
       signal: request.signal,
-      skill: skillSegment,
-      onFinal: (finalText, status, activeConversationId) => {
+      onFinal: (_finalText, status, _activeConversationId, toolsUsed) => {
         const tail: ChatDelta[] = [];
-        // CR-20260910-skill-intake: tell the user which skill this turn used (REQ-F-028 ②).
-        if (route.skill) {
-          tail.push({ type: "skill", name: route.skill });
-        }
-        // CR-20260909-display-screen: "show the home screen" is known up front.
-        if (route.display === "home") {
-          showHome();
-          tail.push({ type: "display", kind: "home" });
-        }
-        // CR-20260909-skills CP-10: the insight write lives here, not in chat.ts.
-        if (skillSegment && status === "complete") {
-          const captured = captureSkillHtml(finalText);
-          if ("html" in captured) {
-            const insight = store.insertInsight({
-              conversationId: activeConversationId,
-              kind: "skill",
-              html: captured.html,
-            });
-            showInsight(insight.id);
-            tail.push({ type: "insight", insightId: insight.id });
-          } else {
-            tail.push({ type: "insight-missing", reason: captured.missing });
-          }
+        // REQ-F-023 ③ (user ruling 1, keep it non-silent): when the model consulted a
+        // skill but never called save_insight, say so rather than leaving the user to
+        // wonder whether a report was produced. Judged on what ran in THIS turn — an
+        // earlier turn's insight must not suppress the notice.
+        const consultedSkill = toolsUsed.includes("read_skill");
+        const savedInsight = toolsUsed.includes("save_insight");
+        if (skillCount > 0 && status === "complete" && consultedSkill && !savedInsight) {
+          tail.push({ type: "notice", text: "本轮未产出洞察。" });
         }
         return tail;
       },

@@ -1,4 +1,4 @@
-import { createServer, type Server } from "node:http";
+﻿import { createServer, type Server } from "node:http";
 import { expect, test, type Page } from "@playwright/test";
 
 const mockModelPort = Number(process.env.JARVIS_E2E_MODEL_PORT ?? 3321);
@@ -111,7 +111,7 @@ test("human workflow: clean home, settings dialog, multi-turn chat with markdown
   await page.goto("/");
   await page.getByPlaceholder("Ask Agent-Jarvis").fill("First question");
   await page.getByRole("button", { name: "发送" }).click();
-  await expect(page.getByText("Human ctx=2")).toBeVisible();
+  await expect(page.getByText("Human ctx=3")).toBeVisible();
 
   // Markdown is rendered, not shown as raw syntax.
   const transcript = page.locator(".floating-chat__messages");
@@ -123,7 +123,7 @@ test("human workflow: clean home, settings dialog, multi-turn chat with markdown
   // Turn 2 — prior turns are replayed, so the echoed context count grows.
   await page.getByPlaceholder("Ask Agent-Jarvis").fill("Second question");
   await page.getByRole("button", { name: "发送" }).click();
-  await expect(page.getByText("Human ctx=4")).toBeVisible();
+  await expect(page.getByText("Human ctx=5")).toBeVisible();
 
   const recent = await (await page.request.get("/api/conversations/recent")).json();
   expect(recent.conversations).toHaveLength(1);
@@ -171,7 +171,7 @@ test("human workflow: collapsing the panel keeps the conversation and survives a
   await page.goto("/");
   await page.getByPlaceholder("Ask Agent-Jarvis").fill("collapse turn one");
   await page.getByRole("button", { name: "发送" }).click();
-  await expect(page.getByText("Human ctx=2")).toBeVisible();
+  await expect(page.getByText("Human ctx=3")).toBeVisible();
 
   // Collapse — transcript hidden, but the session is still active.
   await page.getByRole("button", { name: "收起对话" }).click();
@@ -186,7 +186,7 @@ test("human workflow: collapsing the panel keeps the conversation and survives a
   await page.getByPlaceholder("Ask Agent-Jarvis").fill("collapse turn two");
   await page.getByRole("button", { name: "发送" }).click();
   await expect(page.locator(".floating-chat__messages")).toBeVisible();
-  await expect(page.getByText("Human ctx=4")).toBeVisible();
+  await expect(page.getByText("Human ctx=5")).toBeVisible();
 });
 
 test("human workflow: appearance toggle (in the ☰ menu) switches and persists the dark theme", async ({ page }) => {

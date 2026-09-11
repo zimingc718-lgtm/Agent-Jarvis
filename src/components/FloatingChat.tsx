@@ -1,7 +1,8 @@
 "use client";
 
 import { ChangeEvent, DragEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
-import { DISPLAY_CHANGED_EVENT, SKILLS_CHANGED_EVENT } from "@/lib/ui-events";
+import { DISPLAY_CHANGED_EVENT, SKILLS_CHANGED_EVENT, USAGE_CHANGED_EVENT } from "@/lib/ui-events";
+import type { ChatDelta, Source } from "@/lib/types";
 import {
   ChevronDown,
   FileArchive,
@@ -17,23 +18,25 @@ import { Markdown } from "@/lib/markdown";
 
 export type FloatingMessage = {
   id: string;
-  role: "user" | "assistant" | "system";
+  /** `step` rows are the tool step stream (REQ-F-035 ①), not conversation content. */
+  role: "user" | "assistant" | "system" | "step";
   content: string;
   status?: string;
+  /** Step rows only. */
+  callId?: string;
+  toolName?: string;
+  argsSummary?: string;
+  stepState?: "running" | "ok" | "failed";
+  /** Assistant rows that cited web sources (REQ-F-039). */
+  sources?: Source[];
 };
 
-export type ChatStreamEvent =
-  | { type: "start"; conversationId: string }
-  | { type: "delta"; text: string }
-  | { type: "stopped" }
-  | { type: "error"; message: string }
-  | { type: "done" }
-  // CR-20260909: skill-turn / display tail events.
-  | { type: "insight"; insightId: string }
-  | { type: "insight-missing"; reason: "none" | "incomplete" }
-  | { type: "display"; kind: "home" }
-  // CR-20260910-skill-intake: which skill this turn used.
-  | { type: "skill"; name: string };
+/**
+ * The wire events, imported from the server's own union rather than re-declared here.
+ * The previous local copy plus an allow-list in the parser meant any event the client
+ * had not been taught about was dropped in silence — CP-40.
+ */
+export type ChatStreamEvent = ChatDelta;
 
 export type ChatStreamRequest = {
   message: string;
@@ -47,22 +50,80 @@ export type ChatStreamRequest = {
 /** Raised when the request fails before any reply text arrives (REQ-F-016 request-level error). */
 export class PreStreamError extends Error {}
 
-type LightState = "checking" | "off" | "ready" | "busy" | "done";
+const STEP_STATE_MARK: Record<NonNullable<FloatingMessage["stepState"]>, string> = {
+  running: "…",
+  ok: "✓",
+  failed: "✕",
+};
+
+/**
+ * One row of the step stream (REQ-F-035 ①②). Compact by default — the detail is behind
+ * a real `<button>` with `aria-expanded`, because a 10-step turn would otherwise bury
+ * the answer. A tool error shows up here, not as a request-level red line and not as a
+ * "generation failed" bubble: it is a tool result (REQ-F-016 clarification).
+ */
+function ToolStepRow({ step }: { step: FloatingMessage }) {
+  const [open, setOpen] = useState(false);
+  const state = step.stepState ?? "running";
+  const detail = step.content.trim();
+  return (
+    <div
+      className={cn(
+        "floating-chat__step self-start rounded-md border border-border/60 bg-muted/40 px-2 py-1 text-xs",
+        `floating-chat__step--${state}`
+      )}
+      data-tool={step.toolName}
+      data-state={state}
+    >
+      <div className="flex items-center gap-2">
+        <span aria-hidden="true">{STEP_STATE_MARK[state]}</span>
+        <span className="font-medium">{step.toolName}</span>
+        <span className="truncate text-muted-foreground">{step.argsSummary}</span>
+        {detail ? (
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-label={open ? `收起 ${step.toolName} 的结果` : `展开 ${step.toolName} 的结果`}
+            className="floating-chat__step-toggle ml-auto rounded px-1 underline underline-offset-2"
+            onClick={() => setOpen((current) => !current)}
+          >
+            {open ? "收起" : "详情"}
+          </button>
+        ) : null}
+      </div>
+      {open && detail ? <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{detail}</p> : null}
+    </div>
+  );
+}
+
+/**
+ * Five identifiable states (REQ-F-036 ①). `tool` is the one this CR adds, and adding it
+ * deliberately breaks the "four states, no more" line CR-20260909-collapsible-panel drew
+ * — a multi-step turn can run for half a minute, and when the panel is collapsed the
+ * light is the only thing telling the user what is happening (user ruling 1, 2026-09-10).
+ */
+type LightState = "checking" | "off" | "ready" | "busy" | "tool" | "done";
 
 const LIGHT_LABEL: Record<LightState, string> = {
   checking: "正在检测模型连接",
   off: "没有可用的模型",
   ready: "模型就绪",
   busy: "正在生成回复",
+  tool: "正在执行工具",
   done: "回复已就绪",
 };
 
-/** Each state gets its own hue so the light is distinguishable without the label. */
+/**
+ * Hue AND shape differ per state. `busy` and `tool` must stay apart under
+ * `prefers-reduced-motion`, where the animation is gone — so `tool` also carries a ring
+ * (REQ-F-036 ③).
+ */
 const LIGHT_TONE: Record<LightState, string> = {
-  checking: "bg-muted-foreground/50 animate-pulse",
+  checking: "bg-muted-foreground/50 motion-safe:animate-pulse",
   off: "bg-muted-foreground/40",
   ready: "bg-primary",
-  busy: "bg-primary animate-pulse",
+  busy: "bg-primary motion-safe:animate-pulse",
+  tool: "bg-amber-500 ring-2 ring-amber-500/40 ring-offset-1 ring-offset-background motion-safe:animate-pulse",
   done: "bg-emerald-500",
 };
 
@@ -166,25 +227,9 @@ export async function* streamChatDeltas(request: ChatStreamRequest): AsyncIterab
       if (!parsed || typeof parsed.type !== "string") {
         continue;
       }
-      if (parsed.type === "start" && typeof parsed.conversationId === "string") {
-        yield { type: "start", conversationId: parsed.conversationId };
-      } else if (parsed.type === "delta" && typeof parsed.text === "string") {
-        yield { type: "delta", text: parsed.text };
-      } else if (parsed.type === "stopped") {
-        yield { type: "stopped" };
-      } else if (parsed.type === "error" && typeof parsed.message === "string") {
-        yield { type: "error", message: parsed.message };
-      } else if (parsed.type === "done") {
-        yield { type: "done" };
-      } else if (parsed.type === "insight" && typeof parsed.insightId === "string") {
-        yield { type: "insight", insightId: parsed.insightId };
-      } else if (parsed.type === "insight-missing" && (parsed.reason === "none" || parsed.reason === "incomplete")) {
-        yield { type: "insight-missing", reason: parsed.reason };
-      } else if (parsed.type === "display" && parsed.kind === "home") {
-        yield { type: "display", kind: "home" };
-      } else if (parsed.type === "skill" && typeof parsed.name === "string") {
-        yield { type: "skill", name: parsed.name };
-      }
+      // Single source of truth (CP-40): anything the server declared in `ChatDelta`
+      // reaches the consumer. No per-type allow-list to forget to update.
+      yield parsed as unknown as ChatStreamEvent;
     }
   }
 }
@@ -214,9 +259,11 @@ export function FloatingChat({
   const [input, setInput] = useState("");
   const [userCollapsed, setUserCollapsed] = useState(() => chatCollapsed());
   const [isStreaming, setIsStreaming] = useState(false);
+  /** True between a `tool_call` and its `tool_result` — drives the fifth light state. */
+  const [toolPhase, setToolPhase] = useState(false);
   const [justFinished, setJustFinished] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [probeState, setProbeState] = useState<Exclude<LightState, "busy" | "done">>(
+  const [probeState, setProbeState] = useState<Exclude<LightState, "busy" | "tool" | "done">>(
     hasEnabledProvider ? "checking" : "off"
   );
   const [errorLine, setErrorLine] = useState<string | null>(null);
@@ -235,6 +282,12 @@ export function FloatingChat({
   // DEC-013: `expanded` is derived, not stored. The transcript shows when there is
   // one AND the user has not collapsed the panel.
   const hasTranscript = messages.length > 0;
+  /**
+   * Drives the taller transcript cap (REQ-F-003 as rewritten): plain conversation keeps
+   * half the viewport, a turn carrying a step stream gets 75% — otherwise a 10-step run
+   * pushes the reply itself out of view (user ruling 5, 2026-09-10).
+   */
+  const hasSteps = messages.some((message) => message.role === "step");
   const showTranscript = hasTranscript && !userCollapsed;
 
   // Keep the in-memory flag and the persisted preference in lockstep; the ref lets
@@ -288,7 +341,15 @@ export function FloatingChat({
     }
   }, [messages]);
 
-  const lightState: LightState = isStreaming ? "busy" : justFinished ? "done" : probeState;
+  // While collapsed the transcript is out of the DOM, so the light carries the phase
+  // distinction on its own (REQ-F-019 ④ as rewritten).
+  const lightState: LightState = isStreaming
+    ? toolPhase
+      ? "tool"
+      : "busy"
+    : justFinished
+      ? "done"
+      : probeState;
 
   function endSession() {
     setConversationId(null);
@@ -474,12 +535,46 @@ export function FloatingChat({
         } else if (chunk.type === "insight") {
           window.dispatchEvent(new Event(DISPLAY_CHANGED_EVENT));
           appendSystemMessage("已生成洞察，可在展示屏查看。");
-        } else if (chunk.type === "insight-missing") {
-          appendSystemMessage(chunk.reason === "incomplete" ? "本轮的 HTML 不完整。" : "本轮未产出 HTML。");
-        } else if (chunk.type === "display") {
+        } else if (chunk.type === "tool_call") {
+          // REQ-F-035 ①: a step row opens here and is closed by its `tool_result`.
+          // Inserted BEFORE the assistant bubble so the reply stays last.
+          setToolPhase(true);
+          setMessages((current) => {
+            const row: FloatingMessage = {
+              id: `step-${chunk.callId}`,
+              role: "step",
+              content: "",
+              callId: chunk.callId,
+              toolName: chunk.name,
+              argsSummary: chunk.argsSummary,
+              stepState: "running",
+            };
+            const at = current.findIndex((item) => item.id === assistantId);
+            return at < 0 ? [...current, row] : [...current.slice(0, at), row, ...current.slice(at)];
+          });
+        } else if (chunk.type === "tool_result") {
+          setToolPhase(false);
+          setMessages((current) =>
+            current.map((item) =>
+              item.callId === chunk.callId
+                ? { ...item, stepState: chunk.ok ? "ok" : "failed", content: chunk.summary }
+                : item
+            )
+          );
+          // A tool that changed the display screen takes effect mid-loop (DEC-017 ⑤).
           window.dispatchEvent(new Event(DISPLAY_CHANGED_EVENT));
-        } else if (chunk.type === "skill") {
-          appendSystemMessage(`本轮使用技能：${chunk.name}`);
+        } else if (chunk.type === "sources") {
+          setMessages((current) =>
+            current.map((item) => (item.id === assistantId ? { ...item, sources: chunk.sources } : item))
+          );
+        } else if (chunk.type === "usage") {
+          window.dispatchEvent(new CustomEvent(USAGE_CHANGED_EVENT, { detail: chunk.usage }));
+        } else if (chunk.type === "truncated") {
+          appendSystemMessage(`已达 ${chunk.steps} 步上限，已停止。已完成的部分保留，可继续追问。`);
+        } else if (chunk.type === "tools-unavailable") {
+          appendSystemMessage(chunk.reason);
+        } else if (chunk.type === "notice") {
+          appendSystemMessage(chunk.text);
         }
       }
     } catch (error) {
@@ -637,38 +732,61 @@ export function FloatingChat({
 
         {showTranscript ? (
           <div
-            className="floating-chat__messages flex max-h-[50vh] flex-col gap-3 overflow-y-auto overscroll-contain px-1 py-1"
+            className={cn(
+              "floating-chat__messages flex flex-col gap-3 overflow-y-auto overscroll-contain px-1 py-1",
+              hasSteps ? "max-h-[75vh]" : "max-h-[50vh]"
+            )}
             ref={transcriptRef}
             aria-live="polite"
           >
-            {messages.map((message) => (
-              <article
-                className={cn(
-                  "floating-chat__message max-w-[85%] break-words rounded-lg px-3 py-2 text-sm",
-                  `floating-chat__message--${message.role}`,
-                  message.role === "user"
-                    ? "self-end bg-primary text-primary-foreground"
-                    : "self-start bg-muted text-foreground"
-                )}
-                key={message.id}
-              >
-                {message.role === "assistant" ? (
-                  message.content ? (
-                    <Markdown text={message.content} />
+            {messages.map((message) =>
+              message.role === "step" ? (
+                <ToolStepRow key={message.id} step={message} />
+              ) : (
+                <article
+                  className={cn(
+                    "floating-chat__message max-w-[85%] break-words rounded-lg px-3 py-2 text-sm",
+                    `floating-chat__message--${message.role}`,
+                    message.role === "user"
+                      ? "self-end bg-primary text-primary-foreground"
+                      : "self-start bg-muted text-foreground"
+                  )}
+                  key={message.id}
+                >
+                  {message.role === "assistant" ? (
+                    message.content ? (
+                      <Markdown text={message.content} />
+                    ) : (
+                      "..."
+                    )
                   ) : (
-                    "..."
-                  )
-                ) : (
-                  message.content
-                )}
-                {message.status === "error" ? (
-                  <span className="floating-chat__flag text-xs opacity-80"> （生成失败）</span>
-                ) : null}
-                {message.status === "stopped" ? (
-                  <span className="floating-chat__flag text-xs opacity-80"> （已停止）</span>
-                ) : null}
-              </article>
-            ))}
+                    message.content
+                  )}
+                  {message.status === "error" ? (
+                    <span className="floating-chat__flag text-xs opacity-80"> （生成失败）</span>
+                  ) : null}
+                  {message.status === "stopped" ? (
+                    <span className="floating-chat__flag text-xs opacity-80"> （已停止）</span>
+                  ) : null}
+                  {message.sources?.length ? (
+                    <ul className="floating-chat__sources mt-2 space-y-1 border-t border-border/60 pt-2 text-xs">
+                      {message.sources.map((source) => (
+                        <li key={source.url}>
+                          <a
+                            className="underline underline-offset-2 hover:no-underline"
+                            href={source.url}
+                            rel="noreferrer noopener"
+                            target="_blank"
+                          >
+                            {source.title || source.url}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </article>
+              )
+            )}
           </div>
         ) : null}
 

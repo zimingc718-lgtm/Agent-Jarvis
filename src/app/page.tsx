@@ -1,15 +1,17 @@
-import { getServerSession } from "next-auth";
+﻿import { getServerSession } from "next-auth";
 import { AccountDialog } from "@/components/AccountDialog";
 import { ConfigWarning } from "@/components/ConfigWarning";
 import { CornerMenu } from "@/components/CornerMenu";
 import { DisplayScreen } from "@/components/DisplayScreen";
 import { FloatingChat, type FloatingMessage } from "@/components/FloatingChat";
+import { SearchSettings } from "@/components/SearchSettings";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { SkillList } from "@/components/SkillList";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { authOptions, getGoogleOAuthConfig } from "@/lib/auth";
 import { requireUserId } from "@/lib/auth-guard";
 import { resolveDisplayView } from "@/lib/display";
+import { buildTranscript } from "@/lib/transcript";
 import { getDefaultProviderTemplates } from "@/lib/providers";
 import { STORAGE_CONFIG_HINT, getStorageConfig } from "@/lib/runtime-config";
 import { getStore } from "@/lib/store-singleton";
@@ -40,9 +42,8 @@ export default async function HomePage() {
     const [recent] = getStore().listRecentConversations(auth.userId);
     if (recent) {
       initialConversationId = recent.id;
-      initialMessages = getStore()
-        .listMessages(recent.id)
-        .map((message) => ({ id: message.id, role: message.role, content: message.content, status: message.status }));
+      // REQ-F-035 ④: tool rounds come back as step rows, not as raw `tool` bubbles.
+      initialMessages = buildTranscript(getStore().listMessages(recent.id));
     }
   }
 
@@ -57,6 +58,8 @@ export default async function HomePage() {
         <SettingsDialog templates={templates} providers={savedProviders} storage={storage} />
         <AccountDialog authenticated={auth.ok} googleOAuth={googleOAuth} />
         {storeReady ? <SkillList initialSkills={registeredSkills} /> : null}
+        {/* REQ-F-038 ①: its own entry beside 「模型」, not inside that dialog. */}
+        {storeReady ? <SearchSettings /> : null}
       </CornerMenu>
 
       {auth.ok && !storage.configured ? (

@@ -18,6 +18,13 @@ export const DISPLAY_CHANGED_EVENT = "jarvis:display-changed";
 export const SKILLS_CHANGED_EVENT = "jarvis:skills-changed";
 
 /**
+ * Carries the conversation's running token totals to the ☰ menu (REQ-F-037 ①).
+ * `detail` is a `TokenUsage`. The chat owns the stream, the menu owns the display, and
+ * neither imports the other.
+ */
+export const USAGE_CHANGED_EVENT = "jarvis:usage-changed";
+
+/**
  * What `GET /api/display` returns and what `<DisplayScreen>` renders (DEC-017).
  * `kind` is an extension point — the client falls back to the title view for
  * anything it does not recognise.
