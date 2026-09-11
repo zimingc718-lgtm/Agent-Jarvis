@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+﻿import { randomUUID } from "node:crypto";
 import { repairDanglingToolCalls, runToolLoop } from "./agent-loop";
 import { estimateMessagesTokens, estimateTokens, sendProviderStream, type StreamProviderConfig, type ToolSpec } from "./adapters";
 import { resolveDisplayView } from "./display";
@@ -50,7 +50,8 @@ type RunChatTurnInput = {
   providerStream?: (input: ProviderStreamInput) => AsyncIterable<ChatDelta>;
   /** Extra tools, used by tests to register a fake capability (REQ-NF-010 ②). */
   extraTools?: ToolRegistry;
-  onFinal?: (finalText: string, status: string, conversationId: string) => ChatDelta[];
+  /** `toolsUsed` lets the caller report on what actually ran this turn (REQ-F-023 ③). */
+  onFinal?: (finalText: string, status: string, conversationId: string, toolsUsed: string[]) => ChatDelta[];
 };
 
 const encoder = new TextEncoder();
@@ -269,8 +270,8 @@ function createStreamingResponse(input: {
   run: (
     emit: (delta: ChatDelta) => void,
     persist: (message: ChatMessage & { status: string; sources?: Source[] }) => void
-  ) => Promise<{ text: string; status: string; sources: Source[]; errorMessage?: string }>;
-  onFinal?: (finalText: string, status: string, conversationId: string) => ChatDelta[];
+  ) => Promise<{ text: string; status: string; sources: Source[]; toolsUsed: string[]; errorMessage?: string }>;
+  onFinal?: (finalText: string, status: string, conversationId: string, toolsUsed: string[]) => ChatDelta[];
 }): ReadableStream<Uint8Array> {
   return new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -329,7 +330,7 @@ function createStreamingResponse(input: {
           send({ type: "usage", usage: input.store.getUsage(input.conversationId) });
         }
 
-        for (const delta of input.onFinal?.(result.text, result.status, input.conversationId) ?? []) {
+        for (const delta of input.onFinal?.(result.text, result.status, input.conversationId, result.toolsUsed) ?? []) {
           send(delta);
         }
 

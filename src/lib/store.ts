@@ -150,11 +150,16 @@ export type Store = {
   /** Accumulate one model call's usage onto the conversation (REQ-F-037 ②). */
   addUsage(conversationId: string, usage: UsageTotals): void;
   getUsage(conversationId: string): UsageTotals;
+  /** Record a probe result for one (provider, model) pair (REQ-F-040 ②). */
+  setProviderToolSupport(userId: string, providerId: string, model: string, support: "yes" | "no"): void;
   /** Key/value app settings — search backend config today (DEC-027). */
   getSetting(key: string): string | null;
   setSetting(key: string, value: string | null): void;
   deleteSkillForUser(userId: string, name: string): SkillRecord | null;
+  /** Validates the rename and returns the row with its **old** `dirPath`; does not write. */
   renameSkillForUser(userId: string, from: string, to: string): SkillRecord | null;
+  /** Commits a rename once the folder move succeeded. */
+  updateSkillNameAndPath(skillId: string, name: string, dirPath: string): void;
   listRecentConversations(userId: string): ConversationSummary[];
   listMessages(conversationId: string): MessageRecord[];
   // --- Skills (CR-20260909-skills) ---
@@ -190,7 +195,8 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
     return db
       .prepare(
         `SELECT id, name, kind, auth_mode AS authMode, base_url AS baseUrl, default_model AS defaultModel,
-                enabled, encrypted_secret AS encryptedSecret
+                enabled, encrypted_secret AS encryptedSecret,
+                tool_support AS toolSupport, context_window AS contextWindow
            FROM providers
           WHERE user_id = ? AND id = ?
           LIMIT 1`
@@ -205,6 +211,8 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
           defaultModel: string;
           enabled: 0 | 1;
           encryptedSecret: string | null;
+          toolSupport: string | null;
+          contextWindow: number | null;
         }
       | undefined;
   }
@@ -417,7 +425,23 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
         defaultModel: row.defaultModel,
         enabled: Boolean(row.enabled),
         secret,
+        toolSupport: parseJsonColumn<Record<string, "yes" | "no">>(row.toolSupport),
+        contextWindow: row.contextWindow,
       };
+    },
+
+    setProviderToolSupport(userId, providerId, model, support) {
+      const row = readProviderRow(userId, providerId);
+      if (!row) {
+        return;
+      }
+      const current = parseJsonColumn<Record<string, "yes" | "no">>(row.toolSupport) ?? {};
+      current[model] = support;
+      db.prepare("UPDATE providers SET tool_support = ? WHERE id = ? AND user_id = ?").run(
+        JSON.stringify(current),
+        providerId,
+        userId
+      );
     },
 
     revealProviderSecret(userId, providerId) {
@@ -604,6 +628,10 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
         throw new SkillNameConflictError(to);
       }
       return row;
+    },
+
+    updateSkillNameAndPath(skillId, name, dirPath) {
+      db.prepare("UPDATE skills SET name = ?, dir_path = ? WHERE id = ?").run(name, dirPath, skillId);
     },
 
     getSetting(key) {

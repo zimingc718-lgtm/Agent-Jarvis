@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { testProviderConnection } from "@/lib/adapters";
+import { probeToolSupport, testProviderConnection } from "@/lib/adapters";
 import { authOptions } from "@/lib/auth";
 import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
@@ -21,6 +21,8 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     id?: unknown;
     baseUrl?: unknown;
+    /** Present when the caller wants the tool-capability probe too (REQ-F-040 ②). */
+    defaultModel?: unknown;
     secret?: unknown;
   };
 
@@ -46,5 +48,22 @@ export async function POST(request: Request) {
   }
 
   const result = await testProviderConnection({ baseUrl, secret });
-  return NextResponse.json(result);
+
+  // REQ-F-040 ②: while we have a working connection, find out whether this
+  // (provider, model) actually calls tools. `/models` cannot answer that, and plenty of
+  // local servers accept a `tools` array with a 200 and ignore it — so the probe is a
+  // real completion. Only runs for a saved provider, and never fails the test action.
+  let toolSupport: "yes" | "no" | null = null;
+  const providerId = typeof body.id === "string" && body.id.trim() ? body.id.trim() : null;
+  const model = typeof body.defaultModel === "string" && body.defaultModel.trim() ? body.defaultModel.trim() : null;
+  if (result.ok && providerId && model) {
+    try {
+      toolSupport = await probeToolSupport({ baseUrl, secret }, model);
+      getStore().setProviderToolSupport(auth.userId, providerId, model, toolSupport);
+    } catch {
+      toolSupport = null;
+    }
+  }
+
+  return NextResponse.json({ ...result, toolSupport });
 }

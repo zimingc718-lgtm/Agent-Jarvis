@@ -1,4 +1,4 @@
-import type { ToolSpec } from "./adapters";
+﻿import type { ToolSpec } from "./adapters";
 import type { ChatDelta, ChatMessage, Source, ToolCall } from "./types";
 import { normalizeArgs, parseToolArguments, summarizeArgs, type ToolContext, type ToolRegistry } from "./tools/registry";
 
@@ -45,10 +45,17 @@ export type ToolLoopResult = {
   steps: number;
   /** URLs the tools actually surfaced — the allow-list for citations (REQ-F-039 ②). */
   sources: Source[];
+  /** Tool names invoked during THIS turn, in call order. Lets callers report on what ran. */
+  toolsUsed: string[];
   errorMessage?: string;
 };
 
 function raceWithTimeout<T>(promise: Promise<T>, ms: number, signal?: AbortSignal): Promise<T> {
+  // Already aborted before we got here — a tool that aborts synchronously would
+  // otherwise never fire the listener and the race would hang until the timeout.
+  if (signal?.aborted) {
+    return Promise.reject(new Error("aborted"));
+  }
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`工具执行超过 ${ms / 1000}s 超时`)), ms);
     const onAbort = () => {
@@ -76,13 +83,14 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
   const sources: Source[] = [];
   const seenSourceUrls = new Set<string>();
   const failureStreak = new Map<string, number>();
+  const toolsUsed: string[] = [];
 
   let text = "";
   let steps = 0;
 
   while (true) {
     if (input.signal?.aborted) {
-      return { text, status: "stopped", steps, sources };
+      return { text, status: "stopped", steps, sources, toolsUsed };
     }
 
     let stepText = "";
@@ -127,19 +135,19 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
       if (stepText) {
         input.persist({ role: "assistant", content: stepText, status: "stopped" });
       }
-      return { text, status: "stopped", steps, sources };
+      return { text, status: "stopped", steps, sources, toolsUsed };
     }
     if (failed) {
       if (stepText) {
         input.persist({ role: "assistant", content: stepText, status: "error" });
       }
-      return { text, status: "error", steps, sources, errorMessage: failed };
+      return { text, status: "error", steps, sources, toolsUsed, errorMessage: failed };
     }
 
     // No tools requested: the model answered, the loop is done.
     if (pendingCalls.length === 0) {
       input.persist({ role: "assistant", content: stepText, status: "complete", sources });
-      return { text, status: "complete", steps, sources };
+      return { text, status: "complete", steps, sources, toolsUsed };
     }
 
     // Ceiling check happens BEFORE executing, so we never run an 11th tool and then
@@ -147,7 +155,7 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
     if (steps + pendingCalls.length > MAX_TOOL_STEPS) {
       input.persist({ role: "assistant", content: stepText, status: "truncated", sources });
       input.emit({ type: "truncated", steps });
-      return { text, status: "truncated", steps, sources };
+      return { text, status: "truncated", steps, sources, toolsUsed };
     }
 
     conversation.push({ role: "assistant", content: stepText, tool_calls: pendingCalls });
@@ -156,6 +164,7 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
     const results = await Promise.all(
       pendingCalls.map(async (call) => {
         steps += 1;
+        toolsUsed.push(call.function.name);
         const args = parseToolArguments(call.function.arguments);
         const key = `${call.function.name}:${normalizeArgs(args)}`;
         input.emit({
@@ -219,7 +228,7 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
     }
 
     if (input.signal?.aborted) {
-      return { text, status: "stopped", steps, sources };
+      return { text, status: "stopped", steps, sources, toolsUsed };
     }
   }
 }
@@ -239,16 +248,23 @@ export function repairDanglingToolCalls(messages: ChatMessage[]): ChatMessage[] 
     if (message.role !== "assistant" || !message.tool_calls?.length) {
       continue;
     }
+
+    // Copy the real tool rows first, then append synthetics for the calls that never
+    // came back — the provider expects results in the order the calls were made.
     const answered = new Set<string>();
-    for (let scan = index + 1; scan < messages.length; scan += 1) {
+    let scan = index + 1;
+    for (; scan < messages.length; scan += 1) {
       const next = messages[scan];
       if (next.role !== "tool") {
         break;
       }
+      repaired.push(next);
       if (next.tool_call_id) {
         answered.add(next.tool_call_id);
       }
     }
+    index = scan - 1;
+
     for (const call of message.tool_calls) {
       if (!answered.has(call.id)) {
         repaired.push({ role: "tool", content: "[已中止]", tool_call_id: call.id });

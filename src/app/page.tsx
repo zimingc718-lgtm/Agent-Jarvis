@@ -4,6 +4,7 @@ import { ConfigWarning } from "@/components/ConfigWarning";
 import { CornerMenu } from "@/components/CornerMenu";
 import { DisplayScreen } from "@/components/DisplayScreen";
 import { FloatingChat, type FloatingMessage } from "@/components/FloatingChat";
+import { SearchSettings } from "@/components/SearchSettings";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { SkillList } from "@/components/SkillList";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -57,6 +58,8 @@ export default async function HomePage() {
         <SettingsDialog templates={templates} providers={savedProviders} storage={storage} />
         <AccountDialog authenticated={auth.ok} googleOAuth={googleOAuth} />
         {storeReady ? <SkillList initialSkills={registeredSkills} /> : null}
+        {/* REQ-F-038 ①: its own entry beside 「模型」, not inside that dialog. */}
+        {storeReady ? <SearchSettings /> : null}
       </CornerMenu>
 
       {auth.ok && !storage.configured ? (

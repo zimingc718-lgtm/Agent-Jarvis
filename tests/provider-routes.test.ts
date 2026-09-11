@@ -170,7 +170,43 @@ describe("/api/providers/test", () => {
     );
     const body = await res.json();
     expect(fetchMock).toHaveBeenCalledWith("https://api.openai.com/v1/models", expect.anything());
-    expect(body).toEqual({ ok: false, message: "Authentication failed — check the API key." });
+    // CR-20260910-agent-tooling (CP-16): the response now also carries the tool-calling
+    // probe result. It stays null here because the connection test itself failed.
+    expect(body).toEqual({ ok: false, message: "Authentication failed — check the API key.", toolSupport: null });
+
+    vi.unstubAllGlobals();
+  });
+
+  // REQ-F-040 ②: `/models` says nothing about tool calling, so a successful connection
+  // test follows up with a real completion carrying a `tools` array.
+  it("probes tool-calling capability with POST /chat/completions when the connection works", async () => {
+    const seen: Array<{ url: string; method?: string; body?: string }> = [];
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      seen.push({ url, method: init?.method, body: init?.body as string | undefined });
+      if (url.endsWith("/models")) {
+        return new Response("{}", { status: 200 });
+      }
+      return new Response(
+        JSON.stringify({ choices: [{ message: { tool_calls: [{ id: "c1" }] } }] }),
+        { status: 200 }
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
+
+    const res = await providerTestRoute.POST(
+      post("http://test/api/providers/test", {
+        baseUrl: "https://api.deepseek.com/v1",
+        secret: "k",
+        id: "missing-provider",
+        defaultModel: "deepseek-chat",
+      })
+    );
+    const body = await res.json();
+
+    const probe = seen.find((call) => call.url.endsWith("/chat/completions"));
+    expect(probe?.method).toBe("POST");
+    expect(probe?.body).toContain("tools");
+    expect(body.toolSupport).toBe("yes");
 
     vi.unstubAllGlobals();
   });

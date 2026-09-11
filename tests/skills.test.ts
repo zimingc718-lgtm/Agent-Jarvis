@@ -1,13 +1,14 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+﻿import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+// TEST-034 (routeTurn) and TEST-036 (captureSkillHtml) are SUPERSEDED by
+// CR-20260910-agent-tooling: the routing call is gone (DEC-016) and HTML capture became
+// the `save_insight` tool. Their replacements are TEST-069 and TEST-070.
 import {
-  captureSkillHtml,
   generateSkillDoc,
   registerSkill,
   resolveSkillForTurn,
-  routeTurn,
   slugifySkillName,
   type Completer,
   type UploadedFile,
@@ -21,63 +22,6 @@ function fixedCompleter(answer: string | (() => never)): Completer {
   return async () => (typeof answer === "function" ? answer() : answer);
 }
 
-describe("routeTurn (DEC-016)", () => {
-  const skills = [
-    { id: "s1", name: "stock-insight", description: "分析一只股票" },
-    { id: "s2", name: "翻译", description: "翻译文本" },
-  ];
-
-  it("returns the named skill when the model picks a registered one", async () => {
-    const route = await routeTurn("看看这只股票", skills, fixedCompleter('{"skill":"stock-insight","display":null}'));
-    expect(route).toEqual({ skill: "stock-insight", display: null });
-  });
-
-  it("returns null skill when the model picks none", async () => {
-    const route = await routeTurn("你好", skills, fixedCompleter('{"skill":null,"display":null}'));
-    expect(route.skill).toBeNull();
-  });
-
-  it("reads the display:home intent independent of any skill", async () => {
-    const route = await routeTurn("回到首页", skills, fixedCompleter('{"skill":null,"display":"home"}'));
-    expect(route).toEqual({ skill: null, display: "home" });
-  });
-
-  it("fail-open: no completer → { skill: null, display: null }", async () => {
-    expect(await routeTurn("anything", skills, null)).toEqual({ skill: null, display: null });
-  });
-
-  it("fail-open: a thrown completer (timeout/network) → { skill: null, display: null } and does not throw", async () => {
-    const route = await routeTurn(
-      "x",
-      skills,
-      fixedCompleter(() => {
-        throw new Error("TimeoutError");
-      })
-    );
-    expect(route).toEqual({ skill: null, display: null });
-  });
-
-  it("fail-open: non-JSON output → { skill: null, display: null }", async () => {
-    expect(await routeTurn("x", skills, fixedCompleter("I think you want the stock skill!"))).toEqual({
-      skill: null,
-      display: null,
-    });
-  });
-
-  it("fail-open: an unregistered skill name is discarded", async () => {
-    const route = await routeTurn("x", skills, fixedCompleter('{"skill":"made-up","display":null}'));
-    expect(route.skill).toBeNull();
-  });
-
-  it("sends a non-streaming, history-free request with a small max_tokens", async () => {
-    const complete = vi.fn<Completer>(async () => '{"skill":null,"display":null}');
-    await routeTurn("hello", skills, complete);
-    const [messages, opts] = complete.mock.calls[0];
-    expect(opts).toEqual({ maxTokens: 64, timeoutMs: 10_000 });
-    expect(messages.map((m) => m.role)).toEqual(["system", "user"]);
-    expect(messages.some((m) => m.role === "assistant")).toBe(false);
-  });
-});
 
 describe("resolveSkillForTurn (REQ-F-022)", () => {
   let dir: string;
@@ -189,20 +133,6 @@ describe("registerSkill (CP-9)", () => {
   });
 });
 
-describe("captureSkillHtml (REQ-F-023)", () => {
-  it("takes the last closed ```html block", () => {
-    const text = "first\n```html\n<p>one</p>\n```\nmid\n```html\n<p>two</p>\n```\nend";
-    expect(captureSkillHtml(text)).toEqual({ html: "<p>two</p>" });
-  });
-
-  it("reports 'none' when there is no html fence", () => {
-    expect(captureSkillHtml("just prose")).toEqual({ missing: "none" });
-  });
-
-  it("reports 'incomplete' when an html fence opened but never closed", () => {
-    expect(captureSkillHtml("intro\n```html\n<p>unfinished")).toEqual({ missing: "incomplete" });
-  });
-});
 
 describe("slugifySkillName", () => {
   it("keeps unicode letters and collapses separators", () => {

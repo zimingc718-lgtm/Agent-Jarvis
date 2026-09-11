@@ -1,5 +1,4 @@
-import { showHome, showInsight } from "../display";
-import type { Store } from "../store";
+﻿import type { Store } from "../store";
 import type { ToolDescriptor } from "./registry";
 
 /**
@@ -38,7 +37,7 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
     parameters: { type: "object", properties: {} },
     available: () => true,
     async execute() {
-      showHome();
+      store.setDisplayState({ kind: "home", refId: null });
       return { ok: true, content: "展示屏已切回首页。", summary: "展示屏 → 首页" };
     },
   };
@@ -68,7 +67,7 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
           summary: `洞察不可用：${insightId}`,
         };
       }
-      showInsight(insightId);
+      store.setDisplayState({ kind: "insight", refId: insightId });
       return { ok: true, content: "展示屏已切到该洞察。", summary: "展示屏 → 洞察" };
     },
   };
@@ -92,7 +91,7 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
         };
       }
       const record = store.insertInsight({ conversationId: context.conversationId, kind: "skill", html });
-      showInsight(record.id);
+      store.setDisplayState({ kind: "insight", refId: record.id });
       return { ok: true, content: `洞察已保存（id ${record.id}）并显示在展示屏上。`, summary: "已生成洞察" };
     },
   };

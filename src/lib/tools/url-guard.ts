@@ -64,11 +64,21 @@ function isBlockedIpv4(parts: number[]): string | null {
 
 function isBlockedIpv6(raw: string): string | null {
   const host = raw.toLowerCase().replace(/^\[|\]$/g, "");
-  // ::ffff:127.0.0.1 and friends are IPv4 wearing an IPv6 hat — unwrap before judging.
-  const mapped = /^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/.exec(host);
-  if (mapped) {
-    const parts = ipv4ToParts(mapped[1]);
+
+  // IPv4-mapped addresses are IPv4 wearing an IPv6 hat — unwrap before judging.
+  // Two spellings must both be handled: the dotted form a user types, and the
+  // hex form `URL` normalises it to (`::ffff:127.0.0.1` → `::ffff:7f00:1`).
+  const mappedDotted = /^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/.exec(host);
+  if (mappedDotted) {
+    const parts = ipv4ToParts(mappedDotted[1]);
     return parts ? (isBlockedIpv4(parts) ?? null) : "无法解析的 IPv4-mapped 地址";
+  }
+  const mappedHex = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(host);
+  if (mappedHex) {
+    const high = Number.parseInt(mappedHex[1], 16);
+    const low = Number.parseInt(mappedHex[2], 16);
+    const parts = [(high >> 8) & 0xff, high & 0xff, (low >> 8) & 0xff, low & 0xff];
+    return isBlockedIpv4(parts) ?? null;
   }
   if (host === "::1" || host === "::") return "IPv6 loopback";
   if (/^fe[89ab]/.test(host)) return "IPv6 链路本地地址 fe80::/10";

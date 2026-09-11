@@ -50,6 +50,52 @@ export type ChatStreamRequest = {
 /** Raised when the request fails before any reply text arrives (REQ-F-016 request-level error). */
 export class PreStreamError extends Error {}
 
+const STEP_STATE_MARK: Record<NonNullable<FloatingMessage["stepState"]>, string> = {
+  running: "…",
+  ok: "✓",
+  failed: "✕",
+};
+
+/**
+ * One row of the step stream (REQ-F-035 ①②). Compact by default — the detail is behind
+ * a real `<button>` with `aria-expanded`, because a 10-step turn would otherwise bury
+ * the answer. A tool error shows up here, not as a request-level red line and not as a
+ * "generation failed" bubble: it is a tool result (REQ-F-016 clarification).
+ */
+function ToolStepRow({ step }: { step: FloatingMessage }) {
+  const [open, setOpen] = useState(false);
+  const state = step.stepState ?? "running";
+  const detail = step.content.trim();
+  return (
+    <div
+      className={cn(
+        "floating-chat__step self-start rounded-md border border-border/60 bg-muted/40 px-2 py-1 text-xs",
+        `floating-chat__step--${state}`
+      )}
+      data-tool={step.toolName}
+      data-state={state}
+    >
+      <div className="flex items-center gap-2">
+        <span aria-hidden="true">{STEP_STATE_MARK[state]}</span>
+        <span className="font-medium">{step.toolName}</span>
+        <span className="truncate text-muted-foreground">{step.argsSummary}</span>
+        {detail ? (
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-label={open ? `收起 ${step.toolName} 的结果` : `展开 ${step.toolName} 的结果`}
+            className="floating-chat__step-toggle ml-auto rounded px-1 underline underline-offset-2"
+            onClick={() => setOpen((current) => !current)}
+          >
+            {open ? "收起" : "详情"}
+          </button>
+        ) : null}
+      </div>
+      {open && detail ? <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{detail}</p> : null}
+    </div>
+  );
+}
+
 /**
  * Five identifiable states (REQ-F-036 ①). `tool` is the one this CR adds, and adding it
  * deliberately breaks the "four states, no more" line CR-20260909-collapsible-panel drew
@@ -236,6 +282,12 @@ export function FloatingChat({
   // DEC-013: `expanded` is derived, not stored. The transcript shows when there is
   // one AND the user has not collapsed the panel.
   const hasTranscript = messages.length > 0;
+  /**
+   * Drives the taller transcript cap (REQ-F-003 as rewritten): plain conversation keeps
+   * half the viewport, a turn carrying a step stream gets 75% — otherwise a 10-step run
+   * pushes the reply itself out of view (user ruling 5, 2026-09-10).
+   */
+  const hasSteps = messages.some((message) => message.role === "step");
   const showTranscript = hasTranscript && !userCollapsed;
 
   // Keep the in-memory flag and the persisted preference in lockstep; the ref lets
@@ -680,38 +732,61 @@ export function FloatingChat({
 
         {showTranscript ? (
           <div
-            className="floating-chat__messages flex max-h-[50vh] flex-col gap-3 overflow-y-auto overscroll-contain px-1 py-1"
+            className={cn(
+              "floating-chat__messages flex flex-col gap-3 overflow-y-auto overscroll-contain px-1 py-1",
+              hasSteps ? "max-h-[75vh]" : "max-h-[50vh]"
+            )}
             ref={transcriptRef}
             aria-live="polite"
           >
-            {messages.map((message) => (
-              <article
-                className={cn(
-                  "floating-chat__message max-w-[85%] break-words rounded-lg px-3 py-2 text-sm",
-                  `floating-chat__message--${message.role}`,
-                  message.role === "user"
-                    ? "self-end bg-primary text-primary-foreground"
-                    : "self-start bg-muted text-foreground"
-                )}
-                key={message.id}
-              >
-                {message.role === "assistant" ? (
-                  message.content ? (
-                    <Markdown text={message.content} />
+            {messages.map((message) =>
+              message.role === "step" ? (
+                <ToolStepRow key={message.id} step={message} />
+              ) : (
+                <article
+                  className={cn(
+                    "floating-chat__message max-w-[85%] break-words rounded-lg px-3 py-2 text-sm",
+                    `floating-chat__message--${message.role}`,
+                    message.role === "user"
+                      ? "self-end bg-primary text-primary-foreground"
+                      : "self-start bg-muted text-foreground"
+                  )}
+                  key={message.id}
+                >
+                  {message.role === "assistant" ? (
+                    message.content ? (
+                      <Markdown text={message.content} />
+                    ) : (
+                      "..."
+                    )
                   ) : (
-                    "..."
-                  )
-                ) : (
-                  message.content
-                )}
-                {message.status === "error" ? (
-                  <span className="floating-chat__flag text-xs opacity-80"> （生成失败）</span>
-                ) : null}
-                {message.status === "stopped" ? (
-                  <span className="floating-chat__flag text-xs opacity-80"> （已停止）</span>
-                ) : null}
-              </article>
-            ))}
+                    message.content
+                  )}
+                  {message.status === "error" ? (
+                    <span className="floating-chat__flag text-xs opacity-80"> （生成失败）</span>
+                  ) : null}
+                  {message.status === "stopped" ? (
+                    <span className="floating-chat__flag text-xs opacity-80"> （已停止）</span>
+                  ) : null}
+                  {message.sources?.length ? (
+                    <ul className="floating-chat__sources mt-2 space-y-1 border-t border-border/60 pt-2 text-xs">
+                      {message.sources.map((source) => (
+                        <li key={source.url}>
+                          <a
+                            className="underline underline-offset-2 hover:no-underline"
+                            href={source.url}
+                            rel="noreferrer noopener"
+                            target="_blank"
+                          >
+                            {source.title || source.url}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </article>
+              )
+            )}
           </div>
         ) : null}
 

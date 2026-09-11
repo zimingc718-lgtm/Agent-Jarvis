@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-10",
+  "generated_at": "2026-09-10T00:00:00Z",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
@@ -32,7 +32,8 @@
       "id": "CR-20260910-skill-intake",
       "status": "P1-P4 complete",
       "detail": "P6 defect + zip intake. New MOD-ZIP (src/lib/zip.ts, pure, bounded, zero-dependency: hand-written EOCD/Central Directory + zlib.inflateRawSync, DEC-018/REQ-NF-005). POST /api/skills gains an `archive` branch and an `excluded` receipt; SKILL_TEXT_EXTENSIONS 11 -> 16. FloatingChat: three intake paths collapse into one submitSkillUpload, handleDrop preventDefaults on its first line (root-cause fix), two hidden <input>s plus two real buttons. New SkillList in the ☰ menu + {type:'skill'} SSE tail event + display-events.ts renamed ui-events.ts. TASK-040..043 DONE; TEST-043..046 PASS; TEST-034..042 regression green."
-    }
+    },
+    "project/06_changes/CR-20260910-agent-tooling.md"
   ],
   "tests": [
     {
@@ -260,10 +261,12 @@
     },
     {
       "id": "TEST-034",
-      "result": "PASS",
+      "result": "SUPERSEDED",
       "command": "npm run test:skills",
       "real_entry": true,
-      "evidence": "tests/skills.test.ts: routeTurn (DEC-016) — picks a registered skill from model JSON; returns null skill / display:\"home\" independently; 4 fail-open paths (no completer / thrown completer / non-JSON / unregistered name) all return {skill:null,display:null} without throwing; request is non-streaming, history-free, max_tokens 64, timeout 10s."
+      "evidence": "tests/skills.test.ts: routeTurn (DEC-016) — picks a registered skill from model JSON; returns null skill / display:\"home\" independently; 4 fail-open paths (no completer / thrown completer / non-JSON / unregistered name) all return {skill:null,display:null} without throwing; request is non-streaming, history-free, max_tokens 64, timeout 10s.",
+      "notes": "CR-20260910-agent-tooling：REQ-F-021 SUPERSEDED（routeTurn 删除）；由 TEST-069 取代",
+      "date": "2026-09-10"
     },
     {
       "id": "TEST-035",
@@ -274,10 +277,12 @@
     },
     {
       "id": "TEST-036",
-      "result": "PASS",
+      "result": "SUPERSEDED",
       "command": "npm run test:chat-stream",
       "real_entry": true,
-      "evidence": "tests/chat-stream.test.ts: runChatTurn + onFinal captures the LAST closed ```html block, reports 'none' with no fence and 'incomplete' with an unclosed fence; a turn with no skill segment is unchanged (no insight event, event: done)."
+      "evidence": "tests/chat-stream.test.ts: runChatTurn + onFinal captures the LAST closed ```html block, reports 'none' with no fence and 'incomplete' with an unclosed fence; a turn with no skill segment is unchanged (no insight event, event: done).",
+      "notes": "CR-20260910-agent-tooling：REQ-F-023 围栏捕获 SUPERSEDED（改 save_insight 工具）；由 TEST-070 取代",
+      "date": "2026-09-10"
     },
     {
       "id": "TEST-037",
@@ -316,10 +321,12 @@
     },
     {
       "id": "TEST-042",
-      "result": "PASS",
+      "result": "SUPERSEDED",
       "command": "npm run test:skills && npm run test:display",
       "real_entry": true,
-      "evidence": "tests/skills.test.ts routeTurn display field: {\"display\":\"home\"} -> \"home\"; missing/garbage -> null (fail-open); skill and display are independent. tests/display.test.ts: showInsight / showHome move display_state and GET /api/display reflects it with the joined html."
+      "evidence": "tests/skills.test.ts routeTurn display field: {\"display\":\"home\"} -> \"home\"; missing/garbage -> null (fail-open); skill and display are independent. tests/display.test.ts: showInsight / showHome move display_state and GET /api/display reflects it with the joined html.",
+      "notes": "CR-20260910-agent-tooling：REQ-F-027 SUPERSEDED（display 路由字段作废）；由 TEST-070 取代",
+      "date": "2026-09-10"
     },
     {
       "id": "TEST-043",
@@ -452,6 +459,150 @@
       "real_entry": true,
       "date": "2026-09-10",
       "notes": "CR-20260910-risk-scaled-gates；含阳性用例（构造违规输入并断言具体错误码），非仅通过路径。"
+    },
+    {
+      "id": "TEST-061",
+      "result": "PASS",
+      "command": "npm test -- migrations",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；迁移框架：up→down→up 零 diff、缺 down 即抛、rollback 导出、version 1 行为不变。5 用例。"
+    },
+    {
+      "id": "TEST-062",
+      "result": "PASS",
+      "command": "npm test -- store && npm run test:conversations",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；六处 schema 变更后老行读取不变；混合新旧行会话重建；同毫秒多行按 seq 稳定。"
+    },
+    {
+      "id": "TEST-063",
+      "result": "PASS",
+      "command": "npm test -- adapters-tools",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；tool_calls 按 index 跨 chunk 累积（两种分片粒度）；不依赖 finish_reason；多调用不串线；tool 消息序列化。"
+    },
+    {
+      "id": "TEST-064",
+      "result": "PASS",
+      "command": "npm test -- adapters-tools",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；usage 末 chunk choices 为空不视为异常；stream_options 4xx 自动回退一次且 REQ-F-012 仍通；无关 4xx 不重试；本地估算。"
+    },
+    {
+      "id": "TEST-065",
+      "result": "PASS",
+      "command": "npm run test:provider-test",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；能力探测走 POST /chat/completions 且请求体含 tools（GET /models 探不出）；结果写回 tool_support。"
+    },
+    {
+      "id": "TEST-066",
+      "result": "PASS",
+      "command": "npm test -- agent-loop",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；注册假工具即可被循环调用；四种不注册场景；description 上限；normalizeArgs 键序无关。"
+    },
+    {
+      "id": "TEST-067",
+      "result": "PASS",
+      "command": "npm test -- agent-loop && npm run test:chat-stream",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；10 步上限与 truncated；失败回喂继续；同参连续失败 2 次后拒绝；工具执行期 abort；悬空 tool_calls 合成「已中止」。"
+    },
+    {
+      "id": "TEST-068",
+      "result": "PASS",
+      "command": "npm test -- budget",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；稳定前缀逐字一致且不含时间；保留窗口 N=2 保 tool_call_id；子预算截断；超限先收窄再报错不无限压缩。"
+    },
+    {
+      "id": "TEST-069",
+      "result": "PASS",
+      "command": "npm test -- tool-suites && npm run test:chat-stream",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；三个技能工具；system 只含名录不含正文；每轮无独立路由调用；一轮可读多个技能；无技能时不注册。"
+    },
+    {
+      "id": "TEST-070",
+      "result": "PASS",
+      "command": "npm test -- tool-suites",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；show_home/show_insight/save_insight；属主校验拒跨会话 id；HTML 不完整不写库；已接受风险（HTML 原样存储）如实断言。"
+    },
+    {
+      "id": "TEST-071",
+      "result": "PASS",
+      "command": "npm test -- url-guard",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；SSRF 对抗样本 20 条：IPv4/IPv6 全段、userinfo、非 http、多 A 记录、重定向到内网、跳数上限、DNS 重绑定如实记录、grep 守卫。"
+    },
+    {
+      "id": "TEST-072",
+      "result": "PASS",
+      "command": "npm test -- web-tools",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；载荷只含查询词；后端不可用作工具失败回喂；连续失败短路但描述符仍在；read_url 返回摘要非原文；未配置不注册。"
+    },
+    {
+      "id": "TEST-073",
+      "result": "PASS",
+      "command": "npm test -- agent-loop",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；来源只来自工具实际返回集合；模型编造的 URL 不进来源列表。"
+    },
+    {
+      "id": "TEST-074",
+      "result": "PASS",
+      "command": "npm run test:skills && npm run test:auth-ui",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；技能删除需二次确认、取消不发请求；删除与重命名控件存在；仍无正文编辑入口。"
+    },
+    {
+      "id": "TEST-075",
+      "result": "PASS",
+      "command": "npm test -- web-tools",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；联网总开关默认开；含 userinfo 的 URL 拒绝保存；测试连接判据 2xx+results；SearXNG 未开 json 时给针对性报错。"
+    },
+    {
+      "id": "TEST-076",
+      "result": "PASS",
+      "command": "npm run test:floating-chat && npm test -- transcript",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；步骤行出现与状态更新、默认折叠+aria-expanded；服务端新事件无需改白名单即可透传；刷新后步骤流按落库记录重建。"
+    },
+    {
+      "id": "TEST-077",
+      "result": "PASS",
+      "command": "npm run test:visual && npm run test:ui-contract",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；状态灯五态（LB-06）、面板分情形高度（RF-09 双阈值）、步骤流 a11y（LB-10）。ui-contract 50/0。"
+    },
+    {
+      "id": "TEST-078",
+      "result": "PASS",
+      "command": "npm run test:smoke && npm run test:e2e",
+      "real_entry": true,
+      "date": "2026-09-10",
+      "notes": "CR-20260910-agent-tooling；真实入口：工具循环端到端、步骤流可见、show_home 经工具、刷新重建、未产出洞察的告知。smoke OK，e2e 10 PASS。"
     }
   ],
   "executed_commands": [
@@ -539,7 +690,13 @@
       "command": "npm run build:verify",
       "result": "PASS",
       "summary": "Tailwind v4 pipeline compiles; 13/13 routes generated"
-    }
+    },
+    "npm test",
+    "npm run test:typecheck",
+    "npm run test:ui-contract",
+    "npm run test:smoke",
+    "npm run test:e2e",
+    "npm run build:verify"
   ],
   "known_warnings": [
     {

@@ -1,4 +1,4 @@
-import { createServer, type Server } from "node:http";
+﻿import { createServer, type Server } from "node:http";
 import { expect, test, type Page } from "@playwright/test";
 
 // CR-20260909-skills + CR-20260909-display-screen — TEST-038 (②③④) / TEST-041.
@@ -22,32 +22,64 @@ function mockModel() {
       request.on("end", () => {
         const body = safeJson(raw);
         const lastUser = [...(body.messages ?? [])].reverse().find((m: { role: string }) => m.role === "user");
-        // The router wraps the message as "Skills:\n…\n\nMessage:\n<text>" — only the
-        // tail is the user's own words, and the skill list would otherwise match on it.
-        const text: string = (lastUser?.content ?? "").split("Message:\n").at(-1) ?? "";
-
+        const text: string = lastUser?.content ?? "";
+        // CR-20260910-agent-tooling rewrote this mock. The pre-send routing call is gone
+        // (DEC-016), so `stream === false` no longer identifies it — the only
+        // non-streaming call left is SKILL.md generation. Everything the router used to
+        // decide is now a tool the model asks for, so the mock has to emit `tool_calls`.
         if (body.stream === false) {
-          // Router / SKILL.md generation.
-          let content = '{"skill":null,"display":null}';
-          if (/SKILL\.md/i.test((body.messages?.[0]?.content ?? "") as string)) {
-            content = "---\nname: reporter\ndescription: writes an HTML report\n---\n\nUse it to report.";
-          } else if (/首页|go home/i.test(text)) {
-            content = '{"skill":null,"display":"home"}';
-          } else if (/report|plain-skill/i.test(text)) {
-            content = '{"skill":"reporter","display":null}';
-          }
           response.writeHead(200, { "content-type": "application/json" });
-          response.end(JSON.stringify({ choices: [{ message: { content } }] }));
+          response.end(
+            JSON.stringify({
+              choices: [
+                {
+                  message: {
+                    content:
+                      "---\nname: reporter\ndescription: writes an HTML report\n---\n\nUse it to report.",
+                  },
+                },
+              ],
+            })
+          );
           return;
         }
 
-        // Streaming main reply.
         response.writeHead(200, { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-cache" });
-        const chunks = /report/i.test(text) && !/plain-skill/i.test(text)
-          ? ["Here is the report.\n\n", "```html\n", "<h1>Insight Report</h1>", "\n```\n"]
-          : ["Plain reply, no HTML."];
-        for (const chunk of chunks) {
-          response.write(`data: {"choices":[{"delta":{"content":${JSON.stringify(chunk)}}}]}\n\n`);
+        // Only the CURRENT loop matters: a tool result is fed back as the last message.
+        // Scanning the whole history would see earlier turns' tool rows and make every
+        // later turn answer in plain text.
+        const messages = body.messages ?? [];
+        const alreadyRanTool = messages.at(-1)?.role === "tool";
+
+        const emitToolCall = (name: string, args: Record<string, unknown>) => {
+          response.write(
+            `data: ${JSON.stringify({
+              choices: [
+                {
+                  delta: {
+                    tool_calls: [
+                      { index: 0, id: `call_${name}`, function: { name, arguments: JSON.stringify(args) } },
+                    ],
+                  },
+                },
+              ],
+            })}\n\n`
+          );
+        };
+        const emitText = (chunks: string[]) => {
+          for (const chunk of chunks) {
+            response.write(`data: {"choices":[{"delta":{"content":${JSON.stringify(chunk)}}}]}\n\n`);
+          }
+        };
+
+        if (!alreadyRanTool && /首页|go home/i.test(text)) {
+          emitToolCall("show_home", {});
+        } else if (!alreadyRanTool && /report/i.test(text) && !/plain-skill/i.test(text)) {
+          emitToolCall("save_insight", { html: "<h1>Insight Report</h1>" });
+        } else if (!alreadyRanTool && /plain-skill/i.test(text)) {
+          emitToolCall("read_skill", { name: "reporter" });
+        } else {
+          emitText(["Plain reply, no HTML."]);
         }
         response.write("data: [DONE]\n\n");
         response.end();
@@ -162,7 +194,7 @@ test("skill turn surfaces an insight on the display screen; 显示首页 returns
   // with the non-dismissible notice above the frame.
   await page.getByPlaceholder("Ask Agent-Jarvis").fill("make a report");
   await page.getByRole("button", { name: "发送" }).click();
-  await expect(page.getByText("已生成洞察，可在展示屏查看。")).toBeVisible();
+  await expect(page.locator(".floating-chat__step").filter({ hasText: "save_insight" })).toBeVisible();
   await expect(page.locator(".display-screen__notice")).toBeVisible();
   const frame = page.frameLocator(".display-screen__frame");
   await expect(frame.locator("h1")).toHaveText("Insight Report");
@@ -176,19 +208,25 @@ test("skill turn surfaces an insight on the display screen; 显示首页 returns
   await expect(page.locator(".display-screen__notice")).toBeVisible();
   await expect(page.frameLocator(".display-screen__frame").locator("h1")).toHaveText("Insight Report");
 
-  // "显示首页" routes the display back to the title view — a plain send after does NOT
-  // re-trigger the skill (per-message, not per-session — CP-14).
+  // "显示首页" now goes through the `show_home` tool rather than a routing field
+  // (REQ-F-032 ①). The step row is the visible proof the tool ran.
   await page.getByPlaceholder("Ask Agent-Jarvis").fill("显示首页");
   await page.getByRole("button", { name: "发送" }).click();
+  await expect(page.locator(".floating-chat__step").filter({ hasText: "show_home" })).toBeVisible();
   await expect(page.locator(".display-screen--home h1")).toHaveText("Agent-Jarvis");
 
   await page.reload();
   await expect(page.locator(".display-screen--home h1")).toHaveText("Agent-Jarvis");
+  // REQ-F-035 ④: the step stream is rebuilt from the persisted rows, so the history on
+  // screen after a refresh matches what was there before it.
+  await expect(page.locator(".floating-chat__step").first()).toBeVisible();
 
-  // A skill turn whose reply carries no ```html block says so in the transcript (REQ-F-023 ③).
+  // REQ-F-023 ③ (user ruling 1, keep it non-silent): a turn that consulted a skill but
+  // produced no insight says so, rather than leaving the user guessing.
   await page.getByPlaceholder("Ask Agent-Jarvis").fill("plain-skill please");
   await page.getByRole("button", { name: "发送" }).click();
-  await expect(page.getByText("本轮未产出 HTML。")).toBeVisible();
+  await expect(page.locator(".floating-chat__step").filter({ hasText: "read_skill" })).toBeVisible();
+  await expect(page.getByText("本轮未产出洞察。")).toBeVisible();
 });
 
 test("the ☰ menu stays usable on top of the full-screen display screen (TEST-032 回归)", async ({ page }) => {

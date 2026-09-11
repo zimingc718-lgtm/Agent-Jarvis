@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SkillList } from "@/components/SkillList";
 import { SKILLS_CHANGED_EVENT } from "@/lib/ui-events";
@@ -43,13 +43,33 @@ describe("SkillList (REQ-F-028)", () => {
     expect(fetchSkills).toHaveBeenCalledTimes(2);
   });
 
-  it("⑥ is read-only — no edit or delete controls (non-goal guard)", async () => {
+  // REVERSED by CR-20260910-agent-tooling (CP-3 / REQ-F-031): the list was read-only
+  // through REQ-F-028 ⑥; being unable to remove or correct an uploaded skill is one of
+  // the two gaps that opened this CR. Delete and rename now exist — editing the body,
+  // versioning and a marketplace remain non-goals.
+  it("REQ-F-031 ①:每个技能都有删除与重命名控件", async () => {
     const { container } = render(
       <SkillList fetchSkills={async () => [{ id: "s1", name: "reporter", description: "d" }]} />
     );
     await waitFor(() => expect(screen.getByText("reporter")).toBeInTheDocument());
-    expect(container.querySelectorAll("button")).toHaveLength(0);
+    expect(screen.getByRole("button", { name: "删除" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "重命名" })).toBeInTheDocument();
+    // Still no in-place editing surface — the remaining non-goal.
     expect(container.querySelectorAll("input")).toHaveLength(0);
+    expect(container.querySelectorAll("textarea")).toHaveLength(0);
+  });
+
+  it("REQ-F-031 ②: 删除需二次确认，取消则不发请求", async () => {
+    const calls: string[] = [];
+    vi.stubGlobal("confirm", () => false);
+    vi.stubGlobal("fetch", (async (url: string) => {
+      calls.push(url);
+      return new Response("{}", { status: 200 });
+    }) as unknown as typeof fetch);
+    render(<SkillList fetchSkills={async () => [{ id: "s1", name: "reporter", description: "d" }]} />);
+    await waitFor(() => expect(screen.getByText("reporter")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "删除" }));
+    await waitFor(() => expect(calls).toHaveLength(0));
   });
 
   it("keeps the last good list when a refetch fails", async () => {

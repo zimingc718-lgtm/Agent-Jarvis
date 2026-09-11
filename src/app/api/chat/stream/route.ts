@@ -43,18 +43,16 @@ export async function POST(request: Request) {
       message,
       model,
       signal: request.signal,
-      onFinal: (_finalText, status, activeConversationId) => {
+      onFinal: (_finalText, status, _activeConversationId, toolsUsed) => {
         const tail: ChatDelta[] = [];
         // REQ-F-023 ③ (user ruling 1, keep it non-silent): when the model consulted a
         // skill but never called save_insight, say so rather than leaving the user to
-        // wonder whether a report was produced.
-        if (skillCount > 0 && status === "complete") {
-          const produced = store
-            .listInsights(activeConversationId)
-            .some((insight) => Date.now() - Date.parse(insight.createdAt) < 60_000);
-          if (!produced) {
-            tail.push({ type: "notice", text: "本轮未产出洞察。" });
-          }
+        // wonder whether a report was produced. Judged on what ran in THIS turn — an
+        // earlier turn's insight must not suppress the notice.
+        const consultedSkill = toolsUsed.includes("read_skill");
+        const savedInsight = toolsUsed.includes("save_insight");
+        if (skillCount > 0 && status === "complete" && consultedSkill && !savedInsight) {
+          tail.push({ type: "notice", text: "本轮未产出洞察。" });
         }
         return tail;
       },

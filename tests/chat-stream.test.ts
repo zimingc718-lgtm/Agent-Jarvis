@@ -1,9 +1,8 @@
-import { mkdtempSync, rmSync } from "node:fs";
+﻿import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runChatTurn } from "@/lib/chat";
-import { captureSkillHtml } from "@/lib/skills";
 import { createStore, type Store } from "@/lib/store";
 import type { ChatMessage } from "@/lib/types";
 
@@ -279,17 +278,62 @@ describe("runChatTurn", () => {
   });
 
   // CR-20260909-skills — TEST-035 (injection) / TEST-036 (HTML capture) / CP-14 (default unchanged)
-  it("appends the skill segment to the system prompt for this turn only, without persisting it", async () => {
+  // SUPERSEDED by CR-20260910-agent-tooling. Two behaviours went away together:
+  //   - the per-turn skill segment (REQ-F-022): the body is no longer pasted into the
+  //     system prompt; the model calls `read_skill` when it wants one (TEST-069).
+  //   - the ```html fence capture (REQ-F-023): "skill turn" stopped being a concept, so
+  //     capture became the explicit `save_insight` tool (TEST-070).
+  // What replaces them here is the property that made both possible: the loop.
+  it("REQ-F-029: 工具调用循环——回喂结果后继续，直到模型不再要求工具", async () => {
     const user = store.upsertUser({ email: "user@example.com", name: "User" });
     const providerId = localProvider(store, user.id);
+
+    const rounds: ChatMessage[][] = [];
+    const stream = await runChatTurn({
+      store,
+      userId: user.id,
+      providerId,
+      message: "读一下技能",
+      providerStream: async function* (input) {
+        rounds.push(input.messages);
+        if (rounds.length === 1) {
+          yield { type: "tool_call", callId: "t1", name: "list_skills", argsSummary: "{}" };
+          return;
+        }
+        yield { type: "delta", text: "done" };
+      },
+    });
+    const sse = await readSse(stream);
+
+    // Two provider calls: the tool request, then the answer once the result was fed back.
+    expect(rounds).toHaveLength(2);
+    const toolMessage = rounds[1].find((message) => message.role === "tool");
+    expect(toolMessage?.tool_call_id).toBe("t1");
+    // The step stream reached the client.
+    expect(sse).toContain("event: tool_call");
+    expect(sse).toContain("event: tool_result");
+
+    // The tool round-trip is persisted so a refresh can rebuild it (REQ-F-013).
+    const [conversation] = store.listRecentConversations(user.id);
+    const stored = store.listMessages(conversation.id);
+    expect(stored.some((row) => row.role === "tool" && row.toolCallId === "t1")).toBe(true);
+  });
+
+  it("REQ-F-030 ②: 技能正文不进 system prompt，只留名录", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    const providerId = localProvider(store, user.id);
+    store.insertSkill(user.id, {
+      name: "reporter",
+      description: "写报告",
+      dirPath: "/tmp/does-not-need-to-exist",
+    });
 
     let sent: ChatMessage[] = [];
     const stream = await runChatTurn({
       store,
       userId: user.id,
       providerId,
-      message: "use the skill",
-      skill: "SKILL: extra instructions for this turn",
+      message: "hi",
       providerStream: async function* (input) {
         sent = input.messages;
         yield { type: "delta", text: "ok" };
@@ -297,72 +341,10 @@ describe("runChatTurn", () => {
     });
     await readSse(stream);
 
-    expect(sent[0]).toEqual({
-      role: "system",
-      content: expect.stringContaining("SKILL: extra instructions for this turn"),
-    });
-    // The persisted user/assistant rows never contain the skill text.
-    const [conversation] = store.listRecentConversations(user.id);
-    for (const message of store.listMessages(conversation.id)) {
-      expect(message.content).not.toContain("extra instructions for this turn");
-    }
-  });
-
-  it("captures the last ```html block on a skill turn and reports the missing cases", async () => {
-    const user = store.upsertUser({ email: "user@example.com", name: "User" });
-    const providerId = localProvider(store, user.id);
-
-    async function run(reply: string, skill: string | undefined) {
-      const events: Array<{ html?: string; reason?: string }> = [];
-      const stream = await runChatTurn({
-        store,
-        userId: user.id,
-        providerId,
-        message: "go",
-        skill,
-        providerStream: async function* () {
-          yield { type: "delta", text: reply };
-        },
-        onFinal: (finalText, status) => {
-          events.push({ status } as never);
-          const captured = captureSkillHtml(finalText);
-          if ("html" in captured) {
-            events.push({ html: captured.html });
-            return [{ type: "insight", insightId: "i" }];
-          }
-          events.push({ reason: captured.missing });
-          return [{ type: "insight-missing", reason: captured.missing }];
-        },
-      });
-      const body = await readSse(stream);
-      return { events, body };
-    }
-
-    const twoBlocks = await run("a\n```html\n<p>1</p>\n```\nb\n```html\n<p>2</p>\n```", "S");
-    expect(twoBlocks.events).toContainEqual({ html: "<p>2</p>" });
-    expect(twoBlocks.body).toContain("event: insight");
-
-    const none = await run("no html here", "S");
-    expect(none.events).toContainEqual({ reason: "none" });
-    expect(none.body).toContain('"reason":"none"');
-
-    const unclosed = await run("intro\n```html\n<p>unfinished", "S");
-    expect(unclosed.events).toContainEqual({ reason: "incomplete" });
-
-    // CP-14: with no skill, onFinal is still called by the route but the route's own
-    // guard (`skillSegment && status === "complete"`) skips capture. runChatTurn itself
-    // is unchanged — the default path here has no onFinal and behaves exactly as before.
-    const plain = await runChatTurn({
-      store,
-      userId: user.id,
-      providerId,
-      message: "plain",
-      providerStream: async function* () {
-        yield { type: "delta", text: "```html\n<p>should be ignored</p>\n```" };
-      },
-    });
-    const plainBody = await readSse(plain);
-    expect(plainBody).toContain("event: done");
-    expect(plainBody).not.toContain("event: insight");
+    const system = sent.filter((message) => message.role === "system").map((message) => message.content).join("\n");
+    expect(system).toContain("reporter");
+    expect(system).toContain("read_skill");
+    // The catalogue is a name plus one line — never the folder contents.
+    expect(system).not.toContain("SKILL.md 正文");
   });
 });

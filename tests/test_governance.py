@@ -1,6 +1,7 @@
 import datetime as dt
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -495,6 +496,42 @@ class GovernanceCliTests(unittest.TestCase):
         self.assertIn("G3_PASS", output)
         self.assertIn("deferred", output)
         self.assertIn("TEST-022", output)
+
+    # CR-20260910-agent-tooling CP-37: a test whose behaviour an approved CR deleted
+    # cannot produce PASS evidence, and demanding it would demand a lie. SUPERSEDED
+    # skips it — but only when the row names the CR that replaced it, so the status
+    # cannot be used to quietly silence a genuinely failing test.
+    def test_g3_passes_but_reports_a_superseded_test(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_manual_test(
+                root,
+                {
+                    "id": "TEST-022",
+                    "result": "SUPERSEDED",
+                    "notes": "CR-20260910-agent-tooling：routeTurn 删除，由 TEST-069 取代",
+                },
+            )
+
+            code, output = governance.run(["gate", "g3", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("G3_PASS", output)
+        self.assertIn("superseded", output)
+        self.assertIn("TEST-022", output)
+
+    def test_g3_rejects_a_supersede_that_names_no_cr(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_manual_test(
+                root, {"id": "TEST-022", "result": "SUPERSEDED", "notes": "not needed any more"}
+            )
+
+            code, output = governance.run(["gate", "g3", "--root", directory])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("G3_BLOCKED", output)
+        self.assertIn("SUPERSEDED", output)
 
 
 # --- CR-20260910-process-hardening: TEST-051..054 --------------------------------
@@ -1185,12 +1222,23 @@ class IdReservationTests(unittest.TestCase):
         self.assertEqual(counts.get("TASK-044"), 1, counts.get("TASK-044"))
 
     def test_056_6_the_backfill_left_every_review_gate_untouched(self) -> None:
-        # Invariant the module role attached in R1: reserving ids across the 17
-        # existing records must not move any R1..R4 verdict.
+        # Invariant the module role attached in R1: reserving ids across the existing
+        # records must not move any R1..R4 verdict.
+        #
+        # Originally asserted as the literal "8 change record(s)". That froze a count
+        # every later CR legitimately changes (CR-20260910-agent-tooling made it 9), so
+        # the literal was failing for a reason the invariant does not care about. What
+        # the invariant actually claims is that all four gates pass and agree on the
+        # same set — which is what is asserted now.
+        counts = set()
         for level in ("r1", "r2", "r3", "r4"):
             code, output = governance.run(["review", level, "--root", str(REPO_ROOT)])
             self.assertEqual(code, 0, output)
-            self.assertIn("8 change record(s)", output)
+            match = re.search(r"(\d+) change record\(s\) satisfy", output)
+            self.assertIsNotNone(match, output)
+            counts.add(int(match.group(1)))
+        self.assertEqual(len(counts), 1, f"R1..R4 disagree on how many records they judged: {counts}")
+        self.assertGreaterEqual(counts.pop(), 8)
 
 
 class KnownWarningTests(unittest.TestCase):

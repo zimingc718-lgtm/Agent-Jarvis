@@ -171,7 +171,11 @@ try {
   assert(chatResponse.ok, `chat stream must return 2xx, got ${chatResponse.status}`);
   const chatText = await chatResponse.text();
   assert(chatText.includes('"text":"Smoke"'), "chat stream must include the first mock token");
-  assert(chatText.includes('"text":" ctx=2"'), `turn 1 must send system+user (ctx=2); got: ${chatText}`);
+  // CR-20260910-agent-tooling recalibrates this count. The system prompt is no longer a
+  // single blob: it is a cacheable stable prefix plus a volatile suffix (REQ-NF-008 ①),
+  // so turn 1 sends prefix + suffix + user = 3.
+  assert(chatText.includes('"text":" ctx=3"'), `turn 1 must send prefix+suffix+user (ctx=3); got: ${chatText}`);
+  assert(chatText.includes("event: usage"), "each turn must report token usage (REQ-F-037)");
   assert(chatText.includes("event: done"), "chat stream must complete");
   const conversationId = JSON.parse(chatText.match(/data: (\{"type":"start"[^\n]*)/)[1]).conversationId;
   assert(typeof conversationId === "string", "start event must carry a conversationId");
@@ -183,7 +187,7 @@ try {
     body: JSON.stringify({ providerId, conversationId, message: "Follow up" })
   });
   const followUpText = await followUp.text();
-  assert(followUpText.includes('"text":" ctx=4"'), `turn 2 must replay history (ctx=4); got: ${followUpText}`);
+  assert(followUpText.includes('"text":" ctx=5"'), `turn 2 must replay history (ctx=5); got: ${followUpText}`);
 
   const conversations = await fetchJson(`http://127.0.0.1:${appPort}/api/conversations/recent`);
   assert(conversations.conversations.length === 1, "follow-up must stay in the same conversation");

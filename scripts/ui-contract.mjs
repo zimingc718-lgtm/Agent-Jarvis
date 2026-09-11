@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 /**
  * Agent-Jarvis UI Contract
  * =========================
@@ -894,14 +894,23 @@ const CONTRACT = [
         req: "REQ-F-003",
         title: "The expanded console never takes over the screen",
         guidance:
-          "The composer expands into a bottom panel, not a full-screen chat. Cap the expanded height at 50vh (CR-20260909, was 65vh) so the page behind stays visible and the product does not read as a chat clone.",
+          "The composer expands into a bottom panel, not a full-screen chat. CR-20260910-agent-tooling makes the cap conditional: 50vh for plain conversation, 75vh once a turn carries a tool step stream (a 10-step run would otherwise push the reply out of view). Neither may reach full screen.",
         check(ctx) {
           const expanded = ctx.rule(/\.floating-chat--expanded|\.floating-chat\.is-expanded/);
           if (!expanded) {
             // DEC-019: the cap is the transcript's own max-h utility.
             const u = ctx.utilitiesFor("floating-chat__messages", ["FloatingChat.tsx"]);
-            const vhu = (u.match(/max-h-\[(\d+)vh\]/) || [])[1];
-            if (!vhu) return FAIL("expanded console has no viewport-relative height cap");
+            const caps = [...u.matchAll(/max-h-\[(\d+)vh\]/g)].map((match) => Number(match[1]));
+            if (caps.length === 0) return FAIL("expanded console has no viewport-relative height cap");
+            // Both branches must exist and neither may take the whole screen.
+            if (caps.length > 1) {
+              const low = Math.min(...caps);
+              const high = Math.max(...caps);
+              return low <= 55 && high <= 80
+                ? PASS(`conditional cap ${low}vh / ${high}vh — plain vs. step-stream turns`)
+                : FAIL(`conditional caps ${low}vh / ${high}vh exceed the allowed 55vh / 80vh`);
+            }
+            const vhu = String(caps[0]);
             return Number(vhu) <= 55
               ? PASS(`transcript capped at ${vhu}vh`)
               : FAIL(`transcript may grow to ${vhu}vh — exceeds the 50vh cap (CR-20260909)`);
@@ -1347,16 +1356,16 @@ const CONTRACT = [
         id: "LB-06",
         ref: "REQ-F-018 (CR-20260909)",
         req: "REQ-F-018",
-        title: "The status light has four distinguishable states",
+        title: "The status light has five distinguishable states",
         guidance:
-          "checking / off / ready / busy must each map to a distinct class and CSS rule, and the light stays decorative (state is also exposed as text for AT).",
+          "checking / off / ready / busy / tool must each map to a distinct class and CSS rule, and the light stays decorative (state is also exposed as text for AT). CR-20260910-agent-tooling added `tool` — a multi-step turn can run for tens of seconds and, while the panel is collapsed, the light is the only signal.",
         check(ctx) {
           const src = ctx.files["FloatingChat.tsx"] ?? "";
-          const states = ["checking", "off", "ready", "busy"];
+          const states = ["checking", "off", "ready", "busy", "tool"];
           const inJsx = states.every((s) => new RegExp(`floating-chat__light--${s}|["']${s}["']`).test(src));
           const inCss = states.every((s) => new RegExp(`\\.floating-chat__light--${s}\\b`).test(ctx.css));
-          if (!inJsx) return FAIL("FloatingChat does not render all four light states");
-          if (inCss) return PASS("four light states rendered and styled");
+          if (!inJsx) return FAIL("FloatingChat does not render all five light states");
+          if (inCss) return PASS("five light states rendered and styled");
           // DEC-019: each state maps to its own utility tone instead of a CSS rule.
           const tone = src.match(/LIGHT_TONE[\s\S]*?\{([\s\S]*?)\}/)?.[1] ?? "";
           const missing = states.filter((s) => !new RegExp(`${s}\\s*:`).test(tone));
@@ -1365,7 +1374,35 @@ const CONTRACT = [
           if (new Set(tones).size < states.length) {
             return FAIL(`light states share a tone (${tones.join(" | ")}) — they must be visually distinguishable`);
           }
-          return PASS(`four light states with distinct tones: ${tones.join(" | ")}`);
+          return PASS(`five light states with distinct tones: ${tones.join(" | ")}`);
+        },
+      },
+      {
+        id: "LB-10",
+        ref: "REQ-F-035 (CR-20260910-agent-tooling)",
+        req: "REQ-F-035",
+        title: "The tool step stream is compact, expandable and announced",
+        guidance:
+          "Each tool call gets a step row carrying the tool name and an argument summary. Detail stays collapsed behind a real <button> with aria-expanded — a 10-step turn must not bury the answer — and the row exposes its state for AT rather than by colour alone.",
+        check(ctx) {
+          const src = ctx.files["FloatingChat.tsx"] ?? "";
+          if (!/floating-chat__step\b/.test(src)) {
+            return FAIL("no step row rendered for tool calls");
+          }
+          const toggle = /floating-chat__step-toggle/.test(src);
+          const hasButton = /<button[^>]*aria-expanded=\{[^}]*\}/.test(src);
+          if (!toggle || !hasButton) {
+            return FAIL("step detail is not behind a real <button> with aria-expanded");
+          }
+          if (!/aria-label=\{[^}]*\}/.test(src)) {
+            return FAIL("step toggle has no accessible name");
+          }
+          // State must survive colour-blindness and reduced motion: a data attribute or
+          // a textual mark, not a tone alone.
+          if (!/data-state=/.test(src) && !/STEP_STATE_MARK/.test(src)) {
+            return FAIL("step state is conveyed by colour alone");
+          }
+          return PASS("step rows are compact, expandable and expose state non-visually");
         },
       },
     ],
