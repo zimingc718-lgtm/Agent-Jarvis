@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { createAuthOptions, getGoogleOAuthConfig } from "@/lib/auth";
 import { requireUserId } from "@/lib/auth-guard";
 

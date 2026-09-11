@@ -1,4 +1,4 @@
-﻿import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth";
 import { AccountDialog } from "@/components/AccountDialog";
 import { ConfigWarning } from "@/components/ConfigWarning";
 import { CornerMenu } from "@/components/CornerMenu";

@@ -1,4 +1,4 @@
-﻿import type { ToolSpec } from "./adapters";
+import type { ToolSpec } from "./adapters";
 import type { ChatDelta, ChatMessage, Source, ToolCall } from "./types";
 import { normalizeArgs, parseToolArguments, summarizeArgs, type ToolContext, type ToolRegistry } from "./tools/registry";
 

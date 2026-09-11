@@ -1,4 +1,4 @@
-﻿import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -317,6 +317,63 @@ describe("runChatTurn", () => {
     const [conversation] = store.listRecentConversations(user.id);
     const stored = store.listMessages(conversation.id);
     expect(stored.some((row) => row.role === "tool" && row.toolCallId === "t1")).toBe(true);
+  });
+
+  // CR-20260911-tool-availability. The defect this guards: `unknown` is the state every
+  // provider starts in, and the first version treated it like `no` — so out of the box
+  // no tools registered and the model could not reach web_search at all.
+  it("REQ-F-040 ③: 未探测的 Provider 仍然注册工具，模型可以调起来", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    const providerId = localProvider(store, user.id);
+    // No probe has ever run for this provider/model pair.
+    expect(store.getProviderForUser(user.id, providerId)?.toolSupport ?? null).toBeNull();
+
+    let offeredTools: unknown[] | undefined;
+    let round = 0;
+    const stream = await runChatTurn({
+      store,
+      userId: user.id,
+      providerId,
+      message: "搜一下",
+      providerStream: async function* (input) {
+        round += 1;
+        offeredTools = input.tools;
+        if (round === 1) {
+          yield { type: "tool_call", callId: "t1", name: "show_home", argsSummary: "{}" };
+          return;
+        }
+        yield { type: "delta", text: "done" };
+      },
+    });
+    await readSse(stream);
+
+    expect(offeredTools, "未探测的 Provider 也必须收到 tools 定义").toBeDefined();
+    expect((offeredTools ?? []).length).toBeGreaterThan(0);
+
+    // And the turn teaches the store what it learned, so later turns skip the guessing.
+    expect(store.getProviderForUser(user.id, providerId)?.toolSupport).toMatchObject({ llama: "yes" });
+  });
+
+  it("REQ-F-040 ③: 明确探测为 no 的 Provider 降级为纯对话并提醒", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    const providerId = localProvider(store, user.id);
+    store.setProviderToolSupport(user.id, providerId, "llama", "no");
+
+    let offeredTools: unknown[] | undefined = [];
+    const stream = await runChatTurn({
+      store,
+      userId: user.id,
+      providerId,
+      message: "hi",
+      providerStream: async function* (input) {
+        offeredTools = input.tools;
+        yield { type: "delta", text: "plain" };
+      },
+    });
+    const sse = await readSse(stream);
+
+    expect(offeredTools).toBeUndefined();
+    expect(sse).toContain("event: tools-unavailable");
   });
 
   it("REQ-F-030 ②: 技能正文不进 system prompt，只留名录", async () => {

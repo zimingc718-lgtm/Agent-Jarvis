@@ -1,4 +1,4 @@
-﻿# CR-20260910-agent-tooling
+# CR-20260910-agent-tooling
 
 - 级别: L3（改核心目标——对话从「注入式单轮管线」变为「工具循环 agent」；改技术路线——内核按 DeepSeek Harness 插件化思想重构；打开新信任面——联网搜索与网页读取出网、`read_url` 任意 URL 抓取；新增环境依赖——SearXNG 自托管服务（**零新增 npm 依赖**）。按 `docs/CONTROLS.md` 分档判据含单向门 CP，走**重型**：完整 R1–R4 + 回滚方案 + 事前验尸。）
 - 提出人: user（INPUT-2026-09-10-008；起因：「哪怕上传了 skill，Jarvis 也没有管理 skill 的能力，也没有联网搜索的能力」+「openclaw 的 token 消耗有点大，怎么借鉴轻量化」）

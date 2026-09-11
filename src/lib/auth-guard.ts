@@ -1,4 +1,4 @@
-﻿type SessionLike = {
+type SessionLike = {
   user?: {
     id?: string | null;
     email?: string | null;

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   estimateTokens,
   sendProviderStream,
+  shouldRetryWithoutTools,
   shouldRetryWithoutUsage,
   ToolCallAccumulator,
   type StreamProviderConfig,
@@ -201,6 +202,46 @@ describe("usage 与兼容回退 (DEC-028)", () => {
     );
     expect(fetcher).toHaveBeenCalledTimes(1);
     expect(events[0].type).toBe("error");
+  });
+
+  // CR-20260911-tool-availability: an unprobed provider is asked optimistically, so the
+  // adapter must survive one that does not know the `tools` field.
+  it("4xx 指向 tools 时回退一次并发出 tools-unavailable", async () => {
+    const bodies: string[] = [];
+    let call = 0;
+    const fetcher = vi.fn(async (_url: string, init?: RequestInit) => {
+      bodies.push(String(init?.body));
+      call += 1;
+      if (call === 1) {
+        return new Response(JSON.stringify({ error: { message: "unknown parameter: tools" } }), { status: 400 });
+      }
+      return sse([{ choices: [{ delta: { content: "plain reply" } }] }]);
+    });
+
+    const events = await collect(
+      sendProviderStream({
+        provider,
+        messages: [{ role: "user", content: "hi" }],
+        fetcher: fetcher as unknown as typeof fetch,
+        tools: [{ type: "function", function: { name: "echo", description: "d", parameters: { type: "object" } } }],
+      })
+    );
+
+    expect(bodies[0]).toContain('"tools"');
+    expect(bodies[1]).not.toContain('"tools"');
+    expect(events).toContainEqual({
+      type: "tools-unavailable",
+      reason: "当前模型不支持工具调用，本轮按普通对话进行。",
+    });
+    // The turn still answers — a provider without tools is not a broken provider.
+    expect(events).toContainEqual({ type: "delta", text: "plain reply" });
+  });
+
+  it("shouldRetryWithoutTools 只认该字段相关的 4xx", () => {
+    expect(shouldRetryWithoutTools(400, "unknown parameter: tools")).toBe(true);
+    expect(shouldRetryWithoutTools(400, "tool_choice is not supported")).toBe(true);
+    expect(shouldRetryWithoutTools(400, "context length exceeded")).toBe(false);
+    expect(shouldRetryWithoutTools(500, "tools")).toBe(false);
   });
 
   it("shouldRetryWithoutUsage 只认该参数相关的 4xx", () => {

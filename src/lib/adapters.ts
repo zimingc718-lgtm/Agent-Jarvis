@@ -113,6 +113,16 @@ export function shouldRetryWithoutUsage(status: number, body: string): boolean {
 }
 
 /**
+ * Same idea for the `tools` field (CR-20260911-tool-availability). A provider that has
+ * never been probed is asked optimistically; one that answers "I don't know this field"
+ * gets one retry without it, and the caller records `no` so the next turn skips straight
+ * to plain chat. Keeps an unprobed provider usable without making a broken one loop.
+ */
+export function shouldRetryWithoutTools(status: number, body: string): boolean {
+  return status >= 400 && status < 500 && /\btools?\b|tool_choice|function[_ ]call/i.test(body);
+}
+
+/**
  * Local token estimate for providers that never report usage (REQ-F-037 ④).
  * CJK runs about 1.5 characters per token, Latin script about 4; the split keeps mixed
  * text from skewing badly in either direction. Always surfaced as `estimated`.
@@ -152,19 +162,20 @@ export async function* sendProviderStream(input: SendProviderStreamInput): Async
   const signal = input.signal ? AbortSignal.any([input.signal, timeout]) : timeout;
   const abortedByUser = () => Boolean(input.signal?.aborted);
 
-  const buildBody = (includeUsage: boolean) =>
+  const buildBody = (includeUsage: boolean, withTools: boolean) =>
     JSON.stringify({
       model,
       stream: true,
       messages: input.messages,
-      ...(input.tools && input.tools.length > 0 ? { tools: input.tools } : {}),
+      ...(withTools && input.tools && input.tools.length > 0 ? { tools: input.tools } : {}),
       ...(includeUsage ? { stream_options: { include_usage: true } } : {}),
     });
 
   let wantUsage = input.includeUsage ?? false;
+  let wantTools = true;
   let response: Response;
   try {
-    response = await fetcher(url, { method: "POST", headers, body: buildBody(wantUsage), signal });
+    response = await fetcher(url, { method: "POST", headers, body: buildBody(wantUsage, wantTools), signal });
   } catch (error) {
     if (abortedByUser()) {
       yield { type: "stopped" };
@@ -178,14 +189,21 @@ export async function* sendProviderStream(input: SendProviderStreamInput): Async
     return;
   }
 
-  // One retry when the provider rejected `stream_options` specifically: usage is a
-  // nice-to-have, a working reply is not (REQ-F-012 must keep passing).
-  if (!response.ok && wantUsage) {
+  // Retry once when the provider rejected an optional field specifically. Usage and
+  // tools are both nice-to-haves; a working reply is not (REQ-F-012 must keep passing).
+  if (!response.ok && (wantUsage || (wantTools && input.tools?.length))) {
     const body = await response.clone().text();
-    if (shouldRetryWithoutUsage(response.status, body)) {
-      wantUsage = false;
+    const dropUsage = wantUsage && shouldRetryWithoutUsage(response.status, body);
+    const dropTools = wantTools && Boolean(input.tools?.length) && shouldRetryWithoutTools(response.status, body);
+    if (dropUsage || dropTools) {
+      wantUsage = wantUsage && !dropUsage;
+      wantTools = wantTools && !dropTools;
+      if (dropTools) {
+        // Tell the caller so it can record `no` and stop asking on later turns.
+        yield { type: "tools-unavailable", reason: "当前模型不支持工具调用，本轮按普通对话进行。" };
+      }
       try {
-        response = await fetcher(url, { method: "POST", headers, body: buildBody(false), signal });
+        response = await fetcher(url, { method: "POST", headers, body: buildBody(wantUsage, wantTools), signal });
       } catch (error) {
         yield { type: "error", message: `Could not reach provider: ${errorText(error)}.` };
         return;

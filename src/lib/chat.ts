@@ -1,4 +1,4 @@
-﻿import { randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { repairDanglingToolCalls, runToolLoop } from "./agent-loop";
 import { estimateMessagesTokens, estimateTokens, sendProviderStream, type StreamProviderConfig, type ToolSpec } from "./adapters";
 import { resolveDisplayView } from "./display";
@@ -137,9 +137,19 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
   const skills = input.store.listSkills(input.userId);
   const web = readWebSettings(input.store);
   const support = toolSupportFor(provider, model);
-  // REQ-F-040 ③: `no` and `unknown` behave alike — running tool-free beats letting the
-  // user watch an unexplained failure first. Priority order is untouched (REQ-F-006 ⑦).
-  const toolsUsable = support === "yes";
+  /**
+   * REQ-F-040 ③ as corrected by CR-20260911-tool-availability.
+   *
+   * `unknown` is the state every provider starts in, and the first version treated it
+   * like `no` — so out of the box no tools registered at all and the model could not
+   * reach `web_search` however much the user wanted it to. "Not yet probed" is not
+   * "does not support"; only the latter was what the user ruled should degrade.
+   *
+   * So `unknown` now attempts tools. If the provider rejects the `tools` field we fall
+   * back once and remember `no` (see `toolRejection` below) — the same shape as the
+   * `stream_options` fallback. Priority order is untouched (REQ-F-006 ⑦).
+   */
+  const toolsUsable = support !== "no";
 
   const registry = buildRegistry(input.store, input.extraTools);
   const toolContext: ToolContext = {
@@ -198,6 +208,17 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
       support === "unknown"
         ? "当前模型尚未探测工具调用能力，本轮按普通对话进行。可在「模型」中点「测试」完成探测。"
         : "当前模型不支持工具调用，本轮按普通对话进行。",
+    /**
+     * Learn the provider's tool capability from what actually happened, so an unprobed
+     * provider converges after one turn instead of re-asking forever
+     * (CR-20260911-tool-availability).
+     */
+    recordToolSupport: (result) => {
+      if (support !== "unknown" || !toolsUsable) {
+        return;
+      }
+      input.store.setProviderToolSupport(input.userId, provider.id, model, result);
+    },
     run: (emit, persist) =>
       runToolLoop({
         registry,
@@ -264,6 +285,8 @@ function createStreamingResponse(input: {
   messageId: string;
   signal?: AbortSignal;
   toolsUsable: boolean;
+  /** Called once per turn with what the provider actually demonstrated. */
+  recordToolSupport?: (result: "yes" | "no") => void;
   toolsUnavailableReason: string;
   store: Store;
   estimateFallback: () => number;
@@ -283,12 +306,17 @@ function createStreamingResponse(input: {
       };
 
       let sawUsage = false;
+      let toolsRejected = false;
       const emit = (delta: ChatDelta) => {
         if (delta.type === "usage") {
           sawUsage = true;
           input.store.addUsage(input.conversationId, delta.usage);
           send({ type: "usage", usage: input.store.getUsage(input.conversationId) });
           return;
+        }
+        if (delta.type === "tools-unavailable") {
+          // The adapter dropped `tools` after the provider rejected the field.
+          toolsRejected = true;
         }
         send(delta);
       };
@@ -312,6 +340,15 @@ function createStreamingResponse(input: {
 
       try {
         const result = await input.run(emit, persist);
+
+        // Evidence beats guessing: a tool that actually ran proves support, a rejected
+        // `tools` field proves the opposite. Anything else leaves the state unknown so
+        // the next turn tries again rather than locking in a wrong answer.
+        if (toolsRejected) {
+          input.recordToolSupport?.("no");
+        } else if (result.toolsUsed.length > 0) {
+          input.recordToolSupport?.("yes");
+        }
 
         // REQ-F-039: sources are their own structure, assembled server-side from what the
         // tools actually returned. The prose already streamed and is never rewritten.

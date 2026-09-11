@@ -1,4 +1,4 @@
-﻿import { createServer, type Server } from "node:http";
+import { createServer, type Server } from "node:http";
 import { expect, test, type Page } from "@playwright/test";
 
 const mockModelPort = Number(process.env.JARVIS_E2E_MODEL_PORT ?? 3321);

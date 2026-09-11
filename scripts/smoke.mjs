@@ -1,4 +1,4 @@
-﻿import { spawn, spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { createServer } from "node:http";
 import { join } from "node:path";

@@ -1,4 +1,4 @@
-﻿import { createServer, type Server } from "node:http";
+import { createServer, type Server } from "node:http";
 import { expect, test, type Page } from "@playwright/test";
 
 // CR-20260909-skills + CR-20260909-display-screen — TEST-038 (②③④) / TEST-041.
