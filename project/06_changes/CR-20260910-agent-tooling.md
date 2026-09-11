@@ -2,14 +2,14 @@
 
 - 级别: L3（改核心目标——对话从「注入式单轮管线」变为「工具循环 agent」；改技术路线——内核按 DeepSeek Harness 插件化思想重构；打开新信任面——联网搜索与网页读取出网、`read_url` 任意 URL 抓取；新增环境依赖——SearXNG 自托管服务（**零新增 npm 依赖**）。按 `docs/CONTROLS.md` 分档判据含单向门 CP，走**重型**：完整 R1–R4 + 回滚方案 + 事前验尸。）
 - 提出人: user（INPUT-2026-09-10-008；起因：「哪怕上传了 skill，Jarvis 也没有管理 skill 的能力，也没有联网搜索的能力」+「openclaw 的 token 消耗有点大，怎么借鉴轻量化」）
-- 状态: APPROVED（R1）——P0 原文已存；CP-1..CP-43 登记表已填；`产品需求说明书.md` 基线表与变更响应节已写入；**R1 四角色评审完成（全 CONDITIONAL、零 REJECTED）+ 人工终裁 7 项已拍板**（见「## R1 人工终裁」）。**P2 完成**：三层说明书各含 `变更响应 · CR-20260910-agent-tooling` 节（架构 43 CP 逐点方案 + DEC-022..029 + DEC 修订作废；模块 43 CP 影响矩阵 + TASK-059..076；测试 43 CP 派生矩阵 + 既有测试处置 + TEST-061..078），三张 43×4 矩阵全 APPROVED，`review r2|r3|r4` + `gate g1|g2` + `check-specs|check-doors|check-ids|check-warnings|ui` 全 PASS。**P3 未开始**
+- 状态: APPROVED（R1）——P0 原文已存；CP-1..CP-43 登记表已填；`产品需求说明书.md` 基线表与变更响应节已写入；**R1 四角色评审完成（全 CONDITIONAL、零 REJECTED）+ 人工终裁 7 项已拍板**（见「## R1 人工终裁」）。**P2 完成**：三层说明书各含 `变更响应 · CR-20260910-agent-tooling` 节，三张 43×4 矩阵全 APPROVED。**P3/P4 完成**：TASK-059..076 全部 DONE、TEST-061..078 全部 PASS、7 条出口义务清零；277 单测 / 50 ui-contract / 10 e2e / smoke / build:verify 全绿，typecheck 0，治理单测 69 全过，`gate g3|g3.5` PASS，**零新增运行依赖**。`verify` 的基线漂移待合并前 `snapshot`（WORKFLOW 规定全流程只跑一次）
 - 占用 ID: DEC-022..029, TASK-059..076, TEST-061..078 （另创建 REQ-F-029..041、REQ-NF-007..011，见附录 A；REQ-* 不在 `check-ids` 登记范围）
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: **新增** REQ-F-029..041（13 条）、REQ-NF-007..011（5 条）；**重写** REQ-F-003、F-004、F-005、F-006、F-013、F-014、F-018、F-019、F-023、F-024、F-028、NF-006（12 条）；**作废并由新条款取代** REQ-F-021、F-022、F-027（3 条）；**澄清** REQ-NF-001、NF-003、NF-004、F-016、F-020（5 条）；非目标作废 4 行、改写 1 行、新增 7 行。全文见附录 A / B。
 - 影响模块: **新增 MOD-TOOLS**（`src/lib/tools/` 注册表 + 循环内核 + 6 类工具 + 地址校验 + 预算，`src/lib/agent-loop.ts`）；MOD-CHAT（单轮管线 → 循环宿主、工具落库与回放、来源引用）、MOD-ADAPTER（`tools` 请求体、`tool_calls` 分片累积、`usage` 与 `stream_options` 回退、能力探测）、MOD-DB（迁移框架 + 六处 schema 变更）、MOD-SKILLS（工具化 + 删除/重命名，`routeTurn` 删除）、MOD-DISPLAY（工具化 + 循环中即时写）、MOD-CHAT-UI（步骤流、状态灯五态、面板分情形、事件单一来源）、MOD-SETTINGS-UI（搜索配置入口、token 用量、技能管理 UI）
 - 影响任务: **新增 TASK-059..076（18 个）**，实施顺序有硬依赖（TASK-059 迁移框架 → TASK-060 六处 schema → 其余）。**既有任务**：废止 TASK-035、TASK-039 ①②③、TASK-034 ②④、TASK-043 ③④；大改 TASK-024/028、TASK-026/028、TASK-010、TASK-005、TASK-004、TASK-034 ④；小改 TASK-030 ④、TASK-003、TASK-016。**既有任务受影响（R1 测试/模块角色登记）**：TASK-035 全废；TASK-034 ②④、TASK-039 ①②③、TASK-043 ③④ 废；TASK-024/028（四态→五态）、TASK-026/028（50vh→分情形）、TASK-030 ④ 大改
 - 影响测试: **新增 TEST-061..078（18 条）**。**既有测试（R1 测试角色登记，非「无」）**：作废 TEST-034（F-021 路由）、TEST-036（HTML 围栏捕获）、TEST-042（F-027 display 路由）；断言反转或校准 TEST-035、038 ②③④、041 ③、046 ④⑤⑥、027、031 ④、012、018、047、030、008、013、014、009、029、025、026、006、010、049、032 ③、048 ④、020；其余 REQ-F-002..028 既有 TEST 作回归门
-- 当前证据: `project/05_evidence/EV-2026-09-10-agent-tooling-requirements.md`（仓库代码事实 + 联网调研 + 16 项用户决策时间线 + 三轮审视缺口）；`project/00_input/需求输入.md` INPUT-2026-09-10-008
+- 当前证据: `project/05_evidence/EV-2026-09-10-agent-tooling-requirements.md`（仓库代码事实 + 联网调研 + 16 项用户决策时间线 + 三轮审视缺口）；`project/05_evidence/EV-2026-09-10-agent-tooling-impl.md`（P3/P4 验证结果、实现落点、测试抓到的 4 个实现缺陷、既有测试处置执行记录、出口义务清零、3 条 known limitation）；`project/00_input/需求输入.md` INPUT-2026-09-10-008
 - 方案选项:
   - A. **真嵌入 `@deepseek-ai/dsh` 包作为运行依赖**——否决。①与用户已定三项决策冲突：零新增 npm 依赖、只读免审批工具集（dsh Standard 模式默认带 shell / 文件编辑 / sandbox）、Provider 由 Jarvis 自管（REQ-F-006/009 建立在此上）；②模型层、会话/存储层、SSE 事件三处要做归属裁决与桥接，需求无一条覆盖；③dsh 为 developer preview，且**是否可作为库嵌入未确认**（文档只给 CLI / Web 入口，见 EV §2）。
   - B. **采用 OpenClaw 架构**——否决。①它是多渠道常驻 gateway，Jarvis 只有一个入口（悬浮窗），gateway 层是纯负担；②其 token 开销是结构性的（每轮 ≈ 8000 tokens 固定注入、bootstrap 文件合计 60000 字符全量注入、5 轮 ≈ 13 倍成本、时间进 system prompt 打掉前缀缓存——官方文档自述，见 EV §2），与本 CR「轻量化」目标相反；③只借其「主动唤醒」概念，且推到 D 期。
@@ -374,6 +374,20 @@ P2 产出。三层说明书写 `变更响应 · CR-20260910-agent-tooling` 节�
 | CP-41 | APPROVED 每个可观察动作逐条可验（NF-011 执行体短路） | APPROVED 测试覆盖 DEC-026 ② 的约束面 | APPROVED TASK-064 ③/070 ④ 绑 TEST-066 ③；TEST-072 ④ | APPROVED TEST-066 ③；TEST-072 ④（自审） |
 | CP-42 | APPROVED 每个可观察动作逐条可验（技能 name 与 slug） | APPROVED 测试覆盖 方案表 CP-42 的约束面 | APPROVED TASK-073 ④⑤ 绑 TEST-074 ③④⑤ | APPROVED TEST-074 ③④⑤（自审） |
 | CP-43 | APPROVED 每个可观察动作逐条可验（show_insight 属主校验） | APPROVED 测试覆盖 方案表 CP-43 的约束面 | APPROVED TASK-068 ③ 绑 TEST-070 ③ | APPROVED TEST-070 ③（自审） |
+
+## P3/P4 实施记录（2026-09-10）
+
+证据全文见 `project/05_evidence/EV-2026-09-10-agent-tooling-impl.md`。
+
+**验证**：`npm test` **277**（本 CR 前 190，新增 87）· `ui-contract` **50/0/0** · `npm run test:e2e` **10 PASS**（含真实浏览器里的工具循环、步骤流、`show_home` 经工具、刷新重建、未产出洞察的告知）· `npm run test:smoke` OK · `npm run build:verify` OK · `npx tsc --noEmit` 0 · `python -m unittest tests.test_governance` **69** · `gate g3|g3.5` PASS · **零新增运行依赖**。
+
+**测试抓到并修掉 4 个实现缺陷**（均为实现问题，非需求问题）：① `url-guard` 漏掉 `URL` 规范化后的十六进制 IPv4-mapped 写法（`::ffff:127.0.0.1` → `::ffff:7f00:1`），构成可直达 loopback 的 SSRF 绕过；② `repairDanglingToolCalls` 把合成的「已中止」行插在真实 `tool` 行之前，外发序列顺序错乱；③ `raceWithTimeout` 未在入口检查 `signal.aborted`，同步 abort 的工具会挂到 15s 超时；④ `display-tools` 持有注入的 `store` 却经单例写展示状态。
+
+**CP-37 执行**：TEST-034/036/042 标 `SUPERSEDED`；`ctx=` 计数校准为 3/5（system prompt 拆稳定前缀 + 易变后缀）；`skills-display` e2e mock 改发 `tool_calls`，并把「本轮是否刚回喂」判定收窄为**最后一条是否为 tool 行**；`skill-list` 只读守卫与「本轮使用技能」断言按新逻辑反转。
+
+**治理工具变更**：`gate g3` 新增 `SUPERSEDED` 判定——被取代的测试无法产出 PASS 证据，索要它等于索要谎言；而 `DEFERRED` 的语义是「将来恢复」，与「不会回来」不同。g3 跳过但如实列出，且 `notes` 必须指名取代它的 CR，否则阻断（防止用该状态掩盖真失败），配 2 条回归守卫。另修一条以硬编码 `"8 change record(s)"` 表达不变量的治理单测，改为断言四门全过且判定记录数一致。
+
+**出口义务 7 条全部清零**（见 EV §6）。**3 条 known limitation 如实登记**（DNS 重绑定、`skill-html-unsandboxed-web-source`、弱模型不主动调工具），测试断言当前真实行为而非伪装已防护。
 
 **R2/R3/R4 结果**：CP-1..CP-43 × 4 角色 **全 APPROVED，无 REJECTED、无空格、无遗留 CONDITIONAL**。R1 阶段四角色的 CONDITIONAL 条件已在 P2 全部成文：产品的 7 项经人工终裁回写需求说明书；架构的 8 项落为 DEC-022..029 与 DEC-005/012/015/016/017 的修订作废；模块的 9 项落为 TASK-059..076 的粒度拆分与实施顺序（TASK-059 → TASK-060 → 其余）；测试的 7 项落为 TEST-061..078 与「既有测试处置」表（3 条作废、15 组反转/校准）。
 
