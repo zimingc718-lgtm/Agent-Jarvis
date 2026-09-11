@@ -392,3 +392,7 @@ P2 产出。三层说明书写 `变更响应 · CR-20260910-agent-tooling` 节�
 **R2/R3/R4 结果**：CP-1..CP-43 × 4 角色 **全 APPROVED，无 REJECTED、无空格、无遗留 CONDITIONAL**。R1 阶段四角色的 CONDITIONAL 条件已在 P2 全部成文：产品的 7 项经人工终裁回写需求说明书；架构的 8 项落为 DEC-022..029 与 DEC-005/012/015/016/017 的修订作废；模块的 9 项落为 TASK-059..076 的粒度拆分与实施顺序（TASK-059 → TASK-060 → 其余）；测试的 7 项落为 TEST-061..078 与「既有测试处置」表（3 条作废、15 组反转/校准）。
 
 **P3 出口义务清单（实现前逐条清零）**：① `src/lib/tools/url-guard.ts` 与 `budget.ts` 不得 import `node:fs`（grep 守卫，并入 TEST-071 ⑫ / TEST-068）；② 对话核心不得 import 具体工具模块（grep 守卫，TEST-066 ⑤）；③ 无 subagent / sandbox / shell 类工具注册（grep 守卫，TEST-066 ⑥）；④ `package.json` `dependencies` 逐字不变；⑤ TASK-059 迁移框架必须先于 TASK-060 六处 schema 变更实施，且每条迁移 `up`/`down` 齐备（TEST-061 ②③）；⑥ REQ-F-025 ② 提示条覆盖经 `save_insight` 上屏的全部 HTML（TEST-070 ⑦）；⑦ 既有 TEST-001..060 全部重跑，其中 3 条作废项在 `test-results.json` 标 `superseded`、15 组反转项按新逻辑校准（TEST-037 表）。
+
+## 状态回写补正（2026-09-11）
+
+本 CR 于 2026-09-10 完成 R1 人工终裁与 P3/P4（TASK-059..076 DONE、TEST-061..078 PASS），但合并时漏了把状态回写到两份受控文档：`产品需求说明书.md` 中 REQ-F-029..041、REQ-NF-007..011 仍为「REVIEWING，R1 待四角色评审与人工终裁」，附录 B 重写各行与 REQ-F-021/022/027 的 SUPERSEDED 尾注仍写「R1 待终裁」，分期小表 A 行仍为「R1 待评审」；`模块任务开发说明书.md` 中 TASK-059..076 仍为 TODO。用户 2026-09-11 核查 A–D 四期实现情况时发现，指示「回写」。本次补正只改状态文字，不改任何需求 / 任务 / 测试内容；功能与测试证据（`test-results.json` TEST-061..078 PASS）在 2026-09-10 即已成立。
