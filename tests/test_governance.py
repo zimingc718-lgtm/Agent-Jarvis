@@ -520,6 +520,66 @@ class GovernanceCliTests(unittest.TestCase):
         self.assertIn("superseded", output)
         self.assertIn("TEST-022", output)
 
+    # CR-20260911-tool-availability: DEC-021 ① put the fast lane in CONTROLS.md but never
+    # taught it to `review`, so a fast-lane record was still blocked for a missing CP
+    # matrix. Eligibility must be COMPUTED from the door/detection columns, never taken
+    # from what the record calls itself.
+    def _fast_lane_project(self, root: Path, rows: str) -> None:
+        write_project(root, {})
+        (root / "project/06_changes/CR-20260911-probe.md").write_text(
+            "# CR-20260911-probe\n\n"
+            "- 级别: L2\n"
+            "- 评审模型: 快车道\n\n"
+            "## 变化点登记\n\n"
+            "| CP | 来源角色 | 一句话 | 关联 ID | 类型 | 门 | 发现方式 |\n"
+            "|---|---|---|---|---|---|---|\n" + rows,
+            encoding="utf-8",
+        )
+
+    def test_review_r2_skips_a_fast_lane_record_and_names_it(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._fast_lane_project(
+                root, "| CP-1 | 产品 | 小改 | REQ-F-001 | 小改 | 双向 | 机器：npm test |\n"
+            )
+
+            code, output = governance.run(["review", "r2", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("SKIPPED_FAST_LANE", output)
+        self.assertIn("CR-20260911-probe", output)
+
+    def test_review_r2_still_demands_a_matrix_when_any_door_is_one_way(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._fast_lane_project(
+                root,
+                "| CP-1 | 产品 | 小改 | REQ-F-001 | 小改 | 双向 | 机器：npm test |\n"
+                "| CP-2 | 架构 | 加一列 | REQ-F-002 | 新增 | 单向 | 机器：迁移测试 |\n",
+            )
+
+            code, output = governance.run(["review", "r2", "--root", directory])
+
+        # One one-way door and the whole record goes through the full gate, whatever it
+        # calls itself in 评审模型.
+        self.assertEqual(code, 1, output)
+        self.assertIn("REVIEW_R2", output)
+        self.assertNotIn("SKIPPED_FAST_LANE", output)
+
+    def test_review_r2_still_demands_a_matrix_when_detection_is_not_machine(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._fast_lane_project(
+                root,
+                "| CP-1 | 产品 | 小改 | REQ-F-001 | 小改 | 双向 | 机器：npm test |\n"
+                "| CP-2 | 产品 | 靠人看 | REQ-F-002 | 小改 | 双向 | 真实入口：手工点一遍 |\n",
+            )
+
+            code, output = governance.run(["review", "r2", "--root", directory])
+
+        self.assertEqual(code, 1, output)
+        self.assertNotIn("SKIPPED_FAST_LANE", output)
+
     def test_g3_rejects_a_supersede_that_names_no_cr(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -1226,19 +1286,26 @@ class IdReservationTests(unittest.TestCase):
         # records must not move any R1..R4 verdict.
         #
         # Originally asserted as the literal "8 change record(s)". That froze a count
-        # every later CR legitimately changes (CR-20260910-agent-tooling made it 9), so
-        # the literal was failing for a reason the invariant does not care about. What
-        # the invariant actually claims is that all four gates pass and agree on the
-        # same set — which is what is asserted now.
-        counts = set()
+        # every later CR legitimately changes, so it failed for a reason the invariant
+        # does not care about. The claim is simply that all four gates still pass.
+        #
+        # A count-agreement check was tried next and is also wrong: DEC-021 ①'s fast lane
+        # exempts a record from R2–R4 but never from R1, so R1 legitimately judges MORE
+        # records than the others. What holds is the direction, not the equality.
+        counts: dict[str, int] = {}
         for level in ("r1", "r2", "r3", "r4"):
             code, output = governance.run(["review", level, "--root", str(REPO_ROOT)])
             self.assertEqual(code, 0, output)
             match = re.search(r"(\d+) change record\(s\) satisfy", output)
             self.assertIsNotNone(match, output)
-            counts.add(int(match.group(1)))
-        self.assertEqual(len(counts), 1, f"R1..R4 disagree on how many records they judged: {counts}")
-        self.assertGreaterEqual(counts.pop(), 8)
+            counts[level] = int(match.group(1))
+        self.assertGreaterEqual(counts["r1"], 8)
+        for level in ("r2", "r3", "r4"):
+            self.assertLessEqual(
+                counts[level],
+                counts["r1"],
+                f"{level} judged more records than r1, which the fast lane cannot produce: {counts}",
+            )
 
 
 class KnownWarningTests(unittest.TestCase):

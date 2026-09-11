@@ -114,13 +114,27 @@ probe:    {"ok":true,"message":"搜索服务连接正常。"}
 | 命令 | 结果 |
 |---|---|
 | `npx tsc --noEmit` | 0 |
-| `npm test` | 见 §6 |
+| `npm test` | **36 files / 281 passed**（本 CR 前：35 files 通过 + 1 files 加载失败 / 277） |
 | `npm run test:ui-contract` | 50 passed · 0 failed |
 | `npm run test:smoke` | OK |
 | `npm run test:e2e` | 10 passed |
-| `npm run build:verify` | OK |
-| `python -m unittest tests.test_governance` | 69 passed |
+| `npm run build:verify` | Compiled successfully |
+| `python -m unittest tests.test_governance` | **72 passed**（+3 快车道守卫） |
+| `review r1\|r2\|r3\|r4` | PASS（R2–R4 报 `SKIPPED_FAST_LANE`） |
 
-## 6. 留待收口时填入的最终计数
+## 6. 治理工具变更（CP-4 的连带发现）
 
-（本节在 §5 的 `npm test` 与门禁结果确认后回填，不预填。）
+`docs/CONTROLS.md` 的分档判据写明：全部 CP 为双向门且各有机器兜底 → 走快车道，「不需要 CP 矩阵与四角色意见」。但 `review r2|r3|r4` **从未被教会这条规则**，仍对快车道记录索要 CP 矩阵 —— 这正是 DEC-021 ③「能机器化的规则不得只写进文档」要防的反面。
+
+补上时守住一条：**准入由机器从「门 / 发现方式」两列计算，不采信 CR 自称**。任一单向门、或任一 CP 的发现方式不是机器检查，整条记录照走完整 R2–R4，无论它在「评审模型」里写什么。跳过时如实列名（`SKIPPED_FAST_LANE`），不静默。R1 不在豁免范围内 —— 快车道省的是评审文书，不是人的同意。
+
+配 3 条回归守卫：
+- `test_review_r2_skips_a_fast_lane_record_and_names_it`
+- `test_review_r2_still_demands_a_matrix_when_any_door_is_one_way`
+- `test_review_r2_still_demands_a_matrix_when_detection_is_not_machine`
+
+**另修正我自己一小时前写下的一条断言**：`test_056_6` 原以硬编码 `"8 change record(s)"` 表达「ID 回填不改变任何 R1–R4 裁决」，我把它改成了「四门判定的记录数一致」。快车道使后者也不成立 —— R1 仍覆盖快车道记录而 R2–R4 不覆盖，R1 的计数**本就应该更大**。改为断言四门全过且 R2–R4 ≤ R1，即方向而非相等。
+
+## 7. 尚待用户复核的一项
+
+CP-4（`.gitattributes` + 全仓库行尾规范化）**不是用户要求的功能**，是交付 CP-1/2/3 时撞上的阻断项（不修则测试套件无法加载、基线每次合并必红）。它改变全仓库文件的字节，属基础设施变更，已在 CR 的「R1 人工终裁」里显式标注待复核；若用户不认可，可按 CR 的「回滚方式」单独撤销该项，不影响 CP-1/2/3。

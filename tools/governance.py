@@ -800,6 +800,29 @@ def check_review(root: Path, level: str, cr: str | None = None) -> list[str]:
                 + ", ".join(skipped)
             )
         return messages
+    # DEC-021 ①: a change whose every CP is a two-way door with a machine check behind
+    # it takes the fast lane — CONTROLS.md exempts it from the CP matrix and the
+    # four-role write-ups. That exemption was written in the document and never taught to
+    # this gate, which is the exact failure mode DEC-021 ③ exists to prevent, so it is
+    # enforced here rather than trusted.
+    #
+    # Eligibility is COMPUTED, never self-declared: one one-way door, or one CP whose
+    # detection route is `发现不了`, and the record goes through the full R2–R4 like any
+    # other. R1 still applies — the fast lane drops review paperwork, not human consent.
+    fast_lane: list[str] = []
+    if level in {"r2", "r3", "r4"}:
+        remaining: list[tuple[Path, list[dict[str, str]]]] = []
+        for path, cps in with_model:
+            doors = [entry.get("door", "") for entry in cps]
+            detects = [entry.get("detect", "") for entry in cps]
+            all_two_way = bool(doors) and all(door == "双向" for door in doors)
+            all_machine = all(detect.startswith("机器") for detect in detects)
+            if all_two_way and all_machine:
+                fast_lane.append(path.stem)
+            else:
+                remaining.append((path, cps))
+        with_model = remaining
+
     for path, cps in with_model:
         name = path.stem  # e.g. CR-20260909-corner-menu
         cr_text = read_text(path)
@@ -873,6 +896,12 @@ def check_review(root: Path, level: str, cr: str | None = None) -> list[str]:
         messages.append(
             f"OK REVIEW_{level.upper()}_SKIPPED_BY_LEVEL {len(skipped)} record(s) carry no CP chain by design: "
             + ", ".join(skipped)
+        )
+    if fast_lane:
+        # Named, never silent — the same rule the SKIPPED_BY_LEVEL line follows.
+        messages.append(
+            f"OK REVIEW_{level.upper()}_SKIPPED_FAST_LANE {len(fast_lane)} record(s) are all two-way doors with "
+            "machine detection (DEC-021 ①): " + ", ".join(fast_lane)
         )
     return messages
 
