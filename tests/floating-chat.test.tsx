@@ -12,6 +12,7 @@ import {
   type ChatStreamEvent,
   type ChatStreamRequest,
 } from "@/components/FloatingChat";
+import { KNOWLEDGE_CHANGED_EVENT } from "@/lib/ui-events";
 
 const neverProbe = () => new Promise<boolean>(() => {});
 const readyProbe = () => Promise.resolve(true);
@@ -519,9 +520,81 @@ describe("FloatingChat", () => {
       expect(notPrevented).toBe(false); // ← the P6 root cause: the browser used to take over
 
       await waitFor(() =>
-        expect(screen.getByText(/只能接收技能文件夹或 zip 压缩包/)).toBeInTheDocument()
+        expect(screen.getByText(/只能接收技能文件夹、zip 压缩包或文本笔记/)).toBeInTheDocument()
       );
       expect(screen.getByText(/notes\.pdf/)).toBeInTheDocument();
+    });
+
+    // CR-20260911-knowledge-base — TEST-088 ④⑤⑥: the chat-side consolidation entries.
+    it("REQ-F-046 ①: a dropped .md is posted to /api/knowledge as `file` and receipted", async () => {
+      const fetchMock = vi.fn(
+        async () => new Response(JSON.stringify({ ok: true, entry: { name: "周会", title: "周会纪要" } }), { status: 201 })
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      render(<FloatingChat hasEnabledProvider probeProviders={readyProbe} />);
+      const panel = screen.getByLabelText("Agent-Jarvis chat");
+
+      const notPrevented = fireEvent.drop(panel, { dataTransfer: dataTransferWith([{ file: new File(["# 周会纪要"], "周会.md") }]) });
+      expect(notPrevented).toBe(false);
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+      const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+      expect(url).toBe("/api/knowledge");
+      expect((init.body as FormData).get("file")).toBeInstanceOf(File);
+      await waitFor(() => expect(screen.getByText("已存入知识库：周会纪要")).toBeInTheDocument());
+    });
+
+    it("REQ-F-046 ②: every finished reply carries a named 存入知识库 button that posts the reply text", async () => {
+      const fetchMock = vi.fn(
+        async () => new Response(JSON.stringify({ ok: true, entry: { name: "x", title: "部署端口是 8443" } }), { status: 201 })
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      const { container } = render(
+        <FloatingChat
+          hasEnabledProvider
+          probeProviders={readyProbe}
+          initialConversationId="c1"
+          initialMessages={[
+            { id: "u1", role: "user", content: "端口？", status: "complete" },
+            { id: "a1", role: "assistant", content: "部署端口是 8443", status: "complete" },
+          ]}
+          onStream={async function* () {}}
+        />
+      );
+      const button = screen.getByRole("button", { name: "把这条回复存入知识库" });
+      expect(button.classList.contains("floating-chat__save-knowledge")).toBe(true);
+      // Not on user bubbles.
+      expect(container.querySelectorAll(".floating-chat__save-knowledge")).toHaveLength(1);
+
+      fireEvent.click(button);
+      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+      const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+      expect(url).toBe("/api/knowledge");
+      expect(JSON.parse(String(init.body))).toEqual({ content: "部署端口是 8443", source: "conversation" });
+      await waitFor(() => expect(screen.getByText("已存入知识库：部署端口是 8443")).toBeInTheDocument());
+    });
+
+    it("REQ-F-046 ③: a knowledge_pending event is announced and refreshes the ☰ list", async () => {
+      const changed = vi.fn();
+      window.addEventListener(KNOWLEDGE_CHANGED_EVENT, changed);
+      render(
+        <FloatingChat
+          hasEnabledProvider
+          probeProviders={readyProbe}
+          onStream={async function* () {
+            yield { type: "start", conversationId: "c1", messageId: "m" };
+            yield { type: "knowledge_pending", name: "用户偏好", title: "用户偏好" };
+            yield { type: "delta", text: "已提议。" };
+            yield { type: "done", messageId: "m" };
+          }}
+        />
+      );
+      fireEvent.change(screen.getByPlaceholderText("Ask Agent-Jarvis"), { target: { value: "记住我偏好中文" } });
+      fireEvent.click(screen.getByRole("button", { name: "发送" }));
+      await waitFor(() => expect(screen.getByText(/模型提议了知识条目「用户偏好」/)).toBeInTheDocument());
+      expect(screen.getByText(/待采纳区/)).toBeInTheDocument();
+      expect(changed).toHaveBeenCalled();
+      window.removeEventListener(KNOWLEDGE_CHANGED_EVENT, changed);
     });
 
     it("② dropping a zip posts it to /api/skills as `archive`", async () => {
@@ -586,9 +659,13 @@ describe("FloatingChat", () => {
       expect(screen.getByText(/logo\.png（二进制文件）/)).toBeInTheDocument();
     });
 
-    it("classifyDrop distinguishes folder / zip / neither", () => {
+    it("classifyDrop distinguishes folder / zip / note / neither", () => {
       expect(classifyDrop(dataTransferWith([{ dir: "skill" }]))).toMatchObject({ kind: "folder", name: "skill" });
       expect(classifyDrop(dataTransferWith([{ file: new File(["z"], "a.zip") }]))).toMatchObject({ kind: "archive" });
+      // CR-20260911-knowledge-base: a single text file is a knowledge note (REQ-F-046 ①).
+      expect(classifyDrop(dataTransferWith([{ file: new File(["n"], "笔记.md") }]))).toMatchObject({ kind: "note" });
+      expect(classifyDrop(dataTransferWith([{ file: new File(["n"], "notes.TXT") }]))).toMatchObject({ kind: "note" });
+      expect(classifyDrop(dataTransferWith([{ file: new File(["n"], "a.md") }, { file: new File(["n"], "b.md") }]))).toMatchObject({ kind: "none" });
       expect(classifyDrop(dataTransferWith([{ file: new File(["z"], "a.pdf") }]))).toMatchObject({ kind: "none" });
       expect(classifyDrop(dataTransferWith([{ dir: "a" }, { dir: "b" }]))).toMatchObject({ kind: "none" });
     });

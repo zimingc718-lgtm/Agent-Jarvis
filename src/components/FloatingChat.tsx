@@ -1,12 +1,13 @@
 "use client";
 
 import { ChangeEvent, DragEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
-import { DISPLAY_CHANGED_EVENT, SKILLS_CHANGED_EVENT, USAGE_CHANGED_EVENT } from "@/lib/ui-events";
+import { DISPLAY_CHANGED_EVENT, KNOWLEDGE_CHANGED_EVENT, SKILLS_CHANGED_EVENT, USAGE_CHANGED_EVENT } from "@/lib/ui-events";
 import type { ChatDelta, Source } from "@/lib/types";
 import {
   ChevronDown,
   FileArchive,
   FolderUp,
+  BookmarkPlus,
   MessageSquarePlus,
   SendHorizontal,
   Square,
@@ -430,6 +431,8 @@ export function FloatingChat({
     markSessionEnded(true);
   }
 
+  const [savingKnowledgeId, setSavingKnowledgeId] = useState<string | null>(null);
+
   function appendSystemMessage(content: string) {
     setMessages((current) => [...current, { id: crypto.randomUUID(), role: "system", content }]);
   }
@@ -511,8 +514,62 @@ export function FloatingChat({
       );
     } else if (dropped.kind === "archive") {
       void submitSkillUpload({ kind: "archive", archive: dropped.file });
+    } else if (dropped.kind === "note") {
+      void submitKnowledgeFile(dropped.file);
     } else {
-      appendSystemMessage(`只能接收技能文件夹或 zip 压缩包，本次未处理：${dropped.reason}`);
+      appendSystemMessage(`只能接收技能文件夹、zip 压缩包或文本笔记（.md / .txt），本次未处理：${dropped.reason}`);
+    }
+  }
+
+  /**
+   * REQ-F-046 ①: a dropped text file becomes a knowledge entry. Same shape as the skill
+   * intake — a pending system row that is replaced by the receipt or the refusal, so the
+   * outcome is never silent.
+   */
+  async function submitKnowledgeFile(file: File) {
+    applyCollapsed(false);
+    const pendingId = crypto.randomUUID();
+    setMessages((current) => [...current, { id: pendingId, role: "system", content: `正在存入知识库「${file.name}」…` }]);
+    const replace = (content: string) =>
+      setMessages((current) => current.map((item) => (item.id === pendingId ? { ...item, content } : item)));
+    try {
+      const form = new FormData();
+      form.set("file", file, file.name);
+      const response = await fetch("/api/knowledge", { method: "POST", body: form });
+      const data = (await response.json().catch(() => ({}))) as { entry?: { title: string }; message?: string };
+      if (!response.ok || !data.entry) {
+        replace(data.message ?? "存入知识库失败。");
+        return;
+      }
+      replace(`已存入知识库：${data.entry.title}`);
+      window.dispatchEvent(new Event(KNOWLEDGE_CHANGED_EVENT));
+    } catch {
+      replace("存入知识库失败。");
+    }
+  }
+
+  /** REQ-F-046 ②: one click keeps a reply — the user's own act, so it enters the base directly. */
+  async function saveReplyToKnowledge(message: FloatingMessage) {
+    const content = message.content.trim();
+    if (!content) {
+      return;
+    }
+    setSavingKnowledgeId(message.id);
+    try {
+      const response = await fetch("/api/knowledge", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ content, source: "conversation" }),
+      });
+      const data = (await response.json().catch(() => ({}))) as { entry?: { title: string }; message?: string };
+      appendSystemMessage(response.ok && data.entry ? `已存入知识库：${data.entry.title}` : (data.message ?? "存入知识库失败。"));
+      if (response.ok) {
+        window.dispatchEvent(new Event(KNOWLEDGE_CHANGED_EVENT));
+      }
+    } catch {
+      appendSystemMessage("存入知识库失败。");
+    } finally {
+      setSavingKnowledgeId(null);
     }
   }
 
@@ -649,6 +706,11 @@ export function FloatingChat({
           appendSystemMessage(chunk.reason);
         } else if (chunk.type === "notice") {
           appendSystemMessage(chunk.text);
+        } else if (chunk.type === "knowledge_pending") {
+          // REQ-F-046 ③: a proposal is news the user must act on, so it is said in the
+          // transcript AND the ☰ list refreshes to show the 采纳 / 忽略 controls.
+          appendSystemMessage(`模型提议了知识条目「${chunk.title}」，已放入待采纳区——在 ☰ 菜单「知识库」中采纳或忽略。`);
+          window.dispatchEvent(new Event(KNOWLEDGE_CHANGED_EVENT));
         } else if (chunk.type === "compacted") {
           // REQ-F-043: the boundary shows up in the live transcript at the same place a
           // refresh would rebuild it — silent (no bubble), but not traceless.
@@ -842,6 +904,18 @@ export function FloatingChat({
                   ) : (
                     message.content
                   )}
+                  {message.role === "assistant" && message.content && message.status !== "error" && !isStreaming ? (
+                    <button
+                      type="button"
+                      className="floating-chat__save-knowledge mt-1 inline-flex items-center gap-1 rounded px-1 text-xs text-muted-foreground underline underline-offset-2 disabled:opacity-50"
+                      aria-label="把这条回复存入知识库"
+                      disabled={savingKnowledgeId === message.id}
+                      onClick={() => void saveReplyToKnowledge(message)}
+                    >
+                      <BookmarkPlus aria-hidden="true" className="size-3" />
+                      存入知识库
+                    </button>
+                  ) : null}
                   {message.status === "error" ? (
                     <span className="floating-chat__flag text-xs opacity-80"> （生成失败）</span>
                   ) : null}
@@ -941,7 +1015,11 @@ type SkillUploadInput =
 type DropClassification =
   | { kind: "folder"; name: string; entry: FileSystemDirectoryEntry }
   | { kind: "archive"; file: File }
+  /** A single .md / .txt file: a knowledge note, not a skill (REQ-F-046 ①). */
+  | { kind: "note"; file: File }
   | { kind: "none"; reason: string };
+
+const NOTE_EXTENSIONS = /\.(md|markdown|txt)$/i;
 
 const EXCLUDED_REASON_TEXT: Record<string, string> = {
   binary: "二进制文件",
@@ -989,16 +1067,19 @@ export function classifyDrop(dataTransfer: DataTransfer): DropClassification {
   if (directories.length === 0 && files.length === 1 && /\.zip$/i.test(files[0].name)) {
     return { kind: "archive", file: files[0] };
   }
+  if (directories.length === 0 && files.length === 1 && NOTE_EXTENSIONS.test(files[0].name)) {
+    return { kind: "note", file: files[0] };
+  }
   if (directories.length > 1) {
     return { kind: "none", reason: "一次只能拖入一个技能文件夹" };
   }
   if (files.length > 1) {
-    return { kind: "none", reason: "一次只能拖入一个 zip 压缩包" };
+    return { kind: "none", reason: "一次只能拖入一个 zip 压缩包或一个文本笔记" };
   }
   if (files.length === 1) {
-    return { kind: "none", reason: `「${files[0].name}」不是 zip 压缩包` };
+    return { kind: "none", reason: `「${files[0].name}」不是 zip 压缩包，也不是 .md / .txt 文本笔记` };
   }
-  return { kind: "none", reason: "没有识别到文件夹或 zip 压缩包" };
+  return { kind: "none", reason: "没有识别到文件夹、zip 压缩包或文本笔记" };
 }
 
 async function collectFolderFiles(root: FileSystemDirectoryEntry): Promise<DroppedFile[]> {

@@ -25,6 +25,12 @@ export const SKILLS_CHANGED_EVENT = "jarvis:skills-changed";
 export const USAGE_CHANGED_EVENT = "jarvis:usage-changed";
 
 /**
+ * Tells the ☰ menu's KnowledgeList to refetch — after a drop, a 「存入知识库」 click, or a
+ * `knowledge_pending` event from the stream (CR-20260911-knowledge-base, REQ-F-044 ④).
+ */
+export const KNOWLEDGE_CHANGED_EVENT = "jarvis:knowledge-changed";
+
+/**
  * What `GET /api/display` returns and what `<DisplayScreen>` renders (DEC-017).
  * `kind` is an extension point — the client falls back to the title view for
  * anything it does not recognise.

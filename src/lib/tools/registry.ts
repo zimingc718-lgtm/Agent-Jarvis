@@ -1,4 +1,5 @@
 import type { ToolSpec } from "../adapters";
+import type { ChatDelta } from "../types";
 import { MAX_DESCRIPTION_CHARS } from "./budget";
 
 /**
@@ -19,6 +20,8 @@ export type ToolContext = {
   /** Whether outbound search/fetch is switched on and configured (REQ-F-038 ④). */
   webEnabled: boolean;
   searchConfigured: boolean;
+  /** Entries in the local knowledge base; zero means the read tools do not register (REQ-F-045 ③). */
+  knowledgeCount: number;
 };
 
 export type ToolResult = {
@@ -29,6 +32,12 @@ export type ToolResult = {
   summary: string;
   /** URLs this call surfaced, feeding the source allow-list (REQ-F-039 ②). */
   sources?: Array<{ url: string; title: string }>;
+  /**
+   * Client-facing events the loop emits right after this call's `tool_result`
+   * (CR-20260911-knowledge-base: `knowledge_pending`). A side channel like `sources`,
+   * so a tool can tell the UI something without the loop knowing which tool it was.
+   */
+  events?: ChatDelta[];
 };
 
 export type ToolDescriptor = {

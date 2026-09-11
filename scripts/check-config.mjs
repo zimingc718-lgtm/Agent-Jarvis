@@ -51,6 +51,7 @@ const REQUIRED = [
 
 const OPTIONAL = [
   { name: "JARVIS_DB_PATH", why: "SQLite 存储路径，默认 .data/agent-jarvis.sqlite。" },
+  { name: "JARVIS_KNOWLEDGE_PATH", why: "本地知识库目录（Markdown 文件），默认 .data/knowledge。" },
 ];
 
 function mask(value) {

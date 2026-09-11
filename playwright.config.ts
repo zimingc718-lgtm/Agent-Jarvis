@@ -35,6 +35,7 @@ export default defineConfig({
       GOOGLE_CLIENT_SECRET: "e2e-client-secret",
       JARVIS_DB_PATH: process.env.JARVIS_E2E_DB_PATH ?? "./.data/e2e.sqlite",
       JARVIS_SKILLS_PATH: process.env.JARVIS_E2E_SKILLS_PATH ?? "./.data/e2e-skills",
+      JARVIS_KNOWLEDGE_PATH: process.env.JARVIS_E2E_KNOWLEDGE_PATH ?? "./.data/e2e-knowledge",
       JARVIS_E2E_MODEL_PORT: "3321"
     }
   }

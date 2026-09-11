@@ -63,6 +63,7 @@ try {
       JARVIS_TEST_USER_ID: "smoke-user",
       JARVIS_SECRET_KEY: "0123456789abcdef0123456789abcdef",
       JARVIS_DB_PATH: dbPath,
+      JARVIS_KNOWLEDGE_PATH: join(tempDir, "knowledge"),
       NEXTAUTH_SECRET: "0123456789abcdef0123456789abcdef",
       NEXTAUTH_URL: `http://127.0.0.1:${appPort}`,
       GOOGLE_CLIENT_ID: "smoke-google-client-id.apps.googleusercontent.com",

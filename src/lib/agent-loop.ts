@@ -14,7 +14,7 @@ import { normalizeArgs, parseToolArguments, summarizeArgs, type ToolContext, typ
  */
 
 /** REQ-F-029 ①. Each `tool_call` counts one step. */
-export const MAX_TOOL_STEPS = 10;
+export const MAX_TOOL_STEPS = 100;
 /** REQ-F-029 ④. Same tool, same normalised arguments, twice in a row. */
 export const REPEAT_FAILURE_LIMIT = 2;
 /** How long a single tool may run before it is abandoned (P2 value). */
@@ -201,6 +201,9 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
             }
           }
           input.emit({ type: "tool_result", callId: call.id, ok: result.ok, summary: result.summary });
+          for (const event of result.events ?? []) {
+            input.emit(event);
+          }
           return { call, content: result.content, ok: result.ok };
         } catch (error) {
           failureStreak.set(key, (failureStreak.get(key) ?? 0) + 1);

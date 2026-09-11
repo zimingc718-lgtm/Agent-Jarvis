@@ -15,7 +15,7 @@ const context: ToolContext = {
   conversationId: "c1",
   skillCount: 1,
   webEnabled: true,
-  searchConfigured: true,
+  searchConfigured: true, knowledgeCount: 0
 };
 
 function fakeTool(overrides: Partial<ToolDescriptor> = {}): ToolDescriptor {
@@ -76,7 +76,7 @@ describe("ToolRegistry (REQ-NF-010)", () => {
     expect(registry.specsFor(context).map((spec) => spec.function.name)).toEqual(["skill_tool", "search_tool"]);
     expect(registry.specsFor({ ...context, skillCount: 0 }).map((s) => s.function.name)).toEqual(["search_tool"]);
     expect(registry.specsFor({ ...context, webEnabled: false }).map((s) => s.function.name)).toEqual(["skill_tool"]);
-    expect(registry.specsFor({ ...context, searchConfigured: false }).map((s) => s.function.name)).toEqual(["skill_tool"]);
+    expect(registry.specsFor({ ...context, searchConfigured: false, knowledgeCount: 0 }).map((s) => s.function.name)).toEqual(["skill_tool"]);
     // Nothing available → no tool catalogue text at all.
     expect(registry.catalogueFor({ ...context, skillCount: 0, webEnabled: false })).toBe("");
   });
@@ -87,6 +87,45 @@ describe("ToolRegistry (REQ-NF-010)", () => {
 
   it("normalizeArgs 与键序无关", () => {
     expect(normalizeArgs({ a: 1, b: { c: 2, d: 3 } })).toBe(normalizeArgs({ b: { d: 3, c: 2 }, a: 1 }));
+  });
+});
+
+describe("tool events (CR-20260911-knowledge-base)", () => {
+  it("a tool's `events` are emitted right after its tool_result, in order", async () => {
+    const registry = new ToolRegistry().register(
+      fakeTool({
+        name: "propose",
+        async execute() {
+          return {
+            ok: true,
+            content: "proposed",
+            summary: "提议",
+            events: [{ type: "knowledge_pending", name: "n", title: "t" }],
+          };
+        },
+      })
+    );
+    const h = harness();
+    let round = 0;
+    await runToolLoop({
+      registry,
+      toolContext: context,
+      messages: [{ role: "user", content: "hi" }],
+      emit: (delta) => h.emitted.push(delta),
+      persist: (message) => h.persisted.push(message),
+      providerTurn: async function* () {
+        round += 1;
+        if (round === 1) {
+          yield callDelta("t1", "propose");
+          return;
+        }
+        yield { type: "delta", text: "done" };
+      },
+    });
+    const types = h.emitted.map((event) => event.type);
+    const at = types.indexOf("tool_result");
+    expect(at).toBeGreaterThanOrEqual(0);
+    expect(types[at + 1]).toBe("knowledge_pending");
   });
 });
 
