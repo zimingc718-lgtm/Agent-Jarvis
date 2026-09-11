@@ -77,7 +77,19 @@
 | ⑥ | REQ-F-025 ② 提示条覆盖经 `save_insight` 上屏的 HTML | ✅ `DisplayScreen` 对 `kind==="insight"` 一律渲染 `.display-screen__notice`，与来源无关；e2e 断言 |
 | ⑦ | 既有 TEST 全部重跑 | ✅ 277 全绿；3 条作废、15 组反转/校准已登记 |
 
-## 7. 已登记的 known limitation（如实记录，未伪装已防护）
+## 7. P4 收口时发现的流程缺陷（如实记录，供后续流程 CR 处置）
+
+**现象**：严格按 `docs/WORKFLOW.md`「合并前检查清单」执行——先 `git merge main` 进 CR 分支（Already up to date）→ `npm run verify:all`（`STAGE_P3_PASS`，15 门全过）→ `snapshot` → 合回 main——合并**之后**的 `verify` 却对 50 个文件报 `BASELINE_CHANGED`。
+
+**根因**：`core.autocrlf=true` 且仓库**没有 `.gitattributes`**。合并时的 checkout 把工作区文件的 LF 改写成 CRLF，文件字节因此改变；`git status` 是干净的（git 认为内容未变），但 `baseline.json` 按**字节哈希**比对，于是全部判为已变更。整个流程中反复出现的 `warning: LF will be replaced by CRLF` 就是它的前兆。
+
+**这不是本 CR 的实现缺陷，是收口顺序的一个前提不成立**：WORKFLOW 的清单隐含假设「snapshot 之后的合并不改写文件字节」，该假设在 Windows + `autocrlf=true` 下为假。而 WORKFLOW 同时规定「`snapshot` 全流程只跑一次」，两条叠加会让 Windows 上的每个 CR 都在合并后撞上一次红。
+
+**本次处置**：在 main 上补跑一次 `snapshot`（seq 42 → 43，哈希链在单分支上顺序追加，`prev_hash` 衔接正确，`verify` PASS）。这偏离了「只跑一次」的字面规定，故显式记录而非静默执行。该规定的本意是防止**两条分支各自快照导致链分叉**（`seq`/`prev_hash` 撞号且无正确手工修法），顺序追加不触发该风险。
+
+**建议的根治方向**（留给后续流程 CR，不在本 CR 范围内）：① 加 `.gitattributes` 固定文本文件行尾，使字节跨 checkout 稳定；或 ② 让 `snapshot` 按规范化行尾计算哈希；或 ③ 把清单顺序改为「合回 main 后再 snapshot」。三者选一即可闭合，但都改动治理基线本身，应走独立 CR。
+
+## 8. 已登记的 known limitation（如实记录，未伪装已防护）
 
 1. **DNS 重绑定**（TEST-071 ⑪）：校验与连接非原子，零依赖 `fetch` 下无法消除。每跳重校验**收窄但未关闭**该窗口。缓解路径（`node:https` 自定义 `lookup`）留未来 CR。
 2. **`skill-html-unsandboxed-web-source`**（TEST-070 ⑧）：用户 2026-09-10 终裁 3 明示接受。测试断言 HTML **原样存储、无过滤**，使风险保持可见。
