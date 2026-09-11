@@ -1405,6 +1405,31 @@ const CONTRACT = [
           return PASS("step rows are compact, expandable and expose state non-visually");
         },
       },
+      {
+        id: "LB-11",
+        ref: "REQ-F-043 (CR-20260911-context-compaction)",
+        req: "REQ-F-043",
+        title: "The compaction boundary is a marker, not a message",
+        guidance:
+          "The user asked for compaction to be silent, so the boundary must not render as a chat bubble — a thin divider with a small label keeps reading uninterrupted. It still has to be openable: a model that quietly forgets things the user cannot inspect is worse than one visible line.",
+        check(ctx) {
+          const src = ctx.files["FloatingChat.tsx"] ?? "";
+          if (!/floating-chat__compaction\b/.test(src)) {
+            return FAIL("no compaction boundary marker rendered");
+          }
+          // It must be its own branch, not folded into the message bubble rendering.
+          if (!/role === "summary"/.test(src)) {
+            return FAIL("summary rows are not rendered as their own kind of row");
+          }
+          if (!/floating-chat__compaction-toggle/.test(src)) {
+            return FAIL("compaction summary is not expandable");
+          }
+          if (!/aria-expanded=\{[^}]*\}/.test(src) || !/aria-label=\{[^}]*摘要/.test(src)) {
+            return FAIL("compaction toggle lacks aria-expanded or an accessible name");
+          }
+          return PASS("compaction boundary is a non-bubble marker with an expandable summary");
+        },
+      },
     ],
   },
 

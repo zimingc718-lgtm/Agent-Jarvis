@@ -85,6 +85,21 @@ describe("buildTranscript (REQ-F-035 ④)", () => {
     ]);
   });
 
+  // REQ-F-043: a compaction boundary is a marker, not conversation content.
+  it("压缩摘要行还原为 summary 标记，不是消息气泡", () => {
+    const rows = buildTranscript([
+      record({ id: "m1", role: "user", content: "早前问题" }),
+      record({ id: "s1", role: "system", content: "早前讨论已压缩：选了方案 B。", status: "summary", seq: 1 }),
+      record({ id: "m2", role: "user", content: "后续问题", seq: 2 }),
+    ]);
+
+    expect(rows.map((row) => row.role)).toEqual(["user", "summary", "user"]);
+    expect(rows[1].content).toContain("方案 B");
+    // The original message before the boundary is still part of the visible history —
+    // compaction changes what the MODEL sees, not what the user can scroll back to.
+    expect(rows[0].content).toBe("早前问题");
+  });
+
   it("助手行的来源列表被保留", () => {
     const rows = buildTranscript([
       record({

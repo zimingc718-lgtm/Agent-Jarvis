@@ -40,8 +40,11 @@ export type SourceRecord = { url: string; title: string };
 
 export type MessageRecord = {
   id: string;
-  /** `tool` rows carry a tool result and always have `toolCallId` (DEC-024). */
-  role: "user" | "assistant" | "tool";
+  /**
+   * `tool` rows carry a tool result and always have `toolCallId` (DEC-024).
+   * `system` rows with `status: "summary"` are compaction summaries (DEC-030 ①).
+   */
+  role: "user" | "assistant" | "tool" | "system";
   content: string;
   status: string;
   createdAt: string;
@@ -57,7 +60,8 @@ export type MessageRecord = {
 
 export type AddMessageInput = {
   conversationId: string;
-  role: "user" | "assistant" | "tool";
+  /** `system` + `status: "summary"` carries a compaction summary (DEC-030 ①). */
+  role: "user" | "assistant" | "tool" | "system";
   content: string;
   status: string;
   toolCalls?: ToolCallRecord[] | null;
@@ -147,6 +151,14 @@ export type Store = {
   addMessage(conversationId: string, role: "user" | "assistant", content: string, status: string): string;
   /** Full row, including tool round-trips and cited sources (DEC-024). */
   appendMessage(input: AddMessageInput): string;
+  /**
+   * Insert a row so it replays immediately after `afterMessageId` (DEC-030 ①). A
+   * compaction summary's position IS the boundary it covers, so it cannot simply be
+   * appended at the end — that would put the still-verbatim recent turns *before* it and
+   * drop them from the next replay. Later rows are renumbered; nothing else changes.
+   * No schema change: same columns, same ordering rule (`created_at`, `seq`).
+   */
+  insertMessageAfter(afterMessageId: string, input: AddMessageInput): string;
   /** Accumulate one model call's usage onto the conversation (REQ-F-037 ②). */
   addUsage(conversationId: string, usage: UsageTotals): void;
   getUsage(conversationId: string): UsageTotals;
@@ -512,6 +524,49 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
         input.sources ? JSON.stringify(input.sources) : null
       );
       db.prepare("UPDATE conversations SET updated_at = ? WHERE id = ?").run(now, input.conversationId);
+      return id;
+    },
+
+    insertMessageAfter(afterMessageId, input) {
+      const anchor = db
+        .prepare("SELECT created_at AS createdAt, seq FROM messages WHERE id = ? AND conversation_id = ?")
+        .get(afterMessageId, input.conversationId) as { createdAt: string; seq: number | null } | undefined;
+      if (!anchor) {
+        throw new Error(`Anchor message ${afterMessageId} not found in conversation ${input.conversationId}.`);
+      }
+      const anchorSeq = anchor.seq ?? 0;
+      const id = randomUUID();
+      const now = new Date().toISOString();
+      db.exec("BEGIN");
+      try {
+        // Make room right behind the anchor. Rows in a later millisecond keep their order
+        // by `created_at` anyway; rows in the SAME millisecond (a tool round, or a test
+        // seeding turns back-to-back) rely on `seq`, so those are the ones that must move.
+        db.prepare(
+          `UPDATE messages SET seq = seq + 1
+            WHERE conversation_id = ? AND (created_at > ? OR (created_at = ? AND seq > ?))`
+        ).run(input.conversationId, anchor.createdAt, anchor.createdAt, anchorSeq);
+        db.prepare(
+          `INSERT INTO messages (id, conversation_id, role, content, status, created_at, tool_calls, tool_call_id, seq, sources)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).run(
+          id,
+          input.conversationId,
+          input.role,
+          input.content,
+          input.status,
+          anchor.createdAt,
+          input.toolCalls ? JSON.stringify(input.toolCalls) : null,
+          input.toolCallId ?? null,
+          anchorSeq + 1,
+          input.sources ? JSON.stringify(input.sources) : null
+        );
+        db.prepare("UPDATE conversations SET updated_at = ? WHERE id = ?").run(now, input.conversationId);
+        db.exec("COMMIT");
+      } catch (error) {
+        db.exec("ROLLBACK");
+        throw error;
+      }
       return id;
     },
 

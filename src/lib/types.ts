@@ -71,7 +71,11 @@ export type ChatDelta =
   | { type: "tools-unavailable"; reason: string }
   // REQ-F-023 ③: a plain informational line in the transcript — "no insight this turn"
   // and similar. Keeps such messages from being silently dropped.
-  | { type: "notice"; text: string };
+  | { type: "notice"; text: string }
+  // REQ-F-043 (CR-20260911-context-compaction): this send folded earlier turns into a
+  // summary. Sent before the reply so the boundary marker appears where a refresh
+  // would rebuild it — after `afterMessageId`, ahead of the `keptTurns` verbatim turns.
+  | { type: "compacted"; summary: string; afterMessageId: string | null; keptTurns: number };
 
 export type ChatMessage = {
   role: "system" | "user" | "assistant" | "tool";

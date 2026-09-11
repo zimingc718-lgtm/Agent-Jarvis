@@ -33,7 +33,8 @@
       "status": "P1-P4 complete",
       "detail": "P6 defect + zip intake. New MOD-ZIP (src/lib/zip.ts, pure, bounded, zero-dependency: hand-written EOCD/Central Directory + zlib.inflateRawSync, DEC-018/REQ-NF-005). POST /api/skills gains an `archive` branch and an `excluded` receipt; SKILL_TEXT_EXTENSIONS 11 -> 16. FloatingChat: three intake paths collapse into one submitSkillUpload, handleDrop preventDefaults on its first line (root-cause fix), two hidden <input>s plus two real buttons. New SkillList in the ☰ menu + {type:'skill'} SSE tail event + display-events.ts renamed ui-events.ts. TASK-040..043 DONE; TEST-043..046 PASS; TEST-034..042 regression green."
     },
-    "project/06_changes/CR-20260910-agent-tooling.md"
+    "project/06_changes/CR-20260910-agent-tooling.md",
+    "project/06_changes/CR-20260911-context-compaction.md"
   ],
   "tests": [
     {
@@ -603,6 +604,46 @@
       "real_entry": true,
       "date": "2026-09-10",
       "notes": "CR-20260910-agent-tooling；真实入口：工具循环端到端、步骤流可见、show_home 经工具、刷新重建、未产出洞察的告知。smoke OK，e2e 10 PASS。"
+    },
+    {
+      "id": "TEST-079",
+      "result": "PASS",
+      "command": "npm test -- compaction && npm test -- budget",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-context-compaction；基准用 EV §1 真实形状（109/78/28/18/10 条）：长会话净省显著、短会话 shouldCompact=false；未达预算阈值不论轮数都不压；三级顺序收窄→压缩→报错；一次发送最多压一次；报错文案区分「已压缩」/「压缩未成功」。"
+    },
+    {
+      "id": "TEST-080",
+      "result": "PASS",
+      "command": "npm test -- compaction",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-context-compaction；stub fetch 断言摘要请求走同 Provider、本轮解析出的同一模型、stream:false、max_tokens=SUMMARY_MAX_TOKENS；增量压缩输入含上一份摘要；fail-open 三种注入（抛错/空串/本就超预算）均不成为新失败点且不落库；生成 token 计入累计。语义准确性不在覆盖范围（CP-2 人工发现项）。"
+    },
+    {
+      "id": "TEST-081",
+      "result": "PASS",
+      "command": "npm test -- compaction && npm test -- transcript",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-context-compaction；回放 = 最后一条摘要 + 其后原文；摘要行经 insertMessageAfter 落在被覆盖区间末尾之后（初版追加库尾会丢掉保留的 K 轮，被本用例发现并修正）；同毫秒相邻行顺序由 seq 保证；原始行仍在库；旧 REPLAYABLE_STATUSES 过滤掉摘要行；摘要以 system 角色外发。"
+    },
+    {
+      "id": "TEST-082",
+      "result": "PASS",
+      "command": "npm run test:floating-chat && npm run test:ui-contract",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-context-compaction；标记不是气泡（无 floating-chat__message 类）、默认折叠、真实 <button> + aria-expanded + 可访问名、展开显示摘要；compacted 事件即时在锚点行之后插标记、锚点缺失按保留轮数回退；ui-contract LB-11 通过（51/0）。"
+    },
+    {
+      "id": "TEST-083",
+      "result": "PASS",
+      "command": "npm run test:e2e",
+      "real_entry": true,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-context-compaction；真实入口：4 个长轮次经 HTTP 灌入、第 5 轮从真实浏览器发出；模型收到的消息数 11→8（压缩确实改变发送内容）、对话照常完成；标记可见可展开、刷新后重建于同一位置；GET messages 返回摘要行且每行仍只有 id/role/content/status 四个旧字段。e2e 11 PASS。"
     }
   ],
   "executed_commands": [
@@ -696,7 +737,32 @@
     "npm run test:ui-contract",
     "npm run test:smoke",
     "npm run test:e2e",
-    "npm run build:verify"
+    "npm run build:verify",
+    {
+      "command": "npx tsc --noEmit",
+      "result": "PASS",
+      "summary": "CR-20260911-context-compaction: no type errors"
+    },
+    {
+      "command": "npm test",
+      "result": "PASS",
+      "summary": "CR-20260911-context-compaction: 37 test files, 303 tests passed"
+    },
+    {
+      "command": "npm run test:ui-contract",
+      "result": "PASS",
+      "summary": "CR-20260911-context-compaction: static tier 51/51 incl. new LB-11"
+    },
+    {
+      "command": "npm run test:e2e",
+      "result": "PASS",
+      "summary": "CR-20260911-context-compaction: 11 Chromium workflows incl. long-conversation-compaction (TEST-083)"
+    },
+    {
+      "command": "python tools/governance.py check-doors && review r1 && check-ids && check-changes",
+      "result": "PASS",
+      "summary": "CR-20260911-context-compaction: 9 CP rows declare door + detection route; R1 gate satisfied; 109 ids no overlap"
+    }
   ],
   "known_warnings": [
     {

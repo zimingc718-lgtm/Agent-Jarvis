@@ -15,7 +15,8 @@ import type { Source } from "./types";
 
 export type TranscriptRow = {
   id: string;
-  role: "user" | "assistant" | "system" | "step";
+  /** `summary` marks a compaction boundary, not conversation content (REQ-F-043). */
+  role: "user" | "assistant" | "system" | "step" | "summary";
   content: string;
   status?: string;
   callId?: string;
@@ -46,6 +47,12 @@ export function buildTranscript(records: MessageRecord[]): TranscriptRow[] {
   for (const record of records) {
     if (record.role === "tool") {
       continue; // surfaced as a step row alongside its request
+    }
+    // REQ-F-043: a compaction boundary is a marker, not a message. It renders as a thin
+    // divider the reader can open, never as a bubble in the conversation flow.
+    if (record.status === "summary") {
+      rows.push({ id: record.id, role: "summary", content: record.content, status: record.status });
+      continue;
     }
     if (record.role === "assistant" && record.toolCalls?.length) {
       if (record.content.trim()) {

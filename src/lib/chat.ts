@@ -3,7 +3,9 @@ import { repairDanglingToolCalls, runToolLoop } from "./agent-loop";
 import { estimateMessagesTokens, estimateTokens, sendProviderStream, type StreamProviderConfig, type ToolSpec } from "./adapters";
 import { resolveDisplayView } from "./display";
 import { ProviderSecretError, type SourceRecord, type Store } from "./store";
+import { makeCompleter, type Completer } from "./skills";
 import {
+  applySummary,
   assembleContext,
   budgetTokens,
   BUDGET_SHARES,
@@ -11,7 +13,10 @@ import {
   buildVolatileSuffix,
   contextWindowFor,
   ContextOverflowError,
+  planCompaction,
   renderSkillCatalogue,
+  SUMMARY_MAX_TOKENS,
+  SUMMARY_STATUS,
   type TurnMessage,
 } from "./tools/budget";
 import { ToolRegistry, type ToolContext } from "./tools/registry";
@@ -50,6 +55,8 @@ type RunChatTurnInput = {
   providerStream?: (input: ProviderStreamInput) => AsyncIterable<ChatDelta>;
   /** Extra tools, used by tests to register a fake capability (REQ-NF-010 ②). */
   extraTools?: ToolRegistry;
+  /** Test seam for the compaction summary call (REQ-F-042 ②). */
+  summarize?: Completer;
   /** `toolsUsed` lets the caller report on what actually ran this turn (REQ-F-023 ③). */
   onFinal?: (finalText: string, status: string, conversationId: string, toolsUsed: string[]) => ChatDelta[];
 };
@@ -172,24 +179,62 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
   });
   const volatileSuffix = buildVolatileSuffix({ displayState: describeDisplay() });
 
-  const history = loadHistory(input.store, conversationId);
+  const { messages: history, lastRowIdByTurn } = loadHistory(input.store, conversationId);
   input.store.appendMessage({ conversationId, role: "user", content: message, status: "complete" });
 
   const currentTurn = history.length > 0 ? Math.max(...history.map((entry) => entry.turn)) + 1 : 1;
   const turnMessages: TurnMessage[] = [...history, { role: "user", content: message, turn: currentTurn }];
+
+  // REQ-NF-007 ④ as rewritten: narrow tool results, then compact text history, then —
+  // only then — refuse. Compaction runs at most once per send (DEC-030 ⑨).
+  let contextMessages = turnMessages;
+  let compaction: CompactionOutcome = "not-attempted";
+  const preamble: ChatDelta[] = [];
+  const plan = planCompaction({ messages: turnMessages, currentTurn, contextWindow: window });
+  if (plan.shouldCompact) {
+    // The summary row goes right behind the last row it covers — its position is the
+    // boundary (DEC-030 ①). Appending it at the end would put the still-verbatim recent
+    // turns before it and silently drop them from the next replay.
+    const anchorId = lastRowIdByTurn.get(plan.through) ?? null;
+    const summary = await summarizeSpan({
+      store: input.store,
+      conversationId,
+      provider,
+      model,
+      messages: turnMessages,
+      through: plan.through,
+      anchorId,
+      summarize: input.summarize,
+    });
+    if (summary) {
+      contextMessages = applySummary(turnMessages, summary, plan.through);
+      compaction = "applied";
+      preamble.push({
+        type: "compacted",
+        summary,
+        afterMessageId: anchorId,
+        keptTurns: currentTurn - plan.through,
+      });
+    } else {
+      // The model call failed, timed out or came back empty. Compaction exists to save
+      // tokens; it must never become a way for a turn to fail (REQ-NF-012 ③), so we
+      // simply carry on uncompacted.
+      compaction = "failed";
+    }
+  }
 
   let assembled: ChatMessage[];
   try {
     assembled = assembleContext({
       stablePrefix,
       volatileSuffix,
-      messages: turnMessages,
+      messages: contextMessages,
       currentTurn,
       contextWindow: window,
     }).messages;
   } catch (error) {
     if (error instanceof ContextOverflowError) {
-      throw new ChatServiceError(413, error.message);
+      throw new ChatServiceError(413, describeOverflow(error.message, compaction));
     }
     throw error;
   }
@@ -203,6 +248,7 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     conversationId,
     messageId,
     signal: input.signal,
+    preamble,
     toolsUsable,
     toolsUnavailableReason:
       support === "unknown"
@@ -243,15 +289,48 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
   });
 }
 
-/** Rebuild conversation messages, tagging each with the user turn it belongs to. */
-function loadHistory(store: Store, conversationId: string): TurnMessage[] {
-  const records = store.listMessages(conversationId).filter((record) => REPLAYABLE_STATUSES.has(record.status));
+/**
+ * Rebuild conversation messages, tagging each with the user turn it belongs to.
+ *
+ * When a compaction summary exists, the LAST one is the boundary: everything before it
+ * has already been folded in, so only the summary plus what follows is replayed
+ * (DEC-030 ①). The original rows stay in the database untouched — compaction only
+ * changes what is sent to the model.
+ */
+function loadHistory(
+  store: Store,
+  conversationId: string
+): { messages: TurnMessage[]; lastRowIdByTurn: Map<number, string> } {
+  const all = store.listMessages(conversationId);
+
+  // Summaries are found before the replayable filter, because `summary` is deliberately
+  // NOT in REPLAYABLE_STATUSES — that omission is what makes a rollback safe (DEC-030 ②).
+  let boundary = -1;
+  for (let index = all.length - 1; index >= 0; index -= 1) {
+    if (all[index].status === SUMMARY_STATUS) {
+      boundary = index;
+      break;
+    }
+  }
+
+  const summaryRow = boundary >= 0 ? all[boundary] : null;
+  const scoped = boundary >= 0 ? all.slice(boundary + 1) : all;
+  const records = scoped.filter((record) => REPLAYABLE_STATUSES.has(record.status));
+
   const messages: TurnMessage[] = [];
+  // Where each turn ends in the database — the anchor a compaction summary is inserted
+  // behind (DEC-030 ①). Turn 0 is the previous summary itself.
+  const lastRowIdByTurn = new Map<number, string>();
   let turn = 0;
+  if (summaryRow) {
+    messages.push({ role: "system", content: summaryRow.content, turn });
+    lastRowIdByTurn.set(turn, summaryRow.id);
+  }
   for (const record of records) {
     if (record.role === "user") {
       turn += 1;
     }
+    lastRowIdByTurn.set(turn, record.id);
     if (record.role === "tool") {
       messages.push({
         role: "tool",
@@ -268,7 +347,105 @@ function loadHistory(store: Store, conversationId: string): TurnMessage[] {
       turn,
     });
   }
-  return messages;
+  return { messages, lastRowIdByTurn };
+}
+
+type CompactionOutcome = "not-attempted" | "applied" | "failed";
+
+/**
+ * REQ-NF-007 ④ (CP-8): the refusal names what was already tried, so the user is not told
+ * to open a new conversation as if compaction had never been attempted.
+ */
+function describeOverflow(base: string, compaction: CompactionOutcome): string {
+  if (compaction === "applied") {
+    return `已压缩早前对话并收窄工具结果，${base}`;
+  }
+  if (compaction === "failed") {
+    return `压缩早前对话未成功，已按原样收窄工具结果，${base}`;
+  }
+  return base;
+}
+
+const SUMMARY_SYSTEM_PROMPT =
+  "你在压缩一段对话历史，供后续轮次作为背景使用。请写一份简洁的中文摘要，必须保留：" +
+  "已经做出的决定、明确的约束与偏好、专有名词与标识符（文件名、接口名、编号）、以及尚未完成的事项。" +
+  "不要复述寒暄，不要添加原文没有的内容。只输出摘要正文。";
+
+/**
+ * Fold `messages` up to `through` into one summary, persist it, and return it
+ * (REQ-F-042 ②, REQ-NF-012 ②③④; TASK-078).
+ *
+ * Uses the same provider and model as the conversation itself (user ruling, 2026-09-11).
+ * Returns `null` on any failure — the caller then proceeds uncompacted.
+ */
+async function summarizeSpan(input: {
+  store: Store;
+  conversationId: string;
+  provider: ProviderRuntimeConfig;
+  /** The model this turn resolved to — the summary uses the very same one (CP-2). */
+  model: string;
+  messages: TurnMessage[];
+  through: number;
+  /** Database id of the last row the summary covers; the summary is inserted behind it. */
+  anchorId: string | null;
+  summarize?: Completer;
+}): Promise<string | null> {
+  const span = input.messages.filter((message) => message.turn <= input.through);
+  if (span.length === 0) {
+    return null;
+  }
+
+  // Incremental (REQ-NF-012 ②): a previous summary arrives as a `system` row inside the
+  // span, so folding the span forward re-summarises the summary rather than the whole
+  // conversation. Without this, every compaction would re-read everything from turn 1.
+  const transcript = span
+    .map((message) => {
+      const who = message.role === "system" ? "已有摘要" : message.role === "tool" ? "工具结果" : message.role;
+      return `[${who}] ${message.content}`;
+    })
+    .join("\n\n");
+
+  // Same provider AND same model as the conversation (user ruling Q2, 2026-09-11):
+  // `makeCompleter` sends `defaultModel`, so a per-turn model override has to be folded
+  // in here or the summary would quietly come from a different model.
+  const completer = input.summarize ?? makeCompleter({ ...input.provider, defaultModel: input.model });
+  let summary: string;
+  try {
+    summary = await completer(
+      [
+        { role: "system", content: SUMMARY_SYSTEM_PROMPT },
+        { role: "user", content: transcript },
+      ],
+      { maxTokens: SUMMARY_MAX_TOKENS, timeoutMs: 30_000 }
+    );
+  } catch {
+    return null;
+  }
+
+  const text = summary?.trim();
+  if (!text) {
+    return null;
+  }
+
+  const row = {
+    conversationId: input.conversationId,
+    role: "system" as const,
+    content: text,
+    status: SUMMARY_STATUS,
+  };
+  if (input.anchorId) {
+    input.store.insertMessageAfter(input.anchorId, row);
+  } else {
+    input.store.appendMessage(row);
+  }
+  // REQ-NF-012 ④: the summary call costs tokens, and hiding that would defeat the
+  // measurement REQ-NF-007 relies on.
+  input.store.addUsage(input.conversationId, {
+    inputTokens: estimateTokens(transcript),
+    outputTokens: estimateTokens(text),
+    estimated: true,
+  });
+  return text;
 }
 
 function describeDisplay(): string | null {
@@ -284,6 +461,8 @@ function createStreamingResponse(input: {
   conversationId: string;
   messageId: string;
   signal?: AbortSignal;
+  /** Events that describe this send's preparation (e.g. `compacted`), sent right after `start`. */
+  preamble?: ChatDelta[];
   toolsUsable: boolean;
   /** Called once per turn with what the provider actually demonstrated. */
   recordToolSupport?: (result: "yes" | "no") => void;
@@ -324,7 +503,7 @@ function createStreamingResponse(input: {
       const persist = (message: ChatMessage & { status: string; sources?: Source[] }) => {
         input.store.appendMessage({
           conversationId: input.conversationId,
-          role: message.role === "system" ? "assistant" : message.role,
+          role: message.role,
           content: message.content,
           status: message.status,
           toolCalls: message.tool_calls ?? null,
@@ -334,6 +513,9 @@ function createStreamingResponse(input: {
       };
 
       send({ type: "start", conversationId: input.conversationId, messageId: input.messageId });
+      for (const delta of input.preamble ?? []) {
+        send(delta);
+      }
       if (!input.toolsUsable) {
         send({ type: "tools-unavailable", reason: input.toolsUnavailableReason });
       }

@@ -810,6 +810,15 @@ def check_review(root: Path, level: str, cr: str | None = None) -> list[str]:
     # detection route is `发现不了`, and the record goes through the full R2–R4 like any
     # other. R1 still applies — the fast lane drops review paperwork, not human consent.
     fast_lane: list[str] = []
+    # DEC-021 ① standard tier: every CP is still a two-way door, but at least one can only
+    # be caught at a real entry, by a person. CONTROLS.md asks such a record for the CP
+    # registry, the relevant roles' opinions and the gates — not for the three R2–R4
+    # matrices. Like the fast lane, eligibility is computed from the door/detection
+    # columns, and the record must actually carry a `## 角色意见` section with content;
+    # a record that merely calls itself 标准档 goes through the full gate. Downward
+    # coverage (every CP addressed in the layer doc's own section) is NOT waived — only
+    # the matrix is.
+    standard_tier: set[str] = set()
     if level in {"r2", "r3", "r4"}:
         remaining: list[tuple[Path, list[dict[str, str]]]] = []
         for path, cps in with_model:
@@ -817,10 +826,15 @@ def check_review(root: Path, level: str, cr: str | None = None) -> list[str]:
             detects = [entry.get("detect", "") for entry in cps]
             all_two_way = bool(doors) and all(door == "双向" for door in doors)
             all_machine = all(detect.startswith("机器") for detect in detects)
+            all_named = bool(detects) and all(
+                detect.startswith("机器") or detect.startswith("真实入口") for detect in detects
+            )
             if all_two_way and all_machine:
                 fast_lane.append(path.stem)
-            else:
-                remaining.append((path, cps))
+                continue
+            if all_two_way and all_named and _table_rows(_section(read_text(path), r"角色意见")):
+                standard_tier.add(path.stem)
+            remaining.append((path, cps))
         with_model = remaining
 
     for path, cps in with_model:
@@ -848,6 +862,10 @@ def check_review(root: Path, level: str, cr: str | None = None) -> list[str]:
             findings.append(
                 f"FAIL REVIEW_{level.upper()}_COVERAGE_GAP {name}: {', '.join(uncovered)} not addressed in {REVIEW_LAYER_DOC[level]}"
             )
+
+        if name in standard_tier:
+            # Coverage was judged above; the matrix is what the standard tier is excused from.
+            continue
 
         matrix = _section(cr_text, rf"R{level[1]}\s*评审矩阵")
         if not matrix:
@@ -902,6 +920,12 @@ def check_review(root: Path, level: str, cr: str | None = None) -> list[str]:
         messages.append(
             f"OK REVIEW_{level.upper()}_SKIPPED_FAST_LANE {len(fast_lane)} record(s) are all two-way doors with "
             "machine detection (DEC-021 ①): " + ", ".join(fast_lane)
+        )
+    if standard_tier:
+        messages.append(
+            f"OK REVIEW_{level.upper()}_MATRIX_WAIVED_STANDARD_TIER {len(standard_tier)} record(s) are all two-way "
+            "doors with a human detection route and carry 角色意见; coverage judged, matrix waived (DEC-021 ①): "
+            + ", ".join(sorted(standard_tier))
         )
     return messages
 
