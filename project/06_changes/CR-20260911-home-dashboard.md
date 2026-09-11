@@ -72,7 +72,7 @@
 
 | # | 事项 | 为什么不在本 CR |
 |---|---|---|
-| 1 | **展示屏三态接线**：标题（含动画）→ 看板 → 洞察，含「3 秒为上限、任一输入即切、只在本次会话首次播、切换不由动画结束驱动、洞察优先于开场」 | 与并行的 `CR-20260911-display-console-ux` 的「对话面板悬停态」是同一块交互，两边各写一套必然打架。该 CR 未提交，其修改的 `DisplayScreen.tsx` / `page.tsx` / `types.ts` / `scripts/ui-contract.mjs` 本 CR 一律未碰 |
+| 1 | **展示屏三态接线**：标题（含动画）→ 看板 → 洞察，含「3 秒为上限、任一输入即切、只在本次会话首次播、切换不由动画结束驱动、洞察优先于开场」。**本 CR 以 `/dashboard` 独立路由作为过渡入口**，接线完成后该路由删除 | 与并行的 `CR-20260911-display-console-ux` 的「对话面板悬停态」是同一块交互，两边各写一套必然打架。该 CR 未提交，其修改的 `DisplayScreen.tsx` / `page.tsx` / `types.ts` / `scripts/ui-contract.mjs` 本 CR 一律未碰 |
 | 2 | `entity_pending` 流事件与 ☰ 列表联动 | 需要改 `types.ts` 的 `ChatDelta` 联合类型，同上被并行 CR 占用 |
 | 3 | 实体工具**按上下文分组注册** | 需要给 `ToolContext` 加字段，`registry.ts` 同上被占用。EV §8.2 实测：现有 11 个工具的 `tools` 数组已 857 token，超出 8k 窗口 655 token 的子预算 |
 | 4 | `BUDGET_SHARES.toolDefinitions` **声明了但从未被引用**，工具目录无截断 | 既有缺陷，非本 CR 引入；范围独立，另立小 CR |
@@ -85,5 +85,7 @@
 - **未碰**并行 CR 正在修改的 29 个文件，包括 `DisplayScreen.tsx`、`page.tsx`、`types.ts`、`registry.ts`、`scripts/ui-contract.mjs`。因此实体工具**无条件注册**、不发流事件，两者都列入出口义务。
 - **未占用的编号区间**（留给并行的两个 CR）：功能需求 062 至 069、架构决策 041 至 049、任务 104 至 119、测试 105 至 119。
 - `package.json` 无本 CR 改动：零新增运行依赖。
+- **过渡入口** `src/app/dashboard/page.tsx`（新文件）：在展示屏接线完成前，`/dashboard` 挂载同一个看板组件并叠加对话框，使「在对话里让模型提议对象 → 待采纳区出现 → 采纳 → 卡片进看板」这条闭环现在就能用、能评审。接线完成后删除该路由。
+- **真实入口已验**（本机 dev server）：`GET /api/entities` 与 `GET /api/knowledge/overview` 均 200 且返回空集合（无数据时不造假）；`GET /dashboard` 200，页面含看板与对话框，空态显示「还没有查不到的检索」。
 - 全量：471 单测通过、ui-contract 53/0、typecheck 0。
 - **仍属人工发现**：CP-2 的「源坏了用户能否看出来」、CP-8 的密度与分区比例。
