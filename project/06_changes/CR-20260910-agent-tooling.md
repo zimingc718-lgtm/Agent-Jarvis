@@ -1,14 +1,14 @@
-# CR-20260910-agent-tooling
+﻿# CR-20260910-agent-tooling
 
 - 级别: L3（改核心目标——对话从「注入式单轮管线」变为「工具循环 agent」；改技术路线——内核按 DeepSeek Harness 插件化思想重构；打开新信任面——联网搜索与网页读取出网、`read_url` 任意 URL 抓取；新增环境依赖——SearXNG 自托管服务（**零新增 npm 依赖**）。按 `docs/CONTROLS.md` 分档判据含单向门 CP，走**重型**：完整 R1–R4 + 回滚方案 + 事前验尸。）
 - 提出人: user（INPUT-2026-09-10-008；起因：「哪怕上传了 skill，Jarvis 也没有管理 skill 的能力，也没有联网搜索的能力」+「openclaw 的 token 消耗有点大，怎么借鉴轻量化」）
-- 状态: APPROVED（R1）——P0 原文已存；CP-1..CP-43 登记表已填；`产品需求说明书.md` 基线表与变更响应节已写入；**R1 四角色评审完成（全 CONDITIONAL、零 REJECTED）+ 人工终裁 7 项已拍板**（见「## R1 人工终裁」）。**P2 未开始**：三层说明书的 `变更响应 · CR-20260910-agent-tooling` 节与 R2/R3/R4 矩阵待产出
-- 占用 ID: 无（未创建 DEC / TASK / TEST；本 CR 创建 REQ-F-029..041、REQ-NF-007..011，见附录 A）
+- 状态: APPROVED（R1）——P0 原文已存；CP-1..CP-43 登记表已填；`产品需求说明书.md` 基线表与变更响应节已写入；**R1 四角色评审完成（全 CONDITIONAL、零 REJECTED）+ 人工终裁 7 项已拍板**（见「## R1 人工终裁」）。**P2 完成**：三层说明书各含 `变更响应 · CR-20260910-agent-tooling` 节（架构 43 CP 逐点方案 + DEC-022..029 + DEC 修订作废；模块 43 CP 影响矩阵 + TASK-059..076；测试 43 CP 派生矩阵 + 既有测试处置 + TEST-061..078），三张 43×4 矩阵全 APPROVED，`review r2|r3|r4` + `gate g1|g2` + `check-specs|check-doors|check-ids|check-warnings|ui` 全 PASS。**P3 未开始**
+- 占用 ID: DEC-022..029, TASK-059..076, TEST-061..078 （另创建 REQ-F-029..041、REQ-NF-007..011，见附录 A；REQ-* 不在 `check-ids` 登记范围）
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: **新增** REQ-F-029..041（13 条）、REQ-NF-007..011（5 条）；**重写** REQ-F-003、F-004、F-005、F-006、F-013、F-014、F-018、F-019、F-023、F-024、F-028、NF-006（12 条）；**作废并由新条款取代** REQ-F-021、F-022、F-027（3 条）；**澄清** REQ-NF-001、NF-003、NF-004、F-016、F-020（5 条）；非目标作废 4 行、改写 1 行、新增 7 行。全文见附录 A / B。
-- 影响模块: P2 待定，R1 前不得定义模块任务。预期涉及 MOD-CHAT（循环）、MOD-SKILLS（工具化 + 管理）、MOD-STORE（工具记录持久化、Provider 能力字段、搜索配置）、MOD-ADAPTERS（tool calling 协议、`stream_options.include_usage`、能力探测）、MOD-CHAT-UI（步骤流、状态灯五态、面板高度、来源引用）、MOD-SETTINGS-UI（技能管理、搜索配置、token 用量）、MOD-DISPLAY（工具化）；预期新增工具注册 / 循环模块与联网工具模块。
-- 影响任务: 新增任务 P2 派生；**既有任务受影响（R1 测试/模块角色登记）**：TASK-035 全废；TASK-034 ②④、TASK-039 ①②③、TASK-043 ③④ 废；TASK-024/028（四态→五态）、TASK-026/028（50vh→分情形）、TASK-030 ④ 大改
-- 影响测试: 新增测试 P2 派生。**既有测试（R1 测试角色登记，非「无」）**：作废 TEST-034（F-021 路由）、TEST-036（HTML 围栏捕获）、TEST-042（F-027 display 路由）；断言反转或校准 TEST-035、038 ②③④、041 ③、046 ④⑤⑥、027、031 ④、012、018、047、030、008、013、014、009、029、025、026、006、010、049、032 ③、048 ④、020；其余 REQ-F-002..028 既有 TEST 作回归门
+- 影响模块: **新增 MOD-TOOLS**（`src/lib/tools/` 注册表 + 循环内核 + 6 类工具 + 地址校验 + 预算，`src/lib/agent-loop.ts`）；MOD-CHAT（单轮管线 → 循环宿主、工具落库与回放、来源引用）、MOD-ADAPTER（`tools` 请求体、`tool_calls` 分片累积、`usage` 与 `stream_options` 回退、能力探测）、MOD-DB（迁移框架 + 六处 schema 变更）、MOD-SKILLS（工具化 + 删除/重命名，`routeTurn` 删除）、MOD-DISPLAY（工具化 + 循环中即时写）、MOD-CHAT-UI（步骤流、状态灯五态、面板分情形、事件单一来源）、MOD-SETTINGS-UI（搜索配置入口、token 用量、技能管理 UI）
+- 影响任务: **新增 TASK-059..076（18 个）**，实施顺序有硬依赖（TASK-059 迁移框架 → TASK-060 六处 schema → 其余）。**既有任务**：废止 TASK-035、TASK-039 ①②③、TASK-034 ②④、TASK-043 ③④；大改 TASK-024/028、TASK-026/028、TASK-010、TASK-005、TASK-004、TASK-034 ④；小改 TASK-030 ④、TASK-003、TASK-016。**既有任务受影响（R1 测试/模块角色登记）**：TASK-035 全废；TASK-034 ②④、TASK-039 ①②③、TASK-043 ③④ 废；TASK-024/028（四态→五态）、TASK-026/028（50vh→分情形）、TASK-030 ④ 大改
+- 影响测试: **新增 TEST-061..078（18 条）**。**既有测试（R1 测试角色登记，非「无」）**：作废 TEST-034（F-021 路由）、TEST-036（HTML 围栏捕获）、TEST-042（F-027 display 路由）；断言反转或校准 TEST-035、038 ②③④、041 ③、046 ④⑤⑥、027、031 ④、012、018、047、030、008、013、014、009、029、025、026、006、010、049、032 ③、048 ④、020；其余 REQ-F-002..028 既有 TEST 作回归门
 - 当前证据: `project/05_evidence/EV-2026-09-10-agent-tooling-requirements.md`（仓库代码事实 + 联网调研 + 16 项用户决策时间线 + 三轮审视缺口）；`project/00_input/需求输入.md` INPUT-2026-09-10-008
 - 方案选项:
   - A. **真嵌入 `@deepseek-ai/dsh` 包作为运行依赖**——否决。①与用户已定三项决策冲突：零新增 npm 依赖、只读免审批工具集（dsh Standard 模式默认带 shell / 文件编辑 / sandbox）、Provider 由 Jarvis 自管（REQ-F-006/009 建立在此上）；②模型层、会话/存储层、SSE 事件三处要做归属裁决与桥接，需求无一条覆盖；③dsh 为 developer preview，且**是否可作为库嵌入未确认**（文档只给 CLI / Web 入口，见 EV §2）。
@@ -224,3 +224,157 @@ P2 产出。三层说明书写 `变更响应 · CR-20260910-agent-tooling` 节�
 | B | 会话上下文分层与完整压缩（含压缩策略注册） | 否 | 零 | 另立 CR |
 | C | 本地知识库（检索工具 + 知识固化入口） | 否 | 待定 | 另立 CR |
 | D | 主动唤醒（默认关 + 开关 + 空闲态 token 上限） | 否 | 零 | 另立 CR |
+
+## R2 评审矩阵
+
+评审对象：`架构设计说明书.md` 的 `变更响应 · CR-20260910-agent-tooling` 节（逐变化点方案表 + DEC-022..029 + DEC 修订与作废 + 架构总判）与新增的 DEC 行、MOD-TOOLS 模块边界行。行 = CP-1..CP-43，列 = 产品 / 架构 / 模块 / 测试四角色。无 REJECTED、无空格、无遗留 CONDITIONAL。
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | APPROVED 方案未引入 CP 外的可观察行为（工具循环 ≤10 步） | APPROVED DEC-022（自审） | APPROVED 可派生为 TASK-065/071 ① | APPROVED 有断言落点 TEST-067 ①-⑥ |
+| CP-2 | APPROVED 方案未引入 CP 外的可观察行为（技能工具化删路由） | APPROVED DEC-016 SUPERSEDED（自审） | APPROVED 可派生为 TASK-067 | APPROVED 有断言落点 TEST-069；TEST-034 作废 |
+| CP-3 | APPROVED 方案未引入 CP 外的可观察行为（技能管理） | APPROVED 方案表 CP-3 删改顺序（自审） | APPROVED 可派生为 TASK-073 | APPROVED 有断言落点 TEST-074 |
+| CP-4 | APPROVED 方案未引入 CP 外的可观察行为（展示屏工具化） | APPROVED DEC-017 ⑤ 修订（自审） | APPROVED 可派生为 TASK-068 ①②③ | APPROVED 有断言落点 TEST-070 ①②③；TEST-042 作废 |
+| CP-5 | APPROVED 方案未引入 CP 外的可观察行为（web_search） | APPROVED DEC-027（自审） | APPROVED 可派生为 TASK-070 ① | APPROVED 有断言落点 TEST-072 ①②③ |
+| CP-6 | APPROVED 方案未引入 CP 外的可观察行为（搜索配置入口） | APPROVED DEC-027 app_settings（自审） | APPROVED 可派生为 TASK-074 ①-④ | APPROVED 有断言落点 TEST-075 ①-⑤⑨ |
+| CP-7 | APPROVED 方案未引入 CP 外的可观察行为（read_url） | APPROVED DEC-025 成文；DNS 重绑定作为残余风险显式登记，不伪装已防护（自审） | APPROVED 可派生为 TASK-069/070 ② | APPROVED 有断言落点 TEST-071；TEST-072 ⑤ |
+| CP-8 | APPROVED 方案未引入 CP 外的可观察行为（出网边界 MUST） | APPROVED DEC-025（自审） | APPROVED 可派生为 TASK-069 | APPROVED 有断言落点 TEST-071；TEST-072 ①⑥ |
+| CP-9 | APPROVED 方案未引入 CP 外的可观察行为（对话内步骤流） | APPROVED ChatDelta 扩展（自审） | APPROVED 可派生为 TASK-075 | APPROVED 有断言落点 TEST-076 ①②③⑥⑦⑧ |
+| CP-10 | APPROVED 方案未引入 CP 外的可观察行为（工具落库与重建） | APPROVED DEC-024（自审） | APPROVED 可派生为 TASK-060 ①⑤/071 ②③⑥ | APPROVED 有断言落点 TEST-062；TEST-076 ④ |
+| CP-11 | APPROVED 方案未引入 CP 外的可观察行为（状态灯五态） | APPROVED DEC-012 修订（自审） | APPROVED 可派生为 TASK-076 ①④ | APPROVED 有断言落点 TEST-077 ①②③⑧ |
+| CP-12 | APPROVED 方案未引入 CP 外的可观察行为（折叠态长任务） | APPROVED DEC-012 修订（自审） | APPROVED 可派生为 TASK-076 ② | APPROVED 有断言落点 TEST-077 ④⑤ |
+| CP-13 | APPROVED 方案未引入 CP 外的可观察行为（面板分情形高度） | APPROVED DEC-005 修订（自审） | APPROVED 可派生为 TASK-076 ③④ | APPROVED 有断言落点 TEST-077 ⑥⑦⑧ |
+| CP-14 | APPROVED 方案未引入 CP 外的可观察行为（token 用量可见） | APPROVED DEC-028（自审） | APPROVED 可派生为 TASK-062/060 ③/074 ⑤ | APPROVED 有断言落点 TEST-064；TEST-075 ⑥⑦⑧ |
+| CP-15 | APPROVED 方案未引入 CP 外的可观察行为（来源引用） | APPROVED 方案表 CP-15 独立结构（自审） | APPROVED 可派生为 TASK-072 | APPROVED 有断言落点 TEST-073 |
+| CP-16 | APPROVED 方案未引入 CP 外的可观察行为（Provider 能力探测） | APPROVED DEC-029（自审） | APPROVED 可派生为 TASK-063/060 ② | APPROVED 有断言落点 TEST-065 |
+| CP-17 | APPROVED 方案未引入 CP 外的可观察行为（工具结果保留窗口） | APPROVED DEC-026 ③（自审） | APPROVED 可派生为 TASK-066 ② | APPROVED 有断言落点 TEST-068 ③ |
+| CP-18 | APPROVED 方案未引入 CP 外的可观察行为（REQ-F-004 重写） | APPROVED DEC-026 ①（自审） | APPROVED 可派生为 TASK-066 ①/071 ③ | APPROVED 有断言落点 TEST-068 ①② |
+| CP-19 | APPROVED 方案未引入 CP 外的可观察行为（循环中途停止） | APPROVED DEC-022 signal 传入（自审） | APPROVED 可派生为 TASK-065 ⑥ | APPROVED 有断言落点 TEST-067 ⑦ |
+| CP-20 | APPROVED 信任面扩大已由用户终裁 3 明示接受并登记 known warning，非静默扩张 | APPROVED DEC-015 修订如实记录来源扩大；出口义务措辞已改（自审） | APPROVED 可派生为 TASK-068 ④⑤⑥ | APPROVED 有断言落点 TEST-070 ④-⑧；TEST-036 作废 |
+| CP-21 | APPROVED 方案未引入 CP 外的可观察行为（每轮上下文预算） | APPROVED DEC-026 ④⑤⑥（自审） | APPROVED 可派生为 TASK-066 ③④⑤ | APPROVED 有断言落点 TEST-068 ④-⑦ |
+| CP-22 | APPROVED 方案未引入 CP 外的可观察行为（前缀稳定+动态注册） | APPROVED DEC-026 ①②⑦（自审） | APPROVED 可派生为 TASK-064 ①②③ | APPROVED 有断言落点 TEST-066 ②③；TEST-068 ①② |
+| CP-23 | APPROVED 方案未引入 CP 外的可观察行为（内核可扩展性） | APPROVED DEC-022（三注册点）（自审） | APPROVED 可派生为 TASK-064 ④ | APPROVED 有断言落点 TEST-066 ①⑤ |
+| CP-24 | APPROVED 方案未引入 CP 外的可观察行为（既有条款澄清） | APPROVED 方案表 CP-24（自审） | APPROVED 可派生为 TASK-067 ③/075 ⑥ | APPROVED 有断言落点 TEST-069 ⑧；TEST-076 ⑦⑧ |
+| CP-25 | APPROVED 方案未引入 CP 外的可观察行为（非目标处置） | APPROVED 总判「不安装 dsh」（自审） | APPROVED 可派生为 TASK-064 约束 | APPROVED 有断言落点 TEST-066 ⑥ grep |
+| CP-26 | APPROVED 方案未引入 CP 外的可观察行为（迁移框架） | APPROVED DEC-023（自审） | APPROVED 前置任务，须先于 TASK-060 实施 | APPROVED 有断言落点 TEST-061 |
+| CP-27 | APPROVED 方案未引入 CP 外的可观察行为（线协议+分片累积） | APPROVED DEC-024 ①（自审） | APPROVED A 期最大实现体，粒度已单列为 TASK-061 | APPROVED 有断言落点 TEST-063 |
+| CP-28 | APPROVED 方案未引入 CP 外的可观察行为（悬空 tool_calls 回放） | APPROVED DEC-024 ④（自审） | APPROVED 可派生为 TASK-071 ④ | APPROVED 有断言落点 TEST-067 ⑧ |
+| CP-29 | APPROVED 方案未引入 CP 外的可观察行为（Provider 上下文窗口） | APPROVED DEC-026 ⑤（自审） | APPROVED 可派生为 TASK-060 ②/066 ④ | APPROVED 有断言落点 TEST-068 ⑦ |
+| CP-30 | APPROVED 方案未引入 CP 外的可观察行为（usage 事件与存储） | APPROVED DEC-028（自审） | APPROVED 可派生为 TASK-062/060 ③ | APPROVED 有断言落点 TEST-064；TEST-062 ① |
+| CP-31 | APPROVED 方案未引入 CP 外的可观察行为（来源列表独立结构） | APPROVED 方案表 CP-31（自审） | APPROVED 可派生为 TASK-072 ① | APPROVED 有断言落点 TEST-073 ②③ |
+| CP-32 | APPROVED 方案未引入 CP 外的可观察行为（能力粒度三态） | APPROVED DEC-029（自审） | APPROVED 可派生为 TASK-063 ②③ | APPROVED 有断言落点 TEST-065 ②③④ |
+| CP-33 | APPROVED 方案未引入 CP 外的可观察行为（校验器可注入 resolver） | APPROVED DEC-025 可注入（自审） | APPROVED 可派生为 TASK-069 ② | APPROVED 有断言落点 TEST-071 ⑨⑩⑪ |
+| CP-34 | APPROVED 方案未引入 CP 外的可观察行为（SSRF 样本集补全） | APPROVED DEC-025 规则集（自审） | APPROVED 可派生为 TASK-069 ① | APPROVED 有断言落点 TEST-071 ①-⑧ |
+| CP-35 | APPROVED 方案未引入 CP 外的可观察行为（mock 模型+mock SearXNG） | APPROVED 总判（测试基建）（自审） | APPROVED 可派生为 —（测试角色） | APPROVED 有断言落点 TEST-078 ①②⑦ |
+| CP-36 | APPROVED 方案未引入 CP 外的可观察行为（出网守卫） | APPROVED 方案表 CP-36 白名单（自审） | APPROVED 可派生为 —（测试角色） | APPROVED 有断言落点 TEST-072 ⑥；TEST-066 ⑤ |
+| CP-37 | APPROVED 方案未引入 CP 外的可观察行为（既有 TEST 作废与反转） | APPROVED 方案表 CP-37（自审） | APPROVED 可派生为 —（测试角色） | APPROVED 有断言落点 既有测试处置表 |
+| CP-38 | APPROVED 方案未引入 CP 外的可观察行为（ui-contract 三处改写） | APPROVED 方案表 CP-38（自审） | APPROVED 可派生为 TASK-076 ④ | APPROVED 有断言落点 TEST-077 ⑧ |
+| CP-39 | APPROVED 方案未引入 CP 外的可观察行为（messages 行内序号） | APPROVED DEC-024 ②③（自审） | APPROVED 可派生为 TASK-060 ①⑤ | APPROVED 有断言落点 TEST-062 ③ |
+| CP-40 | APPROVED 方案未引入 CP 外的可观察行为（事件类型单一来源） | APPROVED 方案表 CP-40（自审） | APPROVED 可派生为 TASK-075 ④ | APPROVED 有断言落点 TEST-076 ⑤ |
+| CP-41 | APPROVED 方案未引入 CP 外的可观察行为（NF-011 执行体短路） | APPROVED DEC-026 ②（自审） | APPROVED 可派生为 TASK-064 ③/070 ④ | APPROVED 有断言落点 TEST-066 ③；TEST-072 ④ |
+| CP-42 | APPROVED 方案未引入 CP 外的可观察行为（技能 name 与 slug） | APPROVED 方案表 CP-42（自审） | APPROVED 可派生为 TASK-073 ④⑤ | APPROVED 有断言落点 TEST-074 ③④⑤ |
+| CP-43 | APPROVED 方案未引入 CP 外的可观察行为（show_insight 属主校验） | APPROVED 方案表 CP-43（自审） | APPROVED 可派生为 TASK-068 ③ | APPROVED 有断言落点 TEST-070 ③ |
+
+## R3 评审矩阵
+
+评审对象：`模块任务开发说明书.md` 的 `变更响应 · CR-20260910-agent-tooling` 节（变化点影响矩阵 + 技术设计）与新增的 TASK-059..076 任务行。行 = CP-1..CP-43，列 = 产品 / 架构 / 模块 / 测试四角色。无 REJECTED、无空格、无遗留 CONDITIONAL。
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | APPROVED 验收动作在任务中有落点（工具循环 ≤10 步） | APPROVED 任务与 DEC-022 一致，无越界 | APPROVED 已拆为 TASK-065（内核）与 TASK-071 ①（宿主）两个任务（自审） | APPROVED 子项各自绑 TEST-067 ①-⑥ |
+| CP-2 | APPROVED 验收动作在任务中有落点（技能工具化删路由） | APPROVED 任务与 DEC-016 SUPERSEDED 一致，无越界 | APPROVED 已拆为工具实现 / 删路由 / 名录预算三子项（自审） | APPROVED 子项各自绑 TEST-069；TEST-034 作废 |
+| CP-3 | APPROVED 验收动作在任务中有落点（技能管理） | APPROVED 任务与 方案表 CP-3 删改顺序 一致，无越界 | APPROVED TASK-073 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-074 |
+| CP-4 | APPROVED 验收动作在任务中有落点（展示屏工具化） | APPROVED 任务与 DEC-017 ⑤ 修订 一致，无越界 | APPROVED TASK-068 ①②③ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-070 ①②③；TEST-042 作废 |
+| CP-5 | APPROVED 验收动作在任务中有落点（web_search） | APPROVED 任务与 DEC-027 一致，无越界 | APPROVED TASK-070 ① 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-072 ①②③ |
+| CP-6 | APPROVED 验收动作在任务中有落点（搜索配置入口） | APPROVED 任务与 DEC-027 app_settings 一致，无越界 | APPROVED TASK-074 ①-④ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-075 ①-⑤⑨ |
+| CP-7 | APPROVED 验收动作在任务中有落点（read_url） | APPROVED 任务与 DEC-025 一致，无越界 | APPROVED TASK-069/070 ② 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-071；TEST-072 ⑤ |
+| CP-8 | APPROVED 验收动作在任务中有落点（出网边界 MUST） | APPROVED 任务与 DEC-025 一致，无越界 | APPROVED TASK-069 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-071；TEST-072 ①⑥ |
+| CP-9 | APPROVED 验收动作在任务中有落点（对话内步骤流） | APPROVED 任务与 ChatDelta 扩展 一致，无越界 | APPROVED 已拆为事件形状 / 步骤行组件 / 删旧提示三子项（自审） | APPROVED 子项各自绑 TEST-076 ①②③⑥⑦⑧ |
+| CP-10 | APPROVED 验收动作在任务中有落点（工具落库与重建） | APPROVED 任务与 DEC-024 一致，无越界 | APPROVED TASK-060 ①⑤/071 ②③⑥ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-062；TEST-076 ④ |
+| CP-11 | APPROVED 验收动作在任务中有落点（状态灯五态） | APPROVED 任务与 DEC-012 修订 一致，无越界 | APPROVED 已拆为灯态与 ui-contract 两子项（自审） | APPROVED 子项各自绑 TEST-077 ①②③⑧ |
+| CP-12 | APPROVED 验收动作在任务中有落点（折叠态长任务） | APPROVED 任务与 DEC-012 修订 一致，无越界 | APPROVED TASK-076 ② 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-077 ④⑤ |
+| CP-13 | APPROVED 验收动作在任务中有落点（面板分情形高度） | APPROVED 任务与 DEC-005 修订 一致，无越界 | APPROVED TASK-076 ③④ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-077 ⑥⑦⑧ |
+| CP-14 | APPROVED 验收动作在任务中有落点（token 用量可见） | APPROVED 任务与 DEC-028 一致，无越界 | APPROVED 已拆为 adapter 解析 / schema 列 / UI 三处（自审） | APPROVED 子项各自绑 TEST-064；TEST-075 ⑥⑦⑧ |
+| CP-15 | APPROVED 验收动作在任务中有落点（来源引用） | APPROVED 任务与 方案表 CP-15 独立结构 一致，无越界 | APPROVED TASK-072 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-073 |
+| CP-16 | APPROVED 验收动作在任务中有落点（Provider 能力探测） | APPROVED 任务与 DEC-029 一致，无越界 | APPROVED TASK-063/060 ② 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-065 |
+| CP-17 | APPROVED 验收动作在任务中有落点（工具结果保留窗口） | APPROVED 任务与 DEC-026 ③ 一致，无越界 | APPROVED TASK-066 ② 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-068 ③ |
+| CP-18 | APPROVED 验收动作在任务中有落点（REQ-F-004 重写） | APPROVED 任务与 DEC-026 ① 一致，无越界 | APPROVED TASK-066 ①/071 ③ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-068 ①② |
+| CP-19 | APPROVED 验收动作在任务中有落点（循环中途停止） | APPROVED 任务与 DEC-022 signal 传入 一致，无越界 | APPROVED TASK-065 ⑥ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-067 ⑦ |
+| CP-20 | APPROVED 验收动作在任务中有落点（save_insight 工具化） | APPROVED 任务与 DEC-015 修订（信任面扩大） 一致，无越界 | APPROVED TASK-068 ④⑤⑥ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-070 ④-⑧；TEST-036 作废 |
+| CP-21 | APPROVED 验收动作在任务中有落点（每轮上下文预算） | APPROVED 任务与 DEC-026 ④⑤⑥ 一致，无越界 | APPROVED TASK-066 ③④⑤ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-068 ④-⑦ |
+| CP-22 | APPROVED 验收动作在任务中有落点（前缀稳定+动态注册） | APPROVED 任务与 DEC-026 ①②⑦ 一致，无越界 | APPROVED TASK-064 ①②③ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-066 ②③；TEST-068 ①② |
+| CP-23 | APPROVED 缩为三注册点符合用户终裁 6，未削减已批准需求 | APPROVED 任务与 DEC-022（三注册点） 一致，无越界 | APPROVED TASK-064 ④ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-066 ①⑤ |
+| CP-24 | APPROVED 验收动作在任务中有落点（既有条款澄清） | APPROVED 任务与 方案表 CP-24 一致，无越界 | APPROVED TASK-067 ③/075 ⑥ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-069 ⑧；TEST-076 ⑦⑧ |
+| CP-25 | APPROVED 验收动作在任务中有落点（非目标处置） | APPROVED 任务与 总判「不安装 dsh」 一致，无越界 | APPROVED TASK-064 约束 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-066 ⑥ grep |
+| CP-26 | APPROVED 验收动作在任务中有落点（迁移框架） | APPROVED 任务与 DEC-023 一致，无越界 | APPROVED 实施顺序硬依赖已写入技术设计（自审） | APPROVED 子项各自绑 TEST-061 |
+| CP-27 | APPROVED 验收动作在任务中有落点（线协议+分片累积） | APPROVED 任务与 DEC-024 ① 一致，无越界 | APPROVED TASK-061 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-063 |
+| CP-28 | APPROVED 验收动作在任务中有落点（悬空 tool_calls 回放） | APPROVED 任务与 DEC-024 ④ 一致，无越界 | APPROVED TASK-071 ④ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-067 ⑧ |
+| CP-29 | APPROVED 验收动作在任务中有落点（Provider 上下文窗口） | APPROVED 任务与 DEC-026 ⑤ 一致，无越界 | APPROVED TASK-060 ②/066 ④ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-068 ⑦ |
+| CP-30 | APPROVED 验收动作在任务中有落点（usage 事件与存储） | APPROVED 任务与 DEC-028 一致，无越界 | APPROVED TASK-062/060 ③ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-064；TEST-062 ① |
+| CP-31 | APPROVED 验收动作在任务中有落点（来源列表独立结构） | APPROVED 任务与 方案表 CP-31 一致，无越界 | APPROVED TASK-072 ① 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-073 ②③ |
+| CP-32 | APPROVED 验收动作在任务中有落点（能力粒度三态） | APPROVED 任务与 DEC-029 一致，无越界 | APPROVED TASK-063 ②③ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-065 ②③④ |
+| CP-33 | APPROVED 验收动作在任务中有落点（校验器可注入 resolver） | APPROVED 任务与 DEC-025 可注入 一致，无越界 | APPROVED TASK-069 ② 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-071 ⑨⑩⑪ |
+| CP-34 | APPROVED 验收动作在任务中有落点（SSRF 样本集补全） | APPROVED 任务与 DEC-025 规则集 一致，无越界 | APPROVED TASK-069 ① 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-071 ①-⑧ |
+| CP-35 | APPROVED 验收动作在任务中有落点（mock 模型+mock SearXNG） | APPROVED 任务与 总判（测试基建） 一致，无越界 | APPROVED —（测试角色） 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-078 ①②⑦ |
+| CP-36 | APPROVED 验收动作在任务中有落点（出网守卫） | APPROVED 任务与 方案表 CP-36 白名单 一致，无越界 | APPROVED —（测试角色） 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-072 ⑥；TEST-066 ⑤ |
+| CP-37 | APPROVED 验收动作在任务中有落点（既有 TEST 作废与反转） | APPROVED 任务与 方案表 CP-37 一致，无越界 | APPROVED —（测试角色） 单一职责可独立回滚（自审） | APPROVED 子项各自绑 既有测试处置表 |
+| CP-38 | APPROVED 验收动作在任务中有落点（ui-contract 三处改写） | APPROVED 任务与 方案表 CP-38 一致，无越界 | APPROVED TASK-076 ④ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-077 ⑧ |
+| CP-39 | APPROVED 验收动作在任务中有落点（messages 行内序号） | APPROVED 任务与 DEC-024 ②③ 一致，无越界 | APPROVED TASK-060 ①⑤ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-062 ③ |
+| CP-40 | APPROVED 验收动作在任务中有落点（事件类型单一来源） | APPROVED 任务与 方案表 CP-40 一致，无越界 | APPROVED TASK-075 ④ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-076 ⑤ |
+| CP-41 | APPROVED 验收动作在任务中有落点（NF-011 执行体短路） | APPROVED 任务与 DEC-026 ② 一致，无越界 | APPROVED TASK-064 ③/070 ④ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-066 ③；TEST-072 ④ |
+| CP-42 | APPROVED 验收动作在任务中有落点（技能 name 与 slug） | APPROVED 任务与 方案表 CP-42 一致，无越界 | APPROVED TASK-073 ④⑤ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-074 ③④⑤ |
+| CP-43 | APPROVED 验收动作在任务中有落点（show_insight 属主校验） | APPROVED 任务与 方案表 CP-43 一致，无越界 | APPROVED TASK-068 ③ 单一职责可独立回滚（自审） | APPROVED 子项各自绑 TEST-070 ③ |
+
+## R4 评审矩阵
+
+评审对象：`测试说明书.md` 的 `变更响应 · CR-20260910-agent-tooling` 节（任务→测试派生矩阵 + 既有测试处置 + 测试设计）与新增的 TEST-061..078 测试行。行 = CP-1..CP-43，列 = 产品 / 架构 / 模块 / 测试四角色。无 REJECTED、无空格、无遗留 CONDITIONAL。
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | APPROVED 每个可观察动作逐条可验（工具循环 ≤10 步） | APPROVED 测试覆盖 DEC-022 的约束面 | APPROVED TASK-065/071 ① 绑 TEST-067 ①-⑥ | APPROVED TEST-067 ①-⑥（自审） |
+| CP-2 | APPROVED 每个可观察动作逐条可验（技能工具化删路由） | APPROVED 测试覆盖 DEC-016 SUPERSEDED 的约束面 | APPROVED TASK-067 绑 TEST-069；TEST-034 作废 | APPROVED TEST-069；TEST-034 作废（自审） |
+| CP-3 | APPROVED 每个可观察动作逐条可验（技能管理） | APPROVED 测试覆盖 方案表 CP-3 删改顺序 的约束面 | APPROVED TASK-073 绑 TEST-074 | APPROVED TEST-074（自审） |
+| CP-4 | APPROVED 每个可观察动作逐条可验（展示屏工具化） | APPROVED 测试覆盖 DEC-017 ⑤ 修订 的约束面 | APPROVED TASK-068 ①②③ 绑 TEST-070 ①②③；TEST-042 作废 | APPROVED TEST-070 ①②③；TEST-042 作废（自审） |
+| CP-5 | APPROVED 每个可观察动作逐条可验（web_search） | APPROVED 测试覆盖 DEC-027 的约束面 | APPROVED TASK-070 ① 绑 TEST-072 ①②③ | APPROVED TEST-072 ①②③（自审） |
+| CP-6 | APPROVED 每个可观察动作逐条可验（搜索配置入口） | APPROVED 测试覆盖 DEC-027 app_settings 的约束面 | APPROVED TASK-074 ①-④ 绑 TEST-075 ①-⑤⑨ | APPROVED TEST-075 ①-⑤⑨（自审） |
+| CP-7 | APPROVED 每个可观察动作逐条可验（read_url） | APPROVED 测试覆盖 DEC-025 的约束面 | APPROVED TASK-069/070 ② 绑 TEST-071；TEST-072 ⑤ | APPROVED TEST-071 ⑨⑩ 依赖 TASK-069 ② 的可注入 resolver，否则该样本发现不了（自审） |
+| CP-8 | APPROVED 每个可观察动作逐条可验（出网边界 MUST） | APPROVED 测试覆盖 DEC-025 的约束面 | APPROVED TASK-069 绑 TEST-071；TEST-072 ①⑥ | APPROVED TEST-071；TEST-072 ①⑥（自审） |
+| CP-9 | APPROVED 每个可观察动作逐条可验（对话内步骤流） | APPROVED 测试覆盖 ChatDelta 扩展 的约束面 | APPROVED TASK-075 绑 TEST-076 ①②③⑥⑦⑧ | APPROVED TEST-076 ①②③⑥⑦⑧（自审） |
+| CP-10 | APPROVED 每个可观察动作逐条可验（工具落库与重建） | APPROVED 测试覆盖 DEC-024 的约束面 | APPROVED TASK-060 ①⑤/071 ②③⑥ 绑 TEST-062；TEST-076 ④ | APPROVED TEST-062；TEST-076 ④（自审） |
+| CP-11 | APPROVED 每个可观察动作逐条可验（状态灯五态） | APPROVED 测试覆盖 DEC-012 修订 的约束面 | APPROVED TASK-076 ①④ 绑 TEST-077 ①②③⑧ | APPROVED TEST-077 ③ 覆盖 reduced-motion 下的可辨识性（自审） |
+| CP-12 | APPROVED 每个可观察动作逐条可验（折叠态长任务） | APPROVED 测试覆盖 DEC-012 修订 的约束面 | APPROVED TASK-076 ② 绑 TEST-077 ④⑤ | APPROVED TEST-077 ④⑤（自审） |
+| CP-13 | APPROVED 每个可观察动作逐条可验（面板分情形高度） | APPROVED 测试覆盖 DEC-005 修订 的约束面 | APPROVED TASK-076 ③④ 绑 TEST-077 ⑥⑦⑧ | APPROVED TEST-077 ⑥⑦⑧（自审） |
+| CP-14 | APPROVED 每个可观察动作逐条可验（token 用量可见） | APPROVED 测试覆盖 DEC-028 的约束面 | APPROVED TASK-062/060 ③/074 ⑤ 绑 TEST-064；TEST-075 ⑥⑦⑧ | APPROVED TEST-064；TEST-075 ⑥⑦⑧（自审） |
+| CP-15 | APPROVED 每个可观察动作逐条可验（来源引用） | APPROVED 测试覆盖 方案表 CP-15 独立结构 的约束面 | APPROVED TASK-072 绑 TEST-073 | APPROVED TEST-073（自审） |
+| CP-16 | APPROVED 每个可观察动作逐条可验（Provider 能力探测） | APPROVED 测试覆盖 DEC-029 的约束面 | APPROVED TASK-063/060 ② 绑 TEST-065 | APPROVED TEST-065（自审） |
+| CP-17 | APPROVED 每个可观察动作逐条可验（工具结果保留窗口） | APPROVED 测试覆盖 DEC-026 ③ 的约束面 | APPROVED TASK-066 ② 绑 TEST-068 ③ | APPROVED TEST-068 ③（自审） |
+| CP-18 | APPROVED 每个可观察动作逐条可验（REQ-F-004 重写） | APPROVED 测试覆盖 DEC-026 ① 的约束面 | APPROVED TASK-066 ①/071 ③ 绑 TEST-068 ①② | APPROVED TEST-068 ①②（自审） |
+| CP-19 | APPROVED 每个可观察动作逐条可验（循环中途停止） | APPROVED 测试覆盖 DEC-022 signal 传入 的约束面 | APPROVED TASK-065 ⑥ 绑 TEST-067 ⑦ | APPROVED TEST-067 ⑦（自审） |
+| CP-20 | APPROVED 每个可观察动作逐条可验（save_insight 工具化） | APPROVED 测试覆盖 DEC-015 修订（信任面扩大） 的约束面 | APPROVED TASK-068 ④⑤⑥ 绑 TEST-070 ④-⑧；TEST-036 作废 | APPROVED TEST-070 ⑧ 如实记录已接受风险的实际行为，不伪装防护（自审） |
+| CP-21 | APPROVED 每个可观察动作逐条可验（每轮上下文预算） | APPROVED 测试覆盖 DEC-026 ④⑤⑥ 的约束面 | APPROVED TASK-066 ③④⑤ 绑 TEST-068 ④-⑦ | APPROVED NF-007 ⑤ 已由 P2 定值获得阈值，构成断言而非仅测量（自审） |
+| CP-22 | APPROVED 每个可观察动作逐条可验（前缀稳定+动态注册） | APPROVED 测试覆盖 DEC-026 ①②⑦ 的约束面 | APPROVED TASK-064 ①②③ 绑 TEST-066 ②③；TEST-068 ①② | APPROVED TEST-066 ②③；TEST-068 ①②（自审） |
+| CP-23 | APPROVED 每个可观察动作逐条可验（内核可扩展性） | APPROVED 测试覆盖 DEC-022（三注册点） 的约束面 | APPROVED TASK-064 ④ 绑 TEST-066 ①⑤ | APPROVED TEST-066 ①⑤（自审） |
+| CP-24 | APPROVED 每个可观察动作逐条可验（既有条款澄清） | APPROVED 测试覆盖 方案表 CP-24 的约束面 | APPROVED TASK-067 ③/075 ⑥ 绑 TEST-069 ⑧；TEST-076 ⑦⑧ | APPROVED TEST-069 ⑧；TEST-076 ⑦⑧（自审） |
+| CP-25 | APPROVED 每个可观察动作逐条可验（非目标处置） | APPROVED 测试覆盖 总判「不安装 dsh」 的约束面 | APPROVED TASK-064 约束 绑 TEST-066 ⑥ grep | APPROVED TEST-066 ⑥ grep（自审） |
+| CP-26 | APPROVED 每个可观察动作逐条可验（迁移框架） | APPROVED 测试覆盖 DEC-023 的约束面 | APPROVED TASK-059 绑 TEST-061 | APPROVED TEST-061（自审） |
+| CP-27 | APPROVED 每个可观察动作逐条可验（线协议+分片累积） | APPROVED 测试覆盖 DEC-024 ① 的约束面 | APPROVED TASK-061 绑 TEST-063 | APPROVED TEST-063（自审） |
+| CP-28 | APPROVED 每个可观察动作逐条可验（悬空 tool_calls 回放） | APPROVED 测试覆盖 DEC-024 ④ 的约束面 | APPROVED TASK-071 ④ 绑 TEST-067 ⑧ | APPROVED TEST-067 ⑧（自审） |
+| CP-29 | APPROVED 每个可观察动作逐条可验（Provider 上下文窗口） | APPROVED 测试覆盖 DEC-026 ⑤ 的约束面 | APPROVED TASK-060 ②/066 ④ 绑 TEST-068 ⑦ | APPROVED TEST-068 ⑦（自审） |
+| CP-30 | APPROVED 每个可观察动作逐条可验（usage 事件与存储） | APPROVED 测试覆盖 DEC-028 的约束面 | APPROVED TASK-062/060 ③ 绑 TEST-064；TEST-062 ① | APPROVED TEST-064；TEST-062 ①（自审） |
+| CP-31 | APPROVED 每个可观察动作逐条可验（来源列表独立结构） | APPROVED 测试覆盖 方案表 CP-31 的约束面 | APPROVED TASK-072 ① 绑 TEST-073 ②③ | APPROVED TEST-073 ②③（自审） |
+| CP-32 | APPROVED 每个可观察动作逐条可验（能力粒度三态） | APPROVED 测试覆盖 DEC-029 的约束面 | APPROVED TASK-063 ②③ 绑 TEST-065 ②③④ | APPROVED TEST-065 ②③④（自审） |
+| CP-33 | APPROVED 每个可观察动作逐条可验（校验器可注入 resolver） | APPROVED 测试覆盖 DEC-025 可注入 的约束面 | APPROVED TASK-069 ② 绑 TEST-071 ⑨⑩⑪ | APPROVED TEST-071 ⑨⑩⑪（自审） |
+| CP-34 | APPROVED 每个可观察动作逐条可验（SSRF 样本集补全） | APPROVED 测试覆盖 DEC-025 规则集 的约束面 | APPROVED TASK-069 ① 绑 TEST-071 ①-⑧ | APPROVED TEST-071 ①-⑧（自审） |
+| CP-35 | APPROVED 每个可观察动作逐条可验（mock 模型+mock SearXNG） | APPROVED 测试覆盖 总判（测试基建） 的约束面 | APPROVED —（测试角色） 绑 TEST-078 ①②⑦ | APPROVED TEST-078 ①②使两条主路径在无真实 SearXNG 下可跑；真实后端降人工冒烟（自审） |
+| CP-36 | APPROVED 每个可观察动作逐条可验（出网守卫） | APPROVED 测试覆盖 方案表 CP-36 白名单 的约束面 | APPROVED —（测试角色） 绑 TEST-072 ⑥；TEST-066 ⑤ | APPROVED TEST-072 ⑥；TEST-066 ⑤（自审） |
+| CP-37 | APPROVED 每个可观察动作逐条可验（既有 TEST 作废与反转） | APPROVED 测试覆盖 方案表 CP-37 的约束面 | APPROVED —（测试角色） 绑 既有测试处置表 | APPROVED 3 条作废 + 15 组反转/校准已逐条登记，gate g3 不再索要作废证据（自审） |
+| CP-38 | APPROVED 每个可观察动作逐条可验（ui-contract 三处改写） | APPROVED 测试覆盖 方案表 CP-38 的约束面 | APPROVED TASK-076 ④ 绑 TEST-077 ⑧ | APPROVED TEST-077 ⑧（自审） |
+| CP-39 | APPROVED 每个可观察动作逐条可验（messages 行内序号） | APPROVED 测试覆盖 DEC-024 ②③ 的约束面 | APPROVED TASK-060 ①⑤ 绑 TEST-062 ③ | APPROVED TEST-062 ③（自审） |
+| CP-40 | APPROVED 每个可观察动作逐条可验（事件类型单一来源） | APPROVED 测试覆盖 方案表 CP-40 的约束面 | APPROVED TASK-075 ④ 绑 TEST-076 ⑤ | APPROVED TEST-076 ⑤（自审） |
+| CP-41 | APPROVED 每个可观察动作逐条可验（NF-011 执行体短路） | APPROVED 测试覆盖 DEC-026 ② 的约束面 | APPROVED TASK-064 ③/070 ④ 绑 TEST-066 ③；TEST-072 ④ | APPROVED TEST-066 ③；TEST-072 ④（自审） |
+| CP-42 | APPROVED 每个可观察动作逐条可验（技能 name 与 slug） | APPROVED 测试覆盖 方案表 CP-42 的约束面 | APPROVED TASK-073 ④⑤ 绑 TEST-074 ③④⑤ | APPROVED TEST-074 ③④⑤（自审） |
+| CP-43 | APPROVED 每个可观察动作逐条可验（show_insight 属主校验） | APPROVED 测试覆盖 方案表 CP-43 的约束面 | APPROVED TASK-068 ③ 绑 TEST-070 ③ | APPROVED TEST-070 ③（自审） |
+
+**R2/R3/R4 结果**：CP-1..CP-43 × 4 角色 **全 APPROVED，无 REJECTED、无空格、无遗留 CONDITIONAL**。R1 阶段四角色的 CONDITIONAL 条件已在 P2 全部成文：产品的 7 项经人工终裁回写需求说明书；架构的 8 项落为 DEC-022..029 与 DEC-005/012/015/016/017 的修订作废；模块的 9 项落为 TASK-059..076 的粒度拆分与实施顺序（TASK-059 → TASK-060 → 其余）；测试的 7 项落为 TEST-061..078 与「既有测试处置」表（3 条作废、15 组反转/校准）。
+
+**P3 出口义务清单（实现前逐条清零）**：① `src/lib/tools/url-guard.ts` 与 `budget.ts` 不得 import `node:fs`（grep 守卫，并入 TEST-071 ⑫ / TEST-068）；② 对话核心不得 import 具体工具模块（grep 守卫，TEST-066 ⑤）；③ 无 subagent / sandbox / shell 类工具注册（grep 守卫，TEST-066 ⑥）；④ `package.json` `dependencies` 逐字不变；⑤ TASK-059 迁移框架必须先于 TASK-060 六处 schema 变更实施，且每条迁移 `up`/`down` 齐备（TEST-061 ②③）；⑥ REQ-F-025 ② 提示条覆盖经 `save_insight` 上屏的全部 HTML（TEST-070 ⑦）；⑦ 既有 TEST-001..060 全部重跑，其中 3 条作废项在 `test-results.json` 标 `superseded`、15 组反转项按新逻辑校准（TEST-037 表）。
