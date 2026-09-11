@@ -1,7 +1,16 @@
 "use client";
 
 import { ChangeEvent, DragEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
-import { DISPLAY_CHANGED_EVENT, KNOWLEDGE_CHANGED_EVENT, SKILLS_CHANGED_EVENT, USAGE_CHANGED_EVENT } from "@/lib/ui-events";
+import {
+  DISPLAY_CHANGED_EVENT,
+  KNOWLEDGE_CHANGED_EVENT,
+  SKILLS_CHANGED_EVENT,
+  USAGE_CHANGED_EVENT,
+  WAKE_CHANGED_EVENT,
+  WAKE_NOTICE_EVENT,
+  type WakeClientOutcome,
+  type WakeClientSettings,
+} from "@/lib/ui-events";
 import type { ChatDelta, Source } from "@/lib/types";
 import {
   ChevronDown,
@@ -203,9 +212,36 @@ const LIGHT_TONE: Record<LightState, string> = {
 };
 
 
+/** The subset of wake settings the scheduler needs. */
+export type WakeSchedule = Pick<WakeClientSettings, "enabled" | "intervalMinutes">;
+
+async function loadWakeFromApi(): Promise<WakeSchedule> {
+  const response = await fetch("/api/settings/wake", { headers: { accept: "application/json" } });
+  if (!response.ok) {
+    throw new Error(`wake settings fetch failed (${response.status})`);
+  }
+  const body = (await response.json()) as WakeClientSettings;
+  return { enabled: body.enabled, intervalMinutes: body.intervalMinutes };
+}
+
+async function wakeViaApi(): Promise<WakeClientOutcome> {
+  const response = await fetch("/api/chat/wake", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ manual: false }),
+  });
+  if (!response.ok) {
+    throw new Error(`wake failed (${response.status})`);
+  }
+  return (await response.json()) as WakeClientOutcome;
+}
+
 type FloatingChatProps = {
   /** At least one provider is enabled — sets the light to「检测中」until the probe resolves. */
   hasEnabledProvider?: boolean;
+  /** Test seams for the proactive wake-up scheduler (REQ-F-060 ④). */
+  loadWake?: () => Promise<WakeSchedule>;
+  wake?: () => Promise<WakeClientOutcome>;
   initialConversationId?: string | null;
   initialMessages?: FloatingMessage[];
   onStream?: (request: ChatStreamRequest) => AsyncIterable<ChatStreamEvent>;
@@ -328,6 +364,8 @@ export function FloatingChat({
   initialMessages = [],
   onStream = streamChatDeltas,
   probeProviders = probeViaApi,
+  loadWake = loadWakeFromApi,
+  wake = wakeViaApi,
 }: FloatingChatProps) {
   const restored = !sessionEnded() && initialMessages.length > 0;
 
@@ -343,6 +381,9 @@ export function FloatingChat({
   );
   const [errorLine, setErrorLine] = useState<string | null>(null);
   const [messages, setMessages] = useState<FloatingMessage[]>(restored ? initialMessages : []);
+  const [wakeSchedule, setWakeSchedule] = useState<WakeSchedule>({ enabled: false, intervalMinutes: 30 });
+  /** Last moment the user did something here; a wake only fires after a full quiet interval. */
+  const lastActivityRef = useRef<number>(Date.now());
   const [conversationId, setConversationId] = useState<string | null>(
     restored ? initialConversationId : null
   );
@@ -415,6 +456,89 @@ export function FloatingChat({
       el.scrollTo({ top: el.scrollHeight });
     }
   }, [messages]);
+
+  // REQ-F-060 ④: the schedule comes from the server and follows the ☰ controls live.
+  useEffect(() => {
+    let cancelled = false;
+    const reload = () => {
+      loadWake()
+        .then((schedule) => {
+          if (!cancelled) {
+            setWakeSchedule(schedule);
+          }
+        })
+        .catch(() => {
+          /* keep the current schedule */
+        });
+    };
+    reload();
+    window.addEventListener(WAKE_CHANGED_EVENT, reload);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(WAKE_CHANGED_EVENT, reload);
+    };
+  }, [loadWake]);
+
+  // A reminder produced by 「现在唤醒」 in the ☰ menu shows up here like a scheduled one.
+  useEffect(() => {
+    const onNotice = (event: Event) => {
+      const detail = (event as CustomEvent<{ text: string; messageId: string }>).detail;
+      showWakeNotice(detail.text, detail.messageId);
+    };
+    window.addEventListener(WAKE_NOTICE_EVENT, onNotice);
+    return () => window.removeEventListener(WAKE_NOTICE_EVENT, onNotice);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
+   * The scheduler (REQ-F-060 ④⑤). Only a trigger: the server still decides whether a
+   * wake may spend tokens. It fires only when the page is visible, nothing is streaming,
+   * and the user has been quiet for a full interval — a wake while someone is typing is
+   * an interruption, and a wake into a hidden tab is tokens nobody reads.
+   */
+  useEffect(() => {
+    if (!wakeSchedule.enabled) {
+      return;
+    }
+    const intervalMs = Math.max(1, wakeSchedule.intervalMinutes) * 60_000;
+    const timer = setInterval(() => {
+      if (isStreaming) {
+        return;
+      }
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+        return;
+      }
+      if (Date.now() - lastActivityRef.current < intervalMs) {
+        return;
+      }
+      wake()
+        .then((outcome) => {
+          if (outcome.kind === "notice") {
+            showWakeNotice(outcome.text, outcome.messageId);
+          }
+        })
+        .catch(() => {
+          /* silent: a wake must never surface as an error in the console (REQ-NF-020 ③) */
+        });
+    }, intervalMs);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wakeSchedule.enabled, wakeSchedule.intervalMinutes, isStreaming, wake]);
+
+  /** REQ-F-061 ①②: a reminder is a system row (never a bubble of the user's), and the light pulses once. */
+  function showWakeNotice(text: string, messageId: string) {
+    applyCollapsed(false);
+    setMessages((current) =>
+      current.some((item) => item.id === messageId)
+        ? current
+        : [...current, { id: messageId, role: "system", content: text, status: "wake" }]
+    );
+    setJustFinished(true);
+    if (finishTimerRef.current) {
+      clearTimeout(finishTimerRef.current);
+    }
+    finishTimerRef.current = setTimeout(() => setJustFinished(false), 1200);
+  }
 
   // While collapsed the transcript is out of the DOM, so the light carries the phase
   // distinction on its own (REQ-F-019 ④ as rewritten).
@@ -614,6 +738,7 @@ export function FloatingChat({
 
     const controller = new AbortController();
     abortRef.current = controller;
+    lastActivityRef.current = Date.now();
     const userId = crypto.randomUUID();
     const assistantId = crypto.randomUUID();
     let receivedText = false;
@@ -957,7 +1082,10 @@ export function FloatingChat({
             rows={1}
             className="max-h-40 min-h-11 flex-1 resize-y"
             value={input}
-            onChange={(event) => setInput(event.target.value)}
+            onChange={(event) => {
+              lastActivityRef.current = Date.now();
+              setInput(event.target.value);
+            }}
             onKeyDown={handleKeyDown}
           />
           {isStreaming ? (

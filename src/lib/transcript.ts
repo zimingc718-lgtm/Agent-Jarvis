@@ -76,7 +76,9 @@ export function buildTranscript(records: MessageRecord[]): TranscriptRow[] {
     }
     rows.push({
       id: record.id,
-      role: record.role === "assistant" ? "assistant" : "user",
+      // `system` rows (wake reminders, CR-20260911-proactive-wake) render as system
+      // notices — they were never the user's words.
+      role: record.role === "assistant" ? "assistant" : record.role === "system" ? "system" : "user",
       content: record.content,
       status: record.status,
       ...(record.sources ? { sources: record.sources } : {}),

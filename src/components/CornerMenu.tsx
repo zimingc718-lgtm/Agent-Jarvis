@@ -55,7 +55,10 @@ export function CornerMenu({ children }: { children: ReactNode }) {
     <div className="corner-menu fixed bottom-4 left-4 z-30 flex flex-col items-start gap-2" ref={rootRef}>
       {open ? (
         <div
-          className="corner-menu__panel flex w-64 max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-lg"
+          // CR-20260911-proactive-wake: seven sections outgrow a 720px viewport, which put the
+          // topmost item (the theme toggle) above the screen edge and made it unclickable.
+          // Cap the panel to the viewport and let it scroll; every entry stays reachable.
+          className="corner-menu__panel flex w-64 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-6rem)] flex-col gap-2 overflow-y-auto rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-lg"
           role="menu"
           aria-label="Agent-Jarvis 菜单"
         >

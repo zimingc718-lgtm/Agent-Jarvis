@@ -330,6 +330,7 @@ function buildContext() {
     "DisplayScreen.tsx": read("src/components/DisplayScreen.tsx"),
     "ThemeToggle.tsx": read("src/components/ThemeToggle.tsx"),
     "KnowledgeList.tsx": read("src/components/KnowledgeList.tsx"),
+    "WakeSettings.tsx": read("src/components/WakeSettings.tsx"),
     "markdown.tsx": read("src/lib/markdown.tsx"),
   };
   Object.assign(filesRef, files);
@@ -1451,6 +1452,27 @@ const CONTRACT = [
             return FAIL("adoption controls or their region lack accessible names");
           }
           return PASS("save / adopt / discard are named buttons; the pending queue is a labelled region");
+        },
+      },
+      {
+        id: "LB-13",
+        ref: "REQ-F-060 (CR-20260911-proactive-wake)",
+        req: "REQ-F-060",
+        title: "Proactive wake-up is off by default, switchable, and shows its cost",
+        guidance:
+          "The user ruled 默认关、要有开关、token 用量可见. The switch must be a labelled control that starts unchecked, the daily cap must sit next to today's spend, and the manual trigger must be a real button.",
+        check(ctx) {
+          const src = ctx.files["WakeSettings.tsx"] ?? "";
+          if (!/useState\(false\)/.test(src) || !/aria-label="主动唤醒开关"/.test(src)) {
+            return FAIL("wake switch is not a labelled control that starts off");
+          }
+          if (!/aria-label="每日唤醒 token 上限"/.test(src) || !/今日唤醒用量/.test(src)) {
+            return FAIL("daily cap and today's spend are not shown together");
+          }
+          if (!/wake-settings__now/.test(src) || !/type="button"/.test(src)) {
+            return FAIL("manual wake is not a real button");
+          }
+          return PASS("wake switch starts off with a name; cap and spend are adjacent; manual trigger is a button");
         },
       },
     ],

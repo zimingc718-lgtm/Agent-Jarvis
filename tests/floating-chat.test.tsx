@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   classifyDrop,
@@ -12,7 +12,7 @@ import {
   type ChatStreamEvent,
   type ChatStreamRequest,
 } from "@/components/FloatingChat";
-import { KNOWLEDGE_CHANGED_EVENT } from "@/lib/ui-events";
+import { KNOWLEDGE_CHANGED_EVENT, WAKE_NOTICE_EVENT } from "@/lib/ui-events";
 
 const neverProbe = () => new Promise<boolean>(() => {});
 const readyProbe = () => Promise.resolve(true);
@@ -537,8 +537,8 @@ describe("FloatingChat", () => {
       const notPrevented = fireEvent.drop(panel, { dataTransfer: dataTransferWith([{ file: new File(["# 周会纪要"], "周会.md") }]) });
       expect(notPrevented).toBe(false);
 
-      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-      const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+      await waitFor(() => expect((fetchMock.mock.calls as unknown as Array<[string, RequestInit]>).some((call) => call[0] !== "/api/settings/wake")).toBe(true));
+      const [url, init] = (fetchMock.mock.calls as unknown as Array<[string, RequestInit]>).find((call) => call[0] !== "/api/settings/wake")!;
       expect(url).toBe("/api/knowledge");
       expect((init.body as FormData).get("file")).toBeInstanceOf(File);
       await waitFor(() => expect(screen.getByText("已存入知识库：周会纪要")).toBeInTheDocument());
@@ -567,8 +567,8 @@ describe("FloatingChat", () => {
       expect(container.querySelectorAll(".floating-chat__save-knowledge")).toHaveLength(1);
 
       fireEvent.click(button);
-      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-      const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+      await waitFor(() => expect((fetchMock.mock.calls as unknown as Array<[string, RequestInit]>).some((call) => call[0] !== "/api/settings/wake")).toBe(true));
+      const [url, init] = (fetchMock.mock.calls as unknown as Array<[string, RequestInit]>).find((call) => call[0] !== "/api/settings/wake")!;
       expect(url).toBe("/api/knowledge");
       expect(JSON.parse(String(init.body))).toEqual({ content: "部署端口是 8443", source: "conversation" });
       await waitFor(() => expect(screen.getByText("已存入知识库：部署端口是 8443")).toBeInTheDocument());
@@ -609,8 +609,8 @@ describe("FloatingChat", () => {
       const zip = new File([new Uint8Array([1, 2, 3])], "reporter.zip", { type: "application/zip" });
       fireEvent.drop(panel, { dataTransfer: dataTransferWith([{ file: zip }]) });
 
-      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-      const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+      await waitFor(() => expect((fetchMock.mock.calls as unknown as Array<[string, RequestInit]>).some((call) => call[0] !== "/api/settings/wake")).toBe(true));
+      const [url, init] = (fetchMock.mock.calls as unknown as Array<[string, RequestInit]>).find((call) => call[0] !== "/api/settings/wake")!;
       expect(url).toBe("/api/skills");
       expect((init.body as FormData).get("archive")).toBeInstanceOf(File);
       await waitFor(() => expect(screen.getByText(/已注册技能：reporter/)).toBeInTheDocument());
@@ -628,8 +628,8 @@ describe("FloatingChat", () => {
       const input = screen.getByLabelText("选择技能 zip 压缩包");
       fireEvent.change(input, { target: { files: [new File(["z"], "picked.zip")] } });
 
-      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-      const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+      await waitFor(() => expect((fetchMock.mock.calls as unknown as Array<[string, RequestInit]>).some((call) => call[0] !== "/api/settings/wake")).toBe(true));
+      const [, init] = (fetchMock.mock.calls as unknown as Array<[string, RequestInit]>).find((call) => call[0] !== "/api/settings/wake")!;
       expect((init.body as FormData).get("archive")).toBeInstanceOf(File);
       // ⑤ Same receipt wording as the drop path — one shared submit implementation.
       await waitFor(() => expect(screen.getByText(/已注册技能：picked/)).toBeInTheDocument());
@@ -761,6 +761,66 @@ describe("FloatingChat", () => {
     // Rows streamed in this session carry client ids; count kept user turns from the end.
     const byCount = insertCompactionMarker(restored, { summary: "S", afterMessageId: "not-a-row", keptTurns: 2 });
     expect(byCount.map((row) => row.role === "summary" ? "S" : row.id)).toEqual(["u1", "a1", "S", "u2", "a2", "u3", "a3"]);
+  });
+
+  // CR-20260911-proactive-wake — TEST-103 ④⑤: the scheduler and the menu-originated notice.
+  describe("proactive wake-up (REQ-F-060 ④⑤, REQ-F-061 ①)", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("④ with the schedule on, a quiet interval fires one wake and a notice becomes a system row", async () => {
+      // Fake only the interval and the clock: React's scheduler and waitFor keep real timers.
+      vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+      const wake = vi.fn(async () => ({
+        kind: "notice" as const,
+        text: "主动提醒：记得配 8443。",
+        conversationId: "c1",
+        messageId: "w1",
+        usage: { date: "2026-09-11", inputTokens: 1, outputTokens: 1, runs: 1, notices: 1 },
+      }));
+      const { container } = render(
+        <FloatingChat
+          hasEnabledProvider
+          probeProviders={readyProbe}
+          loadWake={async () => ({ enabled: true, intervalMinutes: 1 })}
+          wake={wake}
+        />
+      );
+      // The schedule has to arrive (a real microtask + commit) before the interval exists.
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      expect(wake).not.toHaveBeenCalled();
+      act(() => {
+        vi.advanceTimersByTime(61_000);
+      });
+      await waitFor(() => expect(wake).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(screen.getByText("主动提醒：记得配 8443。")).toBeInTheDocument());
+      const row = container.querySelector(".floating-chat__message--system");
+      expect(row?.textContent).toContain("主动提醒");
+    });
+
+    it("④′ off by default: no timer, no wake call", async () => {
+      vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+      const wake = vi.fn(async () => ({ kind: "noop" as const, usage: { date: "d", inputTokens: 0, outputTokens: 0, runs: 0, notices: 0 } }));
+      render(<FloatingChat hasEnabledProvider probeProviders={readyProbe} loadWake={async () => ({ enabled: false, intervalMinutes: 1 })} wake={wake} />);
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+      act(() => {
+        vi.advanceTimersByTime(125_000);
+      });
+      expect(wake).not.toHaveBeenCalled();
+    });
+
+    it("⑤ a notice from the ☰ 「现在唤醒」 shows up in the transcript exactly once", async () => {
+      render(<FloatingChat hasEnabledProvider probeProviders={readyProbe} loadWake={async () => ({ enabled: false, intervalMinutes: 30 })} />);
+      const detail = { text: "主动提醒：明天开会。", messageId: "w9" };
+      window.dispatchEvent(new CustomEvent(WAKE_NOTICE_EVENT, { detail }));
+      window.dispatchEvent(new CustomEvent(WAKE_NOTICE_EVENT, { detail }));
+      await waitFor(() => expect(screen.getAllByText("主动提醒：明天开会。")).toHaveLength(1));
+    });
   });
 
   // REVERSED by CR-20260910-agent-tooling (CP-9): the `skill` tail event is gone —
