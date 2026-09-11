@@ -37,6 +37,17 @@ export type KnowledgeSummary = {
   source: string;
   createdAt: string;
   bytes: number;
+  /**
+   * Which tracked entity this belongs to, empty for the unowned bucket
+   * (CR-20260911-home-dashboard: entity is the PRIMARY index, document type secondary).
+   * The unowned bucket is counted and shown rather than hidden - an invisible catch-all
+   * becomes a second 未分类.
+   */
+  entity: string;
+  /** 产品规格书 / 标准说明书 / 技术论文 and so on; secondary classification. */
+  docType: string;
+  /** Where the text came from. Kept alongside the text: pages change, links prove. */
+  sourceUrl: string;
 };
 
 export type KnowledgeEntry = KnowledgeSummary & { content: string };
@@ -98,9 +109,26 @@ export function isKnowledgeTextPath(path: string): boolean {
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 
-export function renderEntryFile(entry: { title: string; source: string; createdAt: string; content: string }): string {
+export function renderEntryFile(entry: {
+  title: string;
+  source: string;
+  createdAt: string;
+  content: string;
+  entity?: string;
+  docType?: string;
+  sourceUrl?: string;
+}): string {
   const title = entry.title.replace(/\r?\n/g, " ").trim();
-  return `---\ntitle: ${title}\nsource: ${entry.source}\ncreated: ${entry.createdAt}\n---\n\n${entry.content.trim()}\n`;
+  const optional = (key: string, value?: string) => (value && value.trim() ? key + ": " + value.trim() + "\n" : "");
+  return (
+    "---\ntitle: " + title +
+    "\nsource: " + entry.source +
+    "\ncreated: " + entry.createdAt + "\n" +
+    optional("entity", entry.entity) +
+    optional("doc_type", entry.docType) +
+    optional("url", entry.sourceUrl) +
+    "---\n\n" + entry.content.trim() + "\n"
+  );
 }
 
 /**
@@ -129,6 +157,9 @@ export function parseEntryFile(raw: string, fallback: { name: string; createdAt:
     title,
     source: meta.source || "file",
     createdAt: meta.created || fallback.createdAt,
+    entity: meta.entity ?? "",
+    docType: meta.doc_type ?? "",
+    sourceUrl: meta.url ?? "",
     content,
   };
 }
@@ -195,6 +226,11 @@ export type SaveKnowledgeInput = {
   title?: string;
   content: string;
   source: string;
+  /** Tracked entity this belongs to; empty lands it in the unowned bucket. */
+  entity?: string;
+  docType?: string;
+  /** The original link, kept even though the text is stored locally. */
+  sourceUrl?: string;
   /** Model proposals go here and stay out of retrieval until adopted (REQ-F-046 ③). */
   pending?: boolean;
   /** Preferred stem, e.g. a dropped file's name. */
@@ -234,8 +270,14 @@ export async function saveKnowledge(input: SaveKnowledgeInput, root: string = KN
   const base = slugifyKnowledgeName(input.preferredName || title) || `entry-${createdAt.replace(/[^0-9]/g, "").slice(0, 14)}`;
   const name = await uniqueName(dir, base);
   const path = entryPath(root, name, input.pending);
-  await writeFile(path, renderEntryFile({ title, source: input.source, createdAt, content }), { encoding: "utf8", flag: "wx" });
-  return { name, title, source: input.source, createdAt, bytes };
+  const entity = (input.entity ?? "").trim();
+  const docType = (input.docType ?? "").trim();
+  const sourceUrl = (input.sourceUrl ?? "").trim();
+  await writeFile(path, renderEntryFile({ title, source: input.source, createdAt, content, entity, docType, sourceUrl }), {
+    encoding: "utf8",
+    flag: "wx",
+  });
+  return { name, title, source: input.source, createdAt, bytes, entity, docType, sourceUrl };
 }
 
 export async function deleteKnowledge(name: string, root: string = KNOWLEDGE_ROOT): Promise<boolean> {
@@ -425,6 +467,89 @@ export async function searchKnowledge(query: string, limit = 5, root: string = K
       const entry = byName.get(hit.id)!;
       return { name: entry.name, title: entry.title, score: hit.score, snippet: snippetFor(entry.content, terms) };
     });
+}
+
+/**
+ * Queries that found nothing (CR-20260911-home-dashboard).
+ *
+ * This is the content-gap signal worth having. A coverage matrix says what is missing
+ * from a taxonomy we invented; a zero-result search says what someone actually went
+ * looking for and could not find. The file is append-only JSON lines, capped, and
+ * carries no answer text - only the query and when.
+ */
+export const MISSES_FILE = "_misses.jsonl";
+const MAX_MISSES = 500;
+
+export type SearchMiss = { query: string; at: string };
+export type MissCount = { query: string; count: number; last: string };
+
+export async function recordSearchMiss(query: string, root: string = KNOWLEDGE_ROOT, now: Date = new Date()): Promise<void> {
+  const trimmed = query.trim().slice(0, 200);
+  if (!trimmed) {
+    return;
+  }
+  await mkdir(root, { recursive: true });
+  const path = join(root, MISSES_FILE);
+  let existing: string[] = [];
+  try {
+    existing = (await readFile(path, "utf8")).split("\n").filter(Boolean);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
+  existing.push(JSON.stringify({ query: trimmed, at: now.toISOString() }));
+  await writeFile(path, existing.slice(-MAX_MISSES).join("\n") + "\n", "utf8");
+}
+
+/** Distinct queries that found nothing, most-asked first. */
+export async function listSearchMisses(root: string = KNOWLEDGE_ROOT): Promise<MissCount[]> {
+  let raw: string;
+  try {
+    raw = await readFile(join(root, MISSES_FILE), "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return [];
+    }
+    throw error;
+  }
+  const tally = new Map<string, MissCount>();
+  for (const line of raw.split("\n")) {
+    if (!line.trim()) {
+      continue;
+    }
+    let parsed: SearchMiss;
+    try {
+      parsed = JSON.parse(line) as SearchMiss;
+    } catch {
+      continue;
+    }
+    if (!parsed?.query) {
+      continue;
+    }
+    const seen = tally.get(parsed.query);
+    if (seen) {
+      seen.count += 1;
+      seen.last = parsed.at > seen.last ? parsed.at : seen.last;
+    } else {
+      tally.set(parsed.query, { query: parsed.query, count: 1, last: parsed.at ?? "" });
+    }
+  }
+  return [...tally.values()].sort((a, b) => b.count - a.count || b.last.localeCompare(a.last));
+}
+
+/**
+ * How many entries each tracked entity owns, with the unowned bucket under "".
+ * The board shows this per card: it is the one place the tracking half and the library
+ * half of the page actually meet (CR-20260911-home-dashboard).
+ */
+export async function countByEntity(root: string = KNOWLEDGE_ROOT): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {};
+  for (const entry of await listKnowledge(root)) {
+    const key = entry.entity || "";
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+  return counts;
 }
 
 /** Token estimate of an entry body, for the tool-result sub-budget (REQ-NF-013 ③). */

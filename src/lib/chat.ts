@@ -24,6 +24,7 @@ import { ToolRegistry, type ToolContext } from "./tools/registry";
 import { createSkillTools } from "./tools/skill-tools";
 import { createDisplayTools } from "./tools/display-tools";
 import { createKnowledgeTools } from "./tools/knowledge-tools";
+import { createEntityTools } from "./tools/entity-tools";
 import { createWebTools, readWebSettings } from "./tools/web-tools";
 import type { ChatDelta, ChatMessage, ProviderRuntimeConfig, Source } from "./types";
 
@@ -91,6 +92,12 @@ export function buildRegistry(store: Store, extra?: ToolRegistry): ToolRegistry 
     registry.register(tool);
   }
   for (const tool of createKnowledgeTools()) {
+    registry.register(tool);
+  }
+  // CR-20260911-home-dashboard: entity tools register unconditionally, like save_knowledge.
+  // Making them conditional needs a ToolContext field, and that file is being rewritten
+  // by the display-console CR right now; the condition joins in the wiring step.
+  for (const tool of createEntityTools()) {
     registry.register(tool);
   }
   if (extra) {

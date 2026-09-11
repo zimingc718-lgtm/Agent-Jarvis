@@ -36,7 +36,8 @@
     "project/06_changes/CR-20260910-agent-tooling.md",
     "project/06_changes/CR-20260911-context-compaction.md",
     "project/06_changes/CR-20260911-knowledge-base.md",
-    "project/06_changes/CR-20260911-proactive-wake.md"
+    "project/06_changes/CR-20260911-proactive-wake.md",
+    "project/06_changes/CR-20260911-home-dashboard.md"
   ],
   "tests": [
     {
@@ -734,6 +735,46 @@
       "real_entry": true,
       "date": "2026-09-11",
       "notes": "CR-20260911-proactive-wake；真实入口：默认关、用量可见；现在唤醒 → 模型恰一次非流式调用（max_tokens 200 + 唤醒指令）→ 转录区 system 行；刷新后仍在、GET messages 字段兼容；上限设 1 后零调用并显示已达上限；开关持久。e2e 13 PASS。"
+    },
+    {
+      "id": "TEST-120",
+      "result": "PASS",
+      "command": "npm test -- entities",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-home-dashboard；保存即带 frontmatter 的 .md 并读回一致；手写最小文件可读；非法 kind/空名拒绝、路径穿越在 slug 层消失；同名加序号；顺序固定（改过的对象不前移）；健康度四例（无源→未接入、有源未采集→陈旧而非正常、超期→陈旧、近期采集但解析失败→解析失败）；移除末个源退回未接入；源须 http/https、拒凭据、拒重复；写 change 令未读、markSeen 清除且变更文字仍在；更新只收白名单字段、证据按字段去重；待采纳区四例。"
+    },
+    {
+      "id": "TEST-121",
+      "result": "PASS",
+      "command": "npm test -- entity-tools",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-home-dashboard；四条 description ≤200 可注册；list_entities 每行都打印采集状态且可按 kind 过滤；read_entity 含容量/下一步/源；propose_entity 只写待采纳区；缺 source_url 一律拒绝；来源不在已登记源内→入队且实体不变；同域→直接生效并留证据；未登记任何源的对象任何来源都不能直写（防空白名单绕过）；非法字段/对象/链接作失败回喂。"
+    },
+    {
+      "id": "TEST-122",
+      "result": "PASS",
+      "command": "npm test -- entity-route",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-home-dashboard；未登录全部 401；GET 一次返回三队列；POST 直接建、kind 非法 400；PATCH 四种 action 及其 400/404；单个 GET/DELETE 与穿越形名称 404；待采纳实体与待采纳修改的采纳/忽略；已登记源写入不入队；知识总览按实体/按类型/无归属计数与缺口按次数排序。"
+    },
+    {
+      "id": "TEST-123",
+      "result": "PASS",
+      "command": "npm test -- knowledge-dashboard",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-home-dashboard；三条泳道与固定顺序提示；每张卡同时给出内容变化与采集健康度（未配置源、解析失败各自可见）；汇总条三个计数；点开卡片即 PATCH seen 且 aria-expanded 变化；展开是源管理并可增删源、无源时明说安静不代表事实；问 Jarvis 交给对话框；待采纳区两类各走各的路由；总览缺口排序与库内篇数；空看板不假装有数据。"
+    },
+    {
+      "id": "TEST-124",
+      "result": "PASS",
+      "command": "npm test -- knowledge",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-home-dashboard；知识条目新增 entity/doc_type/url 三个可选 frontmatter 键后，TEST-086 与 TEST-087 全部仍通过：旧条目缺键可读、待采纳语义不变、检索与截断不变。"
     }
   ],
   "executed_commands": [
@@ -902,6 +943,26 @@
       "command": "python tools/governance.py check-doors && review r1..r4 && check-ids && check-changes && check-specs",
       "result": "PASS",
       "summary": "CR-20260911-proactive-wake: 9 CP rows declare door + detection route; R1 PASS; R2–R4 MATRIX_WAIVED_STANDARD_TIER"
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "result": "PASS",
+      "summary": "CR-20260911-home-dashboard: no type errors"
+    },
+    {
+      "command": "npm test",
+      "result": "PASS",
+      "summary": "CR-20260911-home-dashboard: 58 test files, 471 tests passed (含并行会话的新增用例)"
+    },
+    {
+      "command": "npm run test:ui-contract",
+      "result": "PASS",
+      "summary": "CR-20260911-home-dashboard: static tier 53/53"
+    },
+    {
+      "command": "python tools/governance.py check-specs && check-changes && check-doors && review r1..r4",
+      "result": "PASS",
+      "summary": "CR-20260911-home-dashboard: 10 CP rows declare door + detection route; specs canonical; R1 PASS"
     }
   ],
   "known_warnings": [

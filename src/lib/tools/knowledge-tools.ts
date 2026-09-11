@@ -3,6 +3,7 @@ import {
   KnowledgeError,
   MAX_ENTRY_BYTES,
   readKnowledge,
+  recordSearchMiss,
   saveKnowledge,
   searchKnowledge,
 } from "../knowledge";
@@ -51,6 +52,8 @@ export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescript
       const limit = typeof args.limit === "number" && Number.isFinite(args.limit) ? Math.floor(args.limit) : 5;
       const hits = await searchKnowledge(query, limit, root);
       if (hits.length === 0) {
+        // A miss is the gap signal the board shows; record it before answering.
+        await recordSearchMiss(query, root);
         return { ok: true, content: `知识库中没有与「${query}」相关的条目。`, summary: `知识检索无结果：${query}` };
       }
       const lines = hits.map((hit) => `- ${hit.name}｜${hit.title}：${hit.snippet}`);
