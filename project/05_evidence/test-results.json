@@ -584,7 +584,13 @@
     },
     {
       "id": "skill-html-unsandboxed",
-      "detail": "CR-20260909-skills / CR-20260909-display-screen (DEC-015): skill-generated HTML is rendered in an <iframe srcdoc> WITHOUT a sandbox attribute. Same-origin scripts in that HTML can read localStorage and call same-origin APIs (e.g. DELETE /api/providers/[id]). The user (2026-09-09, msg 54-1) accepted this risk for the local single-admin form; the only mitigation is the non-dismissible notice bar (REQ-F-025 ②). Sandboxing the iframe is a mandatory exit obligation for a future CR.",
+      "detail": "CR-20260909-skills / CR-20260909-display-screen (DEC-015): skill-generated HTML is rendered in an <iframe srcdoc> WITHOUT a sandbox attribute. Same-origin scripts in that HTML can read localStorage and call same-origin APIs (e.g. DELETE /api/providers/[id]). The user (2026-09-09, msg 54-1) accepted this risk for the local single-admin form; the only mitigation is the non-dismissible notice bar (REQ-F-025 ②). Sandboxing the iframe is a mandatory exit obligation for a future CR. SCOPE EXPANDED by CR-20260910-agent-tooling (see sibling entry skill-html-unsandboxed-web-source).",
+      "check": "manual",
+      "reviewed_at": "2026-09-10"
+    },
+    {
+      "id": "skill-html-unsandboxed-web-source",
+      "detail": "CR-20260910-agent-tooling (CP-20, 单向门; R1 架构角色提出): REQ-F-034 read_url lets attacker-controlled web page content enter the model's context. That content can instruct the model to call save_insight(html), placing attacker-authored HTML into the SAME unsandboxed same-origin <iframe srcdoc> covered by skill-html-unsandboxed. DEC-015's accepted-risk premise was 'the user dragged in a poisoned skill folder' — a source the user chose and trusts. This CR widens the source to ANY web page reachable by search, so the premise no longer holds and the trust surface is strictly larger. Attack chain: user question -> web_search -> read_url on attacker page -> prompt injection in page body -> model calls save_insight ->攻击者 HTML renders with same-origin script access (localStorage, DELETE /api/providers/[id]). The user was shown this chain and the three options (A: make 联网 and save_insight mutually exclusive; B: sandbox the iframe first; C: accept) and chose C — explicitly accepting the expanded risk (2026-09-10, R1 人工终裁 item 3). Mitigation remains only the non-dismissible notice bar (REQ-F-025 ②). Detection route is '发现不了' for the injection path itself, which is why CP-20 is registered as a 单向门 per DEC-021 ②. Sandboxing the iframe stays a mandatory exit obligation for a future CR and is now higher priority than before this CR.",
       "check": "manual",
       "reviewed_at": "2026-09-10"
     }
