@@ -567,6 +567,8 @@ class GovernanceCliTests(unittest.TestCase):
         self.assertNotIn("SKIPPED_FAST_LANE", output)
 
     def test_review_r2_still_demands_a_matrix_when_detection_is_not_machine(self) -> None:
+        # All two-way, one human detection route, but NO `## 角色意见` — that is not the
+        # standard tier CONTROLS.md describes, just a record that skipped the paperwork.
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             self._fast_lane_project(
@@ -579,6 +581,73 @@ class GovernanceCliTests(unittest.TestCase):
 
         self.assertEqual(code, 1, output)
         self.assertNotIn("SKIPPED_FAST_LANE", output)
+        self.assertNotIn("MATRIX_WAIVED_STANDARD_TIER", output)
+
+    # CR-20260911-context-compaction: DEC-021 ①'s standard tier (all two-way doors, at
+    # least one CP only a person at a real entry can catch) is "CP 表 + 相关角色意见 +
+    # 门禁" in CONTROLS.md — no R2–R4 matrices. `review` had learnt the fast lane but not
+    # this tier, so the first standard-tier record was blocked for a missing matrix.
+    STANDARD_ROWS = (
+        "| CP-1 | 产品 | 小改 | REQ-F-001 | 小改 | 双向 | 机器：npm test |\n"
+        "| CP-2 | 产品 | 靠人看 | REQ-F-002 | 小改 | 双向 | 真实入口：长对话后追问早前细节 |\n"
+    )
+    ROLE_OPINIONS = (
+        "\n## 角色意见\n\n"
+        "| 角色 | 意见 | 处理 |\n|---|---|---|\n"
+        "| 产品 owner | CP-2 靠人发现，须如实登记 | 登记为真实入口项 |\n"
+    )
+
+    def _standard_tier_project(self, root: Path, *, with_coverage: bool) -> None:
+        self._fast_lane_project(root, self.STANDARD_ROWS)
+        record = root / "project/06_changes/CR-20260911-probe.md"
+        record.write_text(record.read_text(encoding="utf-8") + self.ROLE_OPINIONS, encoding="utf-8")
+        if with_coverage:
+            layer = root / governance.REVIEW_LAYER_DOC["r2"]
+            layer.write_text(
+                layer.read_text(encoding="utf-8")
+                + "\n## 变更响应 · CR-20260911-probe\n\n| 变化点 | 方案 |\n|---|---|\n| CP-1 | 无 |\n| CP-2 | 无 |\n",
+                encoding="utf-8",
+            )
+
+    def test_review_r2_waives_the_matrix_for_a_standard_tier_record_and_names_it(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._standard_tier_project(root, with_coverage=True)
+
+            code, output = governance.run(["review", "r2", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("MATRIX_WAIVED_STANDARD_TIER", output)
+        self.assertIn("CR-20260911-probe", output)
+        self.assertNotIn("SKIPPED_FAST_LANE", output)
+
+    def test_review_r2_standard_tier_still_requires_downward_coverage(self) -> None:
+        # The tier waives the matrix, never the promise that every CP lands in the layer
+        # doc's own section for this CR.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._standard_tier_project(root, with_coverage=False)
+
+            code, output = governance.run(["review", "r2", "--root", directory])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("REVIEW_R2", output)
+        self.assertNotIn("MATRIX_WAIVED_STANDARD_TIER", output)
+
+    def test_review_r2_standard_tier_is_not_open_to_a_one_way_door(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._standard_tier_project(root, with_coverage=True)
+            record = root / "project/06_changes/CR-20260911-probe.md"
+            record.write_text(
+                record.read_text(encoding="utf-8").replace("| 双向 | 真实入口", "| 单向 | 真实入口"),
+                encoding="utf-8",
+            )
+
+            code, output = governance.run(["review", "r2", "--root", directory])
+
+        self.assertEqual(code, 1, output)
+        self.assertNotIn("MATRIX_WAIVED_STANDARD_TIER", output)
 
     def test_g3_rejects_a_supersede_that_names_no_cr(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

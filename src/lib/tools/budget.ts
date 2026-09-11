@@ -152,6 +152,80 @@ export function applyRetentionWindow(
   });
 }
 
+/**
+ * Compaction tuning (DEC-030 ③④⑤, TASK-077).
+ *
+ * These numbers come from measuring the real dev database, not from taste. The
+ * measurement that shaped them: over nine real conversations, a retention window saves
+ * 82% on a 109-message conversation — but *costs* 19% on an 18-message one, because the
+ * summary is bigger than what it replaces. So compaction is gated on budget pressure and
+ * on a net-gain check, never on turn count.
+ */
+export const COMPACT_TRIGGER_RATIO = 0.8;
+/** The compacted span must be at least this many times the summary's own budget. */
+export const COMPACT_MIN_GAIN_RATIO = 3;
+export const SUMMARY_MAX_TOKENS = 500;
+/** Most recent user turns kept verbatim. */
+export const COMPACT_KEEP_TURNS = 3;
+
+/** Marks a persisted summary standing in for everything before it (DEC-030 ①). */
+export const SUMMARY_STATUS = "summary";
+
+export type CompactionPlan =
+  | { shouldCompact: false; reason: "under-budget" | "nothing-old-enough" | "not-worth-it" }
+  | { shouldCompact: true; through: number; spanTokens: number; estimatedGain: number };
+
+/**
+ * Decide whether compacting would actually help (REQ-F-042 ①③, REQ-NF-012 ①).
+ *
+ * Pure: no model call, no db, no fs. The caller generates the summary if this says yes.
+ */
+export function planCompaction(input: {
+  messages: TurnMessage[];
+  currentTurn: number;
+  contextWindow: number;
+  keepTurns?: number;
+  summaryTokens?: number;
+}): CompactionPlan {
+  const keepTurns = input.keepTurns ?? COMPACT_KEEP_TURNS;
+  const summaryTokens = input.summaryTokens ?? SUMMARY_MAX_TOKENS;
+  const limit = budgetTokens(input.contextWindow, BUDGET_SHARES.totalInput);
+
+  const total = input.messages.reduce((sum, message) => sum + estimateTokens(message.content ?? "") + 4, 0);
+  // Budget pressure is the ONLY trigger. A short conversation never reaches it, which is
+  // exactly what keeps compaction from making short conversations more expensive.
+  if (total < limit * COMPACT_TRIGGER_RATIO) {
+    return { shouldCompact: false, reason: "under-budget" };
+  }
+
+  // Everything at or before this turn is old enough to fold into a summary.
+  const cutoff = input.currentTurn - keepTurns;
+  if (cutoff < 1) {
+    return { shouldCompact: false, reason: "nothing-old-enough" };
+  }
+
+  const span = input.messages.filter((message) => message.turn <= cutoff);
+  if (span.length === 0) {
+    return { shouldCompact: false, reason: "nothing-old-enough" };
+  }
+  const spanTokens = span.reduce((sum, message) => sum + estimateTokens(message.content ?? "") + 4, 0);
+
+  // The net-gain check. Without it, compacting a small span pays a summary's worth of
+  // tokens to remove less than a summary's worth of text — the regression this CR's
+  // evidence caught in the naive design.
+  if (spanTokens < summaryTokens * COMPACT_MIN_GAIN_RATIO) {
+    return { shouldCompact: false, reason: "not-worth-it" };
+  }
+
+  return { shouldCompact: true, through: cutoff, spanTokens, estimatedGain: spanTokens - summaryTokens };
+}
+
+/** Drop everything the summary covers and put the summary in its place (DEC-030 ①). */
+export function applySummary(messages: TurnMessage[], summary: string, through: number): TurnMessage[] {
+  const kept = messages.filter((message) => message.turn > through);
+  return [{ role: "system", content: summary, turn: through }, ...kept];
+}
+
 export type AssembleInput = {
   stablePrefix: string;
   volatileSuffix: string;

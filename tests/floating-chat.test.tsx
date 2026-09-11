@@ -5,8 +5,10 @@ import {
   classifyDrop,
   describeExcluded,
   FloatingChat,
+  insertCompactionMarker,
   PreStreamError,
   streamChatDeltas,
+  type FloatingMessage,
   type ChatStreamEvent,
   type ChatStreamRequest,
 } from "@/components/FloatingChat";
@@ -599,6 +601,91 @@ describe("FloatingChat", () => {
   });
 
   // CR-20260910-skill-intake — TEST-046 ④⑤: which skill a turn used.
+  // REQ-F-043: the compaction boundary must be reachable without being intrusive.
+  it("REQ-F-043: 压缩边界是可展开的轻标记，不是消息气泡", async () => {
+    const { container } = render(
+      <FloatingChat
+        hasEnabledProvider
+        probeProviders={readyProbe}
+        initialConversationId="c1"
+        initialMessages={[
+          { id: "m1", role: "user", content: "早前问题", status: "complete" },
+          { id: "s1", role: "summary", content: "早前讨论已压缩：选了方案 B。" },
+          { id: "m2", role: "assistant", content: "后续回答", status: "complete" },
+        ]}
+        onStream={async function* () {}}
+      />
+    );
+
+    const marker = container.querySelector(".floating-chat__compaction");
+    expect(marker).toBeInTheDocument();
+    // Not a bubble: it must not carry the message class that styles conversation turns.
+    expect(marker?.classList.contains("floating-chat__message")).toBe(false);
+
+    // Collapsed by default, opened through a real button with an accessible name.
+    const toggle = screen.getByRole("button", { name: "展开早前对话的摘要" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText(/选了方案 B/)).not.toBeInTheDocument();
+
+    fireEvent.click(toggle);
+    await waitFor(() => expect(screen.getByText(/选了方案 B/)).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "收起早前对话的摘要" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  // REQ-F-043 / TEST-082 ⑦: the marker appears in the SAME send that compacted, at the
+  // boundary — the user does not have to refresh to see that something was folded away.
+  it("REQ-F-043: 压缩当轮的 compacted 事件即时在边界处插入标记", async () => {
+    const { container } = render(
+      <FloatingChat
+        hasEnabledProvider
+        probeProviders={readyProbe}
+        initialConversationId="c1"
+        initialMessages={[
+          { id: "u1", role: "user", content: "第一问", status: "complete" },
+          { id: "a1", role: "assistant", content: "第一答", status: "complete" },
+          { id: "u2", role: "user", content: "第二问", status: "complete" },
+          { id: "a2", role: "assistant", content: "第二答", status: "complete" },
+        ]}
+        onStream={async function* () {
+          yield { type: "start", conversationId: "c1", messageId: "m" };
+          yield { type: "compacted", summary: "早前讨论：第一问已答。", afterMessageId: "a1", keptTurns: 2 };
+          yield { type: "delta", text: "第三答" };
+          yield { type: "done", messageId: "m" };
+        }}
+      />
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("Ask Agent-Jarvis"), { target: { value: "第三问" } });
+    fireEvent.click(screen.getByRole("button", { name: "发送" }));
+    await waitFor(() => expect(screen.getByText("第三答")).toBeInTheDocument());
+
+    const rows = Array.from(container.querySelectorAll(".floating-chat__messages > *"));
+    const markerAt = rows.findIndex((row) => row.classList.contains("floating-chat__compaction"));
+    expect(markerAt).toBeGreaterThan(0);
+    expect(rows[markerAt - 1].textContent).toContain("第一答");
+    expect(rows[markerAt + 1].textContent).toContain("第二问");
+    // Still collapsed and still not a bubble.
+    expect(screen.getByRole("button", { name: "展开早前对话的摘要" })).toHaveAttribute("aria-expanded", "false");
+    expect(rows[markerAt].classList.contains("floating-chat__message")).toBe(false);
+  });
+
+  it("REQ-F-043 ⑤ 前端落点：compacted 事件把标记放在锚点行之后；锚点不在时按保留轮数回退", () => {
+    const restored: FloatingMessage[] = [
+      { id: "u1", role: "user", content: "1" },
+      { id: "a1", role: "assistant", content: "r1" },
+      { id: "u2", role: "user", content: "2" },
+      { id: "a2", role: "assistant", content: "r2" },
+      { id: "u3", role: "user", content: "3" },
+      { id: "a3", role: "assistant", content: "" },
+    ];
+    const byAnchor = insertCompactionMarker(restored, { summary: "S", afterMessageId: "a1", keptTurns: 2 });
+    expect(byAnchor.map((row) => row.role === "summary" ? "S" : row.id)).toEqual(["u1", "a1", "S", "u2", "a2", "u3", "a3"]);
+
+    // Rows streamed in this session carry client ids; count kept user turns from the end.
+    const byCount = insertCompactionMarker(restored, { summary: "S", afterMessageId: "not-a-row", keptTurns: 2 });
+    expect(byCount.map((row) => row.role === "summary" ? "S" : row.id)).toEqual(["u1", "a1", "S", "u2", "a2", "u3", "a3"]);
+  });
+
   // REVERSED by CR-20260910-agent-tooling (CP-9): the `skill` tail event is gone —
   // "which skill did this turn use" is now visible as a `read_skill` row in the step
   // stream, where it sits alongside every other tool the turn ran (REQ-F-035 ⑥).

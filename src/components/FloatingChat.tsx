@@ -18,8 +18,11 @@ import { Markdown } from "@/lib/markdown";
 
 export type FloatingMessage = {
   id: string;
-  /** `step` rows are the tool step stream (REQ-F-035 ①), not conversation content. */
-  role: "user" | "assistant" | "system" | "step";
+  /**
+   * `step` rows are the tool step stream (REQ-F-035 ①); `summary` rows mark a
+   * compaction boundary (REQ-F-043). Neither is conversation content.
+   */
+  role: "user" | "assistant" | "system" | "step" | "summary";
   content: string;
   status?: string;
   /** Step rows only. */
@@ -55,6 +58,77 @@ const STEP_STATE_MARK: Record<NonNullable<FloatingMessage["stepState"]>, string>
   ok: "✓",
   failed: "✕",
 };
+
+/**
+ * Place a compaction marker where a refresh would rebuild it (REQ-F-043, DEC-030 ①):
+ * right after the last row the summary covers. Rows restored from the database carry
+ * their database ids, so `afterMessageId` usually matches; rows streamed in this
+ * session carry client ids, so the fallback counts user turns from the end — the
+ * boundary sits ahead of the `keptTurns` most recent user turns (the current one
+ * included). Exported for the unit test.
+ */
+export function insertCompactionMarker(
+  rows: FloatingMessage[],
+  event: { summary: string; afterMessageId: string | null; keptTurns: number }
+): FloatingMessage[] {
+  const marker: FloatingMessage = { id: `summary-${crypto.randomUUID()}`, role: "summary", content: event.summary };
+  let insertAt = -1;
+  if (event.afterMessageId) {
+    const anchor = rows.findIndex((row) => row.id === event.afterMessageId);
+    if (anchor >= 0) {
+      insertAt = anchor + 1;
+    }
+  }
+  if (insertAt < 0) {
+    let remaining = Math.max(1, event.keptTurns);
+    insertAt = 0;
+    for (let index = rows.length - 1; index >= 0; index -= 1) {
+      if (rows[index].role === "user") {
+        remaining -= 1;
+        if (remaining === 0) {
+          insertAt = index;
+          break;
+        }
+      }
+    }
+  }
+  return [...rows.slice(0, insertAt), marker, ...rows.slice(insertAt)];
+}
+
+/**
+ * The compaction boundary (REQ-F-043).
+ *
+ * Deliberately NOT a message bubble: the user asked for compaction to be silent, and a
+ * system message in the flow is not silent. A thin divider with a small label keeps
+ * reading uninterrupted while leaving the summary reachable — because "don't interrupt"
+ * is not the same as "leave no trace", and a model that suddenly forgets things the user
+ * cannot inspect is worse than a one-line divider.
+ */
+function CompactionMarker({ row }: { row: FloatingMessage }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="floating-chat__compaction my-1 w-full" data-role="summary">
+      <div className="flex items-center gap-2">
+        <span aria-hidden="true" className="h-px flex-1 bg-border" />
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-label={open ? "收起早前对话的摘要" : "展开早前对话的摘要"}
+          className="floating-chat__compaction-toggle rounded px-1 text-[11px] text-muted-foreground underline underline-offset-2"
+          onClick={() => setOpen((current) => !current)}
+        >
+          早前对话已压缩为摘要
+        </button>
+        <span aria-hidden="true" className="h-px flex-1 bg-border" />
+      </div>
+      {open ? (
+        <p className="floating-chat__compaction-body mt-1 whitespace-pre-wrap rounded-md bg-muted/40 px-2 py-1 text-xs text-muted-foreground">
+          {row.content}
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 /**
  * One row of the step stream (REQ-F-035 ①②). Compact by default — the detail is behind
@@ -575,6 +649,10 @@ export function FloatingChat({
           appendSystemMessage(chunk.reason);
         } else if (chunk.type === "notice") {
           appendSystemMessage(chunk.text);
+        } else if (chunk.type === "compacted") {
+          // REQ-F-043: the boundary shows up in the live transcript at the same place a
+          // refresh would rebuild it — silent (no bubble), but not traceless.
+          setMessages((current) => insertCompactionMarker(current, chunk));
         }
       }
     } catch (error) {
@@ -740,7 +818,9 @@ export function FloatingChat({
             aria-live="polite"
           >
             {messages.map((message) =>
-              message.role === "step" ? (
+              message.role === "summary" ? (
+                <CompactionMarker key={message.id} row={message} />
+              ) : message.role === "step" ? (
                 <ToolStepRow key={message.id} step={message} />
               ) : (
                 <article
