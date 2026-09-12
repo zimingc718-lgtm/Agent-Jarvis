@@ -24,6 +24,7 @@ import { ToolRegistry, type ToolContext } from "./tools/registry";
 import { createSkillTools } from "./tools/skill-tools";
 import { createDisplayTools } from "./tools/display-tools";
 import { createKnowledgeTools } from "./tools/knowledge-tools";
+import { createDocumentTools } from "./tools/document-tools";
 import { createEntityTools } from "./tools/entity-tools";
 import { createWebTools, readWebSettings } from "./tools/web-tools";
 import type { ChatDelta, ChatMessage, ProviderRuntimeConfig, Source } from "./types";
@@ -98,6 +99,19 @@ export function buildRegistry(store: Store, extra?: ToolRegistry): ToolRegistry 
   // Making them conditional needs a ToolContext field, and that file is being rewritten
   // by the display-console CR right now; the condition joins in the wiring step.
   for (const tool of createEntityTools()) {
+    registry.register(tool);
+  }
+  /**
+   * REQ-F-110: the user's own files, read where they lie. Registered unconditionally so
+   * the model can say "no folder is configured yet" instead of silently having no idea
+   * that local documents exist at all — the mistake `search_knowledge` made.
+   *
+   * Registered **after** the entity tools on purpose. Both sets are `essential`, and
+   * `fitFor` breaks ties by registration order, so at a small window the board's read
+   * tools survive and these are the ones named in the dropped list instead (TEST-171 ④).
+   * Being named is what keeps the capability explainable rather than invisible.
+   */
+  for (const tool of createDocumentTools(store)) {
     registry.register(tool);
   }
   if (extra) {
