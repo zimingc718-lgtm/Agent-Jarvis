@@ -5,6 +5,7 @@ import {
   DISPLAY_CHANGED_EVENT,
   ASK_JARVIS_EVENT,
   KNOWLEDGE_CHANGED_EVENT,
+  DISPLAY_STAGE_EVENT,
   SKILLS_CHANGED_EVENT,
   USAGE_CHANGED_EVENT,
   WAKE_CHANGED_EVENT,
@@ -912,6 +913,12 @@ export function FloatingChat({
           appendSystemMessage(chunk.reason);
         } else if (chunk.type === "notice") {
           appendSystemMessage(chunk.text);
+        } else if (chunk.type === "display_stage") {
+          // REQ-F-102 ③. Relay only: the chat owns the stream, the display screen owns what
+          // it shows, and neither imports the other. Not announced in the transcript — the
+          // step row for show_home / show_board already says it, and a second line would
+          // just repeat it.
+          window.dispatchEvent(new CustomEvent(DISPLAY_STAGE_EVENT, { detail: { stage: chunk.stage } }));
         } else if (chunk.type === "knowledge_pending") {
           // REQ-F-046 ③: a proposal is news the user must act on, so it is said in the
           // transcript AND the ☰ list refreshes to show the 采纳 / 忽略 controls.
