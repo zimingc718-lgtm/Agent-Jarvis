@@ -160,6 +160,17 @@ test("① 分块提交拼成一份带样式的报告上屏 (REQ-F-050 ①, REQ-F
   });
   await expect(page.locator('.floating-chat__step[data-state="failed"]')).toHaveCount(0);
 
+  // REQ-F-140 ④ (CR-20260912-skill-report-bridge): the report is the deliverable, so the
+  // console steps aside once the turn ends. Measured at 1440×900 the two are both centred
+  // and overlap by 768px — 78% of the report sits behind the chat until this happens.
+  await expect(page.locator(".floating-chat__messages")).toHaveCSS("opacity", "0", { timeout: 10_000 });
+  await expect(page.locator(".floating-chat")).toHaveClass(/floating-chat--auto-hidden/);
+  // And it comes straight back the moment the user goes to type (REQ-F-054 ③).
+  await page.getByPlaceholder("Ask Agent-Jarvis").focus();
+  await expect(page.locator(".floating-chat__messages")).not.toHaveClass(/floating-chat__messages--hidden/, {
+    timeout: 10_000,
+  });
+
   const frame = page.frameLocator(".display-screen__frame");
   // Both chunks are in the SAME document — the whole point of the append mode.
   await expect(frame.locator("h1")).toHaveText("分块报告");

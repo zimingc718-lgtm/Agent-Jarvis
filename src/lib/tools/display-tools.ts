@@ -115,12 +115,17 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
     name: "save_insight",
     priority: TOOL_PRIORITY.management,
     description:
-      "把 HTML 报告保存为洞察并显示在展示屏上。长报告请分块：首块不带 insightId 新建，后续块带上返回的 insightId 追加到同一份。",
+      "把 HTML 报告保存为洞察并显示在展示屏上。长报告分块：首块不带 insightId 新建，后续块带 insightId 追加。发现结构写错要整篇重写时，带 insightId 并置 mode=replace。",
     parameters: {
       type: "object",
       properties: {
         html: { type: "string", description: "本块的 HTML 片段（标签须闭合）" },
-        insightId: { type: "string", description: "可选。已有洞察 id：把本块追加到它的末尾，而不是新建" },
+        insightId: { type: "string", description: "可选。已有洞察 id：默认把本块追加到它的末尾，而不是新建" },
+        mode: {
+          type: "string",
+          enum: ["append", "replace"],
+          description: "对已有洞察的写法：append 追加到末尾（默认），replace 用本次 html 整篇覆盖。顺序写错了用 replace 重发全文，不要把开头追加到结尾。",
+        },
       },
       required: ["html"],
     },
@@ -145,6 +150,14 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
       }
 
       const insightId = typeof args.insightId === "string" ? args.insightId.trim() : "";
+      const mode = args.mode === "replace" ? "replace" : "append";
+      if (mode === "replace" && !insightId) {
+        return {
+          ok: false,
+          content: "mode=replace 需要同时给出要重写的 insightId；不带 id 就是新建，用不着 replace。",
+          summary: "replace 缺少 insightId",
+        };
+      }
       if (insightId) {
         // REQ-F-050 ①: append to an existing insight. Same ownership check as show_insight.
         const existing = store.getInsight(insightId);
@@ -156,6 +169,22 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
             summary: `洞察不可用：${insightId}`,
           };
         }
+        // REQ-F-140 ②: replace exists so a mis-ordered report can be fixed in place.
+        // Without it the only repair was appending the missing opening to the end.
+        if (mode === "replace") {
+          const rewritten = store.replaceInsightHtml(insightId, html);
+          if (!rewritten) {
+            return { ok: false, content: `重写失败：洞察 ${insightId} 已不存在。`, summary: "重写失败" };
+          }
+          store.setDisplayState({ kind: "insight", refId: insightId });
+          return {
+            ok: true,
+            content: `已整篇重写洞察 ${insightId}：现为 ${rewritten.html.length} 字符、${countSections(rewritten.html)} 个章节标题，展示屏已刷新。`,
+            summary: "已重写洞察",
+            events: [{ type: "insight", insightId }],
+          };
+        }
+
         const nextBytes = Buffer.byteLength(existing.html, "utf8") + Buffer.byteLength(html, "utf8");
         if (nextBytes > MAX_INSIGHT_BYTES) {
           return {
@@ -174,6 +203,7 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
           ok: true,
           content: `已追加到洞察 ${insightId}：累计 ${updated.html.length} 字符、${countSections(updated.html)} 个章节标题，展示屏已刷新。继续追加请仍带此 insightId。`,
           summary: "已追加洞察",
+          events: [{ type: "insight", insightId }],
         };
       }
 
@@ -184,12 +214,28 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
           summary: "洞察超出上限，未保存",
         };
       }
+      // REQ-F-140 ③: starting a second report in one conversation is almost always a
+      // mistake — it splits one document in two and the screen then shows only the newer
+      // half. The model had no way to know, so it was told nothing; now it is.
+      const existing = store.listInsightsForConversation(context.conversationId);
       const record = store.insertInsight({ conversationId: context.conversationId, kind: "skill", html });
       store.setDisplayState({ kind: "insight", refId: record.id });
+      const warning =
+        existing.length > 0
+          ? `
+注意：本会话此前已有 ${existing.length} 份洞察，最近一份是 ${existing[0]!.id}（${existing[0]!.html.length} 字符）。` +
+            `如果这是同一份报告的后续，应当带上那个 insightId 追加或 replace，而不是新建——新建会把一份报告拆成两份，展示屏只显示较新的一份。`
+          : "";
       return {
         ok: true,
-        content: `洞察已保存（id ${record.id}，${html.length} 字符）并显示在展示屏上。要继续补充内容，请再次调用并带 insightId ${record.id}。`,
+        content:
+          `洞察已保存（id ${record.id}，${html.length} 字符）并显示在展示屏上。` +
+          `要继续补充请带 insightId ${record.id}；要整篇重写请带该 id 并置 mode=replace。${warning}`,
         summary: "已生成洞察",
+        // REQ-F-140 ④: this delta type existed in `ChatDelta` and was handled by the
+        // console, but nothing ever emitted it — a leftover of the pre-tool skill-turn path.
+        // So the「已生成洞察」notice never appeared either. Emitting it fixes both.
+        events: [{ type: "insight", insightId: record.id }],
       };
     },
   };

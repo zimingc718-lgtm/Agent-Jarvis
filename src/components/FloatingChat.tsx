@@ -824,6 +824,8 @@ export function FloatingChat({
     const userId = crypto.randomUUID();
     const assistantId = crypto.randomUUID();
     let receivedText = false;
+    /** REQ-F-140 ④: a report is the deliverable, so the console steps aside once it lands. */
+    let producedInsight = false;
 
     setErrorLine(null);
     // Sending is an implicit "show me the conversation" — expand and persist it (REQ-F-019 ⑤⑥).
@@ -872,8 +874,13 @@ export function FloatingChat({
           );
           break;
         } else if (chunk.type === "insight") {
+          // Fires once per write, so the notice is said once per send while the flag can be
+          // set every time — chunked reports emit it for each block.
+          if (!producedInsight) {
+            appendSystemMessage("已生成洞察，可在展示屏查看。");
+          }
+          producedInsight = true;
           window.dispatchEvent(new Event(DISPLAY_CHANGED_EVENT));
-          appendSystemMessage("已生成洞察，可在展示屏查看。");
         } else if (chunk.type === "tool_call") {
           // REQ-F-035 ①: a step row opens here and is closed by its `tool_result`.
           // Inserted BEFORE the assistant bubble so the reply stays last.
@@ -964,6 +971,21 @@ export function FloatingChat({
     } finally {
       setIsStreaming(false);
       abortRef.current = null;
+      /**
+       * REQ-F-140 ④. The report column is 68% of the viewport and centred; so is this
+       * console, 768px wide and nearly full height. Measured at 1440×900 they overlap by
+       * 768px — **78% of the report is behind the chat** the moment it appears
+       * (EV-2026-09-12-skill-report-bridge §3). Hovering the display screen already frees
+       * it, but the user should not have to discover that to read what they just asked for.
+       *
+       * Done here rather than on the `insight` event: REQ-F-054 ④ forbids collapsing while
+       * a reply is still streaming, and `finally` is exactly where the turn has ended.
+       * A manual collapse still wins (REQ-F-054 ⑥), and any pointer or focus in the panel
+       * brings it straight back.
+       */
+      if (producedInsight && hoverCapableRef.current && !userCollapsedRef.current) {
+        setAutoHidden(true);
+      }
       // REQ-F-019 ④: if the user collapsed the panel mid-reply, give a brief
       // light pulse when it finishes — they never saw the transcript.
       if (userCollapsedRef.current) {
