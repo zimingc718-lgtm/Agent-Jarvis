@@ -237,9 +237,18 @@ export type AssembleInput = {
 /**
  * Assemble the messages for one provider call (REQ-F-004 as rewritten).
  *
- * Order of recovery when over budget (DEC-026 ⑥): narrow by the retention window first,
- * then fail loudly. Compressing in a loop would itself cost tokens and could not
- * guarantee termination, so the overflow surfaces as a request-level error instead.
+ * The retention window is applied **unconditionally** (REQ-F-091, DEC-070 ①) — REQ-F-041 ① says "只有最近 N 轮的
+ * 工具结果以原文保留", with no budget precondition. The first implementation used it only
+ * as an overflow recovery, which meant a conversation that stayed under the limit replayed
+ * every tool result it had ever produced. Measured on the real database
+ * (EV-2026-09-11-chat-latency §3): 61,770 tokens replayed per turn, 80% of the budget, of
+ * which ~40,000 were tool output from turns the user had long moved past — and because it
+ * sat under the limit, neither this window nor compaction ever fired. The tool loop then
+ * multiplies that by every step in the turn.
+ *
+ * When the narrowed context is still over budget there is nothing further to try:
+ * compressing in a loop would itself cost tokens and could not guarantee termination, so
+ * the overflow surfaces as a request-level error (DEC-026 ⑥).
  */
 export function assembleContext(input: AssembleInput): { messages: ChatMessage[]; estimatedTokens: number } {
   const limit = budgetTokens(input.contextWindow, BUDGET_SHARES.totalInput);
@@ -249,12 +258,6 @@ export function assembleContext(input: AssembleInput): { messages: ChatMessage[]
   }
   if (input.volatileSuffix) {
     system.push({ role: "system", content: input.volatileSuffix });
-  }
-
-  const full = [...system, ...input.messages.map(({ turn: _turn, ...rest }) => rest)];
-  const fullCost = full.reduce((total, message) => total + estimateTokens(message.content ?? "") + 4, 0);
-  if (fullCost <= limit) {
-    return { messages: full, estimatedTokens: fullCost };
   }
 
   const narrowed = [...system, ...applyRetentionWindow(input.messages, input.currentTurn)];

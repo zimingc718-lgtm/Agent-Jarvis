@@ -48,7 +48,8 @@
     "project/06_changes/CR-20260911-proactive-wake.md",
     "CR-20260911-display-console-ux",
     "CR-20260911-web-reading",
-    "CR-20260912-local-production"
+    "CR-20260912-local-production",
+    "CR-20260912-latency-and-report-layout"
   ],
   "tests": [
     {
@@ -923,6 +924,22 @@
       "real_entry": false,
       "date": "2026-09-12",
       "notes": "CR-20260912-display-stage；开场是标题屏且动画对读屏隐藏；没人动 3 秒自动切入看板；指针到达即切；焦点落进控制台即切（刻意不监听按键，UI 契约 LB-09 挡下了 keydown）；一次会话只播一次；洞察压过开场；看板态挂的是真组件且「问 Jarvis」只派事件。7 PASS。"
+    },
+    {
+      "id": "TEST-150",
+      "result": "PASS",
+      "command": "npm test -- budget",
+      "real_entry": false,
+      "date": "2026-09-12",
+      "notes": "保留窗口无条件生效：未超预算时旧工具结果仍被省略（旧实现漏掉的条件）、近 N 轮保留原文、省下过半、用户与助手文本不受影响；收窄后仍超限仍报 ContextOverflowError。真实会话实测每轮由 240,768 降至 24,923 token。13 PASS。"
+    },
+    {
+      "id": "TEST-151",
+      "result": "PASS",
+      "command": "npm test -- display-document",
+      "real_entry": true,
+      "date": "2026-09-12",
+      "notes": "报告外框：自带 body{margin:0} 的完整文档仍为 68% 宽且居中；frame 样式在文档自带 style 之后、body 之前；无 !important；片段同样生效且 1024px 以下整宽；防回归断言禁止布局约束回到 base 层。真实入口三视口实测 1920→0.68、1440→0.68、900→1.00，左右留白相等。9 PASS。"
     }
   ],
   "executed_commands": [
@@ -1109,6 +1126,12 @@
       "result": "PASS",
       "summary": "CR-20260912-local-production: 单测 65 文件 / 556 用例 PASS；ui-contract 53 规则 0 FAIL 0 WARN；smoke PASS；build:local 成功；tsc 0。verify 仍红：本 CR 与并行 CR 的文件待合并前 snapshot。",
       "date": "2026-09-12"
+    },
+    {
+      "command": "npm test && npm run test:ui-contract && npx tsc --noEmit",
+      "result": "PASS",
+      "summary": "CR-20260912-latency-and-report-layout: 单测 67 文件 / 571 用例 PASS；ui-contract 53 规则 0 FAIL 0 WARN；tsc 0。本 CR 为事后补记——代码 2026-09-11 已改，CR 与证据 2026-09-12 补写。",
+      "date": "2026-09-12"
     }
   ],
   "known_warnings": [
@@ -1176,6 +1199,11 @@
     },
     {
       "text": "next dev's resident memory grows to GBs over a long session (measured 772 MB -> 3,806 MB), and under memory pressure its compile workers die: GET routes keep answering 200 while on-demand routes return 500. CR-20260912-local-production adds a production run path (126 MB) as the answer; the dev path itself is unchanged and will behave the same way if left running for hours.",
+      "check": "manual",
+      "reviewed_at": "2026-09-12"
+    },
+    {
+      "text": "CR-20260912-latency-and-report-layout was written AFTER its code change (code 2026-09-11, CR and evidence 2026-09-12). During that gap the source comments referenced an evidence file and a functional requirement number (F series 059) that did not exist. This violates AI_STANDARD principle 8 (change closure). Self-reported and corrected; the fictitious number is now the real REQ-F-090.",
       "check": "manual",
       "reviewed_at": "2026-09-12"
     }

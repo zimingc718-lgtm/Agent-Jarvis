@@ -124,6 +124,57 @@ describe("上下文组装与预算 (REQ-NF-007 / REQ-F-004)", () => {
     expect(messages.at(-1)).toEqual({ role: "user", content: "hi" });
   });
 
+  it("REQ-F-041 ①: 未超预算时也收窄旧工具结果（不是只在溢出时才做）", () => {
+    // The regression this locks: `assembleContext` used to apply the retention window
+    // ONLY as overflow recovery, so a conversation comfortably under the limit replayed
+    // every tool result it had ever produced — 61,770 tokens per turn on the real
+    // database, 80% of budget, never triggering either this window or compaction
+    // (EV-2026-09-11-chat-latency §2). REQ-F-041 ① has no budget precondition.
+    const result = "网页正文".repeat(200);
+    const messages: TurnMessage[] = [
+      userTurn(1, "q1"),
+      toolResult(1, "t1", result),
+      userTurn(2, "q2"),
+      toolResult(2, "t2", result),
+      userTurn(3, "q3"),
+      toolResult(3, "t3", result),
+      userTurn(4, "q4"),
+    ];
+    const { messages: assembled, estimatedTokens } = assembleContext({
+      stablePrefix: "prefix",
+      volatileSuffix: "",
+      messages,
+      currentTurn: 4,
+      // Far above the assembled size: nothing here is close to overflowing.
+      contextWindow: 128_000,
+    });
+    const elided = assembled.filter((m) => m.content === "[结果已省略]");
+    // Turns 1 and 2 are outside the N=2 window; turn 3 stays verbatim.
+    expect(elided).toHaveLength(2);
+    expect(assembled.filter((m) => m.content === result)).toHaveLength(1);
+    // And the saving is real, not cosmetic.
+    const full = messages.reduce((n, m) => n + m.content.length, 0);
+    expect(estimatedTokens).toBeLessThan(full / 2);
+  });
+
+  it("收窄不动用户与助手的文本，只动工具结果", () => {
+    const long = "助手的长回答".repeat(200);
+    const messages: TurnMessage[] = [
+      userTurn(1, "q1"),
+      { role: "assistant", content: long, turn: 1 },
+      userTurn(2, "q2"),
+    ];
+    const { messages: assembled } = assembleContext({
+      stablePrefix: "",
+      volatileSuffix: "",
+      messages,
+      currentTurn: 2,
+      contextWindow: 128_000,
+    });
+    expect(assembled.some((m) => m.content === long)).toBe(true);
+    expect(assembled.some((m) => m.content === "[结果已省略]")).toBe(false);
+  });
+
   it("⑥ 超限先按保留窗口收窄", () => {
     const long = "结果".repeat(3_000);
     const messages: TurnMessage[] = [

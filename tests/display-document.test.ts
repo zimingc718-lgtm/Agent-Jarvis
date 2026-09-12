@@ -53,6 +53,40 @@ describe("TEST-093 buildInsightDocument (REQ-F-052)", () => {
     expect(doc.indexOf('<style id="jarvis-base">')).toBeLessThan(doc.indexOf("<style>.note"));
   });
 
+  it("④ 报告列宽为视口的 68% 并居中；frame 样式在文档自带样式之后", () => {
+    // The regression this locks: the width/centering used to live in `@layer jarvis-base`
+    // on `.jarvis-insight`. A report carrying its own `body { margin: 0 }` is UNLAYERED,
+    // so it beat the layered `margin: 0 auto` while the layered `max-width` survived —
+    // a 1152px column pinned to the left of a 1440px screen (EV-2026-09-11-chat-latency §4).
+    const own = '<!doctype html><html><head><style>body{margin:0;background:#eee}</style></head><body class="report"><h1>T</h1></body></html>';
+    const doc = buildInsightDocument(own, "light");
+    expect(doc).toContain('<style id="jarvis-frame">');
+    expect(doc).toContain("body.jarvis-insight");
+    expect(doc).toMatch(/width:\s*68%/);
+    expect(doc).toMatch(/margin-left:\s*auto/);
+    // Frame must come AFTER the document's own style, or the cascade goes the wrong way.
+    expect(doc.indexOf("<style>body{margin:0")).toBeLessThan(doc.indexOf('<style id="jarvis-frame">'));
+    // And still inside <head>, before the body it targets.
+    expect(doc.indexOf('<style id="jarvis-frame">')).toBeLessThan(doc.indexOf("<body"));
+    // No !important: the document keeps control of everything inside the column.
+    expect(doc).not.toContain("!important");
+  });
+
+  it("④ 片段同样拿到 frame 样式，且窄屏下让出整宽", () => {
+    const doc = buildInsightDocument("<h1>片段</h1>", "light");
+    expect(doc).toContain('<style id="jarvis-frame">');
+    expect(doc).toMatch(/@media \(max-width: 1024px\)[\s\S]*width:\s*100%/);
+    expect(doc).toContain('<body class="jarvis-insight">');
+  });
+
+  it("④ 布局约束不再挂在 base 层的 .jarvis-insight 上", () => {
+    // If max-width comes back into the layered rule, a document's own `body { margin: 0 }`
+    // pins the column left again — which is exactly the bug.
+    const base = INSIGHT_BASE_STYLE.match(/\.jarvis-insight \{[^}]*\}/)![0];
+    expect(base).not.toContain("max-width");
+    expect(base).not.toContain("margin");
+  });
+
   it("readDocumentTheme 只认 dark，其余为 light", () => {
     expect(readDocumentTheme({ getAttribute: () => "dark" })).toBe("dark");
     expect(readDocumentTheme({ getAttribute: () => "light" })).toBe("light");
