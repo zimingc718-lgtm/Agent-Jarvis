@@ -29,7 +29,7 @@ export const INSIGHT_BASE_STYLE = `@layer jarvis-base {
   :root[data-theme="dark"] { ${THEME_VARS.dark} color-scheme: dark; }
   html, body { margin: 0; background: hsl(var(--bg)); color: hsl(var(--fg)); }
   .jarvis-insight {
-    box-sizing: border-box; max-width: 72rem; margin: 0 auto; padding: 2rem 1.5rem 4rem;
+    box-sizing: border-box; padding: 2rem 1.5rem 4rem;
     font: 16px/1.7 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", Roboto, sans-serif;
     overflow-wrap: anywhere;
   }
@@ -61,8 +61,40 @@ export const INSIGHT_BASE_STYLE = `@layer jarvis-base {
   @media (max-width: 640px) { .jarvis-insight { padding: 1.25rem 1rem 3rem; font-size: 15px; } .jarvis-insight h1 { font-size: 1.5rem; } }
 }`;
 
+/** Share of the viewport the report column occupies (REQ-F-090 ①). */
+export const INSIGHT_WIDTH_RATIO = 0.68;
+
+/**
+ * The outer frame: how wide the report is and where it sits. Deliberately **not** in
+ * `@layer jarvis-base`, and deliberately injected *after* the document's own `<style>`.
+ *
+ * Why it cannot live with the rest: a report that brings its own stylesheet almost always
+ * declares `body { margin: 0 }`, and unlayered rules beat layered ones no matter the
+ * specificity — so the layered `margin: 0 auto` lost while the layered `max-width`
+ * survived, which pinned a 1152px column to the left edge of a 1440px screen. That is
+ * exactly the misalignment this fixes (EV-2026-09-11-chat-latency §4).
+ *
+ * `body.jarvis-insight` (0,1,1) also outranks a document's own `body` (0,0,1), so the
+ * frame holds without `!important` — the document keeps control of everything inside it.
+ */
+const INSIGHT_FRAME_STYLE = `
+  body.jarvis-insight {
+    box-sizing: border-box;
+    width: ${(INSIGHT_WIDTH_RATIO * 100).toFixed(0)}%;
+    max-width: ${(INSIGHT_WIDTH_RATIO * 100).toFixed(0)}%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  @media (max-width: 1024px) {
+    body.jarvis-insight { width: 100%; max-width: 100%; }
+  }`;
+
 function baseStyleTag(): string {
   return `<style id="jarvis-base">${INSIGHT_BASE_STYLE}</style>`;
+}
+
+function frameStyleTag(): string {
+  return `<style id="jarvis-frame">${INSIGHT_FRAME_STYLE}</style>`;
 }
 
 function isCompleteDocument(html: string): boolean {
@@ -72,17 +104,19 @@ function isCompleteDocument(html: string): boolean {
 /**
  * Wrap (or lightly augment) insight HTML for `<iframe srcDoc>`.
  *
- * - Fragment → `<html data-theme><head>…base style…</head><body class="jarvis-insight">fragment</body></html>`.
+ * - Fragment → `<html data-theme><head>…base style…frame style…</head><body class="jarvis-insight">fragment</body></html>`.
  * - Complete document → the base style goes at the *start* of `<head>` (created if absent)
- *   so the document's own rules win, `data-theme` is set on `<html>`, and `jarvis-insight`
- *   is added to `<body>`.
+ *   so the document's own rules win, the frame style goes at the *end* so the column width
+ *   and centering hold, `data-theme` is set on `<html>`, and `jarvis-insight` is added to
+ *   `<body>`.
  */
 export function buildInsightDocument(html: string, theme: InsightTheme = "light"): string {
   const themeAttr = ` data-theme="${theme}"`;
   const style = baseStyleTag();
+  const frame = frameStyleTag();
 
   if (!isCompleteDocument(html)) {
-    return `<!doctype html><html lang="zh-CN"${themeAttr}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${style}</head><body class="jarvis-insight">${html}</body></html>`;
+    return `<!doctype html><html lang="zh-CN"${themeAttr}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${style}${frame}</head><body class="jarvis-insight">${html}</body></html>`;
   }
 
   let out = html;
@@ -96,6 +130,13 @@ export function buildInsightDocument(html: string, theme: InsightTheme = "light"
     out = out.replace(/<head\b([^>]*)>/i, (match) => `${match}${style}`);
   } else {
     out = out.replace(/<html\b[^>]*>/i, (match) => `${match}<head>${style}</head>`);
+  }
+  // Frame style LAST in <head>: it must outrank the document's own `body` rule, which is
+  // unlayered and would otherwise cancel the centering.
+  if (/<\/head>/i.test(out)) {
+    out = out.replace(/<\/head>/i, `${frame}</head>`);
+  } else {
+    out = out.replace(/<body\b[^>]*>/i, (match) => `${frame}${match}`);
   }
   // Namespace the body so the fallback selectors apply.
   if (/<body\b[^>]*>/i.test(out)) {
