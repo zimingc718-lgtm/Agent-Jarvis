@@ -226,6 +226,20 @@ export function KnowledgeDashboard({
                   <li className="flex items-center gap-2 text-xs" key={url}>
                     <span className="min-w-0 flex-1 truncate">{url}</span>
                     <button
+                      aria-label={`立即采集 ${entity.title} 的 ${url}`}
+                      className="knowledge-dashboard__fetch-source shrink-0 rounded px-1 underline underline-offset-2 disabled:opacity-50"
+                      disabled={busy === `src:${entity.name}`}
+                      onClick={() =>
+                        void run(`src:${entity.name}`, "已采集。", "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
+                          action: "fetch",
+                          url,
+                        })
+                      }
+                      type="button"
+                    >
+                      立即采集
+                    </button>
+                    <button
                       aria-label={`移除 ${entity.title} 的采集源 ${url}`}
                       className="knowledge-dashboard__remove-source shrink-0 rounded px-1 text-destructive underline underline-offset-2 disabled:opacity-50"
                       disabled={busy === `src:${entity.name}`}

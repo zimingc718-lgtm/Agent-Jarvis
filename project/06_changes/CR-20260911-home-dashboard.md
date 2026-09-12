@@ -76,7 +76,7 @@
 | 2 | `entity_pending` 流事件与 ☰ 列表联动 | 需要改 `types.ts` 的 `ChatDelta` 联合类型，同上被并行 CR 占用 |
 | 3 | 实体工具**按上下文分组注册** | 需要给 `ToolContext` 加字段，`registry.ts` 同上被占用。EV §8.2 实测：现有 11 个工具的 `tools` 数组已 857 token，超出 8k 窗口 655 token 的子预算 |
 | 4 | `BUDGET_SHARES.toolDefinitions` **声明了但从未被引用**，工具目录无截断 | 既有缺陷，非本 CR 引入；范围独立，另立小 CR |
-| 5 | 采集源的实际抓取与比对（`fetch_source`）、`ingest_url`、`extract_fields` | 本 CR 先立数据结构与人工录入路径；自动采集的成本需按 B / C 期做法先实测 |
+| 5 | ~~采集源的实际抓取与比对（`fetch_source`）~~ **已清零**（TASK-125 / TEST-125）；仍欠 `ingest_url`、`extract_fields`，以及**定时巡检** | 手动采集已可用：卡片内「立即采集」、工具 `fetch_source`、API `PATCH {action:"fetch"}`。定时巡检的成本仍需按 B / C 期做法先实测再定 |
 
 ## 实施记录（2026-09-11）
 
@@ -87,5 +87,6 @@
 - `package.json` 无本 CR 改动：零新增运行依赖。
 - **过渡入口** `src/app/dashboard/page.tsx`（新文件）：在展示屏接线完成前，`/dashboard` 挂载同一个看板组件并叠加对话框，使「在对话里让模型提议对象 → 待采纳区出现 → 采纳 → 卡片进看板」这条闭环现在就能用、能评审。接线完成后删除该路由。
 - **真实入口已验**（本机 dev server）：`GET /api/entities` 与 `GET /api/knowledge/overview` 均 200 且返回空集合（无数据时不造假）；`GET /dashboard` 200，页面含看板与对话框，空态显示「还没有查不到的检索」。
-- 全量：471 单测通过、ui-contract 53/0、typecheck 0。
+- **续做（同日）**：新增 `src/lib/sources.ts` 与 TASK-125 / TEST-125，把采集真正跑起来——在此之前健康度只能停在「未接入」或「陈旧」，整列指示是装饰。复用既有的 SSRF 守卫与正文抽取，未新增出网面、未新增依赖、未碰并行 CR 持有的文件。
+- 全量：487 单测通过、ui-contract 53/0、typecheck 0。
 - **仍属人工发现**：CP-2 的「源坏了用户能否看出来」、CP-8 的密度与分区比例。

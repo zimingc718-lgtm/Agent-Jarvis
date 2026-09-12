@@ -775,6 +775,14 @@
       "real_entry": false,
       "date": "2026-09-11",
       "notes": "CR-20260911-home-dashboard；知识条目新增 entity/doc_type/url 三个可选 frontmatter 键后，TEST-086 与 TEST-087 全部仍通过：旧条目缺键可读、待采纳语义不变、检索与截断不变。"
+    },
+    {
+      "id": "TEST-125",
+      "result": "PASS",
+      "command": "npm test -- sources",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-home-dashboard 续做；describeChange 只数行只引首条、顺序调换不算变化、过长截断；首次采集建基线不计变化；不变→无变更、变化→写入并附证据且卡片未读；抓不到→failed_fetch 且不推进 checkedAt；HTTP 错误同为 failed_fetch；抓到但无正文→parse_failed；解析失败压过时间；只采集已登记源、对象不存在不发请求；快照按对象×源分存。"
     }
   ],
   "executed_commands": [
@@ -963,6 +971,11 @@
       "command": "python tools/governance.py check-specs && check-changes && check-doors && review r1..r4",
       "result": "PASS",
       "summary": "CR-20260911-home-dashboard: 10 CP rows declare door + detection route; specs canonical; R1 PASS"
+    },
+    {
+      "command": "npm test",
+      "result": "PASS",
+      "summary": "CR-20260911-home-dashboard 续做: 59 test files, 487 tests passed"
     }
   ],
   "known_warnings": [

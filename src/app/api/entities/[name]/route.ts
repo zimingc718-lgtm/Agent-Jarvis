@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
+import { fetchSource } from "@/lib/sources";
 import {
   addSource,
   deleteEntity,
@@ -76,6 +77,16 @@ export async function PATCH(request: Request, { params }: Params) {
         : NextResponse.json({ message: `没有名为「${name}」的跟踪对象。` }, { status: 404 });
     }
 
+    if (action === "fetch") {
+      const url = typeof body.url === "string" ? body.url.trim() : "";
+      if (!url) {
+        return NextResponse.json({ message: "缺少 url。" }, { status: 400 });
+      }
+      const outcome = await fetchSource(name, url, { root: ENTITIES_ROOT });
+      const entity = await readEntity(name, ENTITIES_ROOT);
+      return NextResponse.json({ ok: true, outcome, entity: entity ? summarize(entity) : null });
+    }
+
     if (action === "field") {
       const field = typeof body.field === "string" ? body.field : "";
       if (!(UPDATABLE_FIELDS as readonly string[]).includes(field)) {
@@ -94,7 +105,7 @@ export async function PATCH(request: Request, { params }: Params) {
         : NextResponse.json({ message: `没有名为「${name}」的跟踪对象。` }, { status: 404 });
     }
 
-    return NextResponse.json({ message: "未知的 action。可用：seen、field、addSource、removeSource。" }, { status: 400 });
+    return NextResponse.json({ message: "未知的 action。可用：seen、field、addSource、removeSource、fetch。" }, { status: 400 });
   } catch (error) {
     if (error instanceof EntityError) {
       return NextResponse.json({ message: error.message }, { status: error.status });

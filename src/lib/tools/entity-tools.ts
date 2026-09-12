@@ -12,6 +12,7 @@ import {
   type EntityKind,
   type UpdatableField,
 } from "../entities";
+import { fetchSource } from "../sources";
 import { truncateToTokens } from "./budget";
 import type { ToolDescriptor } from "./registry";
 
@@ -219,5 +220,41 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
     },
   };
 
-  return [list, read, propose, proposeUpdate];
+  const collect: ToolDescriptor = {
+    name: "fetch_source",
+    description: "立即采集某个对象的一个已登记来源，返回是否有变化，并写回该对象的采集状态。参数 name 与 url。",
+    parameters: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "对象名称" },
+        url: { type: "string", description: "该对象已登记的采集源链接" },
+      },
+      required: ["name", "url"],
+    },
+    // Outbound, so it follows the same switch as the other web tools (REQ-F-038 ④).
+    available: (context) => context.webEnabled,
+    async execute(args, context) {
+      const name = typeof args.name === "string" ? args.name.trim() : "";
+      const url = typeof args.url === "string" ? args.url.trim() : "";
+      if (!name || !url) {
+        return { ok: false, content: "name 与 url 都是必填。", summary: "参数缺失" };
+      }
+      try {
+        const outcome = await fetchSource(name, url, { root, signal: context.signal });
+        return {
+          ok: outcome.health === "fresh",
+          content: outcome.detail,
+          summary: outcome.changed ? `采集到变化：${name}` : outcome.detail,
+          sources: [{ url, title: name }],
+        };
+      } catch (error) {
+        if (error instanceof EntityError) {
+          return { ok: false, content: error.message, summary: "采集未执行" };
+        }
+        return { ok: false, content: `采集失败：${error instanceof Error ? error.message : "未知错误"}`, summary: "采集失败" };
+      }
+    },
+  };
+
+  return [list, read, propose, proposeUpdate, collect];
 }
