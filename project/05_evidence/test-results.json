@@ -783,6 +783,14 @@
       "real_entry": false,
       "date": "2026-09-11",
       "notes": "CR-20260911-home-dashboard 续做；describeChange 只数行只引首条、顺序调换不算变化、过长截断；首次采集建基线不计变化；不变→无变更、变化→写入并附证据且卡片未读；抓不到→failed_fetch 且不推进 checkedAt；HTTP 错误同为 failed_fetch；抓到但无正文→parse_failed；解析失败压过时间；只采集已登记源、对象不存在不发请求；快照按对象×源分存。"
+    },
+    {
+      "id": "TEST-126",
+      "result": "PASS",
+      "command": "npm test -- ingest",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-home-dashboard 续做第二步；存正文与原链接、不存原件，标题取自页面 title；来源与对象已登记源同域→直接入库且立刻可检索；不在登记源内→进待采纳区且采纳前检索不到；未指定归属对象同样待采纳；trustCaller 让用户自己贴的链接跳过白名单；alwaysPending 可强制入队；非法链接、未知对象、抓取失败、解析失败均失败返回且不入库，未知对象不发请求；正文超上限拒绝并提示摘录；无标题页面退回主机名且条目可读回。9 PASS。"
     }
   ],
   "executed_commands": [

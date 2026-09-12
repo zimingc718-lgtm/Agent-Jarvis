@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
+import { ingestUrl } from "@/lib/ingest";
 import {
   isKnowledgeTextPath,
   KNOWLEDGE_ROOT,
@@ -65,7 +66,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, entry }, { status: 201 });
     }
 
-    const body = (await request.json().catch(() => ({}))) as { title?: unknown; content?: unknown; source?: unknown };
+    const body = (await request.json().catch(() => ({}))) as {
+      title?: unknown;
+      content?: unknown;
+      source?: unknown;
+      url?: unknown;
+      entity?: unknown;
+      docType?: unknown;
+    };
+
+    // A link is the third intake path, next to a dropped file and a kept reply. The
+    // user asking for it is their own action, so it goes straight in.
+    if (typeof body.url === "string" && body.url.trim()) {
+      const outcome = await ingestUrl(body.url, {
+        entity: typeof body.entity === "string" ? body.entity : "",
+        docType: typeof body.docType === "string" ? body.docType : "",
+        title: typeof body.title === "string" ? body.title : undefined,
+        trustCaller: true,
+      });
+      return outcome.ok
+        ? NextResponse.json({ ok: true, entry: outcome.entry, pending: outcome.pending, reason: outcome.reason }, { status: 201 })
+        : NextResponse.json({ message: outcome.reason }, { status: 400 });
+    }
+
     const content = typeof body.content === "string" ? body.content : "";
     const title = typeof body.title === "string" ? body.title : undefined;
     const source = body.source === "conversation" || body.source === "manual" ? body.source : "manual";

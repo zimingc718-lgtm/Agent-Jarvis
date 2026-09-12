@@ -3,7 +3,7 @@ import { lookup } from "node:dns/promises";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import { ENTITIES_ROOT, EntityError, readEntity, updateEntity, type Health } from "./entities";
-import { extractReadableText } from "./tools/web-tools";
+import { extractReadableText, extractTitle } from "./tools/web-tools";
 import { fetchWithGuardedRedirects, UrlNotAllowedError, type Resolver } from "./tools/url-guard";
 
 /**
@@ -53,10 +53,59 @@ export type FetchSourceDeps = {
   now?: () => Date;
 };
 
+/**
+ * One guarded fetch plus text extraction.
+ *
+ * Shared by source collection and URL ingestion on purpose: "what counts as unreadable"
+ * must be one decision, not two that drift apart. A page that is too thin to diff is
+ * also too thin to file as knowledge.
+ */
+export type ReadableFetch =
+  | { ok: true; text: string; title: string }
+  | { ok: false; health: Extract<Health, "failed_fetch" | "parse_failed">; detail: string };
+
+export async function fetchReadable(url: string, deps: FetchSourceDeps = {}): Promise<ReadableFetch> {
+  const resolver: Resolver =
+    deps.resolver ?? (async (hostname) => (await lookup(hostname, { all: true })).map((entry) => entry.address));
+
+  let response: Response;
+  try {
+    response = await fetchWithGuardedRedirects(url, {
+      resolver,
+      allowHosts: deps.allowHosts,
+      fetcher: deps.fetcher,
+      signal: deps.signal,
+      timeoutMs: FETCH_TIMEOUT_MS,
+    });
+  } catch (error) {
+    const reason = error instanceof UrlNotAllowedError ? error.message : error instanceof Error ? error.message : "网络错误";
+    return { ok: false, health: "failed_fetch", detail: `抓取失败：${reason}` };
+  }
+  if (!response.ok) {
+    return { ok: false, health: "failed_fetch", detail: `抓取失败：HTTP ${response.status}` };
+  }
+
+  let body: string;
+  try {
+    const buffer = await response.arrayBuffer();
+    if (buffer.byteLength > MAX_SOURCE_BYTES) {
+      return { ok: false, health: "failed_fetch", detail: `抓取失败：响应超过 ${Math.floor(MAX_SOURCE_BYTES / 1024 / 1024)}MB` };
+    }
+    body = new TextDecoder("utf-8").decode(buffer);
+  } catch {
+    return { ok: false, health: "failed_fetch", detail: "抓取失败：响应读取失败" };
+  }
+
+  const text = extractReadableText(body).slice(0, MAX_SNAPSHOT_CHARS);
+  if (text.length < MIN_READABLE_CHARS) {
+    return { ok: false, health: "parse_failed", detail: "解析失败：抓到了页面但取不出正文，可能是改版或需要脚本渲染" };
+  }
+  return { ok: true, text, title: extractTitle(body) };
+}
+
 function snapshotPath(root: string, entity: string, url: string): string {
   const key = `${entity}__${createHash("sha256").update(url).digest("hex").slice(0, 16)}.json`;
-  const dir = join(root, SNAPSHOTS_DIR);
-  const path = join(dir, key);
+  const path = join(root, SNAPSHOTS_DIR, key);
   if (!resolve(path).startsWith(resolve(root) + sep)) {
     throw new EntityError("快照路径越界", 400);
   }
@@ -117,9 +166,6 @@ export function describeChange(before: string, after: string): string {
 export async function fetchSource(entityName: string, url: string, deps: FetchSourceDeps = {}): Promise<FetchOutcome> {
   const root = deps.root ?? ENTITIES_ROOT;
   const at = (deps.now ?? (() => new Date()))().toISOString();
-  // Same default as the web tools: DNS resolution feeds the SSRF checks.
-  const resolver: Resolver =
-    deps.resolver ?? (async (hostname) => (await lookup(hostname, { all: true })).map((entry) => entry.address));
 
   const entity = await readEntity(entityName, root);
   if (!entity) {
@@ -136,38 +182,11 @@ export async function fetchSource(entityName: string, url: string, deps: FetchSo
     return { health, changed: false, change: "", detail, at };
   };
 
-  let response: Response;
-  try {
-    response = await fetchWithGuardedRedirects(url, {
-      resolver,
-      allowHosts: deps.allowHosts,
-      fetcher: deps.fetcher,
-      signal: deps.signal,
-      timeoutMs: FETCH_TIMEOUT_MS,
-    });
-  } catch (error) {
-    const reason = error instanceof UrlNotAllowedError ? error.message : error instanceof Error ? error.message : "网络错误";
-    return fail("failed_fetch", `抓取失败：${reason}`);
+  const readable = await fetchReadable(url, deps);
+  if (!readable.ok) {
+    return fail(readable.health, readable.detail);
   }
-  if (!response.ok) {
-    return fail("failed_fetch", `抓取失败：HTTP ${response.status}`);
-  }
-
-  let body: string;
-  try {
-    const buffer = await response.arrayBuffer();
-    if (buffer.byteLength > MAX_SOURCE_BYTES) {
-      return fail("failed_fetch", `抓取失败：响应超过 ${Math.floor(MAX_SOURCE_BYTES / 1024 / 1024)}MB`);
-    }
-    body = new TextDecoder("utf-8").decode(buffer);
-  } catch {
-    return fail("failed_fetch", "抓取失败：响应读取失败");
-  }
-
-  const text = extractReadableText(body).slice(0, MAX_SNAPSHOT_CHARS);
-  if (text.length < MIN_READABLE_CHARS) {
-    return fail("parse_failed", "解析失败：抓到了页面但取不出正文，可能是改版或需要脚本渲染");
-  }
+  const text = readable.text;
 
   const hash = createHash("sha256").update(text).digest("hex");
   const previous = await readSnapshot(root, entityName, url);

@@ -2,13 +2,13 @@
 
 - 级别: L2（首页知识看板的**数据层与看板本体**：跟踪对象、采集健康度、提议与证据、知识库实体索引、看板组件与 API。**不含展示屏三态接线**，见「出口义务」。无 schema 变更、零新增运行依赖、无新增出网面）
 - 提出人: user（INPUT-2026-09-11-011 第 1–10 条；第 7 条「按这个来，你可以做需求分析」，第 10 条「整理下所有需求，等其他任务结束后进入流程」，续「改造继续。现在完成它」「放在一起，跟当前的需求一起」）
-- 状态: APPROVED（R1 按用户逐轮拍板推进，决策来源逐条可溯至 INPUT-011）——P3/P4 完成：TASK-120..124 DONE、TEST-120..124 PASS；`gate g3|g3.5` PASS
-- 占用 ID: DEC-050, TASK-120..124, TEST-120..124, REQ-F-070..072, REQ-NF-030（编号刻意跳空，为并行起草的 `CR-20260911-display-console-ux` 与 `CR-20260911-web-reading` 留段，未占用区间见「实施记录」）
+- 状态: APPROVED（R1 按用户逐轮拍板推进，决策来源逐条可溯至 INPUT-011）——P3/P4 完成：TASK-120..126 DONE、TEST-120..126 PASS；`gate g3|g3.5` PASS
+- 占用 ID: DEC-050, TASK-120..126, TEST-120..126, REQ-F-070..072, REQ-NF-030（编号刻意跳空，为并行起草的 `CR-20260911-display-console-ux` 与 `CR-20260911-web-reading` 留段，未占用区间见「实施记录」）
 - 评审模型: 标准档（DEC-021 ①：全部 CP 双向门，CP-2 与 CP-8 依赖真实使用发现 → 不走快车道；CP 表 + 相关角色意见 + 门禁，不产出 R2–R4 矩阵）
 - 影响需求: 新增 REQ-F-070（本地跟踪对象）、REQ-F-071（知识看板呈现）、REQ-F-072（实体写入与证据）、REQ-NF-030（看板边界）；**扩写** REQ-F-044 ①（知识条目增加实体主索引与来源链接）、REQ-F-045 ④（零结果检索被记录为缺口信号）
 - 影响模块: 新增 **MOD-ENTITY**（`src/lib/entities.ts`、`src/lib/entity-proposals.ts`、`src/app/api/entities/**`）；MOD-KNOWLEDGE（条目增 entity / doc_type / url，新增缺口记录与按实体计数、`/api/knowledge/overview`）；MOD-TOOLS（四个实体工具）；MOD-CHAT（注册实体工具）；MOD-SETTINGS-UI（`KnowledgeDashboard` 组件）
-- 影响任务: 新增 TASK-120..124
-- 影响测试: 新增 TEST-120..124；TEST-086/087（知识工具与路由）作回归门
+- 影响任务: 新增 TASK-120..126
+- 影响测试: 新增 TEST-120..126；TEST-086/087（知识工具与路由）作回归门
 - 当前证据: `project/05_evidence/EV-2026-09-11-home-dashboard.md`（需求整理稿 + 业界实践 + 工具预算实测）；设计草图 `design/`
 - 方案选项:
   - A. **实体入表**（SQLite 新表 + 迁移）——否决。新表即单向门；而看板数据量是几十到几百条，用不上关系型能力。
@@ -22,7 +22,7 @@
 - 验收条件:
   - R1: 本文件有 `## 变化点登记` 表（每行有来源角色、门、发现方式）+ R1 终裁痕迹；`check-doors` PASS；`review r1` PASS。
   - 标准档不产出 R2/R3/R4 矩阵；三层说明书各含 `变更响应 · CR-20260911-home-dashboard` 节逐 CP 落点。
-  - P3/P4: TASK-120..124 DONE、TEST-120..124 PASS；`gate g3|g3.5` PASS；零新增运行依赖（`git diff package.json` 中本 CR 无改动）。
+  - P3/P4: TASK-120..126 DONE、TEST-120..126 PASS；`gate g3|g3.5` PASS；零新增运行依赖（`git diff package.json` 中本 CR 无改动）。
 - 评审记录: 标准档，相关角色意见见 `## 角色意见`。**R1 人工终裁**：用户在 INPUT-011 第 5、8、9 条中逐项拍板了操作逻辑与定性，本 CR 逐条落地，见 `## R1 人工终裁`。
 
 ## 变化点登记
@@ -76,7 +76,7 @@
 | 2 | `entity_pending` 流事件与 ☰ 列表联动 | 需要改 `types.ts` 的 `ChatDelta` 联合类型，同上被并行 CR 占用 |
 | 3 | 实体工具**按上下文分组注册** | 需要给 `ToolContext` 加字段，`registry.ts` 同上被占用。EV §8.2 实测：现有 11 个工具的 `tools` 数组已 857 token，超出 8k 窗口 655 token 的子预算 |
 | 4 | `BUDGET_SHARES.toolDefinitions` **声明了但从未被引用**，工具目录无截断 | 既有缺陷，非本 CR 引入；范围独立，另立小 CR |
-| 5 | ~~采集源的实际抓取与比对（`fetch_source`）~~ **已清零**（TASK-125 / TEST-125）；仍欠 `ingest_url`、`extract_fields`，以及**定时巡检** | 手动采集已可用：卡片内「立即采集」、工具 `fetch_source`、API `PATCH {action:"fetch"}`。定时巡检的成本仍需按 B / C 期做法先实测再定 |
+| 5 | ~~采集源的实际抓取与比对（`fetch_source`）~~、~~链接入库（`ingest_url`）~~ **已清零**（TASK-125 / TEST-125、TASK-126 / TEST-126）；仍欠 `extract_fields` 与**定时巡检** | 采集与入库两条路都已可用：卡片内「立即采集」、工具 `fetch_source` / `ingest_url`、API `PATCH {action:"fetch"}` 与 `POST /api/knowledge {url}`。`extract_fields` 要先有稳定的字段抽取判据；定时巡检的成本仍需按 B / C 期做法先实测再定 |
 
 ## 实施记录（2026-09-11）
 
@@ -88,5 +88,6 @@
 - **过渡入口** `src/app/dashboard/page.tsx`（新文件）：在展示屏接线完成前，`/dashboard` 挂载同一个看板组件并叠加对话框，使「在对话里让模型提议对象 → 待采纳区出现 → 采纳 → 卡片进看板」这条闭环现在就能用、能评审。接线完成后删除该路由。
 - **真实入口已验**（本机 dev server）：`GET /api/entities` 与 `GET /api/knowledge/overview` 均 200 且返回空集合（无数据时不造假）；`GET /dashboard` 200，页面含看板与对话框，空态显示「还没有查不到的检索」。
 - **续做（同日）**：新增 `src/lib/sources.ts` 与 TASK-125 / TEST-125，把采集真正跑起来——在此之前健康度只能停在「未接入」或「陈旧」，整列指示是装饰。复用既有的 SSRF 守卫与正文抽取，未新增出网面、未新增依赖、未碰并行 CR 持有的文件。
-- 全量：487 单测通过、ui-contract 53/0、typecheck 0。
+- **续做（同日，第二步）**：新增 `src/lib/ingest.ts` 与 TASK-126 / TEST-126，把一条链接抓成知识条目——**只存正文与原链接，不存原件**（用户第 4 条）。`sources.ts` 同时抽出 `fetchReadable`，让采集与入库共用同一条「可读」判据，避免两处各判各的。入库走与字段修改同一条信任规则：来源同域直入、否则待采纳；`trustCaller` 只留给用户自己贴的链接，因为该闸门防的是模型而不是人。
+- 全量：496 单测通过、typecheck 0。**一处已知抖动**：整套并发跑满时 `compaction` / `display` 三例 SQLite 用例偶发触顶 5s 默认超时（单独跑 2s 内通过，复跑全量 496/496 全绿）。属机器负载抖动，不是回归；若再现应调高这两个文件的 `testTimeout` 而非改实现。
 - **仍属人工发现**：CP-2 的「源坏了用户能否看出来」、CP-8 的密度与分区比例。

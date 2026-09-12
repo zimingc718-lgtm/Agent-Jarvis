@@ -7,6 +7,7 @@ import {
   saveKnowledge,
   searchKnowledge,
 } from "../knowledge";
+import { ingestUrl } from "../ingest";
 import { truncateToTokens } from "./budget";
 import type { ToolDescriptor } from "./registry";
 
@@ -130,5 +131,42 @@ export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescript
     },
   };
 
-  return [search, read, save];
+  const ingest: ToolDescriptor = {
+    name: "ingest_url",
+    description: "把一个网页抓下来存成知识条目：只存正文与原链接，不存原件。参数 url，可选 entity 与 doc_type。",
+    parameters: {
+      type: "object",
+      properties: {
+        url: { type: "string", description: "网页链接" },
+        entity: { type: "string", description: "归属的跟踪对象名称，留空则进无归属桶" },
+        doc_type: { type: "string", description: "产品规格书 / 标准说明书 / 技术论文 等" },
+      },
+      required: ["url"],
+    },
+    // Outbound, so it follows the same switch as the other web tools (REQ-F-038 ④).
+    available: (context) => context.webEnabled,
+    async execute(args, context) {
+      const url = typeof args.url === "string" ? args.url.trim() : "";
+      if (!url) {
+        return { ok: false, content: "缺少参数 url。", summary: "参数缺失" };
+      }
+      const outcome = await ingestUrl(url, {
+        knowledgeRoot: root,
+        entity: typeof args.entity === "string" ? args.entity : "",
+        docType: typeof args.doc_type === "string" ? args.doc_type : "",
+        signal: context.signal,
+      });
+      if (!outcome.ok) {
+        return { ok: false, content: outcome.reason, summary: "未入库" };
+      }
+      return {
+        ok: true,
+        content: `已存为知识条目「${outcome.entry.title}」（${outcome.entry.name}，正文 ${outcome.chars} 字）。${outcome.reason}`,
+        summary: outcome.pending ? `待采纳：${outcome.entry.title}` : `已入库：${outcome.entry.title}`,
+        sources: [{ url, title: outcome.entry.title }],
+      };
+    },
+  };
+
+  return [search, read, save, ingest];
 }
