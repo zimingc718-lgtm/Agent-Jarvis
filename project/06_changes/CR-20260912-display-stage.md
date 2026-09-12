@@ -55,4 +55,5 @@
 - 删除 `src/app/dashboard/page.tsx`（过渡入口，接线完成即删）。
 - 新增 `tests/display-stage.test.tsx`（TEST-135，7 例）。
 - 全量 571 单测通过、ui-contract 53/0、typecheck 0、零新增依赖。
+- **真实入口已验**（隔离 dev server，端口 3300，数据与 `distDir` 全部另起、跑完即删）：`GET /` 200，首屏含 `display-screen--home`、扫描线与网格两个动画元素、以及「进入知识看板」按钮；`GET /dashboard` 已是 404——过渡路由确已删除。
 - **仍属人工发现**：开场观感与三秒是否合适（CP-4）。
