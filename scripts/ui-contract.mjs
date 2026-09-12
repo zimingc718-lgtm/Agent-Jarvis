@@ -1230,11 +1230,11 @@ const CONTRACT = [
       },
       {
         id: "LB-08",
-        ref: "REQ-F-015 (CR-20260909-corner-menu)",
+        ref: "REQ-F-015 / REQ-F-053 (CR-20260909-corner-menu, CR-20260911-display-console-ux)",
         req: "REQ-F-015",
-        title: "Home entries live in a bottom-left ☰ menu, not the header",
+        title: "Home entries live in a bottom-left ☰ drawer, not the header",
         guidance:
-          "page.tsx header holds only the title; CornerMenu is a fixed bottom-left disclosure (real <button> with aria-haspopup + aria-expanded, z-index above the chat).",
+          "page.tsx header holds only the title; CornerMenu is a fixed bottom-left trigger (real <button> with aria-haspopup + aria-expanded, z-index above the chat) opening a left-hand drawer: role=dialog + aria-modal, full height (inset-y-0 left-0), own scrolling, backdrop for light-dismiss (REQ-F-053 ①②⑥).",
         check(ctx) {
           const page = ctx.files["page.tsx"] ?? "";
           const menuSrc = ctx.files["CornerMenu.tsx"] ?? "";
@@ -1261,7 +1261,19 @@ const CONTRACT = [
             if (!/\bbottom-\d/.test(u) || !/\bleft-\d/.test(u)) return FAIL(".corner-menu is not anchored bottom-left");
           }
           if (!(z >= 21)) return FAIL(`.corner-menu z-index (${z}) is not above the floating chat (20)`);
-          return PASS(`CornerMenu: header clean, trigger + aria, z-index ${z}`);
+          // REQ-F-053 (DEC-032 ⑤): the panel is a drawer, not a popover — full-height,
+          // scrollable, modal dialog semantics, with a backdrop so light-dismiss survives.
+          const panel = menuSrc.match(/corner-menu__panel[\s\S]{0,600}?>/)?.[0] ?? "";
+          if (!panel) return FAIL("CornerMenu has no .corner-menu__panel");
+          if (!/\binset-y-0\b/.test(panel) || !/\bleft-0\b/.test(panel) || !/\bfixed\b/.test(panel)) {
+            return FAIL(".corner-menu__panel is not a fixed full-height left drawer (inset-y-0 left-0)");
+          }
+          if (!/\boverflow-y-auto\b/.test(panel)) return FAIL(".corner-menu__panel does not scroll its own content");
+          if (!/role="dialog"/.test(panel) || !/aria-modal="true"/.test(panel)) {
+            return FAIL(".corner-menu__panel is not role=dialog + aria-modal");
+          }
+          if (!/corner-menu__backdrop/.test(menuSrc)) return FAIL("CornerMenu renders no backdrop (light-dismiss surface)");
+          return PASS(`CornerMenu: header clean, trigger + aria, drawer (dialog, inset-y-0, scroll, backdrop), z-index ${z}`);
         },
       },
       {
@@ -1270,7 +1282,7 @@ const CONTRACT = [
         req: "REQ-F-019",
         title: "The transcript has a collapse/expand control",
         guidance:
-          "A real <button> with aria-expanded that toggles userCollapsed, rendered only when a transcript exists; no height transition on the expanded panel (v1).",
+          "A real <button> with aria-expanded that toggles userCollapsed, rendered only when a transcript exists. The manual toggle is instant (DEC-013); the hover tuck-away (REQ-F-054, CR-20260911-display-console-ux) may transition, but only with a motion-reduce escape hatch and without touching localStorage.",
         check(ctx) {
           const src = ctx.files["FloatingChat.tsx"] ?? "";
           // The control may be a <button> or the Button primitive, which renders one.
@@ -1285,8 +1297,25 @@ const CONTRACT = [
           if (!hasButton) return FAIL("no .floating-chat__toggle <button>");
           if (!hasAria) return FAIL("collapse control missing aria-expanded");
           if (!gated) return WARN("collapse control may render without a transcript");
-          if (!noTween) return FAIL("expanded panel animates its height — v1 is an instant toggle (DEC-013)");
-          return PASS("collapse control: <button> + aria-expanded, transcript-gated, no height animation");
+          if (!noTween) return FAIL("expanded panel animates its height — the manual toggle is an instant switch (DEC-013)");
+          // REQ-F-054 ⑦⑧: a transition on the transcript is allowed only alongside the
+          // hover state, with reduced-motion honoured; the hover state must not persist.
+          const transcript = src.match(/floating-chat__messages[\s\S]{0,700}?aria-live/)?.[0] ?? "";
+          const hasTransition = /\btransition(-\[[^\]]*\])?\b/.test(transcript);
+          if (hasTransition && !/motion-reduce:transition-none/.test(transcript)) {
+            return FAIL("transcript transitions without a motion-reduce:transition-none escape (REQ-F-054 ⑧)");
+          }
+          if (hasTransition && !/autoHidden/.test(src)) {
+            return FAIL("transcript transitions but no autoHidden hover state exists — the manual toggle must stay instant");
+          }
+          if (/autoHidden/.test(src) && /localStorage[\s\S]{0,80}autoHidden|autoHidden[\s\S]{0,80}localStorage/.test(src)) {
+            return FAIL("autoHidden is written to localStorage — it must be a transient state (REQ-F-054 ⑦)");
+          }
+          return PASS(
+            hasTransition
+              ? "collapse control: <button> + aria-expanded, transcript-gated; hover tuck-away transitions with motion-reduce"
+              : "collapse control: <button> + aria-expanded, transcript-gated, no height animation"
+          );
         },
       },
       {

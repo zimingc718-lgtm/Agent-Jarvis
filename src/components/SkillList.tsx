@@ -33,6 +33,8 @@ export function SkillList({ initialSkills = [], fetchSkills = fetchSkillsFromApi
   const [skills, setSkills] = useState<SkillListEntry[]>(initialSkills);
   const [pending, setPending] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  /** REQ-F-053 ⑤: which row has its actions disclosed (one at a time keeps rows single-line). */
+  const [openActions, setOpenActions] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,31 +114,54 @@ export function SkillList({ initialSkills = [], fetchSkills = fetchSkillsFromApi
       {skills.length === 0 ? (
         <p className="skill-list__empty text-sm text-muted-foreground">尚未注册技能</p>
       ) : (
-        <ul className="skill-list__items flex flex-col gap-1">
-          {skills.map((skill) => (
-            <li key={skill.id} className="skill-list__item flex flex-col">
-              <span className="skill-list__name text-sm font-medium">{skill.name}</span>
-              <span className="skill-list__description text-xs text-muted-foreground">{skill.description}</span>
-              <span className="skill-list__actions mt-1 flex gap-2">
-                <button
-                  type="button"
-                  className="skill-list__rename rounded px-1 text-xs underline underline-offset-2 disabled:opacity-50"
-                  disabled={pending === skill.name}
-                  onClick={() => void rename(skill.name)}
-                >
-                  重命名
-                </button>
-                <button
-                  type="button"
-                  className="skill-list__delete rounded px-1 text-xs text-destructive underline underline-offset-2 disabled:opacity-50"
-                  disabled={pending === skill.name}
-                  onClick={() => void remove(skill.name)}
-                >
-                  删除
-                </button>
-              </span>
-            </li>
-          ))}
+        <ul className="skill-list__items flex flex-col gap-0.5">
+          {skills.map((skill) => {
+            const disclosed = openActions === skill.name;
+            return (
+              <li key={skill.id} className="skill-list__item flex flex-col">
+                {/* One line per skill: name, a truncated description, and a 「更多」 toggle.
+                    The full description stays in the DOM (title + text) — it is clipped, not dropped. */}
+                <div className="flex min-h-9 items-center gap-2">
+                  <span className="skill-list__name shrink-0 text-sm font-medium">{skill.name}</span>
+                  <span
+                    className="skill-list__description min-w-0 flex-1 truncate text-xs text-muted-foreground"
+                    title={skill.description}
+                  >
+                    {skill.description}
+                  </span>
+                  <button
+                    type="button"
+                    className="skill-list__more shrink-0 rounded px-1 text-xs text-muted-foreground underline underline-offset-2"
+                    aria-expanded={disclosed}
+                    aria-label={disclosed ? `收起 ${skill.name} 的操作` : `更多：${skill.name}`}
+                    onClick={() => setOpenActions(disclosed ? null : skill.name)}
+                  >
+                    {disclosed ? "收起" : "更多"}
+                  </button>
+                </div>
+                {disclosed ? (
+                  <span className="skill-list__actions flex gap-2 pb-1 pl-1">
+                    <button
+                      type="button"
+                      className="skill-list__rename rounded px-1 text-xs underline underline-offset-2 disabled:opacity-50"
+                      disabled={pending === skill.name}
+                      onClick={() => void rename(skill.name)}
+                    >
+                      重命名
+                    </button>
+                    <button
+                      type="button"
+                      className="skill-list__delete rounded px-1 text-xs text-destructive underline underline-offset-2 disabled:opacity-50"
+                      disabled={pending === skill.name}
+                      onClick={() => void remove(skill.name)}
+                    >
+                      删除
+                    </button>
+                  </span>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       )}
       {notice ? (

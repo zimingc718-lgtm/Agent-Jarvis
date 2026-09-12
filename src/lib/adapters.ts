@@ -14,9 +14,45 @@ type CompatibleChunk = {
       content?: unknown;
       tool_calls?: ToolCallChunk[];
     };
+    /** `"length"` means the provider stopped at its output cap (REQ-F-051 ②). */
+    finish_reason?: string | null;
   }>;
   usage?: { prompt_tokens?: number; completion_tokens?: number };
 };
+
+/**
+ * Output ceiling sent on every call, per provider kind (DEC-032 ①, REQ-F-051 ①).
+ *
+ * Without it DeepSeek defaults to ~4K output tokens and silently cut an 18 KB HTML
+ * report nine times in a row (EV-2026-09-11-display-console-ux §1.1). The values are the
+ * documented maxima; a provider that rejects the field gets one retry without it
+ * (`shouldRetryWithoutOutputLimit`). Deliberately no per-provider column — that would be
+ * a schema change for a number that has not yet needed overriding.
+ */
+export const DEFAULT_MAX_OUTPUT_TOKENS: Record<ProviderKind, number> = {
+  openai: 4096,
+  deepseek: 8192,
+  local: 4096,
+};
+
+/** OpenAI deprecated `max_tokens` in favour of `max_completion_tokens`; the others still use the old name. */
+export function outputLimitField(kind: ProviderKind): "max_tokens" | "max_completion_tokens" {
+  return kind === "openai" ? "max_completion_tokens" : "max_tokens";
+}
+
+/** A 4xx that names the output-limit field: retry once without it (same shape as `stream_options`). */
+export function shouldRetryWithoutOutputLimit(status: number, body: string): boolean {
+  return status >= 400 && status < 500 && /max_tokens|max_completion_tokens/i.test(body);
+}
+
+function parsesAsJson(value: string): boolean {
+  try {
+    JSON.parse(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export type StreamProviderConfig = {
   kind: ProviderKind;
@@ -162,20 +198,23 @@ export async function* sendProviderStream(input: SendProviderStreamInput): Async
   const signal = input.signal ? AbortSignal.any([input.signal, timeout]) : timeout;
   const abortedByUser = () => Boolean(input.signal?.aborted);
 
-  const buildBody = (includeUsage: boolean, withTools: boolean) =>
+  const limitField = outputLimitField(input.provider.kind);
+  const buildBody = (includeUsage: boolean, withTools: boolean, withLimit: boolean) =>
     JSON.stringify({
       model,
       stream: true,
       messages: input.messages,
       ...(withTools && input.tools && input.tools.length > 0 ? { tools: input.tools } : {}),
       ...(includeUsage ? { stream_options: { include_usage: true } } : {}),
+      ...(withLimit ? { [limitField]: DEFAULT_MAX_OUTPUT_TOKENS[input.provider.kind] } : {}),
     });
 
   let wantUsage = input.includeUsage ?? false;
   let wantTools = true;
+  let wantLimit = true;
   let response: Response;
   try {
-    response = await fetcher(url, { method: "POST", headers, body: buildBody(wantUsage, wantTools), signal });
+    response = await fetcher(url, { method: "POST", headers, body: buildBody(wantUsage, wantTools, wantLimit), signal });
   } catch (error) {
     if (abortedByUser()) {
       yield { type: "stopped" };
@@ -191,19 +230,21 @@ export async function* sendProviderStream(input: SendProviderStreamInput): Async
 
   // Retry once when the provider rejected an optional field specifically. Usage and
   // tools are both nice-to-haves; a working reply is not (REQ-F-012 must keep passing).
-  if (!response.ok && (wantUsage || (wantTools && input.tools?.length))) {
+  if (!response.ok && (wantUsage || wantLimit || (wantTools && input.tools?.length))) {
     const body = await response.clone().text();
     const dropUsage = wantUsage && shouldRetryWithoutUsage(response.status, body);
     const dropTools = wantTools && Boolean(input.tools?.length) && shouldRetryWithoutTools(response.status, body);
-    if (dropUsage || dropTools) {
+    const dropLimit = wantLimit && shouldRetryWithoutOutputLimit(response.status, body);
+    if (dropUsage || dropTools || dropLimit) {
       wantUsage = wantUsage && !dropUsage;
       wantTools = wantTools && !dropTools;
+      wantLimit = wantLimit && !dropLimit;
       if (dropTools) {
         // Tell the caller so it can record `no` and stop asking on later turns.
         yield { type: "tools-unavailable", reason: "当前模型不支持工具调用，本轮按普通对话进行。" };
       }
       try {
-        response = await fetcher(url, { method: "POST", headers, body: buildBody(wantUsage, wantTools), signal });
+        response = await fetcher(url, { method: "POST", headers, body: buildBody(wantUsage, wantTools, wantLimit), signal });
       } catch (error) {
         yield { type: "error", message: `Could not reach provider: ${errorText(error)}.` };
         return;
@@ -225,6 +266,10 @@ export async function* sendProviderStream(input: SendProviderStreamInput): Async
   const accumulator = new ToolCallAccumulator();
   let promptTokens: number | null = null;
   let completionTokens: number | null = null;
+  let sawText = false;
+  // REQ-F-051 ②: the provider hit its output cap. Still not used to *close* tool calls
+  // (DEC-024 ①) — only to label what arrived as cut short.
+  let lengthCapped = false;
   const reader = response.body.getReader();
   while (true) {
     let chunk: ReadableStreamReadResult<Uint8Array>;
@@ -262,8 +307,12 @@ export async function* sendProviderStream(input: SendProviderStreamInput): Async
         completionTokens = parsed.usage.completion_tokens ?? completionTokens;
       }
       accumulator.push(parsed.choices?.[0]?.delta?.tool_calls);
+      if (parsed.choices?.[0]?.finish_reason === "length") {
+        lengthCapped = true;
+      }
       const delta = normalizeOpenAICompatibleChunk(parsed);
       if (delta) {
+        sawText = true;
         yield delta;
       }
     }
@@ -278,8 +327,21 @@ export async function* sendProviderStream(input: SendProviderStreamInput): Async
   }
   if (accumulator.size > 0) {
     for (const call of accumulator.toToolCalls()) {
-      yield { type: "tool_call", callId: call.id, name: call.function.name, argsSummary: call.function.arguments };
+      // A call whose JSON no longer closes after a `length` stop was cut mid-argument.
+      // Label it rather than dropping it: the loop turns the label into a precise tool
+      // result, which is what lets the model shorten or split instead of retrying blind.
+      const truncated = lengthCapped && !parsesAsJson(call.function.arguments);
+      yield {
+        type: "tool_call",
+        callId: call.id,
+        name: call.function.name,
+        argsSummary: call.function.arguments,
+        ...(truncated ? { truncated: true, argsLength: call.function.arguments.length } : {}),
+      };
     }
+  } else if (lengthCapped && sawText) {
+    // REQ-F-051 ④: a plain reply that hit the cap is told, not silently shortened.
+    yield { type: "notice", text: "回复因达到模型输出上限而被截断，内容可能不完整。可以让我继续或分段输出。" };
   }
 }
 

@@ -51,7 +51,12 @@ export type ToolDescriptor = {
   priority?: ToolPriority;
   /** Whether this tool exists at all for the current context (REQ-NF-008 ④). */
   available(context: ToolContext): boolean;
-  execute(args: Record<string, unknown>, context: ToolContext): Promise<ToolResult>;
+  /**
+   * `rawArguments` is the model's original argument string, so a tool can explain a
+   * parse problem precisely via `describeArgsProblem` (REQ-F-050 ⑤). Optional: tests and
+   * callers that already have parsed args may omit it.
+   */
+  execute(args: Record<string, unknown>, context: ToolContext, rawArguments?: string): Promise<ToolResult>;
 };
 
 /**
@@ -209,13 +214,54 @@ export function summarizeArgs(raw: string): string {
   return flat.length > MAX_DESCRIPTION_CHARS ? `${flat.slice(0, MAX_DESCRIPTION_CHARS)}…` : flat;
 }
 
+/** Single-key wrappers some models put around the real arguments (REQ-F-050 ④). */
+const ARGUMENT_WRAPPERS = new Set(["arguments", "parameters", "input"]);
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * Parse the model's argument string. Unwraps `{"arguments": {...}}` and friends: after a
+ * few truncated attempts DeepSeek switched to that shape and a 63-byte valid call was
+ * then rejected as "empty" (EV-2026-09-11-display-console-ux §1.1). Anything unparseable
+ * still yields `{}` — `describeArgsProblem` is how a tool explains *why* to the model.
+ */
 export function parseToolArguments(raw: string): Record<string, unknown> {
   try {
     const parsed = JSON.parse(raw || "{}") as unknown;
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : {};
+    if (!isPlainObject(parsed)) {
+      return {};
+    }
+    const keys = Object.keys(parsed);
+    if (keys.length === 1 && ARGUMENT_WRAPPERS.has(keys[0]) && isPlainObject(parsed[keys[0]])) {
+      return parsed[keys[0]] as Record<string, unknown>;
+    }
+    return parsed;
   } catch {
     return {};
   }
+}
+
+/**
+ * Why a call's arguments did not satisfy the tool, in words the model can act on
+ * (REQ-F-050 ⑤): which required keys are missing, which keys actually arrived, and
+ * whether the raw string was even JSON. Returns null when nothing is wrong.
+ */
+export function describeArgsProblem(raw: string, args: Record<string, unknown>, required: string[]): string | null {
+  let json = true;
+  try {
+    JSON.parse(raw || "{}");
+  } catch {
+    json = false;
+  }
+  if (!json) {
+    return `参数不是合法 JSON（收到 ${raw.length} 字符，末尾：${JSON.stringify(raw.slice(-40))}），疑似在生成中被截断。请缩短内容或分块提交。`;
+  }
+  const missing = required.filter((key) => !(key in args) || args[key] === undefined || args[key] === null);
+  if (missing.length === 0) {
+    return null;
+  }
+  const received = Object.keys(args);
+  return `缺少参数 ${missing.join("、")}；收到的键：${received.length > 0 ? received.join("、") : "（无）"}。参数须是顶层 JSON 对象，例如 {"${missing[0]}": …}。`;
 }

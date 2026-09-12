@@ -183,6 +183,12 @@ export type Store = {
   insertInsight(input: { conversationId: string; kind: string; html: string }): InsightRecord;
   listInsights(conversationId: string): InsightRecord[];
   getInsight(insightId: string): InsightRecord | null;
+  /**
+   * Append HTML to an existing insight's body (REQ-F-050 ①, DEC-032 ③). Returns the
+   * updated record, or null when the id does not exist. No schema change: same row,
+   * longer `html`.
+   */
+  appendInsightHtml(insightId: string, html: string): InsightRecord | null;
   // --- Display state (CR-20260909-display-screen, DEC-017) ---
   getDisplayState(): DisplayStateRecord;
   setDisplayState(next: { kind: string; refId?: string | null }): void;
@@ -742,6 +748,14 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
         )
         .get(insightId) as InsightRecord | undefined;
       return row ?? null;
+    },
+
+    appendInsightHtml(insightId, html) {
+      const changed = db.prepare("UPDATE insights SET html = html || ? WHERE id = ?").run(html, insightId);
+      if (Number(changed.changes) === 0) {
+        return null;
+      }
+      return this.getInsight(insightId);
     },
 
     getDisplayState() {

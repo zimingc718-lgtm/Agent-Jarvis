@@ -346,6 +346,15 @@ def check_baseline(root: Path) -> list[str]:
         if not path.exists():
             findings.append(f"FAIL BASELINE_FILE_MISSING {rel_path}")
             continue
+        if not path.is_file():
+            # A baseline entry that is now a directory. `.git` is the real case: it is a
+            # FILE inside a git worktree and a DIRECTORY in a normal checkout, so a
+            # snapshot taken from a worktree baselines it and every later `verify` in the
+            # main checkout crashed on `open()`. A gate must report, never crash — the
+            # entry is wrong and a fresh `snapshot` is what removes it
+            # (`discover_controlled_files` already skips non-files).
+            findings.append(f"FAIL BASELINE_NOT_A_FILE {rel_path} is not a regular file — re-run snapshot to drop it")
+            continue
         actual_hash = governed_hash(path, rel_path)
         if actual_hash != expected_hash:
             findings.append(f"FAIL BASELINE_CHANGED {rel_path}")

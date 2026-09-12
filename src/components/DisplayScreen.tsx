@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { KnowledgeDashboard } from "@/components/KnowledgeDashboard";
 import { ShieldAlert } from "lucide-react";
+import { buildInsightDocument, readDocumentTheme, type InsightTheme } from "@/lib/display-document";
 import { ASK_JARVIS_EVENT, DISPLAY_CHANGED_EVENT, type DisplayView } from "@/lib/ui-events";
 
 const NOTICE_TEXT =
@@ -65,6 +66,18 @@ export function DisplayScreen({ initial, fetchView = fetchViewFromApi }: Display
   const [stage, setStage] = useState<"opening" | "board">("opening");
   const stageRef = useRef(stage);
   stageRef.current = stage;
+  // REQ-F-052 ②: the iframe is its own document, so the host theme is passed in by hand.
+  // Light first so server and client markup agree; the real value is adopted after mount
+  // and followed live through the same `data-theme` attribute ThemeToggle writes.
+  const [theme, setTheme] = useState<InsightTheme>("light");
+
+  useEffect(() => {
+    const root = document.documentElement;
+    setTheme(readDocumentTheme(root));
+    const observer = new MutationObserver(() => setTheme(readDocumentTheme(root)));
+    observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
 
   const enterBoard = useCallback(() => {
     if (stageRef.current === "board") {
@@ -128,11 +141,13 @@ export function DisplayScreen({ initial, fetchView = fetchViewFromApi }: Display
           <ShieldAlert aria-hidden="true" className="size-4 shrink-0" />
           <span>{NOTICE_TEXT}</span>
         </div>
-        {/* DEC-015 / CP-11: rendered without a sandbox attribute — the user accepts the risk. */}
+        {/* DEC-015 / CP-11: rendered without a sandbox attribute — the user accepts the risk.
+            REQ-F-052 ①③: the stored HTML is wrapped in a base-styled, theme-aware document;
+            an insight that brings its own <style> or a full document keeps it (DEC-032 ④). */}
         <iframe
           className="display-screen__frame min-h-0 w-full flex-1 border-0 bg-background"
           title="技能洞察报告"
-          srcDoc={view.html}
+          srcDoc={buildInsightDocument(view.html, theme)}
         />
       </section>
     );

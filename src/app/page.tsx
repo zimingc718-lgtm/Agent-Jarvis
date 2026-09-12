@@ -5,6 +5,7 @@ import { CornerMenu } from "@/components/CornerMenu";
 import { DisplayScreen } from "@/components/DisplayScreen";
 import { FloatingChat, type FloatingMessage } from "@/components/FloatingChat";
 import { KnowledgeList } from "@/components/KnowledgeList";
+import { MenuSection } from "@/components/MenuSection";
 import { SearchSettings } from "@/components/SearchSettings";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { SkillList } from "@/components/SkillList";
@@ -61,10 +62,16 @@ export default async function HomePage() {
           the chat and ☰ menu float above it (z-index: base / 20 / 30). */}
       {storeReady ? <DisplayScreen initial={resolveDisplayView()} /> : null}
 
+      {/* REQ-F-053 ③: the drawer is a list of same-shaped groups — untitled chrome gets a
+          MenuSection; the self-titled entries below already render the same card. */}
       <CornerMenu>
-        <ThemeToggle />
-        <SettingsDialog templates={templates} providers={savedProviders} storage={storage} />
-        <AccountDialog authenticated={auth.ok} googleOAuth={googleOAuth} />
+        <MenuSection title="外观">
+          <ThemeToggle />
+        </MenuSection>
+        <MenuSection title="模型与账号">
+          <SettingsDialog templates={templates} providers={savedProviders} storage={storage} />
+          <AccountDialog authenticated={auth.ok} googleOAuth={googleOAuth} />
+        </MenuSection>
         {storeReady ? <SkillList initialSkills={registeredSkills} /> : null}
         {storeReady ? <KnowledgeList initial={knowledge} /> : null}
         {/* REQ-F-038 ①: its own entry beside 「模型」, not inside that dialog. */}

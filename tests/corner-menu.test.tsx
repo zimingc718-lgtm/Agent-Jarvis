@@ -36,7 +36,7 @@ describe("CornerMenu", () => {
   it("keeps its items out of the DOM until the ☰ trigger is pressed (TEST-032 ①②③)", () => {
     render(<Harness />);
     const trigger = screen.getByRole("button", { name: "打开菜单" });
-    expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+    expect(trigger).toHaveAttribute("aria-haspopup", "dialog");
     expect(trigger).toHaveAttribute("aria-expanded", "false");
 
     // Closed: menu items are not mounted.
@@ -46,7 +46,7 @@ describe("CornerMenu", () => {
 
     fireEvent.click(trigger);
     expect(screen.getByRole("button", { name: "关闭菜单" })).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("menu", { name: "Agent-Jarvis 菜单" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Agent-Jarvis 菜单" })).toBeInTheDocument();
     // Inline theme toggle + two launchers.
     expect(screen.getByRole("group", { name: "外观主题" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "模型" })).toBeInTheDocument();
@@ -57,7 +57,7 @@ describe("CornerMenu", () => {
     render(<Harness />);
     const trigger = screen.getByRole("button", { name: "打开菜单" });
     fireEvent.click(trigger);
-    expect(screen.getByRole("menu")).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
 
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
@@ -72,7 +72,7 @@ describe("CornerMenu", () => {
       </div>
     );
     fireEvent.click(screen.getByRole("button", { name: "打开菜单" }));
-    expect(screen.getByRole("menu")).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
 
     fireEvent.mouseDown(screen.getByRole("button", { name: "elsewhere" }));
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
@@ -97,5 +97,42 @@ describe("CornerMenu", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "账号登录" }));
     expect(screen.getByText("尚未登录 Agent-Jarvis。")).toBeInTheDocument();
+  });
+
+  // CR-20260911-display-console-ux — REQ-F-053 / TEST-094 ②③④: the popover became a drawer.
+  it("TEST-094 ②: opens as a modal dialog drawer with the same accessible name", () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: "打开菜单" }));
+    const drawer = screen.getByRole("dialog", { name: "Agent-Jarvis 菜单" });
+    expect(drawer).toHaveAttribute("aria-modal", "true");
+    expect(drawer.className).toMatch(/inset-y-0/);
+    expect(drawer.className).toMatch(/left-0/);
+    expect(drawer.className).toMatch(/overflow-y-auto/);
+    expect(document.querySelector(".corner-menu__backdrop")).not.toBeNull();
+  });
+
+  it("TEST-094 ③: a mousedown on the backdrop closes the drawer", () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: "打开菜单" }));
+    fireEvent.mouseDown(document.querySelector(".corner-menu__backdrop")!);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("TEST-094 ④: Tab wraps from the last focusable back to the first, Shift+Tab the other way", () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: "打开菜单" }));
+    const root = document.querySelector(".corner-menu") as HTMLElement;
+    const focusable = [...root.querySelectorAll<HTMLElement>("button, input, select, textarea, a[href]")];
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    // Opening moves focus into the drawer.
+    expect(document.activeElement).toBe(first);
+
+    last.focus();
+    fireEvent.keyDown(root, { key: "Tab" });
+    expect(document.activeElement).toBe(first);
+
+    fireEvent.keyDown(root, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(last);
   });
 });

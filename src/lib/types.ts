@@ -59,7 +59,10 @@ export type ChatDelta =
   | { type: "insight"; insightId: string }
   // CR-20260910-agent-tooling (REQ-F-035 ③): the step stream. `tool_call` opens a step
   // row, `tool_result` closes it. Emitted mid-loop, not as a tail event.
-  | { type: "tool_call"; callId: string; name: string; argsSummary: string }
+  // REQ-F-051 ② (CR-20260911-display-console-ux): `truncated` marks a call whose
+  // arguments were cut by the provider's output limit (`finish_reason: "length"`);
+  // `argsLength` is how many characters arrived. The loop refuses to run such a call.
+  | { type: "tool_call"; callId: string; name: string; argsSummary: string; truncated?: boolean; argsLength?: number }
   | { type: "tool_result"; callId: string; ok: boolean; summary: string }
   // REQ-F-039: sources travel as their own structure so the streamed prose is never rewritten.
   | { type: "sources"; sources: Source[] }
