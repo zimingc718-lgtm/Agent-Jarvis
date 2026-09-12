@@ -53,9 +53,22 @@ describe("展示屏三态", () => {
     await waitFor(() => expect(screen.getByRole("region", { name: "知识看板" })).toBeInTheDocument());
   });
 
-  it("③ 鼠标到达标题屏即切换，不必等满 3 秒", async () => {
+  it("③ 鼠标只是移动不算开始工作，开场留住（CR-20260912-stage-reach 反转本条）", async () => {
+    // This assertion is the inverse of the one it replaces. The original read「鼠标到达标题屏
+    // 即切换」and followed the approved CP-1 literally. Real use showed why that was wrong:
+    // the pointer is already over the window when the page loads, so the first mouse twitch
+    // skipped the opening and the user reported it as「首页没有动画效果」. Moving a mouse is
+    // not starting work; clicking or typing is — and those are asserted just below.
     renderScreen();
     fireEvent.pointerEnter(screen.getByRole("region", { name: "Agent-Jarvis" }));
+    fireEvent.pointerOver(screen.getByRole("region", { name: "Agent-Jarvis" }));
+    expect(screen.getByRole("region", { name: "Agent-Jarvis" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "知识看板" })).toBeNull();
+  });
+
+  it("③ 点击算开始工作，仍然立刻切走", async () => {
+    renderScreen();
+    fireEvent.pointerDown(window);
     await waitFor(() => expect(screen.getByRole("region", { name: "知识看板" })).toBeInTheDocument());
   });
 

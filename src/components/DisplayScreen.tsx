@@ -4,7 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { KnowledgeDashboard } from "@/components/KnowledgeDashboard";
 import { ShieldAlert } from "lucide-react";
 import { buildInsightDocument, readDocumentTheme, type InsightTheme } from "@/lib/display-document";
-import { ASK_JARVIS_EVENT, DISPLAY_CHANGED_EVENT, type DisplayView } from "@/lib/ui-events";
+import {
+  ASK_JARVIS_EVENT,
+  DISPLAY_CHANGED_EVENT,
+  DISPLAY_STAGE_EVENT,
+  type DisplayStage,
+  type DisplayView,
+} from "@/lib/ui-events";
 
 const NOTICE_TEXT =
   "以下内容由大模型生成，在沙箱中隔离显示。内容未经核实，请勿在其中输入敏感信息。";
@@ -16,14 +22,25 @@ const NOTICE_TEXT =
  * 展板或者动画标题，就可以切换。」 Three things follow from that sentence and each one is
  * a decision worth keeping:
  *
- * ① **3 秒是上限，不是时长。** Any sign of work — the pointer arriving, a click, focus
- *    landing in the console — switches at once. The timer only covers the case where
- *    nobody does anything. (Not a key listener: see the effect below.)
+ * ① **3 秒是上限，不是时长。** A deliberate sign of work — a click, or focus landing in
+ *    the console — switches at once. The timer only covers the case where nobody does
+ *    anything. (Not a key listener: see the effect below.)
  * ② **切换不由动画结束驱动.** The animation loops; if the switch waited for it, a slow
  *    machine would sit on the title screen longer than a fast one, for no reason the
  *    user could see.
  * ③ **一次会话只播一次.** Coming back from an insight should land on the board, not
  *    replay the intro. The flag lives in sessionStorage, so a new tab plays it again.
+ *
+ * Two corrections from CR-20260912-stage-reach, both from what real use showed:
+ *
+ * ④ **鼠标移动不算开始工作.** The pointer is already over the window when the page loads,
+ *    so treating its arrival as a signal made the opening unobservable — the user reported
+ *    it as「首页没有动画效果」. Only a click or focus counts now.
+ * ⑤ **阶段必须可以被对话改回去.** `stage` lives in the component and outranks the persisted
+ *    `display_state` when rendering, so once it reached `board` the title view was gone for
+ *    the rest of the session and `show_home` ran to no visible effect. Both stages are now
+ *    reachable through `DISPLAY_STAGE_EVENT`, and returning to the opening clears the
+ *    played flag so it does not bounce straight back.
  */
 export const OPENING_MAX_MS = 3_000;
 export const OPENING_PLAYED_KEY = "jarvis:opening-played";
@@ -42,6 +59,15 @@ function rememberOpeningPlayed(): void {
     window.sessionStorage.setItem(OPENING_PLAYED_KEY, "1");
   } catch {
     /* nothing to do; the worst case is it plays again next render */
+  }
+}
+
+/** Lets `show_home` bring the opening back (REQ-F-102 ①). */
+function forgetOpeningPlayed(): void {
+  try {
+    window.sessionStorage.removeItem(OPENING_PLAYED_KEY);
+  } catch {
+    /* nothing to do; the flag only ever suppresses a replay */
   }
 }
 
@@ -87,6 +113,28 @@ export function DisplayScreen({ initial, fetchView = fetchViewFromApi }: Display
     setStage("board");
   }, []);
 
+  /**
+   * The conversation can move between the two stages (REQ-F-102 ③, CR-20260912-stage-reach).
+   *
+   * Going back to the opening also clears the played flag, otherwise the next render would
+   * immediately bounce to the board again and `show_home` would still do nothing visible —
+   * which is the regression this closes.
+   */
+  useEffect(() => {
+    const onStage = (event: Event) => {
+      const stage = (event as CustomEvent<{ stage?: DisplayStage }>).detail?.stage;
+      if (stage === "board") {
+        rememberOpeningPlayed();
+        setStage("board");
+      } else if (stage === "opening") {
+        forgetOpeningPlayed();
+        setStage("opening");
+      }
+    };
+    window.addEventListener(DISPLAY_STAGE_EVENT, onStage);
+    return () => window.removeEventListener(DISPLAY_STAGE_EVENT, onStage);
+  }, []);
+
   useEffect(() => {
     if (openingAlreadyPlayed()) {
       setStage("board");
@@ -95,8 +143,13 @@ export function DisplayScreen({ initial, fetchView = fetchViewFromApi }: Display
     const timer = window.setTimeout(enterBoard, OPENING_MAX_MS);
     // Work starting, in the two forms it takes: a click anywhere, or focus arriving in
     // the console. Deliberately NOT a key listener — UI contract LB-09 forbids key
-    // handling in this component so that the unsandboxed-HTML notice can never be
-    // dismissed with Escape (CP-7), and typing needs focus first anyway.
+    // handling in this component so that the HTML notice can never be dismissed with
+    // Escape (CP-7), and typing needs focus first anyway.
+    //
+    // Pointer *movement* used to count too, via `onPointerEnter` on the title section
+    // (REQ-F-102 ④). It made the opening unobservable in practice: the pointer is already
+    // over the window on load, so the first mouse twitch skipped it. Moving the mouse is
+    // not starting work — clicking or typing is.
     window.addEventListener("pointerdown", enterBoard);
     window.addEventListener("focusin", enterBoard);
     return () => {
@@ -180,8 +233,6 @@ export function DisplayScreen({ initial, fetchView = fetchViewFromApi }: Display
     <section
       className="display-screen display-screen--home fixed inset-0 z-0 flex items-center justify-center bg-background px-6"
       aria-label="Agent-Jarvis"
-      // The pointer arriving IS the signal that work is starting (user ruling).
-      onPointerEnter={enterBoard}
     >
       {/* Sci-fi opening, CSS only: a sweep and a slow pulse, both switched off under
           prefers-reduced-motion. No library, no canvas, nothing to keep painting once

@@ -38,7 +38,7 @@ describe("TEST-092 save_insight 追加 (REQ-F-050)", () => {
   });
 
   function saveTool() {
-    const [, , save] = createDisplayTools(store);
+    const save = createDisplayTools(store).find((t) => t.name === "save_insight")!;
     return save;
   }
 

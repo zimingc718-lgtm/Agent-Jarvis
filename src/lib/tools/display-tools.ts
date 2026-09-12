@@ -42,12 +42,40 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
   const home: ToolDescriptor = {
     name: "show_home",
     priority: TOOL_PRIORITY.normal,
-    description: "把展示屏切回标题视图（首页）。用户说「回到首页」「显示标题」时调用。",
+    description: "把展示屏切回标题视图（首页，带开场动画）。用户说「回到首页」「显示标题」时调用。",
     parameters: { type: "object", properties: {} },
     available: () => true,
     async execute() {
       store.setDisplayState({ kind: "home", refId: null });
-      return { ok: true, content: "展示屏已切回首页。", summary: "展示屏 → 首页" };
+      // REQ-F-102 ①. Clearing the persisted state is not enough on its own: the board is a
+      // session stage held in the component, and it outranks `home` when rendering. Without
+      // this event the tool reported success while the user went on seeing the board — the
+      // regression e2e caught (EV-2026-09-12-stage-reach §1).
+      return {
+        ok: true,
+        content: "展示屏已切回首页。",
+        summary: "展示屏 → 首页",
+        events: [{ type: "display_stage", stage: "opening" }],
+      };
+    },
+  };
+
+  const board: ToolDescriptor = {
+    name: "show_board",
+    priority: TOOL_PRIORITY.normal,
+    description: "把展示屏切到知识看板（跟踪对象与知识库总览）。用户说「打开看板」「看一下跟踪对象」时调用。",
+    parameters: { type: "object", properties: {} },
+    available: () => true,
+    async execute() {
+      // The board sits below a persisted insight, so an insight left on screen would cover
+      // it. Clearing to `home` first is what makes the stage visible (REQ-F-102 ②).
+      store.setDisplayState({ kind: "home", refId: null });
+      return {
+        ok: true,
+        content: "展示屏已切到知识看板。看板上的内容由用户采纳的条目构成，我不能绕过用户直接改动它。",
+        summary: "展示屏 → 知识看板",
+        events: [{ type: "display_stage", stage: "board" }],
+      };
     },
   };
 
@@ -166,5 +194,5 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
     },
   };
 
-  return [home, insight, save];
+  return [home, board, insight, save];
 }

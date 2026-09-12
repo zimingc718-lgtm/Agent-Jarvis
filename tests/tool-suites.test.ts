@@ -104,7 +104,7 @@ describe("display tools (REQ-F-032 / REQ-F-023)", () => {
     const otherConversation = store.createConversation(otherUser, "theirs").id;
     const foreign = store.insertInsight({ conversationId: otherConversation, kind: "skill", html: "<p>theirs</p>" });
 
-    const [, showInsight] = createDisplayTools(store);
+    const showInsight = createDisplayTools(store).find((t) => t.name === "show_insight")!;
     const result = await showInsight.execute({ insightId: foreign.id }, context);
 
     expect(result.ok).toBe(false);
@@ -112,12 +112,12 @@ describe("display tools (REQ-F-032 / REQ-F-023)", () => {
   });
 
   it("③ 不存在的 insightId 作失败回喂", async () => {
-    const [, showInsight] = createDisplayTools(store);
+    const showInsight = createDisplayTools(store).find((t) => t.name === "show_insight")!;
     expect((await showInsight.execute({ insightId: "nope" }, context)).ok).toBe(false);
   });
 
   it("⑤ HTML 不完整时失败回喂，且不写 insights 行", async () => {
-    const [, , saveInsight] = createDisplayTools(store);
+    const saveInsight = createDisplayTools(store).find((t) => t.name === "save_insight")!;
     const result = await saveInsight.execute({ html: "<div><p>truncated mid-ta" }, context);
 
     expect(result.ok).toBe(false);
@@ -125,7 +125,7 @@ describe("display tools (REQ-F-032 / REQ-F-023)", () => {
   });
 
   it("④ 完整 HTML 写入 insights", async () => {
-    const [, , saveInsight] = createDisplayTools(store);
+    const saveInsight = createDisplayTools(store).find((t) => t.name === "save_insight")!;
     const result = await saveInsight.execute({ html: "<h1>季度报告</h1><p>正文</p>" }, context);
 
     expect(result.ok).toBe(true);
@@ -138,7 +138,7 @@ describe("display tools (REQ-F-032 / REQ-F-023)", () => {
     // same-origin iframe) and chose to accept it. This test asserts what the code
     // ACTUALLY does so the risk stays visible, rather than implying a defence that
     // does not exist.
-    const [, , saveInsight] = createDisplayTools(store);
+    const saveInsight = createDisplayTools(store).find((t) => t.name === "save_insight")!;
     const injected = '<div><img src=x onerror="fetch(\'/api/providers\')"></div>';
     const result = await saveInsight.execute({ html: injected }, context);
 

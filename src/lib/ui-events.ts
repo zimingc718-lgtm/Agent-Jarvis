@@ -39,6 +39,23 @@ export const KNOWLEDGE_CHANGED_EVENT = "jarvis:knowledge-changed";
 export const ASK_JARVIS_EVENT = "jarvis:ask";
 
 /**
+ * Moves the display screen between its two **session** stages — the title opening and the
+ * knowledge board (CR-20260912-stage-reach). `detail` is `{ stage }`.
+ *
+ * Why an event rather than a fourth `display_state` value: CR-20260912-display-stage
+ * rejected persisting the board, because a sticky board would fight `show_home` /
+ * `show_insight` across sessions. That decision stands. What it missed is that a stage
+ * held only in the component silently outranks the persisted state, so once anything had
+ * happened in the session the title view became unreachable and `show_home` ran to no
+ * visible effect. A transient event keeps the board out of the database and still lets the
+ * conversation reach both stages.
+ */
+export const DISPLAY_STAGE_EVENT = "jarvis:display-stage";
+
+/** The two session stages of the display screen. Insight is persistent and sits above both. */
+export type DisplayStage = "opening" | "board";
+
+/**
  * Proactive wake-up (CR-20260911-proactive-wake). `WAKE_CHANGED_EVENT` tells the chat
  * that the schedule changed in the ☰ menu; `WAKE_NOTICE_EVENT` carries a reminder the
  * menu's 「现在唤醒」 produced, so the chat can show it — `detail` is `{ text, messageId }`.
