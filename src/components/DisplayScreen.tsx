@@ -183,14 +183,7 @@ export function DisplayScreen({ initial, fetchView = fetchViewFromApi }: Display
   if (view.kind === "insight" && view.html != null) {
     return (
       <section
-        className={
-          // REQ-F-160 ②: reserve the console's lane so the reading surface and the console
-          // never overlap. The reservation is a constant, so the report column — centred
-          // inside whatever width is left — sits at the same place whether the console is
-          // expanded or collapsed. That was the ruling: the report must not move.
-          "display-screen display-screen--insight fixed inset-0 z-0 flex flex-col bg-background " +
-          "lg:pr-[calc(var(--jarvis-console-lane)+var(--jarvis-lane-gap)*2)]"
-        }
+        className="display-screen display-screen--insight fixed inset-0 z-0 flex flex-col bg-background"
         aria-label="技能洞察"
       >
         {/* CP-7: non-dismissible — no close control, no Escape handler. */}

@@ -75,10 +75,7 @@ describe("TEST-093 buildInsightDocument (REQ-F-052)", () => {
   it("④ 片段同样拿到 frame 样式，且窄屏下让出整宽", () => {
     const doc = buildInsightDocument("<h1>片段</h1>", "light");
     expect(doc).toContain('<style id="jarvis-frame">');
-    // REQ-F-160 ③: this query is evaluated against the iframe, which is now a lane rather
-    // than the whole viewport. At 1024px it fired permanently and the column filled the
-    // lane; 720px keeps the proportion on a real lane and still yields on a narrow one.
-    expect(doc).toMatch(/@media \(max-width: 720px\)[\s\S]*width:\s*100%/);
+    expect(doc).toMatch(/@media \(max-width: 1024px\)[\s\S]*width:\s*100%/);
     expect(doc).toContain('<body class="jarvis-insight">');
   });
 

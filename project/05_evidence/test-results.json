@@ -56,8 +56,7 @@
     "CR-20260912-runtime-visibility",
     "CR-20260912-context-degrade",
     "CR-20260912-skill-report-bridge",
-    "CR-20260912-skill-paging",
-    "CR-20260912-reading-lane"
+    "CR-20260912-skill-paging"
   ],
   "tests": [
     {
@@ -781,7 +780,7 @@
       "command": "npm test -- display-document display-screen",
       "real_entry": true,
       "date": "2026-09-12",
-      "notes": "展示屏外壳与主题。CR-20260912-sandbox-and-budget 反转 ⑤：由断言「iframe 无 sandbox（DEC-015 不变）」改为断言有 sandbox、含 allow-scripts、不含 allow-same-origin。真实入口（npm run test:e2e，ux-display-console ①，16/16 PASS）：报告在沙箱 iframe 内照常渲染——基础样式生效、分块拼成同一份、主题切换跟随；并直接验证隔离本身——从 iframe 内部读宿主 localStorage 返回 blocked（改动前为 accessible）。这一条是注入链最后一环被切断的直接证据。 CR-20260912-reading-lane 修订 ④：iframe 内让宽断点 1024px → 720px（该查询按 iframe 宽度求值，车道化后 iframe 仅 960px，旧值永久命中）。"
+      "notes": "展示屏外壳与主题。CR-20260912-sandbox-and-budget 反转 ⑤：由断言「iframe 无 sandbox（DEC-015 不变）」改为断言有 sandbox、含 allow-scripts、不含 allow-same-origin。真实入口（npm run test:e2e，ux-display-console ①，16/16 PASS）：报告在沙箱 iframe 内照常渲染——基础样式生效、分块拼成同一份、主题切换跟随；并直接验证隔离本身——从 iframe 内部读宿主 localStorage 返回 blocked（改动前为 accessible）。这一条是注入链最后一环被切断的直接证据。"
     },
     {
       "id": "TEST-094",
@@ -1046,14 +1045,6 @@
       "real_entry": true,
       "date": "2026-09-12",
       "notes": "技能按需分页读取：入口返回 SKILL.md + 清单且不内联大文件正文；清单含 KB 数与「不要假设你已经看过」；带 file 单独取到字母序靠后的小文件（改前不可达）；大文件单独读按预算截断并标注；../ 越界与 .png 非白名单被拒且不回显真实路径；清单外文件指回入口调用；宿主约定仍在末尾。7 PASS。真实技能实测：multi-agent-insight-reviewer 20 个文件 160 KB，入口由 32KB 拼接块降为 4,480 字符，改前不可达的 128 KB 现全部可达。 真实入口（生产构建 + 真实浏览器，1440×900）：控制台高度由 821 px 降为 668 px（占屏 74%，max-height 计算值 522 px = 58vh），报告顶部可见区域由 79 px 增至 232 px；展示屏 iframe 仍在，报告照常渲染。"
-    },
-    {
-      "id": "TEST-220",
-      "result": "PASS",
-      "command": "npm test -- reading-lane",
-      "real_entry": true,
-      "date": "2026-09-12",
-      "notes": "阅读车道的源码契约：车道宽与间距在 globals.css 单一定义且两侧均引用；洞察面预留由 calc 得出；控制台同时含 mx-auto 与 lg:mx-0/lg:ml-auto/lg:max-w-[var(--jarvis-console-lane)]；类名为单条字符串字面量；iframe 让宽断点 720px 且不再出现 1024px；比例仍 68% 居中。6 PASS。真实入口（生产构建 + 真实浏览器）：1440 报告列 154..807（653px）/ 控制台 984..1416 / 重叠 0；1280 报告列 128..672 / 控制台 824..1256 / 重叠 0；900 不分车道仍重叠 612px（设计如此）。三档视口下面板开合前后报告列位置与宽度均逐位相同。"
     }
   ],
   "executed_commands": [
@@ -1294,12 +1285,6 @@
       "result": "PASS",
       "summary": "CR-20260912-skill-paging: tsc 0；单测 650 用例 PASS（新增 7，迁移 4）；ui-contract 53/0（含 RF-07/RF-09）；e2e 19 passed。真实技能入口由 32KB 拼接块降为 4,480 字符，128 KB 由不可达变为可达。",
       "date": "2026-09-12"
-    },
-    {
-      "command": "npx tsc --noEmit && npm test && node scripts/ui-contract.mjs",
-      "result": "PASS",
-      "summary": "CR-20260912-reading-lane: tsc 0；单测 656 用例 PASS（新增 6）；ui-contract 53/0（含改写后的 LB-02）；三档视口真实浏览器实测见 TEST-220。",
-      "date": "2026-09-12"
     }
   ],
   "known_warnings": [
@@ -1417,7 +1402,7 @@
       "reviewed_at": "2026-09-12"
     },
     {
-      "text": "CR-20260912-reading-lane removes the horizontal overlap at lg and above, but below lg there is no room for two lanes: at 900px the console still covers 612px of the report and the auto-collapse from REQ-F-140 carries that case. The lane width of 27rem is a chosen value, not a measured conclusion — the console is markedly narrower than the previous 768px and long replies wrap more; changing --jarvis-console-lane in globals.css moves both sides together. Very wide screens (2560px) were not separately verified; the report column may need an absolute max there.",
+      "text": "CR-20260912-reading-lane was built on a misread requirement and has been reverted in full. The user's ruling 「报告不用跟着位移」 meant 'leave the console position alone, and the report need not move for it' — i.e. keep things as they are. It was read as 'separate them horizontally, but keep the report fixed', which is the opposite. The user corrected it: 「我说了不修改对话框位置。还是底下居中，展开后可以遮挡报告内容，因为展开意味着需要对话。」 Everything that CR introduced (REQ-F-160, DEC-140, TASK-220, TEST-220, and its revisions to REQ-F-002, REQ-F-090 ①, ui-contract LB-02 and the in-iframe breakpoint) is rolled back; code and specs are back to the state before it. The user's reasoning is worth keeping on its own: expanding the console IS the signal that the user wants to converse rather than read, so covering the report at that moment is correct behaviour, not a defect. That premise invalidates the 'overlap = problem' assumption behind the preceding CRs' framing — the mitigations they shipped (auto-collapse on report, 58vh step-stream cap) remain, and were not objected to.",
       "check": "manual",
       "reviewed_at": "2026-09-12"
     }

@@ -85,17 +85,7 @@ const INSIGHT_FRAME_STYLE = `
     margin-left: auto;
     margin-right: auto;
   }
-  /*
-    The width below which the column gives up and takes the whole surface.
-
-    This media query is evaluated against the IFRAME, not the window. It was 1024px back
-    when the iframe was the full viewport; once REQ-F-160 gave the report its own lane the
-    iframe became 960px on a 1440px screen, so the rule fired permanently and the column
-    filled the lane edge to edge — 960px of prose, far past comfortable reading width.
-    720px keeps the proportion on any real lane and still hands the whole width to a
-    genuinely narrow one.
-  */
-  @media (max-width: 720px) {
+  @media (max-width: 1024px) {
     body.jarvis-insight { width: 100%; max-width: 100%; }
   }`;
 
