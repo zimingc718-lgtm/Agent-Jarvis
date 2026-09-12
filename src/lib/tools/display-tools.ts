@@ -1,5 +1,5 @@
 import type { Store } from "../store";
-import type { ToolDescriptor } from "./registry";
+import { TOOL_PRIORITY, type ToolDescriptor } from "./registry";
 
 /**
  * Display-screen control as tools (REQ-F-032, REQ-F-023 rewritten; TASK-068).
@@ -33,6 +33,7 @@ export function looksLikeCompleteHtml(html: string): boolean {
 export function createDisplayTools(store: Store): ToolDescriptor[] {
   const home: ToolDescriptor = {
     name: "show_home",
+    priority: TOOL_PRIORITY.normal,
     description: "把展示屏切回标题视图（首页）。用户说「回到首页」「显示标题」时调用。",
     parameters: { type: "object", properties: {} },
     available: () => true,
@@ -44,6 +45,7 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
 
   const insight: ToolDescriptor = {
     name: "show_insight",
+    priority: TOOL_PRIORITY.normal,
     description: "把展示屏切到一份已存在的洞察报告。参数 insightId 为该报告的 id。",
     parameters: {
       type: "object",
@@ -74,6 +76,7 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
 
   const save: ToolDescriptor = {
     name: "save_insight",
+    priority: TOOL_PRIORITY.management,
     description: "把一份 HTML 报告保存为洞察并显示在展示屏上。参数 html 为完整 HTML 片段。",
     parameters: {
       type: "object",

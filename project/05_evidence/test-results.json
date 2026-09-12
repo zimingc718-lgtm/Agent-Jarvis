@@ -10,7 +10,9 @@
     "project/06_changes/CR-20260911-scheduled-sweep.md",
     "project/06_changes/CR-20260911-board-add-entity.md",
     "project/06_changes/CR-20260911-skill-doc-preserved.md",
-    "project/06_changes/CR-20260912-technical-spine.md"
+    "project/06_changes/CR-20260912-technical-spine.md",
+    "project/06_changes/CR-20260912-tool-budget.md",
+    "project/06_changes/CR-20260912-entity-pending.md"
   ],
   "change_records": [
     "project/06_changes/CR-20260908-floating-llm-chat.md",
@@ -755,8 +757,8 @@
       "result": "PASS",
       "command": "npm test -- entity-tools",
       "real_entry": false,
-      "date": "2026-09-11",
-      "notes": "CR-20260911-home-dashboard；四条 description ≤200 可注册；list_entities 每行都打印采集状态且可按 kind 过滤；read_entity 含容量/下一步/源；propose_entity 只写待采纳区；缺 source_url 一律拒绝；来源不在已登记源内→入队且实体不变；同域→直接生效并留证据；未登记任何源的对象任何来源都不能直写（防空白名单绕过）；非法字段/对象/链接作失败回喂。"
+      "date": "2026-09-12",
+      "notes": "CR-20260911-home-dashboard；四条 description ≤200 可注册；list_entities 每行都打印采集状态且可按 kind 过滤；read_entity 含容量/下一步/源；propose_entity 只写待采纳区；缺 source_url 一律拒绝；来源不在已登记源内→入队且实体不变；同域→直接生效并留证据；未登记任何源的对象任何来源都不能直写（防空白名单绕过）；非法字段/对象/链接作失败回喂。 CR-20260912-entity-pending 增 1 例：propose_entity 与入队的 propose_entity_update 带出 entity_pending 事件，直写不带。"
     },
     {
       "id": "TEST-122",
@@ -821,6 +823,14 @@
       "real_entry": false,
       "date": "2026-09-11",
       "notes": "CR-20260911-scheduled-sweep；默认关时一轮不跑且不发请求；force 让用户按钮越过开关；每轮条数上限且如实报剩余；游标轮转，第二轮从上次停处接着走；采集失败不推进 checkedAt 但游标照样前进（坏源不卡队列）；到期按对象 checkedAt 判，未到期整轮不跑、时间推进后重新到期；从没采集过的对象排最前；无源时如实说明而非报无变化；设置边界拒绝越界；rotateAfter 纯函数两例；路由 401/默认值/越界 400 带理由/无源如实回；看板默认关并写明「还没有巡检过」、开关即保存、按钮带 force、不可见时不发起。10 + 4 + 2 PASS。"
+    },
+    {
+      "id": "TEST-133",
+      "result": "PASS",
+      "command": "npm test -- tool-budget",
+      "real_entry": false,
+      "date": "2026-09-12",
+      "notes": "CR-20260912-tool-budget；预算够时全装且保持注册顺序；不够时按优先级丢（管理类先走、读取类最后）；被丢掉的在名录里被点名；预算装不下一个时仍装一个；未声明优先级按 normal；不可用工具不占预算；真实工具集 8k 下 590 token 落进 655 子预算且四个读取工具幸存，128k 下 18 个全装。7 PASS。"
     }
   ],
   "executed_commands": [

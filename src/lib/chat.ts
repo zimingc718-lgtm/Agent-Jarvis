@@ -187,10 +187,14 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     skills.map((skill) => ({ name: skill.name, description: skill.description })),
     budgetTokens(window, BUDGET_SHARES.skillCatalogue)
   );
+  // The declared tool-definition budget, finally enforced (出口义务 4). The catalogue in
+  // the prefix and the `tools` array on the wire are computed from ONE fit, so the prefix
+  // can never advertise a tool the request does not carry.
+  const toolFit = registry.fitFor(toolContext, budgetTokens(window, BUDGET_SHARES.toolDefinitions));
   const stablePrefix = buildStablePrefix({
     identity: input.systemPrompt ?? DEFAULT_SYSTEM_PROMPT,
     skillCatalogue: catalogue.text,
-    toolCatalogue: toolsUsable ? registry.catalogueFor(toolContext) : "",
+    toolCatalogue: toolsUsable ? registry.catalogueFor(toolContext, toolFit) : "",
   });
   const volatileSuffix = buildVolatileSuffix({ displayState: describeDisplay() });
 
@@ -283,6 +287,7 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     run: (emit, persist) =>
       runToolLoop({
         registry,
+        toolSpecs: toolFit.specs,
         toolContext: { ...toolContext, signal: input.signal },
         messages: assembled,
         emit,

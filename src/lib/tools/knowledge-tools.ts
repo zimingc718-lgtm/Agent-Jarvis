@@ -9,7 +9,7 @@ import {
 } from "../knowledge";
 import { ingestUrl } from "../ingest";
 import { truncateToTokens } from "./budget";
-import type { ToolDescriptor } from "./registry";
+import { TOOL_PRIORITY, type ToolDescriptor } from "./registry";
 
 /**
  * Knowledge as tools (REQ-F-045, REQ-F-046 ③; TASK-083).
@@ -35,6 +35,7 @@ export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescript
 
   const search: ToolDescriptor = {
     name: "search_knowledge",
+    priority: TOOL_PRIORITY.essential,
     description: "在本地知识库中按关键词检索，返回最相关条目的名称、标题与片段。需要全文时再调 read_knowledge。",
     parameters: {
       type: "object",
@@ -69,6 +70,7 @@ export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescript
 
   const read: ToolDescriptor = {
     name: "read_knowledge",
+    priority: TOOL_PRIORITY.essential,
     description: "读取知识库中一个条目的全文。参数 name 为 search_knowledge 返回的条目名称。",
     parameters: {
       type: "object",
@@ -97,6 +99,7 @@ export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescript
 
   const save: ToolDescriptor = {
     name: "save_knowledge",
+    priority: TOOL_PRIORITY.management,
     description: "把值得长期记住的内容提议存入本地知识库（决定、偏好、事实）。进入待采纳区，用户采纳后才可被检索。",
     parameters: {
       type: "object",
@@ -133,6 +136,7 @@ export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescript
 
   const ingest: ToolDescriptor = {
     name: "ingest_url",
+    priority: TOOL_PRIORITY.management,
     description: "把一个网页抓下来存成知识条目：只存正文与原链接，不存原件。参数 url，可选 entity 与 doc_type。",
     parameters: {
       type: "object",

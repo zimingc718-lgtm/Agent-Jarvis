@@ -1,7 +1,7 @@
 import { lookup } from "node:dns/promises";
 import type { Store } from "../store";
 import { BUDGET_SHARES, truncateToTokens } from "./budget";
-import type { ToolDescriptor, ToolResult } from "./registry";
+import { TOOL_PRIORITY, type ToolDescriptor, type ToolResult } from "./registry";
 import { fetchWithGuardedRedirects, UrlNotAllowedError, type Resolver } from "./url-guard";
 
 /**
@@ -138,6 +138,7 @@ export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {
 
   const webSearch: ToolDescriptor = {
     name: "web_search",
+    priority: TOOL_PRIORITY.normal,
     description: "用配置的搜索服务检索网页，返回标题、网址与摘要。需要网页正文时再调 read_url。",
     parameters: {
       type: "object",
@@ -198,6 +199,7 @@ export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {
 
   const readUrl: ToolDescriptor = {
     name: "read_url",
+    priority: TOOL_PRIORITY.normal,
     description: "读取一个网页的正文摘要。参数 url 必须是 http/https 公网地址。",
     parameters: {
       type: "object",

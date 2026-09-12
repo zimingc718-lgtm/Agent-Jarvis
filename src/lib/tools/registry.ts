@@ -1,4 +1,4 @@
-import type { ToolSpec } from "../adapters";
+import { estimateTokens, type ToolSpec } from "../adapters";
 import type { ChatDelta } from "../types";
 import { MAX_DESCRIPTION_CHARS } from "./budget";
 
@@ -44,9 +44,38 @@ export type ToolDescriptor = {
   name: string;
   description: string;
   parameters: Record<string, unknown>;
+  /**
+   * What survives a small context window (CR-20260912-tool-budget). Default `normal`.
+   * Ranking is by what breaks when the tool is missing, not by how often it is used.
+   */
+  priority?: ToolPriority;
   /** Whether this tool exists at all for the current context (REQ-NF-008 ④). */
   available(context: ToolContext): boolean;
   execute(args: Record<string, unknown>, context: ToolContext): Promise<ToolResult>;
+};
+
+/**
+ * Load order under pressure (CR-20260912-tool-budget).
+ *
+ * `essential` — without it the model answers from memory and nobody can tell: the
+ *   knowledge and entity READ tools. Their absence is silent, which is what makes them
+ *   first.
+ * `normal` — outbound reading and skills. Losing them is visible: the model says it
+ *   cannot reach the network.
+ * `management` — writes and configuration (propose, ingest, extract, collect). Losing
+ *   them is the most visible of all, because the user asked for the write and hears
+ *   that it did not happen.
+ */
+export const TOOL_PRIORITY = { essential: 1, normal: 2, management: 3 } as const;
+export type ToolPriority = (typeof TOOL_PRIORITY)[keyof typeof TOOL_PRIORITY];
+
+export type ToolFit = {
+  /** What the provider request may carry this turn. */
+  specs: ToolSpec[];
+  loaded: ToolDescriptor[];
+  /** Available but left out because the window could not hold them. */
+  dropped: ToolDescriptor[];
+  tokens: number;
 };
 
 export class ToolRegistry {
@@ -80,20 +109,76 @@ export class ToolRegistry {
 
   /** The `tools` array for the provider request body. */
   specsFor(context: ToolContext): ToolSpec[] {
-    return this.availableFor(context).map((tool) => ({
-      type: "function" as const,
-      function: { name: tool.name, description: tool.description, parameters: tool.parameters },
-    }));
+    return this.availableFor(context).map(specOf);
   }
 
-  /** One line per tool for the stable prefix, so the model can see what it has. */
-  catalogueFor(context: ToolContext): string {
-    const tools = this.availableFor(context);
+  /**
+   * As many tools as the declared budget can carry (REQ-NF-007 ②, 出口义务 4).
+   *
+   * `BUDGET_SHARES.toolDefinitions` was declared when the budget module was written and
+   * then never consulted; measured afterwards, 18 tools ship 1734 tokens of schema
+   * against a 655-token allowance at an 8k window — 21% of the whole window, spent
+   * before the conversation starts (EV-2026-09-11-home-dashboard §8.2b).
+   *
+   * Three decisions worth stating:
+   * ① The cost measured is the WIRE array, not the catalogue text. The first estimate
+   *    looked at descriptions and was wrong by 5x: the weight is in the parameter schemas.
+   * ② Dropping is by priority, and the caller is told what was dropped so the prefix can
+   *    say so. A tool that vanishes silently turns into a model that quietly stops being
+   *    able to do something, which is the failure this project has already shipped once.
+   * ③ The first tool always loads, even if it alone exceeds the budget. Zero tools means
+   *    the agent loop cannot act at all; being slightly over is caught later by the
+   *    overall context check, which fails loudly.
+   */
+  fitFor(context: ToolContext, maxTokens: number): ToolFit {
+    const available = this.availableFor(context);
+    const byPriority = [...available].sort((a, b) => (a.priority ?? TOOL_PRIORITY.normal) - (b.priority ?? TOOL_PRIORITY.normal));
+
+    const keep = new Set<string>();
+    let tokens = 0;
+    for (const tool of byPriority) {
+      const cost = estimateTokens(JSON.stringify(specOf(tool)));
+      if (keep.size > 0 && tokens + cost > maxTokens) {
+        continue;
+      }
+      keep.add(tool.name);
+      tokens += cost;
+    }
+
+    // Emitted in registration order, so the prefix stays byte-identical turn to turn
+    // whenever the toolset itself has not changed (REQ-NF-008 ①).
+    const loaded = available.filter((tool) => keep.has(tool.name));
+    const dropped = available.filter((tool) => !keep.has(tool.name));
+    return { specs: loaded.map(specOf), loaded, dropped, tokens };
+  }
+
+  /**
+   * One line per tool for the stable prefix. Given a fit, it lists what is actually
+   * callable and names the rest — the model needs to be able to tell the user "that
+   * tool did not fit in this model's window" instead of failing at the call.
+   */
+  catalogueFor(context: ToolContext, fit?: ToolFit): string {
+    const tools = fit ? fit.loaded : this.availableFor(context);
     if (tools.length === 0) {
       return "";
     }
-    return ["可用工具：", ...tools.map((tool) => `- ${tool.name}：${tool.description}`)].join("\n");
+    const lines = ["可用工具：", ...tools.map((tool) => `- ${tool.name}：${tool.description}`)];
+    if (fit && fit.dropped.length > 0) {
+      lines.push(
+        `（另有 ${fit.dropped.length} 个工具本轮未加载，因为超出该模型窗口的工具预算：${fit.dropped
+          .map((tool) => tool.name)
+          .join("、")}。需要它们时请告知用户换用上下文窗口更大的模型。）`
+      );
+    }
+    return lines.join("\n");
   }
+}
+
+function specOf(tool: ToolDescriptor): ToolSpec {
+  return {
+    type: "function" as const,
+    function: { name: tool.name, description: tool.description, parameters: tool.parameters },
+  };
 }
 
 /** Stable, order-insensitive key for "same tool, same arguments" (REQ-F-029 ④). */

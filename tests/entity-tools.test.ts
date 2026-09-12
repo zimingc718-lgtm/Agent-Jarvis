@@ -184,4 +184,22 @@ describe("entity tools", () => {
     expect((await readEntity("tso-a", root))?.capacity).toBe("0.8 GW");
     expect(good.sources?.[0]).toMatchObject({ url: "https://tso-a.example/rules/2026" });
   });
+
+  it("⑪ 提议会带出 entity_pending 事件；直写不带——直写已经显示在卡片上了", async () => {
+    const { propose, proposeUpdate } = tools();
+    const proposed = await propose.execute({ kind: "competitor", title: "友商 Z" }, context);
+    expect(proposed.events).toEqual([{ type: "entity_pending", title: "友商 Z", what: "entity" }]);
+
+    const queued = await proposeUpdate.execute(
+      { name: "友商-b", field: "change", value: "发布新固件", source_url: "https://b.example/news" },
+      context
+    );
+    expect(queued.events).toEqual([{ type: "entity_pending", title: "友商 B", what: "update" }]);
+
+    const direct = await proposeUpdate.execute(
+      { name: "tso-a", field: "capacity", value: "可用 0.9 GW", source_url: "https://tso-a.example/rules/x" },
+      context
+    );
+    expect(direct.events).toBeUndefined();
+  });
 });

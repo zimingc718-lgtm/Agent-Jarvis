@@ -28,6 +28,11 @@ export type ProviderTurn = (input: {
 export type ToolLoopInput = {
   registry: ToolRegistry;
   toolContext: ToolContext;
+  /**
+   * The budgeted tool set for this turn (CR-20260912-tool-budget). Omitted means "no
+   * budget applied" and every available tool is sent — the shape tests use.
+   */
+  toolSpecs?: ToolSpec[];
   /** Conversation messages, already assembled and budgeted by `budget.ts`. */
   messages: ChatMessage[];
   providerTurn: ProviderTurn;
@@ -79,7 +84,7 @@ function raceWithTimeout<T>(promise: Promise<T>, ms: number, signal?: AbortSigna
 
 export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult> {
   const conversation = [...input.messages];
-  const specs = input.registry.specsFor(input.toolContext);
+  const specs = input.toolSpecs ?? input.registry.specsFor(input.toolContext);
   const sources: Source[] = [];
   const seenSourceUrls = new Set<string>();
   const failureStreak = new Map<string, number>();

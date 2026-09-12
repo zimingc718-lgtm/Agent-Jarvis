@@ -836,6 +836,16 @@ export function FloatingChat({
           // transcript AND the ☰ list refreshes to show the 采纳 / 忽略 controls.
           appendSystemMessage(`模型提议了知识条目「${chunk.title}」，已放入待采纳区——在 ☰ 菜单「知识库」中采纳或忽略。`);
           window.dispatchEvent(new Event(KNOWLEDGE_CHANGED_EVENT));
+        } else if (chunk.type === "entity_pending") {
+          // Same shape as `knowledge_pending`, and deliberately the same refresh event:
+          // the board already listens to it, and a second event name for the same
+          // refresh would be two wires doing one job (出口义务 2).
+          appendSystemMessage(
+            chunk.what === "entity"
+              ? `模型提议跟踪对象「${chunk.title}」，已放入待采纳区——在看板上采纳或忽略。`
+              : `模型提议修改「${chunk.title}」，已放入待采纳区——在看板上采纳或忽略。`
+          );
+          window.dispatchEvent(new Event(KNOWLEDGE_CHANGED_EVENT));
         } else if (chunk.type === "compacted") {
           // REQ-F-043: the boundary shows up in the live transcript at the same place a
           // refresh would rebuild it — silent (no bubble), but not traceless.

@@ -78,7 +78,12 @@ export type ChatDelta =
   | { type: "compacted"; summary: string; afterMessageId: string | null; keptTurns: number }
   // REQ-F-046 ③ (CR-20260911-knowledge-base): the model proposed a knowledge entry; it
   // sits in the pending queue until the user adopts it in the ☰ 知识库 list.
-  | { type: "knowledge_pending"; name: string; title: string };
+  | { type: "knowledge_pending"; name: string; title: string }
+  // CR-20260912-entity-pending (CR-20260911-home-dashboard 出口义务 2): the model
+  // proposed a tracked object or a change to one. `what` separates the two queues —
+  // a whole new object waits in `entities/pending/`, a single field or parameter waits
+  // in `entities/proposals/` — because adopting them is two different clicks.
+  | { type: "entity_pending"; title: string; what: "entity" | "update" };
 
 export type ChatMessage = {
   role: "system" | "user" | "assistant" | "tool";

@@ -17,7 +17,7 @@ import {
 } from "../entities";
 import { fetchSource } from "../sources";
 import { truncateToTokens } from "./budget";
-import type { ToolDescriptor } from "./registry";
+import { TOOL_PRIORITY, type ToolDescriptor } from "./registry";
 
 /**
  * Entity tools (EV-2026-09-11-home-dashboard §8; CR-20260911-home-dashboard).
@@ -48,6 +48,7 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
 
   const list: ToolDescriptor = {
     name: "list_entities",
+    priority: TOOL_PRIORITY.essential,
     description: "列出看板跟踪的对象：友商、规则与准入方、客户。可用 kind 过滤。返回名称、标题、状态与采集健康度。",
     parameters: {
       type: "object",
@@ -86,6 +87,7 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
 
   const read: ToolDescriptor = {
     name: "read_entity",
+    priority: TOOL_PRIORITY.essential,
     description: "读取一个跟踪对象的全部内容：技术参数与我方是否满足、定位、下一步、最新变更、采集源、证据与笔记。参数 name。",
     parameters: {
       type: "object",
@@ -128,6 +130,7 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
 
   const propose: ToolDescriptor = {
     name: "propose_entity",
+    priority: TOOL_PRIORITY.management,
     description: "提议把一个对象加入看板跟踪。进入待采纳区，用户采纳后才出现在看板上。参数 kind、title、summary。",
     parameters: {
       type: "object",
@@ -158,6 +161,9 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
           ok: true,
           content: `已提议跟踪对象「${saved.title}」（${saved.name}，${describe(kind)}），放入待采纳区；用户采纳后才会出现在看板上。`,
           summary: `提议对象：${saved.title}`,
+          // The user has to act on this, so it is said in the transcript too — the board
+          // may not even be the screen they are looking at (出口义务 2).
+          events: [{ type: "entity_pending", title: saved.title, what: "entity" }],
         };
       } catch (error) {
         if (error instanceof EntityError) {
@@ -170,6 +176,7 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
 
   const proposeUpdate: ToolDescriptor = {
     name: "propose_entity_update",
+    priority: TOOL_PRIORITY.management,
     description: "提议修改某个对象的一个字段，必须给出来源链接。来源不在该对象已登记的采集源内时进入待采纳区。",
     parameters: {
       type: "object",
@@ -240,12 +247,15 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
           ? `已更新「${entity.title}」的 ${field} 为「${value}」，来源在该对象已登记的采集源内，直接生效。`
           : `已提议把「${entity.title}」的 ${field} 改为「${value}」。来源 ${host} 不在该对象已登记的采集源内，需用户在看板上采纳后才生效。`,
         summary: record.applied ? `更新 ${entity.title}.${field}` : `提议更新 ${entity.title}.${field}`,
+        // Only the queued case is news: a direct write already shows up on the card.
+        events: record.applied ? undefined : [{ type: "entity_pending", title: entity.title, what: "update" }],
       };
     },
   };
 
   const collect: ToolDescriptor = {
     name: "fetch_source",
+    priority: TOOL_PRIORITY.management,
     description: "立即采集某个对象的一个已登记来源，返回是否有变化，并写回该对象的采集状态。参数 name 与 url。",
     parameters: {
       type: "object",
@@ -282,6 +292,7 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
 
   const extract: ToolDescriptor = {
     name: "extract_fields",
+    priority: TOOL_PRIORITY.management,
     description: "从一条已入库的知识条目里把字段写到对象上。每个字段必须附原文，原文须在条目中逐字存在且包含该值，否则拒绝。",
     parameters: {
       type: "object",
@@ -330,10 +341,12 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
         return `${result.field} = ${result.value} —— ${label}：${result.reason}`;
       });
       const written = outcome.results.filter((result) => result.status !== "rejected").length;
+      const queued = outcome.results.filter((result) => result.status === "queued").length;
       return {
         // A call where every claim failed its evidence check is a failed call: the model
         // must see that, not a cheerful summary of nothing happening.
         ok: written > 0,
+        events: queued > 0 ? [{ type: "entity_pending", title: name, what: "update" }] : undefined,
         content: `条目「${outcome.entryName}」→ 对象「${name}」：\n${lines.join("\n")}`,
         summary: written > 0 ? `写入 ${written} 个字段：${name}` : `原文核对未通过：${name}`,
         sources: [{ url: outcome.sourceUrl, title: outcome.entryName }],
