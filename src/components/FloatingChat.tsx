@@ -253,6 +253,24 @@ type FloatingChatProps = {
 const SESSION_ENDED_KEY = "jarvis:chat-session-ended";
 const COLLAPSED_KEY = "jarvis:chat-collapsed";
 
+/**
+ * REQ-F-054 ② (DEC-032 ⑦): how long the pointer must rest on the display screen before
+ * the transcript tucks away. Initial value; the architecture may retune it from real use.
+ */
+export const AUTO_HIDE_DELAY_MS = 400;
+/** REQ-F-054 ⑤: hover auto-hide only makes sense where hover exists. Touch devices opt out. */
+const HOVER_CAPABLE_QUERY = "(hover: hover) and (pointer: fine)";
+
+function hoverCapable(): boolean {
+  try {
+    return typeof window !== "undefined" && typeof window.matchMedia === "function"
+      ? window.matchMedia(HOVER_CAPABLE_QUERY).matches
+      : false;
+  } catch {
+    return false;
+  }
+}
+
 function sessionEnded(): boolean {
   try {
     return sessionStorage.getItem(SESSION_ENDED_KEY) === "1";
@@ -405,7 +423,20 @@ export function FloatingChat({
    * pushes the reply itself out of view (user ruling 5, 2026-09-10).
    */
   const hasSteps = messages.some((message) => message.role === "step");
+  /** REQ-F-019 ②: the persisted preference decides whether the transcript is in the DOM at all. */
   const showTranscript = hasTranscript && !userCollapsed;
+
+  /**
+   * REQ-F-054 (DEC-032 ⑦): the hover state. Orthogonal to `userCollapsed` — it never
+   * touches localStorage and never removes the transcript from the DOM (that is what
+   * lets it animate). `showTranscript && !autoHidden` is what the user actually sees.
+   * Expanded, the panel covered 91% of the viewport, hiding the very report the user
+   * asked for (EV-2026-09-11-display-console-ux §3).
+   */
+  const [autoHidden, setAutoHidden] = useState(false);
+  const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoverCapableRef = useRef(false);
+  const transcriptVisible = showTranscript && !autoHidden;
 
   // Keep the in-memory flag and the persisted preference in lockstep; the ref lets
   // async stream handlers read the current value without a stale closure.
@@ -417,12 +448,42 @@ export function FloatingChat({
   }
 
   useEffect(() => {
+    hoverCapableRef.current = hoverCapable();
     return () => {
       if (finishTimerRef.current) {
         clearTimeout(finishTimerRef.current);
       }
+      if (autoHideTimerRef.current) {
+        clearTimeout(autoHideTimerRef.current);
+      }
     };
   }, []);
+
+  function cancelAutoHide() {
+    if (autoHideTimerRef.current) {
+      clearTimeout(autoHideTimerRef.current);
+      autoHideTimerRef.current = null;
+    }
+    setAutoHidden(false);
+  }
+
+  /**
+   * REQ-F-054 ②④⑤⑥: schedule the tuck-away when the pointer leaves for the display
+   * screen. Not while streaming (the user is watching the reply), not on touch devices,
+   * and not when the user collapsed the panel themselves (nothing to hide).
+   */
+  function scheduleAutoHide() {
+    if (!hoverCapableRef.current || isStreaming || userCollapsedRef.current || !hasTranscript) {
+      return;
+    }
+    if (autoHideTimerRef.current) {
+      clearTimeout(autoHideTimerRef.current);
+    }
+    autoHideTimerRef.current = setTimeout(() => {
+      autoHideTimerRef.current = null;
+      setAutoHidden(true);
+    }, AUTO_HIDE_DELAY_MS);
+  }
 
   // REQ-F-018 / DEC-012: probe on mount (off the first-paint path) and again
   // whenever the settings dialog reports a provider change or the tab regains
@@ -765,6 +826,7 @@ export function FloatingChat({
     setErrorLine(null);
     // Sending is an implicit "show me the conversation" — expand and persist it (REQ-F-019 ⑤⑥).
     applyCollapsed(false);
+    cancelAutoHide();
     setJustFinished(false);
     setInput("");
     setIsStreaming(true);
@@ -915,6 +977,8 @@ export function FloatingChat({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    // REQ-F-054 ③: typing means "I'm here" — bring the transcript back at once.
+    cancelAutoHide();
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       formRef.current?.requestSubmit();
@@ -929,9 +993,13 @@ export function FloatingChat({
         // pb clears the iOS home indicator (env(safe-area-inset-bottom)).
         "floating-chat fixed inset-x-0 bottom-0 z-20 mx-auto flex w-full max-w-3xl flex-col gap-2 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:p-4 sm:pb-[calc(1rem+env(safe-area-inset-bottom,0px))]",
         showTranscript && "floating-chat--expanded",
+        autoHidden && "floating-chat--auto-hidden",
         dragActive && "floating-chat--drag"
       )}
       aria-label="Agent-Jarvis chat"
+      onPointerLeave={scheduleAutoHide}
+      onPointerEnter={cancelAutoHide}
+      onFocusCapture={cancelAutoHide}
       onDragOver={(event) => {
         if ([...(event.dataTransfer?.types ?? [])].includes("Files")) {
           event.preventDefault();
@@ -1028,10 +1096,15 @@ export function FloatingChat({
           <div
             className={cn(
               "floating-chat__messages flex flex-col gap-3 overflow-y-auto overscroll-contain px-1 py-1",
-              hasSteps ? "max-h-[75vh]" : "max-h-[50vh]"
+              // REQ-F-054 ⑧: the hover tuck-away animates max-height + opacity; the DOM stays
+              // (REQ-F-019 ② removal is `userCollapsed`'s job, not this one's).
+              "transition-[max-height,opacity] duration-200 ease-out motion-reduce:transition-none",
+              hasSteps ? "max-h-[75vh]" : "max-h-[50vh]",
+              !transcriptVisible && "floating-chat__messages--hidden max-h-0 overflow-hidden py-0 opacity-0"
             )}
             ref={transcriptRef}
             aria-live="polite"
+            aria-hidden={!transcriptVisible}
           >
             {messages.map((message) =>
               message.role === "summary" ? (

@@ -52,6 +52,10 @@ describe("SkillList (REQ-F-028)", () => {
       <SkillList fetchSkills={async () => [{ id: "s1", name: "reporter", description: "d" }]} />
     );
     await waitFor(() => expect(screen.getByText("reporter")).toBeInTheDocument());
+    // REQ-F-053 ⑤ (CR-20260911-display-console-ux): rows are single-line; the actions sit
+    // behind a per-row 「更多」 disclosure so a long description cannot grow the drawer.
+    expect(screen.queryByRole("button", { name: "删除" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "更多：reporter" }));
     expect(screen.getByRole("button", { name: "删除" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "重命名" })).toBeInTheDocument();
     // Still no in-place editing surface — the remaining non-goal.
@@ -68,6 +72,7 @@ describe("SkillList (REQ-F-028)", () => {
     }) as unknown as typeof fetch);
     render(<SkillList fetchSkills={async () => [{ id: "s1", name: "reporter", description: "d" }]} />);
     await waitFor(() => expect(screen.getByText("reporter")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "更多：reporter" }));
     fireEvent.click(screen.getByRole("button", { name: "删除" }));
     await waitFor(() => expect(calls).toHaveLength(0));
   });

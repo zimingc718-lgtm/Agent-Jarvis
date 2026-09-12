@@ -224,7 +224,7 @@ test("human workflow: the ☰ menu stays reachable while the chat panel is expan
 
   // With the panel expanded, the ☰ trigger still opens its menu.
   await page.getByRole("button", { name: "打开菜单" }).click();
-  await expect(page.getByRole("menu", { name: "Agent-Jarvis 菜单" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Agent-Jarvis 菜单" })).toBeVisible();
   await expect(page.getByRole("button", { name: "模型" })).toBeVisible();
 });
 

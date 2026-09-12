@@ -46,6 +46,7 @@
     "project/06_changes/CR-20260911-context-compaction.md",
     "project/06_changes/CR-20260911-knowledge-base.md",
     "project/06_changes/CR-20260911-proactive-wake.md",
+    "CR-20260911-display-console-ux",
     "CR-20260912-local-production"
   ],
   "tests": [
@@ -747,6 +748,54 @@
       "notes": "CR-20260911-proactive-wake；真实入口：默认关、用量可见；现在唤醒 → 模型恰一次非流式调用（max_tokens 200 + 唤醒指令）→ 转录区 system 行；刷新后仍在、GET messages 字段兼容；上限设 1 后零调用并显示已达上限；开关持久。e2e 13 PASS。"
     },
     {
+      "id": "TEST-091",
+      "result": "PASS",
+      "command": "npm test -- adapters-tools-limit",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "输出上限与截断可见：openai 用 max_completion_tokens、deepseek/local 用 max_tokens；finish_reason=length 且参数未闭合 → tool_call 带 truncated+argsLength；纯文本截断 → notice；4xx 指向该字段回退一次仍送达；JSON 完整时不误标。6 PASS。"
+    },
+    {
+      "id": "TEST-092",
+      "result": "PASS",
+      "command": "npm test -- registry-args tool-suites-append agent-loop-truncated",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "参数解包装与诊断（回放 EV §1.1 的两种真实失败样本）、save_insight 追加（同一行变长、指针不变、512KiB 上限、跨会话拒绝）、截断调用不执行且回喂字符位置。16 PASS。"
+    },
+    {
+      "id": "TEST-093",
+      "result": "PASS",
+      "command": "npm test -- display-document display-screen",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "展示屏文档外壳：片段包成带 @layer jarvis-base 的完整文档、整文档只前置一份样式且结构保留、自带 style 优先、data-theme 跟随宿主主题切换、提示条与无沙箱不变。9 PASS。"
+    },
+    {
+      "id": "TEST-094",
+      "result": "PASS",
+      "command": "npm test -- corner-menu skill-list search-settings",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "☰ 抽屉：role=dialog+aria-modal、inset-y-0 全高、自身滚动、遮罩关闭、Esc 焦点回归、Tab 循环；技能行单行省略+更多展开；搜索设置入口行+对话框。13 PASS。"
+    },
+    {
+      "id": "TEST-095",
+      "result": "PASS",
+      "command": "npm test -- floating-chat-hover",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "悬停态（假定时器 + matchMedia 桩）：399ms 仍可见/400ms 隐藏且 DOM 保留、进入/聚焦/按键各自恢复、流式中不收缩、手动折叠时不展开、触屏无效、全程不写 localStorage、发送复位。8 PASS。"
+    },
+    {
+      "id": "TEST-096",
+      "result": "PASS",
+      "command": "npm run test:e2e && npm run test:ui-contract && npm run test:visual",
+      "real_entry": true,
+      "date": "2026-09-11",
+      "notes": "真实入口：模型两次 save_insight（第二次带 insightId）后 iframe 内为一份文档、两段标题、表格有边框、主题跟随；1024×700 抽屉完整在视口内且遮罩接管点击；指针移到展示屏后记录区收缩、回到输入框恢复。e2e 16 PASS；ui-contract 53/0/0；visual PASS。"
+    },
+    {
       "id": "TEST-120",
       "result": "PASS",
       "command": "npm test -- entities",
@@ -1019,6 +1068,12 @@
       "summary": "CR-20260911-proactive-wake: 9 CP rows declare door + detection route; R1 PASS; R2–R4 MATRIX_WAIVED_STANDARD_TIER"
     },
     {
+      "command": "npm test && npm run test:ui-contract && npm run build:verify && npm run test:smoke && npm run test:e2e && python -m unittest tests.test_governance",
+      "result": "PASS",
+      "summary": "CR-20260911-display-console-ux: 单测 52 文件 / 406 用例 PASS；ui-contract 53 规则 0 FAIL 0 WARN；build:verify PASS；smoke PASS；e2e 16 PASS；治理单测 75 PASS。verify 仍红：本 CR 的新增/改动文件待合并前 snapshot，另有一条 pre-existing 的 .git 基线条目（见 known_warnings）。",
+      "date": "2026-09-11"
+    },
+    {
       "command": "npm test && npm run test:ui-contract && npm run test:smoke && npm run build:local && npx tsc --noEmit",
       "result": "PASS",
       "summary": "CR-20260912-local-production: 单测 65 文件 / 556 用例 PASS；ui-contract 53 规则 0 FAIL 0 WARN；smoke PASS；build:local 成功；tsc 0。verify 仍红：本 CR 与并行 CR 的文件待合并前 snapshot。",
@@ -1077,6 +1132,11 @@
       "detail": "CR-20260910-agent-tooling (CP-20, 单向门; R1 架构角色提出): REQ-F-034 read_url lets attacker-controlled web page content enter the model's context. That content can instruct the model to call save_insight(html), placing attacker-authored HTML into the SAME unsandboxed same-origin <iframe srcdoc> covered by skill-html-unsandboxed. DEC-015's accepted-risk premise was 'the user dragged in a poisoned skill folder' — a source the user chose and trusts. This CR widens the source to ANY web page reachable by search, so the premise no longer holds and the trust surface is strictly larger. Attack chain: user question -> web_search -> read_url on attacker page -> prompt injection in page body -> model calls save_insight ->攻击者 HTML renders with same-origin script access (localStorage, DELETE /api/providers/[id]). The user was shown this chain and the three options (A: make 联网 and save_insight mutually exclusive; B: sandbox the iframe first; C: accept) and chose C — explicitly accepting the expanded risk (2026-09-10, R1 人工终裁 item 3). Mitigation remains only the non-dismissible notice bar (REQ-F-025 ②). Detection route is '发现不了' for the injection path itself, which is why CP-20 is registered as a 单向门 per DEC-021 ②. Sandboxing the iframe stays a mandatory exit obligation for a future CR and is now higher priority than before this CR.",
       "check": "manual",
       "reviewed_at": "2026-09-10"
+    },
+    {
+      "text": ".git is baselined as a governed file (committed in a8873a7, from a snapshot taken inside a git worktree where .git is a FILE). In a normal checkout it is a directory, which made `verify` crash on open(). CR-20260911-display-console-ux CP-9 turns that crash into a BASELINE_NOT_A_FILE finding; the entry itself disappears on the next snapshot, since discover_controlled_files already skips non-files.",
+      "check": "manual",
+      "reviewed_at": "2026-09-11"
     },
     {
       "text": "Web reading limits measured on 2026-09-11 and NOT fixed by this CR: opencompute.org, iea.org (Cloudflare cf-mitigated: challenge) and tesla.com (Akamai) stay unreadable. Full browser headers do not change the 403, and driving Chromium — headless AND headed — sits on the interstitial for 25s and stays 403. The tool now reports this honestly and suggests another source or pasting the text into the knowledge base. Fingerprint spoofing is an explicit non-goal (REQ-F-057 ⑤).",

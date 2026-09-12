@@ -100,6 +100,9 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
 
     let stepText = "";
     const pendingCalls: ToolCall[] = [];
+    // REQ-F-051 ③: calls the adapter labelled as cut by the output cap. They are never
+    // executed; the model gets a precise reason instead (DEC-032 ①).
+    const truncatedCalls = new Map<string, number>();
     let failed: string | null = null;
     let stopped = false;
 
@@ -120,9 +123,12 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
           type: "function",
           function: { name: delta.name, arguments: delta.argsSummary },
         });
+        if (delta.truncated) {
+          truncatedCalls.set(delta.callId, delta.argsLength ?? delta.argsSummary.length);
+        }
         continue;
       }
-      if (delta.type === "usage") {
+      if (delta.type === "usage" || delta.type === "notice") {
         input.emit(delta);
         continue;
       }
@@ -172,12 +178,22 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
         toolsUsed.push(call.function.name);
         const args = parseToolArguments(call.function.arguments);
         const key = `${call.function.name}:${normalizeArgs(args)}`;
+        const cutAt = truncatedCalls.get(call.id);
         input.emit({
           type: "tool_call",
           callId: call.id,
           name: call.function.name,
           argsSummary: summarizeArgs(call.function.arguments),
+          ...(cutAt !== undefined ? { truncated: true, argsLength: cutAt } : {}),
         });
+
+        if (cutAt !== undefined) {
+          // Running a half-arrived call would only produce a confusing downstream error
+          // (the nine "HTML 不完整" retries in EV §1.1). Say exactly what happened instead.
+          const content = `工具参数在第 ${cutAt} 字符处被模型输出上限截断，本次调用未执行。请缩短参数内容，或分成多次较小的调用提交。`;
+          input.emit({ type: "tool_result", callId: call.id, ok: false, summary: "参数被输出上限截断，未执行" });
+          return { call, content, ok: false };
+        }
 
         if ((failureStreak.get(key) ?? 0) >= REPEAT_FAILURE_LIMIT) {
           const content = `同一调用已连续失败 ${REPEAT_FAILURE_LIMIT} 次，本轮不再重试。请换一种做法。`;
@@ -194,7 +210,7 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
 
         try {
           const result = await raceWithTimeout(
-            tool.execute(args, { ...input.toolContext, signal: input.signal }),
+            tool.execute(args, { ...input.toolContext, signal: input.signal }, call.function.arguments),
             TOOL_TIMEOUT_MS,
             input.signal
           );

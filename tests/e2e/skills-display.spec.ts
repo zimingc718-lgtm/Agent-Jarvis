@@ -233,7 +233,7 @@ test("the ☰ menu stays usable on top of the full-screen display screen (TEST-0
   await page.goto("/");
   await expect(page.locator(".display-screen")).toBeVisible();
   await page.getByRole("button", { name: "打开菜单" }).click();
-  await expect(page.getByRole("menu", { name: "Agent-Jarvis 菜单" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Agent-Jarvis 菜单" })).toBeVisible();
 
   // Leave the shared e2e database as we found it: no provider of ours may outrank
   // the ones other spec files create (resolveActiveProvider walks priority order).
