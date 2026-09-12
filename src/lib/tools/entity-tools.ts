@@ -33,7 +33,7 @@ import type { ToolDescriptor } from "./registry";
 const LIST_TOKEN_CAP = 1_500;
 const READ_TOKEN_CAP = 4_000;
 
-export type EntityToolDeps = { root?: string };
+export type EntityToolDeps = { root?: string; knowledgeRoot?: string };
 
 function describe(kind: EntityKind): string {
   return KIND_LABEL[kind];
@@ -41,6 +41,7 @@ function describe(kind: EntityKind): string {
 
 export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
   const root = deps.root ?? ENTITIES_ROOT;
+  const knowledgeRoot = deps.knowledgeRoot;
 
   const list: ToolDescriptor = {
     name: "list_entities",
@@ -256,5 +257,66 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
     },
   };
 
-  return [list, read, propose, proposeUpdate, collect];
+  const extract: ToolDescriptor = {
+    name: "extract_fields",
+    description: "从一条已入库的知识条目里把字段写到对象上。每个字段必须附原文，原文须在条目中逐字存在且包含该值，否则拒绝。",
+    parameters: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "对象名称" },
+        entry: { type: "string", description: "知识条目名（search_knowledge / ingest_url 返回的那个）" },
+        fields: {
+          type: "array",
+          description: "要写入的字段，每项含 field、value、quote 三个键",
+          items: {
+            type: "object",
+            properties: {
+              field: { type: "string", description: UPDATABLE_FIELDS.join(" / ") },
+              value: { type: "string", description: "字段的值" },
+              quote: { type: "string", description: "条目里包含该值的原文，逐字照抄" },
+            },
+            required: ["field", "value", "quote"],
+          },
+        },
+      },
+      required: ["name", "entry", "fields"],
+    },
+    available: () => true,
+    async execute(args) {
+      const name = typeof args.name === "string" ? args.name.trim() : "";
+      const entry = typeof args.entry === "string" ? args.entry.trim() : "";
+      const raw = Array.isArray(args.fields) ? args.fields : [];
+      const claims = raw
+        .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
+        .map((item) => ({
+          field: typeof item.field === "string" ? item.field : "",
+          value: typeof item.value === "string" ? item.value : "",
+          quote: typeof item.quote === "string" ? item.quote : "",
+        }));
+      if (!name || !entry || claims.length === 0) {
+        return { ok: false, content: "name、entry、fields 都是必填，且每个字段都要带原文。", summary: "参数缺失" };
+      }
+
+      const { extractFields } = await import("../extract");
+      const outcome = await extractFields({ entity: name, entryName: entry, claims }, { entitiesRoot: root, knowledgeRoot });
+      if (!outcome.ok) {
+        return { ok: false, content: outcome.reason, summary: "未写入" };
+      }
+      const lines = outcome.results.map((result) => {
+        const label = result.status === "applied" ? "已生效" : result.status === "queued" ? "待采纳" : "已拒绝";
+        return `${result.field} = ${result.value} —— ${label}：${result.reason}`;
+      });
+      const written = outcome.results.filter((result) => result.status !== "rejected").length;
+      return {
+        // A call where every claim failed its evidence check is a failed call: the model
+        // must see that, not a cheerful summary of nothing happening.
+        ok: written > 0,
+        content: `条目「${outcome.entryName}」→ 对象「${name}」：\n${lines.join("\n")}`,
+        summary: written > 0 ? `写入 ${written} 个字段：${name}` : `原文核对未通过：${name}`,
+        sources: [{ url: outcome.sourceUrl, title: outcome.entryName }],
+      };
+    },
+  };
+
+  return [list, read, propose, proposeUpdate, collect, extract];
 }

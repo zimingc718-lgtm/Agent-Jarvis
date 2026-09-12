@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { addSource, listEntities, listPendingEntities, readEntity, saveEntity } from "@/lib/entities";
 import { listProposals } from "@/lib/entity-proposals";
+import { saveKnowledge } from "@/lib/knowledge";
 import { createEntityTools } from "@/lib/tools/entity-tools";
 import { ToolRegistry, type ToolContext } from "@/lib/tools/registry";
 
@@ -23,9 +24,11 @@ const context: ToolContext = {
 
 describe("entity tools", () => {
   let root: string;
+  let knowledgeRoot: string;
 
   beforeEach(async () => {
     root = mkdtempSync(join(tmpdir(), "agent-jarvis-et-"));
+    knowledgeRoot = mkdtempSync(join(tmpdir(), "agent-jarvis-et-k-"));
     await saveEntity(
       { kind: "authority", title: "TSO A", summary: "北部电网", capacity: "可用 1.2 GW", nextLabel: "意见截止", nextDate: "2026-10-15" },
       root
@@ -35,14 +38,15 @@ describe("entity tools", () => {
   });
   afterEach(() => {
     rmSync(root, { recursive: true, force: true });
+    rmSync(knowledgeRoot, { recursive: true, force: true });
   });
 
   const tools = () => {
-    const [list, read, propose, proposeUpdate] = createEntityTools({ root });
-    return { list, read, propose, proposeUpdate };
+    const [list, read, propose, proposeUpdate, , extract] = createEntityTools({ root, knowledgeRoot });
+    return { list, read, propose, proposeUpdate, extract };
   };
 
-  it("① 四个工具描述都在 200 字符内，可注册", () => {
+  it("① 工具描述都在 200 字符内、可注册；联网关时只少 fetch_source 一个", () => {
     const registry = new ToolRegistry();
     for (const tool of createEntityTools({ root })) {
       expect(() => registry.register(tool)).not.toThrow();
@@ -52,6 +56,7 @@ describe("entity tools", () => {
       "read_entity",
       "propose_entity",
       "propose_entity_update",
+      "extract_fields",
     ]);
   });
 
@@ -149,5 +154,34 @@ describe("entity tools", () => {
     const bad = await proposeUpdate.execute({ name: "tso-a", field: "capacity", value: "x", source_url: "不是链接" }, context);
     expect(bad.ok).toBe(false);
     expect(bad.summary).toBe("来源非法");
+  });
+
+  it("⑩ extract_fields：全部原文核对不通过时整次调用回喂失败，理由逐条可见", async () => {
+    const { extract } = tools();
+    const entry = await saveKnowledge(
+      {
+        title: "并网规则 2026",
+        content: "第 3 节：本区域可用并网容量为 0.8 GW。",
+        source: "file",
+        sourceUrl: "https://tso-a.example/rules/2026",
+      },
+      knowledgeRoot
+    );
+
+    const bad = await extract.execute(
+      { name: "tso-a", entry: entry.name, fields: [{ field: "capacity", value: "9 GW", quote: "本区域可用并网容量为 9 GW。" }] },
+      context
+    );
+    expect(bad.ok).toBe(false);
+    expect(bad.content).toContain("不在该条目里");
+
+    const good = await extract.execute(
+      { name: "tso-a", entry: entry.name, fields: [{ field: "capacity", value: "0.8 GW", quote: "第 3 节：本区域可用并网容量为 0.8 GW。" }] },
+      context
+    );
+    expect(good.ok).toBe(true);
+    // The document's own link is registered on this entity, so it lands directly.
+    expect((await readEntity("tso-a", root))?.capacity).toBe("0.8 GW");
+    expect(good.sources?.[0]).toMatchObject({ url: "https://tso-a.example/rules/2026" });
   });
 });
