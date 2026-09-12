@@ -80,7 +80,7 @@ describe("TEST-099 read_url 分流与浏览器回退 (REQ-F-055, REQ-F-057)", ()
     store = createStore(join(dir, "db.sqlite"), encryptionKey);
     const userId = store.upsertUser({ email: "u@example.com", name: "U" }).id;
     const conversationId = store.createConversation(userId, "chat").id;
-    context = { userId, conversationId, skillCount: 0, webEnabled: true, searchConfigured: true, knowledgeCount: 0 };
+    context = { userId, conversationId, skillCount: 0, webEnabled: true, searchConfigured: true, knowledgeCount: 0, contextWindow: 128_000 };
   });
 
   afterEach(() => {

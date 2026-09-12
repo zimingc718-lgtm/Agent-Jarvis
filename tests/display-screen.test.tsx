@@ -29,13 +29,23 @@ describe("TEST-093 DisplayScreen 外壳与主题 (REQ-F-052)", () => {
     await waitFor(() => expect(frame.getAttribute("srcdoc")).toContain('data-theme="dark"'));
   });
 
-  it("⑤ 提示条仍在、不可关闭；iframe 仍无 sandbox（DEC-015 不变）", () => {
+  it("⑤ 提示条仍在、不可关闭；iframe 已沙箱化且未交还同源（REQ-F-101 ①②，DEC-080 ①）", () => {
     const { container } = render(<DisplayScreen initial={insight} fetchView={async () => insight} />);
     const notice = container.querySelector(".display-screen__notice");
     expect(notice).toBeTruthy();
     expect(notice?.querySelector("button")).toBeNull();
+
     const frame = container.querySelector("iframe.display-screen__frame") as HTMLIFrameElement;
-    expect(frame.hasAttribute("sandbox")).toBe(false);
+    // ① There is a sandbox at all. This assertion replaces its own inverse: the previous
+    // version locked in the unsandboxed state recorded as an accepted risk (DEC-015).
+    expect(frame.hasAttribute("sandbox")).toBe(true);
+    const tokens = (frame.getAttribute("sandbox") ?? "").split(/\s+/).filter(Boolean);
+    // ② The one token that would undo it. `allow-scripts allow-same-origin` together let
+    // the framed document reach this app's origin — same storage, same session — which is
+    // precisely the last link of the injection chain this closes. Scripts alone are fine:
+    // an opaque origin has its own empty storage and no credentials.
+    expect(tokens).not.toContain("allow-same-origin");
+    expect(tokens).toContain("allow-scripts");
   });
 
   it("首页视图不渲染 iframe", () => {

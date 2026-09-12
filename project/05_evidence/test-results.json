@@ -49,7 +49,8 @@
     "CR-20260911-display-console-ux",
     "CR-20260911-web-reading",
     "CR-20260912-local-production",
-    "CR-20260912-latency-and-report-layout"
+    "CR-20260912-latency-and-report-layout",
+    "CR-20260912-sandbox-and-budget"
   ],
   "tests": [
     {
@@ -770,8 +771,8 @@
       "result": "PASS",
       "command": "npm test -- display-document display-screen",
       "real_entry": false,
-      "date": "2026-09-11",
-      "notes": "展示屏文档外壳：片段包成带 @layer jarvis-base 的完整文档、整文档只前置一份样式且结构保留、自带 style 优先、data-theme 跟随宿主主题切换、提示条与无沙箱不变。9 PASS。"
+      "date": "2026-09-12",
+      "notes": "展示屏文档外壳：片段包成带 @layer jarvis-base 的完整文档、整文档只前置一份样式且结构保留、自带 style 优先、data-theme 跟随宿主主题切换、提示条与无沙箱不变。9 PASS。 CR-20260912-sandbox-and-budget 反转 ⑤：由断言「iframe 无 sandbox（DEC-015 不变）」改为断言有 sandbox、含 allow-scripts、不含 allow-same-origin。"
     },
     {
       "id": "TEST-094",
@@ -940,6 +941,22 @@
       "real_entry": true,
       "date": "2026-09-12",
       "notes": "报告外框：自带 body{margin:0} 的完整文档仍为 68% 宽且居中；frame 样式在文档自带 style 之后、body 之前；无 !important；片段同样生效且 1024px 以下整宽；防回归断言禁止布局约束回到 base 层。真实入口三视口实测 1920→0.68、1440→0.68、900→1.00，左右留白相等。9 PASS。"
+    },
+    {
+      "id": "TEST-161",
+      "result": "PASS",
+      "command": "npm test -- loop-budget",
+      "real_entry": false,
+      "date": "2026-09-12",
+      "notes": "工具循环内的上下文预算：未超预算时返回同一数组引用且 narrowed=false；超预算逐级收窄且保留 tool_call_id；最紧仍放不下返回 fits=false 带估算值与限额；循环层放不下时不调 Provider、不执行工具、发 notice、落库 truncated；不传 contextWindow 时行为不变。6 PASS。"
+    },
+    {
+      "id": "TEST-162",
+      "result": "PASS",
+      "command": "npm test -- web-result-cap",
+      "real_entry": false,
+      "date": "2026-09-12",
+      "notes": "单条网页结果按真实窗口取上限：128k 窗口所得正文远多于 8k；两者均落在申报的 singleToolResult 份额内；8k 模型下单页不再独吞输入预算。旧实现恒等于 12000。3 PASS。"
     }
   ],
   "executed_commands": [
@@ -1132,6 +1149,12 @@
       "result": "PASS",
       "summary": "CR-20260912-latency-and-report-layout: 单测 67 文件 / 571 用例 PASS；ui-contract 53 规则 0 FAIL 0 WARN；tsc 0。本 CR 为事后补记——代码 2026-09-11 已改，CR 与证据 2026-09-12 补写。",
       "date": "2026-09-12"
+    },
+    {
+      "command": "npx tsc --noEmit && npm test && node scripts/ui-contract.mjs",
+      "result": "PASS",
+      "summary": "CR-20260912-sandbox-and-budget: tsc 0；单测 69 文件 / 580 用例 PASS；ui-contract 53 规则 0 FAIL 0 WARN（含反转后的 LB-09）。",
+      "date": "2026-09-12"
     }
   ],
   "known_warnings": [
@@ -1173,7 +1196,8 @@
     {
       "id": "config-check-single-admin-eval-order",
       "status": "known, user decided not to fix (2026-09-09)",
-      "detail": "scripts/check-config.mjs computes SINGLE_ADMIN = isRealValue(process.env.JARVIS_TEST_USER_ID) at module top, before loadEnv() reads .env.local. So when JARVIS_TEST_USER_ID lives in .env.local (not the shell), `npm run config:check` still reports GOOGLE_CLIENT_ID/SECRET as 缺少 instead of 暂缓 and exits 1. TEST-023 passes because it injects JARVIS_TEST_USER_ID into the child process env directly. Cosmetic only — the dev server's JARVIS_TEST_USER_ID bypass (auth-guard.ts, read per-request after Next loads .env.local) is unaffected. Fix would be: move the SINGLE_ADMIN computation after loadEnv() + add a TEST-023 case that goes through .env.local."
+      "detail": "scripts/check-config.mjs computes SINGLE_ADMIN = isRealValue(process.env.JARVIS_TEST_USER_ID) at module top, before loadEnv() reads .env.local. So when JARVIS_TEST_USER_ID lives in .env.local (not the shell), `npm run config:check` still reports GOOGLE_CLIENT_ID/SECRET as 缺少 instead of 暂缓 and exits 1. TEST-023 passes because it injects JARVIS_TEST_USER_ID into the child process env directly. Cosmetic only — the dev server's JARVIS_TEST_USER_ID bypass (auth-guard.ts, read per-request after Next loads .env.local) is unaffected. Fix would be: move the SINGLE_ADMIN computation after loadEnv() + add a TEST-023 case that goes through .env.local. —— 已闭合：CR-20260912-local-production 把 SINGLE_ADMIN 的求值移到 loadEnv() 之后，2026-09-12 确认。",
+      "reviewed_at": "2026-09-12"
     },
     {
       "id": "skill-html-unsandboxed",
@@ -1204,6 +1228,11 @@
     },
     {
       "text": "CR-20260912-latency-and-report-layout was written AFTER its code change (code 2026-09-11, CR and evidence 2026-09-12). During that gap the source comments referenced an evidence file and a functional requirement number (F series 059) that did not exist. This violates AI_STANDARD principle 8 (change closure). Self-reported and corrected; the fictitious number is now the real REQ-F-090.",
+      "check": "manual",
+      "reviewed_at": "2026-09-12"
+    },
+    {
+      "text": "CR-20260912-sandbox-and-budget closes the sandbox exit obligation, but prompt injection itself is NOT solved: an attacker-controlled page can still make the model repeat or act on its content. Only the last link — attacker HTML gaining this app's origin — is cut. Detection route for the injection path itself remains '发现不了'. Also: under allow-scripts a framed script can still make outbound requests; acceptable while insights carry no user-private data, and recorded so it is re-evaluated if that changes.",
       "check": "manual",
       "reviewed_at": "2026-09-12"
     }

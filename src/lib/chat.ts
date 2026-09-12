@@ -173,6 +173,7 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
   const registry = buildRegistry(input.store, input.extraTools);
   // Counted once per send like the skills: the toolset is fixed for the turn (DEC-026 ②).
   const knowledgeCount = (await listKnowledge(KNOWLEDGE_ROOT)).length;
+  const window = contextWindowFor({ kind: provider.kind, contextWindow: provider.contextWindow });
   const toolContext: ToolContext = {
     userId: input.userId,
     conversationId,
@@ -180,9 +181,9 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     webEnabled: web.enabled,
     searchConfigured: Boolean(web.baseUrl),
     knowledgeCount,
+    contextWindow: window,
   };
 
-  const window = contextWindowFor({ kind: provider.kind, contextWindow: provider.contextWindow });
   const catalogue = renderSkillCatalogue(
     skills.map((skill) => ({ name: skill.name, description: skill.description })),
     budgetTokens(window, BUDGET_SHARES.skillCatalogue)
@@ -290,6 +291,7 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
         toolSpecs: toolFit.specs,
         toolContext: { ...toolContext, signal: input.signal },
         messages: assembled,
+        contextWindow: window,
         emit,
         signal: input.signal,
         persist,

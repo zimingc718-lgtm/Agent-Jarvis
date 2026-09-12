@@ -1,7 +1,7 @@
 import { lookup } from "node:dns/promises";
 import type { Store } from "../store";
 import { extractPdfText, looksLikePdf } from "../pdf-text";
-import { BUDGET_SHARES, truncateToTokens } from "./budget";
+import { BUDGET_SHARES, budgetTokens, truncateToTokens } from "./budget";
 import { fetchThroughBrowser, type BrowserLauncher } from "./browser-fetch";
 import { TOOL_PRIORITY, type ToolDescriptor, type ToolResult } from "./registry";
 import { fetchWithGuardedRedirects, UrlNotAllowedError, type Resolver } from "./url-guard";
@@ -195,7 +195,16 @@ export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {
   // descriptor stays registered so the stable prefix does not change (DEC-026 ②).
   const failures = new Map<string, number>();
 
-  const searchResultCap = (): number => Math.floor(8_000 * BUDGET_SHARES.singleToolResult * 10);
+  /**
+   * How many tokens one web result may occupy (DEC-080 ③).
+   *
+   * This used to read `Math.floor(8_000 * BUDGET_SHARES.singleToolResult * 10)` — an
+   * expression shaped like a budget but constant at 12,000, because the 8,000 stood in for
+   * the context window and the ×10 cancelled the share back out. It overflowed an 8k local
+   * model on a single page and left two thirds of a 128k window unused. Now it is the
+   * declared share of the window actually in play.
+   */
+  const searchResultCap = (window: number): number => budgetTokens(window, BUDGET_SHARES.singleToolResult);
 
   const webSearch: ToolDescriptor = {
     name: "web_search",
@@ -240,7 +249,7 @@ export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {
         const rendered = results
           .map((entry, index) => `${index + 1}. ${entry.title ?? entry.url}\n   ${entry.url}\n   ${entry.content ?? ""}`)
           .join("\n");
-        const { text } = truncateToTokens(rendered, searchResultCap());
+        const { text } = truncateToTokens(rendered, searchResultCap(context.contextWindow));
         return {
           ok: true,
           content: text,
@@ -259,9 +268,9 @@ export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {
   };
 
   /** Shape an HTML string into the tool result (REQ-F-034 ①: only the extract travels). */
-  const renderHtml = (html: string, url: string, via: string): ToolResult => {
+  const renderHtml = (html: string, url: string, via: string, window: number): ToolResult => {
     const title = extractTitle(html) || url;
-    const { text } = truncateToTokens(extractReadableText(html), searchResultCap());
+    const { text } = truncateToTokens(extractReadableText(html), searchResultCap(window));
     if (!text) {
       return {
         ok: false,
@@ -278,7 +287,7 @@ export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {
   };
 
   /** REQ-F-055: a PDF is text, not markup — and never silently garbage. */
-  const renderPdf = (bytes: Uint8Array, url: string): ToolResult => {
+  const renderPdf = (bytes: Uint8Array, url: string, window: number): ToolResult => {
     const extraction = extractPdfText(bytes);
     if (extraction.encrypted) {
       return {
@@ -294,7 +303,7 @@ export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {
         summary: "PDF 无文字层（疑似扫描件）",
       };
     }
-    const { text, truncated } = truncateToTokens(extraction.text, searchResultCap());
+    const { text, truncated } = truncateToTokens(extraction.text, searchResultCap(window));
     const note = truncated ? "（PDF 正文较长，已按预算截断）" : "";
     return {
       ok: true,
@@ -349,7 +358,7 @@ export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {
               summary: `人机校验未通过：${reason}`,
             };
           }
-          return renderHtml(result.html, result.finalUrl, `（经浏览器读取，已通过${reason}）`);
+          return renderHtml(result.html, result.finalUrl, `（经浏览器读取，已通过${reason}）`, context.contextWindow);
         } catch (error) {
           if (error instanceof UrlNotAllowedError) {
             return { ok: false, content: error.message, summary: "地址被拒绝" };
@@ -395,13 +404,13 @@ export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {
           if (bytes.byteLength > READ_PDF_MAX_BYTES) {
             return { ok: false, content: `PDF 超过 ${READ_PDF_MAX_BYTES / 1024 / 1024} MiB 上限，未读取。`, summary: "PDF 过大" };
           }
-          return renderPdf(bytes, raw);
+          return renderPdf(bytes, raw, context.contextWindow);
         }
 
         if (buffer.byteLength > READ_URL_MAX_BYTES) {
           return { ok: false, content: "页面超过 2 MiB 上限，未读取。", summary: "页面过大" };
         }
-        return renderHtml(new TextDecoder().decode(buffer), raw, "");
+        return renderHtml(new TextDecoder().decode(buffer), raw, "", context.contextWindow);
       } catch (error) {
         if (error instanceof UrlNotAllowedError) {
           return { ok: false, content: error.message, summary: "地址被拒绝" };

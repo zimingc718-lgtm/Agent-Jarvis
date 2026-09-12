@@ -29,7 +29,7 @@ describe("TEST-092 save_insight 追加 (REQ-F-050)", () => {
     store = createStore(join(dir, "db.sqlite"), encryptionKey);
     userId = store.upsertUser({ email: "u@example.com", name: "U" }).id;
     conversationId = store.createConversation(userId, "chat").id;
-    context = { userId, conversationId, skillCount: 0, webEnabled: false, searchConfigured: false, knowledgeCount: 0 };
+    context = { userId, conversationId, skillCount: 0, webEnabled: false, searchConfigured: false, knowledgeCount: 0, contextWindow: 128_000 };
   });
 
   afterEach(() => {
