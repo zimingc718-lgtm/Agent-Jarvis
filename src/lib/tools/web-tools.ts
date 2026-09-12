@@ -1,6 +1,8 @@
 import { lookup } from "node:dns/promises";
 import type { Store } from "../store";
+import { extractPdfText, looksLikePdf } from "../pdf-text";
 import { BUDGET_SHARES, truncateToTokens } from "./budget";
+import { fetchThroughBrowser, type BrowserLauncher } from "./browser-fetch";
 import { TOOL_PRIORITY, type ToolDescriptor, type ToolResult } from "./registry";
 import { fetchWithGuardedRedirects, UrlNotAllowedError, type Resolver } from "./url-guard";
 
@@ -15,9 +17,13 @@ import { fetchWithGuardedRedirects, UrlNotAllowedError, type Resolver } from "./
 
 export const SETTING_WEB_ENABLED = "search.enabled";
 export const SETTING_SEARCH_BASE_URL = "search.base_url";
+/** REQ-F-057 ④: the browser fallback can be switched off; absent means on. */
+export const SETTING_BROWSER_FALLBACK = "search.browser_fallback";
 
 const MAX_RESULTS = 10;
 const READ_URL_MAX_BYTES = 2 * 1024 * 1024;
+/** PDFs are routinely larger than a page; this one is measured against real whitepapers. */
+const READ_PDF_MAX_BYTES = 24 * 1024 * 1024;
 const READ_URL_TIMEOUT_MS = 15_000;
 /** Consecutive failures after which the backend is presumed down for this turn. */
 const FAILURE_SHORT_CIRCUIT = 2;
@@ -27,7 +33,62 @@ export type WebToolDeps = {
   fetcher?: typeof fetch;
   resolver?: Resolver;
   allowHosts?: string[];
+  /** Test seam for the browser channel (REQ-F-057). */
+  browserLauncher?: BrowserLauncher;
 };
+
+/**
+ * Does this response mean "a browser is required" rather than "this page is gone"?
+ * (REQ-F-056 ②)
+ *
+ * The distinction matters because the model cannot see the difference otherwise: faced
+ * with a bare「返回 403」it retried the same URL until the repeat-failure breaker stopped
+ * it. Cloudflare states it outright in `cf-mitigated`; Akamai does not, so the status
+ * plus the server banner is what identifies it.
+ */
+export function detectBotChallenge(status: number, headers: Headers, body: string): string | null {
+  if (headers.get("cf-mitigated") === "challenge") {
+    return "Cloudflare 人机校验";
+  }
+  if (looksLikeChallengePage(body)) {
+    return "JavaScript 人机校验";
+  }
+  const server = (headers.get("server") ?? "").toLowerCase();
+  if (status === 403 && (server.includes("cloudflare") || server.includes("akamai"))) {
+    return server.includes("akamai") ? "Akamai 机器人防护" : "Cloudflare 机器人防护";
+  }
+  // A bare 403/429 with no challenge marker is still worth one browser attempt: some
+  // sites refuse a non-browser client without announcing why. tsmc.com is the measured
+  // case — 403 to fetch, 8,579 characters of real text through the browser.
+  if (status === 403 || status === 429) {
+    return "站点拒绝了非浏览器请求";
+  }
+  return null;
+}
+
+/**
+ * The interstitial itself, in either language. Both are needed: the page is served in the
+ * client's locale, and the Chinese wording is what the measured runs actually returned
+ * ("正在进行安全验证" / "请稍候…"), so an English-only check reported a challenge page as a
+ * successful read.
+ */
+export function looksLikeChallengePage(body: string): boolean {
+  const snippet = body.slice(0, 6000).toLowerCase();
+  return (
+    snippet.includes("just a moment") ||
+    snippet.includes("enable javascript") ||
+    snippet.includes("checking your browser") ||
+    snippet.includes("verifying you are human") ||
+    snippet.includes("正在进行安全验证") ||
+    snippet.includes("请稍候") ||
+    snippet.includes("需要验证您是真人") ||
+    snippet.includes("请开启 javascript")
+  );
+}
+
+export function browserFallbackEnabled(store: Store): boolean {
+  return store.getSetting(SETTING_BROWSER_FALLBACK) !== "false";
+}
 
 export function readWebSettings(store: Store): { enabled: boolean; baseUrl: string | null } {
   // REQ-F-038 ②: the master switch defaults ON (user ruling 4). Outbound traffic still
@@ -197,13 +258,59 @@ export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {
     },
   };
 
+  /** Shape an HTML string into the tool result (REQ-F-034 ①: only the extract travels). */
+  const renderHtml = (html: string, url: string, via: string): ToolResult => {
+    const title = extractTitle(html) || url;
+    const { text } = truncateToTokens(extractReadableText(html), searchResultCap());
+    if (!text) {
+      return {
+        ok: false,
+        content: `页面 ${url} 没有可提取的正文（可能整页由脚本渲染或只有图片）。`,
+        summary: "无正文可读",
+      };
+    }
+    return {
+      ok: true,
+      content: `标题：${title}\n来源：${url}${via}\n\n${text}`,
+      summary: `读取 ${title}`,
+      sources: [{ url, title }],
+    };
+  };
+
+  /** REQ-F-055: a PDF is text, not markup — and never silently garbage. */
+  const renderPdf = (bytes: Uint8Array, url: string): ToolResult => {
+    const extraction = extractPdfText(bytes);
+    if (extraction.encrypted) {
+      return {
+        ok: false,
+        content: `${url} 是加密 PDF，无法提取文字。请下载后另存为未加密副本，或改用其它来源。`,
+        summary: "PDF 已加密",
+      };
+    }
+    if (!extraction.text) {
+      return {
+        ok: false,
+        content: `${url} 是 PDF，但提取不到文字——通常是扫描件（整页为图片），本工具不做 OCR。请改用其它来源，或把关键内容直接贴给我。`,
+        summary: "PDF 无文字层（疑似扫描件）",
+      };
+    }
+    const { text, truncated } = truncateToTokens(extraction.text, searchResultCap());
+    const note = truncated ? "（PDF 正文较长，已按预算截断）" : "";
+    return {
+      ok: true,
+      content: `标题：${url.split("/").pop() ?? url}\n来源：${url}（PDF，${extraction.streams} 个内容流）${note}\n\n${text}`,
+      summary: `读取 PDF ${extraction.text.length} 字`,
+      sources: [{ url, title: url.split("/").pop() ?? url }],
+    };
+  };
+
   const readUrl: ToolDescriptor = {
     name: "read_url",
     priority: TOOL_PRIORITY.normal,
-    description: "读取一个网页的正文摘要。参数 url 必须是 http/https 公网地址。",
+    description: "读取一个网页或 PDF 的正文。参数 url 必须是 http/https 公网地址；遇到人机校验会自动改用浏览器重试。",
     parameters: {
       type: "object",
-      properties: { url: { type: "string", description: "网页地址" } },
+      properties: { url: { type: "string", description: "网页或 PDF 地址" } },
       required: ["url"],
     },
     available: (context) => context.webEnabled,
@@ -212,6 +319,49 @@ export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {
       if (!raw) {
         return { ok: false, content: "缺少参数 url。", summary: "参数缺失" };
       }
+
+      /** REQ-F-057 ②: the browser path, used only once the plain one is refused. */
+      const viaBrowser = async (reason: string): Promise<ToolResult> => {
+        if (!browserFallbackEnabled(deps.store)) {
+          return {
+            ok: false,
+            content: `${raw} 被${reason}拦截，浏览器回退已关闭。可在「搜索设置」中开启，或换一个来源。`,
+            summary: `被拦截：${reason}`,
+          };
+        }
+        try {
+          const result = await fetchThroughBrowser(raw, {
+            resolver,
+            allowHosts: deps.allowHosts,
+            signal: context.signal,
+            launcher: deps.browserLauncher,
+          });
+          // Measured limit, stated plainly rather than papered over: Cloudflare- and
+          // Akamai-class JavaScript challenges are NOT solved by driving Chromium. Both
+          // headless and headed runs sat on 「请稍候…」 for 25s and stayed 403
+          // (EV-2026-09-11-web-reading §2). Returning that interstitial as a successful
+          // read is the one outcome that must never happen — the model would then
+          // "summarise" a security notice as if it were the source.
+          if (looksLikeChallengePage(result.html)) {
+            return {
+              ok: false,
+              content: `${raw} 的${reason}用浏览器也没有通过——该站点的校验能识别自动化浏览器。请改用其它来源，或把正文直接贴给我 / 存成文件拖进知识库。不要重复请求这个地址。`,
+              summary: `人机校验未通过：${reason}`,
+            };
+          }
+          return renderHtml(result.html, result.finalUrl, `（经浏览器读取，已通过${reason}）`);
+        } catch (error) {
+          if (error instanceof UrlNotAllowedError) {
+            return { ok: false, content: error.message, summary: "地址被拒绝" };
+          }
+          return {
+            ok: false,
+            content: `${raw} 被${reason}拦截，浏览器回退也失败：${error instanceof Error ? error.message : "未知错误"}。请改用其它来源。`,
+            summary: `被拦截：${reason}`,
+          };
+        }
+      };
+
       try {
         const response = await fetchWithGuardedRedirects(raw, {
           resolver,
@@ -220,24 +370,38 @@ export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {
           signal: context.signal,
           timeoutMs: READ_URL_TIMEOUT_MS,
         });
+
         if (!response.ok) {
-          return { ok: false, content: `读取失败，服务器返回 ${response.status}。`, summary: `读取失败 ${response.status}` };
+          // Read a little of the body: telling a challenge from a genuine 403 is what
+          // stops the model retrying the same address (REQ-F-056 ②).
+          const body = await response.text().catch(() => "");
+          const challenge = detectBotChallenge(response.status, response.headers, body);
+          if (challenge) {
+            return viaBrowser(challenge);
+          }
+          return {
+            ok: false,
+            content: `读取失败，服务器返回 ${response.status}。这是站点本身的拒绝，不是人机校验；换一个来源即可，重复请求同一地址不会成功。`,
+            summary: `读取失败 ${response.status}`,
+          };
         }
+
         const buffer = await response.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        const contentType = (response.headers.get("content-type") ?? "").toLowerCase();
+        const isPdf = contentType.includes("application/pdf") || looksLikePdf(bytes);
+
+        if (isPdf) {
+          if (bytes.byteLength > READ_PDF_MAX_BYTES) {
+            return { ok: false, content: `PDF 超过 ${READ_PDF_MAX_BYTES / 1024 / 1024} MiB 上限，未读取。`, summary: "PDF 过大" };
+          }
+          return renderPdf(bytes, raw);
+        }
+
         if (buffer.byteLength > READ_URL_MAX_BYTES) {
           return { ok: false, content: "页面超过 2 MiB 上限，未读取。", summary: "页面过大" };
         }
-        const html = new TextDecoder().decode(buffer);
-        const title = extractTitle(html) || raw;
-        // Only the extract enters the context and the database — the raw page never
-        // does (REQ-F-034 ①).
-        const { text } = truncateToTokens(extractReadableText(html), searchResultCap());
-        return {
-          ok: true,
-          content: `标题：${title}\n来源：${raw}\n\n${text}`,
-          summary: `读取 ${title}`,
-          sources: [{ url: raw, title }],
-        };
+        return renderHtml(new TextDecoder().decode(buffer), raw, "");
       } catch (error) {
         if (error instanceof UrlNotAllowedError) {
           return { ok: false, content: error.message, summary: "地址被拒绝" };

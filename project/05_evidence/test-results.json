@@ -47,6 +47,7 @@
     "project/06_changes/CR-20260911-knowledge-base.md",
     "project/06_changes/CR-20260911-proactive-wake.md",
     "CR-20260911-display-console-ux",
+    "CR-20260911-web-reading",
     "CR-20260912-local-production"
   ],
   "tests": [
@@ -796,6 +797,30 @@
       "notes": "真实入口：模型两次 save_insight（第二次带 insightId）后 iframe 内为一份文档、两段标题、表格有边框、主题跟随；1024×700 抽屉完整在视口内且遮罩接管点击；指针移到展示屏后记录区收缩、回到输入框恢复。e2e 16 PASS；ui-contract 53/0/0；visual PASS。"
     },
     {
+      "id": "TEST-097",
+      "result": "PASS",
+      "command": "npm test -- pdf-text",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "零依赖 PDF 提取：字距不拆词、转义/八进制/十六进制串、ToUnicode（bfchar + bfrange 两种形式）还原中文、未覆盖 CID 串丢弃、加密与扫描件如实报告。夹具用 zlib 现造，不入库二进制。8 PASS。"
+    },
+    {
+      "id": "TEST-098",
+      "result": "PASS",
+      "command": "npm test -- web-reading",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "拦截识别：cf-mitigated、中英文校验页文案、Akamai server 头、404/500 不触发回退、无标记 403/429 仍给一次浏览器机会、出站请求头含 UA/application-pdf/zh-CN。6 PASS。"
+    },
+    {
+      "id": "TEST-099",
+      "result": "PASS",
+      "command": "npm test -- web-reading search-settings && npm run test:smoke",
+      "real_entry": true,
+      "date": "2026-09-11",
+      "notes": "read_url 分流与回退（桩 launcher）：PDF 走提取且不含结构噪音、octet-stream 按文件头嗅探、扫描件报失败、被拦截调浏览器一次并标注来路、仍在校验页则报失败且不返回校验页内容、404 不启动浏览器、开关可关/默认开、正常 HTML 不启动浏览器、设置开关持久化并写明边界。真实入口：本机 SearXNG 返回 20 条 JSON，web_search 出 10 条；UALink 英文 PDF 提取 33,675 字、东兴证券中文 PDF 提取 230,992 字；opencompute.org 如实报「人机校验未通过」。15+1 PASS。"
+    },
+    {
       "id": "TEST-120",
       "result": "PASS",
       "command": "npm test -- entities",
@@ -1071,6 +1096,12 @@
       "command": "npm test && npm run test:ui-contract && npm run build:verify && npm run test:smoke && npm run test:e2e && python -m unittest tests.test_governance",
       "result": "PASS",
       "summary": "CR-20260911-display-console-ux: 单测 52 文件 / 406 用例 PASS；ui-contract 53 规则 0 FAIL 0 WARN；build:verify PASS；smoke PASS；e2e 16 PASS；治理单测 75 PASS。verify 仍红：本 CR 的新增/改动文件待合并前 snapshot，另有一条 pre-existing 的 .git 基线条目（见 known_warnings）。",
+      "date": "2026-09-11"
+    },
+    {
+      "command": "npm test && npm run test:ui-contract && npm run build:verify && npx tsc --noEmit",
+      "result": "PASS",
+      "summary": "CR-20260911-web-reading: 单测 54 文件 / 430 用例 PASS；ui-contract 53 规则 0 FAIL 0 WARN；build:verify PASS；tsc 0。新增运行依赖 playwright-core（单向门，已登记）。verify 仍红：本 CR 与并行 CR 的文件待合并前 snapshot，另有 pre-existing 的 .git 基线条目。",
       "date": "2026-09-11"
     },
     {
