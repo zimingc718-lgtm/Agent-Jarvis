@@ -265,13 +265,26 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
 
   let assembled: ChatMessage[];
   try {
-    assembled = assembleContext({
+    const fitted = assembleContext({
       stablePrefix,
       volatileSuffix,
       messages: contextMessages,
       currentTurn,
       contextWindow: window,
-    }).messages;
+    });
+    assembled = fitted.messages;
+    // REQ-F-130 ④ / REQ-F-023: tightening changes what the model can see, so it is said
+    // out loud rather than left for the user to infer from a vaguer answer.
+    if (fitted.degraded) {
+      const { retainedTurns, affected } = fitted.degraded;
+      preamble.push({
+        type: "notice",
+        text:
+          retainedTurns === 0
+            ? `本轮上下文超出预算，已省略全部 ${affected} 条工具结果的正文以继续。需要其中内容请让我重新读取。`
+            : `本轮上下文超出预算，已缩短 ${affected} 条较早的工具结果（保留最近 ${retainedTurns} 轮）。需要被略去的部分请让我重新读取。`,
+      });
+    }
   } catch (error) {
     if (error instanceof ContextOverflowError) {
       throw new ChatServiceError(413, describeOverflow(error.message, compaction));
