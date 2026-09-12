@@ -1,5 +1,5 @@
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
-import { dirname, join, relative, resolve, sep } from "node:path";
+import { mkdir, readFile, readdir, realpath, writeFile } from "node:fs/promises";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { SkillNameConflictError, type Store } from "./store";
 import type { ChatMessage, ProviderRuntimeConfig } from "./types";
 
@@ -33,7 +33,6 @@ export const SKILL_TEXT_EXTENSIONS = [
 
 /** Total bytes of skill content injected into a single turn (REQ-F-022 ②). */
 export const MAX_INJECTION_BYTES = 32 * 1024;
-const TRUNCATION_NOTICE = "\n\n[技能内容超过 32KB，已截断]";
 
 export type SkillSummary = { id: string; name: string; description: string };
 
@@ -85,29 +84,6 @@ export function makeCompleter(provider: ProviderRuntimeConfig, fetcher: typeof f
     const content = body.choices?.[0]?.message?.content;
     return typeof content === "string" ? content : "";
   };
-}
-
-/**
- * Assemble the additional system segment for a turn that hit a skill (REQ-F-022):
- * SKILL.md body + every allowlisted text file in the folder, capped at 32KB.
- */
-export async function resolveSkillForTurn(dirPath: string): Promise<string> {
-  const parts: string[] = [];
-  const skillMd = await readTextFile(join(dirPath, "SKILL.md"));
-  if (skillMd != null) {
-    parts.push(stripFrontmatter(skillMd).trim());
-  }
-  for (const relPath of await listSkillTextFiles(dirPath)) {
-    const content = await readTextFile(join(dirPath, relPath));
-    if (content != null) {
-      parts.push(`\n\n=== ${relPath} ===\n${content}`);
-    }
-  }
-  let assembled = parts.join("");
-  if (Buffer.byteLength(assembled, "utf8") > MAX_INJECTION_BYTES) {
-    assembled = truncateToBytes(assembled, MAX_INJECTION_BYTES - Buffer.byteLength(TRUNCATION_NOTICE, "utf8")) + TRUNCATION_NOTICE;
-  }
-  return assembled;
 }
 
 export type GeneratedSkillDoc = {
@@ -300,7 +276,7 @@ async function readTextFile(path: string): Promise<string | null> {
   }
 }
 
-async function listSkillTextFiles(rootDir: string): Promise<string[]> {
+export async function listSkillTextFiles(rootDir: string): Promise<string[]> {
   const found: string[] = [];
 
   async function walk(dir: string): Promise<void> {
@@ -327,19 +303,65 @@ async function listSkillTextFiles(rootDir: string): Promise<string[]> {
   return found.sort();
 }
 
-function truncateToBytes(text: string, maxBytes: number): string {
-  if (Buffer.byteLength(text, "utf8") <= maxBytes) {
-    return text;
-  }
-  let low = 0;
-  let high = text.length;
-  while (low < high) {
-    const mid = Math.ceil((low + high) / 2);
-    if (Buffer.byteLength(text.slice(0, mid), "utf8") <= maxBytes) {
-      low = mid;
-    } else {
-      high = mid - 1;
+export type SkillFileEntry = { path: string; bytes: number };
+
+/** SKILL.md alone, with frontmatter stripped. The navigable entry point (REQ-F-150 ①). */
+export async function readSkillDoc(dirPath: string): Promise<string> {
+  const skillMd = await readTextFile(join(dirPath, "SKILL.md"));
+  return skillMd == null ? "" : stripFrontmatter(skillMd).trim();
+}
+
+/** Every readable file in the folder besides SKILL.md, with its size (REQ-F-150 ①). */
+export async function listSkillFiles(dirPath: string): Promise<SkillFileEntry[]> {
+  const entries: SkillFileEntry[] = [];
+  for (const rel of await listSkillTextFiles(dirPath)) {
+    const content = await readTextFile(join(dirPath, rel));
+    if (content != null) {
+      entries.push({ path: rel, bytes: Buffer.byteLength(content, "utf8") });
     }
   }
-  return text.slice(0, low);
+  return entries;
 }
+
+export class SkillFileError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SkillFileError";
+  }
+}
+
+/**
+ * One file out of a skill folder (REQ-F-150 ②).
+ *
+ * Same shape of guard as `documents.ts` and `url-guard`: resolve first, then test
+ * containment with `relative()`. A skill folder is the user's own content, but its paths
+ * reach here straight from a model argument, so `references/../../.env` has to be refused
+ * on the resolved path rather than on the string.
+ */
+export async function readSkillFile(dirPath: string, relPath: string): Promise<string> {
+  const cleaned = relPath.trim().replace(/\\/g, "/");
+  if (!cleaned || cleaned.includes("\0")) {
+    throw new SkillFileError("文件路径为空或含非法字符。");
+  }
+  const rootReal = await realpath(dirPath).catch(() => null);
+  if (!rootReal) {
+    throw new SkillFileError("技能目录已不可访问。");
+  }
+  const abs = await realpath(resolve(rootReal, cleaned)).catch(() => null);
+  if (!abs) {
+    throw new SkillFileError(`技能里没有 ${cleaned} 这个文件。先不带 file 参数调用一次，可看到文件清单。`);
+  }
+  const rel = relative(rootReal, abs);
+  if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {
+    throw new SkillFileError("该路径解析后落在技能目录之外，已拒绝。");
+  }
+  if (!isSkillTextPath(rel.split(sep).join("/"))) {
+    throw new SkillFileError(`${cleaned} 不是可读的文本格式。`);
+  }
+  const content = await readTextFile(abs);
+  if (content == null) {
+    throw new SkillFileError(`读取 ${cleaned} 失败。`);
+  }
+  return content;
+}
+

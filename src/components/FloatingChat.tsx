@@ -1126,6 +1126,13 @@ export function FloatingChat({
           ) : null}
         </div>
 
+        {/* REQ-F-150 ③: the step-stream branch below is exactly the one that fires while a
+            report sits behind the console. At 75vh the console came to 821px of a 900px
+            viewport and the report stayed unreadable however far it scrolled
+            (EV-2026-09-12-skill-paging §2). 58vh still shows about a dozen step rows.
+            The rationale stays out of the cn() argument list on purpose — the UI contract
+            reads the utility strings around the class name, and a comment between them
+            hides the cap from RF-07/RF-09. */}
         {showTranscript ? (
           <div
             className={cn(
@@ -1133,7 +1140,7 @@ export function FloatingChat({
               // REQ-F-054 ⑧: the hover tuck-away animates max-height + opacity; the DOM stays
               // (REQ-F-019 ② removal is `userCollapsed`'s job, not this one's).
               "transition-[max-height,opacity] duration-200 ease-out motion-reduce:transition-none",
-              hasSteps ? "max-h-[75vh]" : "max-h-[50vh]",
+              hasSteps ? "max-h-[58vh]" : "max-h-[50vh]",
               !transcriptVisible && "floating-chat__messages--hidden max-h-0 overflow-hidden py-0 opacity-0"
             )}
             ref={transcriptRef}
