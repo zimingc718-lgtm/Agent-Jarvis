@@ -86,7 +86,12 @@ export type ChatDelta =
   // proposed a tracked object or a change to one. `what` separates the two queues —
   // a whole new object waits in `entities/pending/`, a single field or parameter waits
   // in `entities/proposals/` — because adopting them is two different clicks.
-  | { type: "entity_pending"; title: string; what: "entity" | "update" };
+  | { type: "entity_pending"; title: string; what: "entity" | "update" }
+  // REQ-F-102 (CR-20260912-stage-reach): move the display screen between its two session
+  // stages. Transient by design — the board is deliberately NOT a persisted display_state
+  // value (CR-20260912-display-stage rejected that), so the only way a tool can reach it
+  // is a message that travels once and is not stored.
+  | { type: "display_stage"; stage: "opening" | "board" };
 
 export type ChatMessage = {
   role: "system" | "user" | "assistant" | "tool";

@@ -49,7 +49,8 @@
     "CR-20260911-display-console-ux",
     "CR-20260911-web-reading",
     "CR-20260912-local-production",
-    "CR-20260912-latency-and-report-layout"
+    "CR-20260912-latency-and-report-layout",
+    "CR-20260912-stage-reach"
   ],
   "tests": [
     {
@@ -923,7 +924,7 @@
       "command": "npm test -- display-stage",
       "real_entry": false,
       "date": "2026-09-12",
-      "notes": "CR-20260912-display-stage；开场是标题屏且动画对读屏隐藏；没人动 3 秒自动切入看板；指针到达即切；焦点落进控制台即切（刻意不监听按键，UI 契约 LB-09 挡下了 keydown）；一次会话只播一次；洞察压过开场；看板态挂的是真组件且「问 Jarvis」只派事件。7 PASS。"
+      "notes": "CR-20260912-display-stage；开场是标题屏且动画对读屏隐藏；没人动 3 秒自动切入看板；指针到达即切；焦点落进控制台即切（刻意不监听按键，UI 契约 LB-09 挡下了 keydown）；一次会话只播一次；洞察压过开场；看板态挂的是真组件且「问 Jarvis」只派事件。7 PASS。 CR-20260912-stage-reach 反转 ③：由「鼠标到达标题屏即切换」改为「指针移动不切换」，另加一条「点击仍立刻切换」。"
     },
     {
       "id": "TEST-150",
@@ -940,6 +941,14 @@
       "real_entry": true,
       "date": "2026-09-12",
       "notes": "报告外框：自带 body{margin:0} 的完整文档仍为 68% 宽且居中；frame 样式在文档自带 style 之后、body 之前；无 !important；片段同样生效且 1024px 以下整宽；防回归断言禁止布局约束回到 base 层。真实入口三视口实测 1920→0.68、1440→0.68、900→1.00，左右留白相等。9 PASS。"
+    },
+    {
+      "id": "TEST-163",
+      "result": "PASS",
+      "command": "npm test -- stage-reach",
+      "real_entry": true,
+      "date": "2026-09-12",
+      "notes": "展示屏阶段可达性：show_home 发 opening 事件并清 sessionStorage 标记；show_board 存在且先清回 home 持久态；board/opening 两个方向都通且可反复；指针移动不切换、点击切换；洞察仍压过两阶段。7 PASS。真实入口：npm run test:e2e 由 3 failed / 13 passed 变为 16 passed，三条既有红全部转绿。"
     }
   ],
   "executed_commands": [
@@ -1132,6 +1141,12 @@
       "result": "PASS",
       "summary": "CR-20260912-latency-and-report-layout: 单测 67 文件 / 571 用例 PASS；ui-contract 53 规则 0 FAIL 0 WARN；tsc 0。本 CR 为事后补记——代码 2026-09-11 已改，CR 与证据 2026-09-12 补写。",
       "date": "2026-09-12"
+    },
+    {
+      "command": "npx tsc --noEmit && npm test && node scripts/ui-contract.mjs && npm run test:e2e",
+      "result": "PASS",
+      "summary": "CR-20260912-stage-reach: tsc 0；单测 68 文件 / 579 用例 PASS；ui-contract 53/0；e2e 16 passed（修改前干净 main 上为 3 failed / 13 passed）。",
+      "date": "2026-09-12"
     }
   ],
   "known_warnings": [
@@ -1204,6 +1219,11 @@
     },
     {
       "text": "CR-20260912-latency-and-report-layout was written AFTER its code change (code 2026-09-11, CR and evidence 2026-09-12). During that gap the source comments referenced an evidence file and a functional requirement number (F series 059) that did not exist. This violates AI_STANDARD principle 8 (change closure). Self-reported and corrected; the fictitious number is now the real REQ-F-090.",
+      "check": "manual",
+      "reviewed_at": "2026-09-12"
+    },
+    {
+      "text": "CR-20260912-display-stage shipped a regression that three e2e specs had been failing on, unnoticed: the client-side stage outranked the persisted display_state, so once anything happened in a session the title view was unreachable and show_home ran to no visible effect. It was merged with unit tests and gates green because e2e was not run. CR-20260912-stage-reach fixes it. Process note: for display-screen render branches, unit tests can pass while the real entry is broken — jsdom has no 'pointer already inside the window'.",
       "check": "manual",
       "reviewed_at": "2026-09-12"
     }
