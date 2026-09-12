@@ -33,6 +33,9 @@ export const BUDGET_SHARES = {
 /** Tool and skill descriptions are injected every turn, so they stay short (DEC-026 ⑦). */
 export const MAX_DESCRIPTION_CHARS = 200;
 
+/** The marker a dropped tool result leaves behind. One definition, used by every path. */
+export const OMITTED_RESULT = "[结果已省略]";
+
 /** How many user turns keep their tool results verbatim (REQ-F-041 ①). */
 export const TOOL_RESULT_RETENTION_TURNS = 2;
 
@@ -194,7 +197,7 @@ export function applyRetentionWindow(
       return rest;
     }
     const { turn: _turn, ...rest } = message;
-    return { ...rest, content: "[结果已省略]" };
+    return { ...rest, content: OMITTED_RESULT };
   });
 }
 
@@ -287,7 +290,7 @@ export function narrowToolResults(messages: ChatMessage[], keepLast: number): Ch
   }
   const keep = new Set(toolIndexes.slice(-keepLast));
   return messages.map((message, index) =>
-    message.role === "tool" && !keep.has(index) ? { ...message, content: "[结果已省略]" } : message
+    message.role === "tool" && !keep.has(index) ? { ...message, content: OMITTED_RESULT } : message
   );
 }
 
@@ -355,7 +358,21 @@ export type AssembleInput = {
  * compressing in a loop would itself cost tokens and could not guarantee termination, so
  * the overflow surfaces as a request-level error (DEC-026 ⑥).
  */
-export function assembleContext(input: AssembleInput): { messages: ChatMessage[]; estimatedTokens: number } {
+/** What `assembleContext` had to give up to fit, when it had to give anything up. */
+export type ContextDegradation = {
+  /** Turns whose tool results kept their full text. Lower than the default means tightened. */
+  retainedTurns: number;
+  /** Per-result ceiling applied to the surviving tool rows, when one was needed. */
+  perResultTokens: number | null;
+  /** Tool rows whose text was shortened or replaced. */
+  affected: number;
+};
+
+export function assembleContext(input: AssembleInput): {
+  messages: ChatMessage[];
+  estimatedTokens: number;
+  degraded: ContextDegradation | null;
+} {
   const limit = budgetTokens(input.contextWindow, BUDGET_SHARES.totalInput);
   const system: ChatMessage[] = [];
   if (input.stablePrefix) {
@@ -365,13 +382,73 @@ export function assembleContext(input: AssembleInput): { messages: ChatMessage[]
     system.push({ role: "system", content: input.volatileSuffix });
   }
 
-  const narrowed = [...system, ...applyRetentionWindow(input.messages, input.currentTurn)];
-  const narrowedCost = narrowed.reduce((total, message) => total + estimateTokens(message.content ?? "") + 4, 0);
-  if (narrowedCost <= limit) {
-    return { messages: narrowed, estimatedTokens: narrowedCost };
+  const cost = (rows: ChatMessage[]): number =>
+    rows.reduce((total, message) => total + estimateTokens(message.content ?? "") + 4, 0);
+  const systemCost = cost(system);
+
+  const attempt = (retainTurns: number, perResult: number | null): ChatMessage[] => {
+    const kept = applyRetentionWindow(input.messages, input.currentTurn, retainTurns);
+    const capped =
+      perResult === null
+        ? kept
+        : kept.map((message) =>
+            message.role === "tool" && message.content && message.content !== OMITTED_RESULT
+              ? { ...message, content: truncateToTokens(message.content, perResult).text }
+              : message
+          );
+    return [...system, ...capped];
+  };
+
+  const full = attempt(TOOL_RESULT_RETENTION_TURNS, null);
+  const fullCost = cost(full);
+  if (fullCost <= limit) {
+    return { messages: full, estimatedTokens: fullCost, degraded: null };
   }
 
+  /**
+   * Tighten rather than refuse (REQ-F-130, DEC-110).
+   *
+   * The old behaviour threw here, and that turned out to be a dead end rather than a
+   * safeguard. The budget shares do not compose: one tool result may take 0.15 of the
+   * window while the whole input may take 0.6, so four full-sized results are already the
+   * entire allowance. Meanwhile compaction protects the last three turns and the retention
+   * window the last two — and a research turn puts its large reads in exactly those turns.
+   * Nothing could shrink them, so the conversation simply died and the user was told to
+   * start over, losing the work that caused it.
+   *
+   * Every step below is deterministic truncation, not summarisation: no extra model call,
+   * no termination risk. That is what DEC-026 ⑥ was guarding against, and it still holds.
+   */
+  const budgetForTools = Math.max(1, limit - systemCost);
+  const steps: Array<{ retain: number; perResult: number | null }> = [
+    // Keep both recent turns, but stop any single result from eating the whole allowance.
+    { retain: TOOL_RESULT_RETENTION_TURNS, perResult: Math.floor(budgetForTools / 4) },
+    { retain: TOOL_RESULT_RETENTION_TURNS, perResult: Math.floor(budgetForTools / 8) },
+    // Then give up the older of the two turns.
+    { retain: 1, perResult: Math.floor(budgetForTools / 2) },
+    { retain: 1, perResult: Math.floor(budgetForTools / 4) },
+    // Last resort: no verbatim tool text at all. The conversation still continues.
+    { retain: 0, perResult: null },
+  ];
+
+  for (const step of steps) {
+    const candidate = attempt(step.retain, step.perResult);
+    const candidateCost = cost(candidate);
+    if (candidateCost <= limit) {
+      const affected = candidate.filter(
+        (message, index) => message.role === "tool" && message.content !== full[index]?.content
+      ).length;
+      return {
+        messages: candidate,
+        estimatedTokens: candidateCost,
+        degraded: { retainedTurns: step.retain, perResultTokens: step.perResult, affected },
+      };
+    }
+  }
+
+  // Only reachable when the plain user/assistant text alone exceeds the budget — nothing
+  // here can shorten that without a model call, so the request-level error stands.
   throw new ContextOverflowError(
-    `本轮上下文约 ${narrowedCost} tokens，超出预算 ${limit}。请开启新对话，或改用上下文窗口更大的模型。`
+    `本轮上下文约 ${fullCost} tokens，即使省略全部工具结果仍超出预算 ${limit}——对话本身的文字已经太长。请开启新对话，或改用上下文窗口更大的模型。`
   );
 }

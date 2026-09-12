@@ -53,7 +53,8 @@
     "CR-20260912-stage-reach",
     "CR-20260912-sandbox-and-budget",
     "CR-20260912-local-documents",
-    "CR-20260912-runtime-visibility"
+    "CR-20260912-runtime-visibility",
+    "CR-20260912-context-degrade"
   ],
   "tests": [
     {
@@ -1018,6 +1019,14 @@
       "real_entry": true,
       "date": "2026-09-12",
       "notes": "真实入口：浏览器内配置 Provider 并真实发送一次，对桩 Provider 实际收到的 messages 断言——存在含「当前运行时」的 system 消息，内含 Provider 名 MockRuntime 与模型 id mock-model-x，且位于身份提示之后。e2e 19 passed。"
+    },
+    {
+      "id": "TEST-190",
+      "result": "PASS",
+      "command": "npm test -- context-degrade",
+      "real_entry": true,
+      "date": "2026-09-12",
+      "notes": "超预算逐级收紧：份额不相容断言（0.15×4≥0.6）；装得下时不动且 degraded 为 null；三份 3 万 tokens 报告收紧后装得下；先削正文再放弃轮次；tool_call_id 保留；用户与助手文字逐字保留；只有对话文字超限才抛错；最后一级省略全部工具正文。8 PASS。真实入口：用户真实会话（36 条消息、tool 内容 328,849 字符）回放，由抛 ContextOverflowError（83,740 > 76,800）变为装配成功 54,214 tokens，三条大 PDF 各削至 9,535 tokens，其余 20 条一字未动，两轮均未放弃。"
     }
   ],
   "executed_commands": [
@@ -1240,6 +1249,12 @@
       "result": "PASS",
       "summary": "CR-20260912-runtime-visibility: tsc 0；单测 627 用例 PASS（新增 13）；ui-contract 53/0；e2e 19 passed（新增 1）。",
       "date": "2026-09-12"
+    },
+    {
+      "command": "npx tsc --noEmit && npm test && node scripts/ui-contract.mjs",
+      "result": "PASS",
+      "summary": "CR-20260912-context-degrade: tsc 0；单测 635 用例 PASS（新增 8）；ui-contract 53/0；真实会话回放由抛错变为装配成功。",
+      "date": "2026-09-12"
     }
   ],
   "known_warnings": [
@@ -1338,6 +1353,11 @@
     },
     {
       "text": "Intermittent 'Failed to fetch' was investigated on 2026-09-12 and traced to the machine running at ~90% memory, not to a defect: 600 requests succeeded with zero failures, 1,200 requests moved RSS by 1 MB, and there are no crash records. The largest single consumer on that machine was Claude Code itself (17 processes, ~2 GB) — the investigator, not Jarvis (656 MB). CR-20260912-runtime-visibility makes the consequence visible and recoverable; it does NOT fix the cause. Freeing memory remains the highest-value step and needs no code change.",
+      "check": "manual",
+      "reviewed_at": "2026-09-12"
+    },
+    {
+      "text": "BUDGET_SHARES remains internally inconsistent by design after CR-20260912-context-degrade: singleToolResult (0.15) x 4 equals totalInput (0.6), so four full-sized tool results still exhaust the whole input allowance by construction. The CR absorbs the consequence by tightening progressively rather than refusing the turn; it does NOT change the declared shares, because that would shorten every tool output and has a far wider blast radius. TEST-190 ① pins the inequality so the next person to touch the shares sees it. Also recorded honestly: CR-20260912-sandbox-and-budget widened the gap by 60% when it replaced the constant 12,000 cap with 0.15 of the real window — that change was correct on its own terms, and it made this failure more likely.",
       "check": "manual",
       "reviewed_at": "2026-09-12"
     }
