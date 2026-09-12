@@ -121,6 +121,13 @@ export type GeneratedSkillDoc = {
 /**
  * Ask the model to write a SKILL.md for the dropped folder (REQ-F-020 ②④).
  * Any failure falls back to the folder name + "（未生成描述）".
+ *
+ * A folder that ALREADY documents itself is taken at its word
+ * (CR-20260911-skill-doc-preserved). Generation exists for folders that arrive as a pile
+ * of scripts and notes; when the author has written the SKILL.md, regenerating it is
+ * destructive in both directions — with no provider configured the file is replaced by a
+ * stub, and with one configured the model paraphrases instructions someone wrote on
+ * purpose.
  */
 export async function generateSkillDoc(
   files: UploadedFile[],
@@ -133,6 +140,22 @@ export async function generateSkillDoc(
     body: "",
     docGenerated: false,
   };
+
+  const authored = files.find((file) => file.path.replace(/^\.\//, "").toLowerCase() === "skill.md");
+  if (authored) {
+    const frontmatter = parseFrontmatter(authored.content);
+    // Only a parseable frontmatter counts as "documented"; a SKILL.md without one tells
+    // us nothing to register the skill under, so that folder still goes to generation.
+    if (frontmatter?.name.trim()) {
+      return {
+        name: frontmatter.name.trim(),
+        description: frontmatter.description.trim() || "（未生成描述）",
+        body: frontmatter.body.trim(),
+        docGenerated: true,
+      };
+    }
+  }
+
   if (!complete) {
     return fallback;
   }

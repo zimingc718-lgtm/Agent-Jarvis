@@ -8,7 +8,8 @@
     "project/04_tests/测试说明书.md",
     "project/06_changes/CR-20260911-knowledge-skills.md",
     "project/06_changes/CR-20260911-scheduled-sweep.md",
-    "project/06_changes/CR-20260911-board-add-entity.md"
+    "project/06_changes/CR-20260911-board-add-entity.md",
+    "project/06_changes/CR-20260911-skill-doc-preserved.md"
   ],
   "change_records": [
     "project/06_changes/CR-20260908-floating-llm-chat.md",
@@ -280,7 +281,8 @@
       "result": "PASS",
       "command": "npm run test:skills",
       "real_entry": true,
-      "evidence": "tests/skills.test.ts: resolveSkillForTurn includes SKILL.md body + allowlisted text files (incl. nested), excludes non-allowlisted (.png), truncates past 32KB with a marker; generateSkillDoc parses frontmatter or falls back to the folder name + （未生成描述）."
+      "evidence": "tests/skills.test.ts: resolveSkillForTurn includes SKILL.md body + allowlisted text files (incl. nested), excludes non-allowlisted (.png), truncates past 32KB with a marker; generateSkillDoc parses frontmatter or falls back to the folder name + （未生成描述）. CR-20260911-skill-doc-preserved 增四例：文件夹自带可解析 SKILL.md 时原样采用且不调模型；无 Provider 时同样保留（原来这条路会把正文覆盖成占位符）；无前置块仍走生成；registerSkill 落盘后正文与注入内容都还在。13 PASS。",
+      "date": "2026-09-11"
     },
     {
       "id": "TEST-036",
