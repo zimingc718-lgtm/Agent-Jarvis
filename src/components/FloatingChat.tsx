@@ -1021,11 +1021,20 @@ export function FloatingChat({
 
   const hasInput = input.trim().length > 0;
 
+  /*
+   * REQ-F-160 ①: at wide viewports the console leaves the centre axis and docks into its
+   * own lane on the right, so the report beside it is never covered. Below `lg` there is
+   * no room for two lanes — it stays centred there and the auto-collapse carries the load.
+   *
+   * The utility string below must stay ONE contiguous literal. The UI contract reads the
+   * classes around the class name, so a comment inserted into the cn() argument list hides
+   * them — LB-01 and LB-02 went red exactly that way while this change was being written.
+   */
   return (
     <section
       className={cn(
         // pb clears the iOS home indicator (env(safe-area-inset-bottom)).
-        "floating-chat fixed inset-x-0 bottom-0 z-20 mx-auto flex w-full max-w-3xl flex-col gap-2 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:p-4 sm:pb-[calc(1rem+env(safe-area-inset-bottom,0px))]",
+        "floating-chat fixed inset-x-0 bottom-0 z-20 mx-auto flex w-full max-w-3xl flex-col gap-2 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:p-4 sm:pb-[calc(1rem+env(safe-area-inset-bottom,0px))] lg:mx-0 lg:ml-auto lg:mr-[var(--jarvis-lane-gap)] lg:max-w-[var(--jarvis-console-lane)]",
         showTranscript && "floating-chat--expanded",
         autoHidden && "floating-chat--auto-hidden",
         dragActive && "floating-chat--drag"

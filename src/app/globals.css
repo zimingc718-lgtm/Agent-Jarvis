@@ -38,6 +38,17 @@
 
 /* Light purple — the default when nothing is stored. Values are the DEC-019 baseline. */
 :root {
+  /*
+    The console's lane at wide viewports (REQ-F-160, DEC-140).
+
+    Defined once because two places must agree: the console docks into it, and the insight
+    surface reserves exactly this much on its right. If they drift, the report is either
+    covered again or a strip of screen goes to waste. It is a constant, not a state — the
+    console keeps this footprint whether it is expanded or collapsed, which is what keeps
+    the report from moving when the console opens.
+  */
+  --jarvis-console-lane: 27rem;
+  --jarvis-lane-gap: 1.5rem;
   --background: 270 33% 99%;
   --foreground: 264 33% 16%;
   --card: 0 0% 100%;

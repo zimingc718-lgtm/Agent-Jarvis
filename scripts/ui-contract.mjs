@@ -1135,17 +1135,28 @@ const CONTRACT = [
         id: "LB-02",
         ref: "REQ-F-002",
         req: "REQ-F-002",
-        title: "The console is horizontally centred",
-        guidance: "left:50% + translateX(-50%), or symmetric left/right.",
+        title: "The console is centred when it is alone, and docked when it shares the screen",
+        guidance:
+          "Below lg the console is centred (mx-auto). From lg it docks into its own right-hand lane so a report can be read beside it without being covered (REQ-F-160). Both halves are asserted: losing the centring breaks narrow screens, losing the dock puts the console back on top of the report.",
         check(ctx) {
           const fc = ctx.rule(".floating-chat");
           if (!fc) {
             // DEC-019: centring is `mx-auto` on the max-width section.
             const u = ctx.utilitiesFor("floating-chat ", ["FloatingChat.tsx"]);
             if (!u) return FAIL("no .floating-chat in CSS or component source");
-            if (/\bmx-auto\b/.test(u)) return PASS("mx-auto within a max-width container");
-            if (/\binset-x-0\b/.test(u)) return WARN("full-bleed via inset-x-0 without mx-auto — not centred on wide screens");
-            return FAIL(".floating-chat is not horizontally centred");
+            if (!/\bmx-auto\b/.test(u)) {
+              return /\binset-x-0\b/.test(u)
+                ? WARN("full-bleed via inset-x-0 without mx-auto — not centred on narrow screens")
+                : FAIL(".floating-chat is not horizontally centred on narrow screens");
+            }
+            // REQ-F-160 ①: from `lg` the console must leave the centre axis, or it lands back
+            // on top of the report column, which is centred too. Measured overlap before the
+            // lanes existed: 768px, 78% of the report's width.
+            const docked = /lg:ml-auto/.test(u) && /lg:mx-0/.test(u);
+            const laned = /lg:max-w-\[var\(--jarvis-console-lane\)\]/.test(u);
+            if (!docked) return FAIL("console still shares the centre axis at lg — it will cover the report column");
+            if (!laned) return FAIL("console has no fixed lane width at lg — the reading area cannot reserve space for it");
+            return PASS("mx-auto below lg, docked into --jarvis-console-lane from lg");
           }
           const left = decl(fc.body, "left");
           const transform = decl(fc.body, "transform");
