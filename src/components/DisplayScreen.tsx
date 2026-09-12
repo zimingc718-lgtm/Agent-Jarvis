@@ -13,7 +13,7 @@ import {
 } from "@/lib/ui-events";
 
 const NOTICE_TEXT =
-  "以下内容由大模型生成，未做安全隔离。请勿在其中输入敏感信息。";
+  "以下内容由大模型生成，在沙箱中隔离显示。内容未经核实，请勿在其中输入敏感信息。";
 
 /**
  * The opening (CR-20260912-display-stage; user ruling 2026-09-11).
@@ -194,11 +194,17 @@ export function DisplayScreen({ initial, fetchView = fetchViewFromApi }: Display
           <ShieldAlert aria-hidden="true" className="size-4 shrink-0" />
           <span>{NOTICE_TEXT}</span>
         </div>
-        {/* DEC-015 / CP-11: rendered without a sandbox attribute — the user accepts the risk.
+        {/* Sandboxed with `allow-scripts` and deliberately WITHOUT `allow-same-origin`
+            (DEC-080 ①, closing the exit obligation carried by DEC-015 / CP-11).
+            The two tokens together would be no sandbox at all; `allow-scripts` alone puts
+            the document in an opaque origin, so a report can still draw a chart but cannot
+            read this app's localStorage or call its API with the user's session — which is
+            the last link of the injection chain recorded as skill-html-unsandboxed-web-source.
             REQ-F-052 ①③: the stored HTML is wrapped in a base-styled, theme-aware document;
             an insight that brings its own <style> or a full document keeps it (DEC-032 ④). */}
         <iframe
           className="display-screen__frame min-h-0 w-full flex-1 border-0 bg-background"
+          sandbox="allow-scripts"
           title="技能洞察报告"
           srcDoc={buildInsightDocument(view.html, theme)}
         />

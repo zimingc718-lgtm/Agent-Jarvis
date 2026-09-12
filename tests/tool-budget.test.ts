@@ -21,6 +21,7 @@ const context: ToolContext = {
   webEnabled: true,
   searchConfigured: true,
   knowledgeCount: 1,
+  contextWindow: 128_000,
 };
 
 function tool(name: string, priority: ToolDescriptor["priority"], padding = 0): ToolDescriptor {

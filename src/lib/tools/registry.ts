@@ -22,6 +22,13 @@ export type ToolContext = {
   searchConfigured: boolean;
   /** Entries in the local knowledge base; zero means the read tools do not register (REQ-F-045 ③). */
   knowledgeCount: number;
+  /**
+   * The active provider's context window, so a tool can size its own result against the
+   * real budget instead of a constant (DEC-080 ③). `web-tools` used to compute its cap
+   * from a hardcoded 8,000 regardless of the model, which both overflowed small local
+   * windows and wasted large ones.
+   */
+  contextWindow: number;
 };
 
 export type ToolResult = {

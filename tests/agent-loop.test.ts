@@ -15,7 +15,7 @@ const context: ToolContext = {
   conversationId: "c1",
   skillCount: 1,
   webEnabled: true,
-  searchConfigured: true, knowledgeCount: 0
+  searchConfigured: true, knowledgeCount: 0, contextWindow: 128_000
 };
 
 function fakeTool(overrides: Partial<ToolDescriptor> = {}): ToolDescriptor {
@@ -76,7 +76,7 @@ describe("ToolRegistry (REQ-NF-010)", () => {
     expect(registry.specsFor(context).map((spec) => spec.function.name)).toEqual(["skill_tool", "search_tool"]);
     expect(registry.specsFor({ ...context, skillCount: 0 }).map((s) => s.function.name)).toEqual(["search_tool"]);
     expect(registry.specsFor({ ...context, webEnabled: false }).map((s) => s.function.name)).toEqual(["skill_tool"]);
-    expect(registry.specsFor({ ...context, searchConfigured: false, knowledgeCount: 0 }).map((s) => s.function.name)).toEqual(["skill_tool"]);
+    expect(registry.specsFor({ ...context, searchConfigured: false, knowledgeCount: 0, contextWindow: 128_000 }).map((s) => s.function.name)).toEqual(["skill_tool"]);
     // Nothing available → no tool catalogue text at all.
     expect(registry.catalogueFor({ ...context, skillCount: 0, webEnabled: false })).toBe("");
   });

@@ -1324,7 +1324,7 @@ const CONTRACT = [
         req: "REQ-F-015",
         title: "Home is a full-screen display screen with the chat and menu above it",
         guidance:
-          "page.tsx renders <DisplayScreen> as the base layer; .display-screen is fixed/full-screen at a z-index below the chat (20) and menu (30); the insight notice is non-dismissible (no close button, no Escape handler) and the insight <iframe> is deliberately unsandboxed (DEC-015).",
+          "page.tsx renders <DisplayScreen> as the base layer; .display-screen is fixed/full-screen at a z-index below the chat (20) and menu (30); the insight notice is non-dismissible (no close button, no Escape handler) and the insight <iframe> is sandboxed without allow-same-origin (DEC-080).",
         check(ctx) {
           const page = ctx.files["page.tsx"] ?? "";
           const screen = ctx.files["DisplayScreen.tsx"] ?? "";
@@ -1353,10 +1353,18 @@ const CONTRACT = [
             return FAIL("DisplayScreen handles a key event — the notice must not be dismissible via Escape (CP-7)");
           }
 
-          // DEC-015: the insight iframe is intentionally rendered without a sandbox attribute.
+          // DEC-080 ①: the insight iframe MUST be sandboxed, and the sandbox must not hand
+          // the origin back. This replaces the earlier rule, which locked in the unsandboxed
+          // state and demanded a CR to change it — this is that CR. `allow-scripts` together
+          // with `allow-same-origin` is equivalent to no sandbox at all, so it is rejected
+          // outright rather than left to a reviewer to notice.
           if (!/<iframe\b/.test(screen)) return FAIL("DisplayScreen renders no <iframe> for insight HTML");
-          if (/<iframe[^>]*\bsandbox\b/.test(screen)) {
-            return FAIL("the insight <iframe> has a sandbox attribute — DEC-015 records this as a deliberate non-goal; add it via a future CR, not silently");
+          const insightFrame = /<iframe\b[^>]*>/.exec(screen)?.[0] ?? "";
+          if (!/\bsandbox\b/.test(insightFrame)) {
+            return FAIL("the insight <iframe> has no sandbox attribute — DEC-080 ① requires one; model- and web-sourced HTML must not run in this app's origin");
+          }
+          if (/sandbox="[^"]*allow-same-origin/.test(insightFrame)) {
+            return FAIL("the insight <iframe> sandbox allows same-origin — with allow-scripts that is no sandbox at all (DEC-080 ①)");
           }
           if (/setInterval\s*\(|new EventSource|new WebSocket/.test(screen)) {
             return FAIL("DisplayScreen polls / opens a stream — it must refetch on the jarvis:display-changed event only (CP-9)");
@@ -1364,7 +1372,7 @@ const CONTRACT = [
           if (!/jarvis:display-changed|DISPLAY_CHANGED_EVENT/.test(screen)) {
             return FAIL("DisplayScreen does not listen for the display-changed event");
           }
-          return PASS(`display screen: fixed base z-index ${z}, non-dismissible notice, unsandboxed iframe (DEC-015), event-driven refetch`);
+          return PASS(`display screen: fixed base z-index ${z}, non-dismissible notice, sandboxed iframe without allow-same-origin (DEC-080), event-driven refetch`);
         },
       },
       {

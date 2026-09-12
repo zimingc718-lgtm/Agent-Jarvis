@@ -16,7 +16,7 @@ describe("knowledge tools", () => {
     root = mkdtempSync(join(tmpdir(), "agent-jarvis-kt-"));
     await saveKnowledge({ title: "部署说明", content: "生产环境部署端口是 8443，反向代理用 Caddy。", source: "manual" }, root);
     await saveKnowledge({ title: "回答风格", content: "用户偏好中文回答。", source: "conversation" }, root);
-    context = { userId: "u", conversationId: "c", skillCount: 0, webEnabled: false, searchConfigured: false, knowledgeCount: 2 };
+    context = { userId: "u", conversationId: "c", skillCount: 0, webEnabled: false, searchConfigured: false, knowledgeCount: 2, contextWindow: 128_000 };
   });
   afterEach(() => {
     rmSync(root, { recursive: true, force: true });
@@ -31,7 +31,7 @@ describe("knowledge tools", () => {
   });
 
   it("② 知识库为空时只注册 save_knowledge，检索与读取不占提示词预算（REQ-NF-008 ④）", () => {
-    const empty = { ...context, knowledgeCount: 0 };
+    const empty = { ...context, knowledgeCount: 0, contextWindow: 128_000 };
     const names = createKnowledgeTools({ root })
       .filter((tool) => tool.available(empty))
       .map((tool) => tool.name);

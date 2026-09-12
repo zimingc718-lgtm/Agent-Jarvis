@@ -16,6 +16,7 @@ const context: ToolContext = {
   webEnabled: false,
   searchConfigured: false,
   knowledgeCount: 0,
+  contextWindow: 128_000,
 };
 
 describe("TEST-092 ⑥ 截断的工具调用不执行 (REQ-F-051 ③)", () => {

@@ -31,6 +31,7 @@ const toolContext: ToolContext = {
   webEnabled: false,
   searchConfigured: false,
   knowledgeCount: 0,
+  contextWindow: 128_000,
 };
 
 function dispatchStage(stage: "opening" | "board") {

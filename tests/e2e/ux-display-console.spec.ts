@@ -172,6 +172,27 @@ test("① 分块提交拼成一份带样式的报告上屏 (REQ-F-050 ①, REQ-F
   const bodyClass = await frame.locator("body").getAttribute("class");
   expect(bodyClass).toContain("jarvis-insight");
 
+  // REQ-F-101 ①② (CR-20260912-sandbox-and-budget). Everything above already proves the
+  // sandbox did not break rendering — styles, theme and both chunks are still there.
+  // These two check the isolation itself, at the real entry.
+  const sandbox = await page.locator(".display-screen__frame").getAttribute("sandbox");
+  expect(sandbox).toBeTruthy();
+  expect(sandbox).not.toContain("allow-same-origin");
+
+  // The property that actually cuts the injection chain: inside an opaque origin, reaching
+  // for this app's storage throws. Before the sandbox this returned "accessible", and a
+  // script in a model- or web-authored report could read the host origin's data and call
+  // its API with the user's session.
+  const storageReach = await frame.locator("body").evaluate(() => {
+    try {
+      void window.localStorage.length;
+      return "accessible";
+    } catch {
+      return "blocked";
+    }
+  });
+  expect(storageReach).toBe("blocked");
+
   // REQ-F-052 ②: the iframe document follows the host theme.
   await page.getByRole("button", { name: "打开菜单" }).click();
   await page.getByRole("button", { name: "深色" }).click();

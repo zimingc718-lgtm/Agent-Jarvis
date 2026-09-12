@@ -50,7 +50,8 @@
     "CR-20260911-web-reading",
     "CR-20260912-local-production",
     "CR-20260912-latency-and-report-layout",
-    "CR-20260912-stage-reach"
+    "CR-20260912-stage-reach",
+    "CR-20260912-sandbox-and-budget"
   ],
   "tests": [
     {
@@ -770,9 +771,9 @@
       "id": "TEST-093",
       "result": "PASS",
       "command": "npm test -- display-document display-screen",
-      "real_entry": false,
-      "date": "2026-09-11",
-      "notes": "展示屏文档外壳：片段包成带 @layer jarvis-base 的完整文档、整文档只前置一份样式且结构保留、自带 style 优先、data-theme 跟随宿主主题切换、提示条与无沙箱不变。9 PASS。"
+      "real_entry": true,
+      "date": "2026-09-12",
+      "notes": "展示屏外壳与主题。CR-20260912-sandbox-and-budget 反转 ⑤：由断言「iframe 无 sandbox（DEC-015 不变）」改为断言有 sandbox、含 allow-scripts、不含 allow-same-origin。真实入口（npm run test:e2e，ux-display-console ①，16/16 PASS）：报告在沙箱 iframe 内照常渲染——基础样式生效、分块拼成同一份、主题切换跟随；并直接验证隔离本身——从 iframe 内部读宿主 localStorage 返回 blocked（改动前为 accessible）。这一条是注入链最后一环被切断的直接证据。"
     },
     {
       "id": "TEST-094",
@@ -949,6 +950,22 @@
       "real_entry": true,
       "date": "2026-09-12",
       "notes": "展示屏阶段可达性：show_home 发 opening 事件并清 sessionStorage 标记；show_board 存在且先清回 home 持久态；board/opening 两个方向都通且可反复；指针移动不切换、点击切换；洞察仍压过两阶段。7 PASS。真实入口：npm run test:e2e 由 3 failed / 13 passed 变为 16 passed，三条既有红全部转绿。"
+    },
+    {
+      "id": "TEST-161",
+      "result": "PASS",
+      "command": "npm test -- loop-budget",
+      "real_entry": false,
+      "date": "2026-09-12",
+      "notes": "工具循环内的上下文预算：未超预算时返回同一数组引用且 narrowed=false；超预算逐级收窄且保留 tool_call_id；最紧仍放不下返回 fits=false 带估算值与限额；循环层放不下时不调 Provider、不执行工具、发 notice、落库 truncated；不传 contextWindow 时行为不变。6 PASS。"
+    },
+    {
+      "id": "TEST-162",
+      "result": "PASS",
+      "command": "npm test -- web-result-cap",
+      "real_entry": false,
+      "date": "2026-09-12",
+      "notes": "单条网页结果按真实窗口取上限：128k 窗口所得正文远多于 8k；两者均落在申报的 singleToolResult 份额内；8k 模型下单页不再独吞输入预算。旧实现恒等于 12000。3 PASS。"
     }
   ],
   "executed_commands": [
@@ -1147,6 +1164,18 @@
       "result": "PASS",
       "summary": "CR-20260912-stage-reach: tsc 0；单测 68 文件 / 579 用例 PASS；ui-contract 53/0；e2e 16 passed（修改前干净 main 上为 3 failed / 13 passed）。",
       "date": "2026-09-12"
+    },
+    {
+      "command": "npx tsc --noEmit && npm test && node scripts/ui-contract.mjs",
+      "result": "PASS",
+      "summary": "CR-20260912-sandbox-and-budget: tsc 0；单测 69 文件 / 580 用例 PASS；ui-contract 53 规则 0 FAIL 0 WARN（含反转后的 LB-09）。",
+      "date": "2026-09-12"
+    },
+    {
+      "command": "npm run test:e2e",
+      "result": "PASS",
+      "summary": "CR-20260912-sandbox-and-budget 真实入口：16 passed。ux-display-console ① 内新增三条断言——iframe 有 sandbox、不含 allow-same-origin、frame 内读 localStorage 被拒。",
+      "date": "2026-09-12"
     }
   ],
   "known_warnings": [
@@ -1224,6 +1253,17 @@
     },
     {
       "text": "CR-20260912-display-stage shipped a regression that three e2e specs had been failing on, unnoticed: the client-side stage outranked the persisted display_state, so once anything happened in a session the title view was unreachable and show_home ran to no visible effect. It was merged with unit tests and gates green because e2e was not run. CR-20260912-stage-reach fixes it. Process note: for display-screen render branches, unit tests can pass while the real entry is broken — jsdom has no 'pointer already inside the window'.",
+      "check": "manual",
+      "reviewed_at": "2026-09-12"
+    },
+    {
+      "id": "config-check-single-admin-eval-order",
+      "status": "known, user decided not to fix (2026-09-09)",
+      "detail": "scripts/check-config.mjs computes SINGLE_ADMIN = isRealValue(process.env.JARVIS_TEST_USER_ID) at module top, before loadEnv() reads .env.local. So when JARVIS_TEST_USER_ID lives in .env.local (not the shell), `npm run config:check` still reports GOOGLE_CLIENT_ID/SECRET as 缺少 instead of 暂缓 and exits 1. TEST-023 passes because it injects JARVIS_TEST_USER_ID into the child process env directly. Cosmetic only — the dev server's JARVIS_TEST_USER_ID bypass (auth-guard.ts, read per-request after Next loads .env.local) is unaffected. Fix would be: move the SINGLE_ADMIN computation after loadEnv() + add a TEST-023 case that goes through .env.local. —— 已闭合：CR-20260912-local-production 把 SINGLE_ADMIN 的求值移到 loadEnv() 之后，2026-09-12 确认。",
+      "reviewed_at": "2026-09-12"
+    },
+    {
+      "text": "CR-20260912-sandbox-and-budget closes the sandbox exit obligation, but prompt injection itself is NOT solved: an attacker-controlled page can still make the model repeat or act on its content. Only the last link — attacker HTML gaining this app's origin — is cut. Detection route for the injection path itself remains '发现不了'. Also: under allow-scripts a framed script can still make outbound requests; acceptable while insights carry no user-private data, and recorded so it is re-evaluated if that changes.",
       "check": "manual",
       "reviewed_at": "2026-09-12"
     }

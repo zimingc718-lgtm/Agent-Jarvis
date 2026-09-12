@@ -1,6 +1,7 @@
 import type { ToolSpec } from "./adapters";
 import type { ChatDelta, ChatMessage, Source, ToolCall } from "./types";
 import { normalizeArgs, parseToolArguments, summarizeArgs, type ToolContext, type ToolRegistry } from "./tools/registry";
+import { fitToolLoopContext } from "./tools/budget";
 
 /**
  * The tool loop (DEC-022, REQ-F-029, TASK-065).
@@ -33,8 +34,14 @@ export type ToolLoopInput = {
    * budget applied" and every available tool is sent — the shape tests use.
    */
   toolSpecs?: ToolSpec[];
-  /** Conversation messages, already assembled and budgeted by `budget.ts`. */
+  /** Conversation messages, assembled and budgeted by `budget.ts` before the loop starts. */
   messages: ChatMessage[];
+  /**
+   * Context window of the provider in play. Present means the loop re-checks its own
+   * growth before every call (DEC-080 ②); omitted keeps the old unbounded behaviour and
+   * exists only for the shape tests that drive the loop with a stub provider.
+   */
+  contextWindow?: number;
   providerTurn: ProviderTurn;
   /** Emit an SSE delta to the client. */
   emit: (delta: ChatDelta) => void;
@@ -92,10 +99,37 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
 
   let text = "";
   let steps = 0;
+  /** The narrowing notice is worth saying once per send, not once per step. */
+  let narrowedAnnounced = false;
 
   while (true) {
     if (input.signal?.aborted) {
       return { text, status: "stopped", steps, sources, toolsUsed };
+    }
+
+    // The loop's own growth, re-checked before every call (DEC-080 ②). `assembleContext`
+    // ran once, before the first step; everything appended since then has never been
+    // measured. Narrowing here is on-pressure only — see `fitToolLoopContext`.
+    let outgoing = conversation;
+    if (input.contextWindow) {
+      const fit = fitToolLoopContext(conversation, input.contextWindow);
+      if (!fit.fits) {
+        input.emit({
+          type: "notice",
+          text: `本轮工具结果累计约 ${fit.estimatedTokens} tokens，已超出预算 ${fit.limit}，停在这里。已完成的部分保留，可就已有结果继续追问。`,
+        });
+        input.persist({ role: "assistant", content: "", status: "truncated", sources });
+        input.emit({ type: "truncated", steps });
+        return { text, status: "truncated", steps, sources, toolsUsed };
+      }
+      if (fit.narrowed && !narrowedAnnounced) {
+        narrowedAnnounced = true;
+        input.emit({
+          type: "notice",
+          text: "本轮工具结果较多，较早几条已省略正文以腾出预算；需要时可以让我重新读取。",
+        });
+      }
+      outgoing = fit.messages;
     }
 
     let stepText = "";
@@ -106,7 +140,7 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
     let failed: string | null = null;
     let stopped = false;
 
-    for await (const delta of input.providerTurn({ messages: conversation, tools: specs })) {
+    for await (const delta of input.providerTurn({ messages: outgoing, tools: specs })) {
       if (input.signal?.aborted) {
         stopped = true;
         break;

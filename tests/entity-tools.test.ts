@@ -20,6 +20,7 @@ const context: ToolContext = {
   webEnabled: false,
   searchConfigured: false,
   knowledgeCount: 0,
+  contextWindow: 128_000,
 };
 
 describe("entity tools", () => {

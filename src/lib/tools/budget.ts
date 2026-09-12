@@ -226,6 +226,65 @@ export function applySummary(messages: TurnMessage[], summary: string, through: 
   return [{ role: "system", content: summary, turn: through }, ...kept];
 }
 
+/**
+ * Keep only the last `keepLast` tool results verbatim; older ones become the same marker
+ * `applyRetentionWindow` uses. `tool_call_id` is preserved so the assistant/tool pairing
+ * stays a legal sequence — dropping rows outright would corrupt the protocol.
+ *
+ * Operates on plain `ChatMessage`s with no turn numbers, because inside one send there are
+ * no turns — only loop steps.
+ */
+export function narrowToolResults(messages: ChatMessage[], keepLast: number): ChatMessage[] {
+  const toolIndexes = messages.flatMap((message, index) => (message.role === "tool" ? [index] : []));
+  if (toolIndexes.length <= keepLast) {
+    return messages;
+  }
+  const keep = new Set(toolIndexes.slice(-keepLast));
+  return messages.map((message, index) =>
+    message.role === "tool" && !keep.has(index) ? { ...message, content: "[结果已省略]" } : message
+  );
+}
+
+/** Progressively tighter retention attempts before the loop gives up (DEC-080 ②). */
+export const IN_TURN_RETENTION_STEPS = [3, 2, 1];
+
+export type ToolLoopFit =
+  | { fits: true; messages: ChatMessage[]; narrowed: boolean; estimatedTokens: number }
+  | { fits: false; estimatedTokens: number; limit: number };
+
+/**
+ * Bound what one send replays as its own tool loop grows (REQ-F-101, DEC-080 ②).
+ *
+ * `assembleContext` runs once, before the loop starts. Everything the loop then appends —
+ * up to `MAX_TOOL_STEPS` assistant/tool pairs, each tool result allowed its own sizeable
+ * share — is never re-checked against the budget. With the ceiling at 10 that was bounded
+ * by accident; at 100 it is not, and ten page reads alone can pass the whole input budget
+ * inside a single request. The failure then surfaces as a provider 400 mid-loop.
+ *
+ * Unlike the cross-turn window, narrowing here is applied **only under pressure**: within
+ * one send every result belongs to the task in hand, so discarding them by default would
+ * break exactly the multi-source synthesis the loop exists for. REQ-F-041 ① governs turns,
+ * not steps, so it is not in tension with this.
+ */
+export function fitToolLoopContext(messages: ChatMessage[], contextWindow: number): ToolLoopFit {
+  const limit = budgetTokens(contextWindow, BUDGET_SHARES.totalInput);
+  const cost = (rows: ChatMessage[]): number =>
+    rows.reduce((total, message) => total + estimateTokens(message.content ?? "") + 4, 0);
+
+  const full = cost(messages);
+  if (full <= limit) {
+    return { fits: true, messages, narrowed: false, estimatedTokens: full };
+  }
+  for (const keepLast of IN_TURN_RETENTION_STEPS) {
+    const narrowed = narrowToolResults(messages, keepLast);
+    const narrowedCost = cost(narrowed);
+    if (narrowedCost <= limit) {
+      return { fits: true, messages: narrowed, narrowed: true, estimatedTokens: narrowedCost };
+    }
+  }
+  return { fits: false, estimatedTokens: full, limit };
+}
+
 export type AssembleInput = {
   stablePrefix: string;
   volatileSuffix: string;
