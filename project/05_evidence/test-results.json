@@ -6,7 +6,8 @@
     "project/02_solution/架构设计说明书.md",
     "project/03_modules/模块任务开发说明书.md",
     "project/04_tests/测试说明书.md",
-    "project/06_changes/CR-20260911-knowledge-skills.md"
+    "project/06_changes/CR-20260911-knowledge-skills.md",
+    "project/06_changes/CR-20260911-scheduled-sweep.md"
   ],
   "change_records": [
     "project/06_changes/CR-20260908-floating-llm-chat.md",
@@ -808,6 +809,14 @@
       "real_entry": false,
       "date": "2026-09-11",
       "notes": "CR-20260911-knowledge-skills；六本技能齐备且纪律类在列；每本 SKILL.md 前置块可被登记解析、name/description 非空且非占位符；文件夹名 slug 化后非空；每本注入在单轮 32KB 预算内且不触发截断；src/ 内无任何代码引用仓库 skills/（运行时技能只在 .data/skills）。不断言模型是否遵守——那是真实入口。5 PASS。"
+    },
+    {
+      "id": "TEST-129",
+      "result": "PASS",
+      "command": "npm test -- sweep",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-scheduled-sweep；默认关时一轮不跑且不发请求；force 让用户按钮越过开关；每轮条数上限且如实报剩余；游标轮转，第二轮从上次停处接着走；采集失败不推进 checkedAt 但游标照样前进（坏源不卡队列）；到期按对象 checkedAt 判，未到期整轮不跑、时间推进后重新到期；从没采集过的对象排最前；无源时如实说明而非报无变化；设置边界拒绝越界；rotateAfter 纯函数两例；路由 401/默认值/越界 400 带理由/无源如实回；看板默认关并写明「还没有巡检过」、开关即保存、按钮带 force、不可见时不发起。10 + 4 + 2 PASS。"
     }
   ],
   "executed_commands": [

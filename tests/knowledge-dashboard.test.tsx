@@ -156,4 +156,55 @@ describe("KnowledgeDashboard", () => {
     expect(screen.getByText(/还没有查不到的检索/)).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "待采纳的提议" })).not.toBeInTheDocument();
   });
+
+  it("⑩ 巡检条：默认关、开关即保存、「立即巡检一轮」带 force，未采集过时明说", async () => {
+    const saveSweep = vi.fn(async (patch: Record<string, unknown>) => ({
+      enabled: patch.enabled === true,
+      intervalMinutes: 180,
+      maxPerRound: 6,
+      lastRun: "",
+    }));
+    const runSweepRound = vi.fn(async () => ({ ran: true, reason: "采集 2 个源，没有变化。", remaining: 3 }));
+    render(
+      <KnowledgeDashboard
+        act={noop}
+        isVisible={() => true}
+        loadBoard={async () => board}
+        loadOverview={async () => overview}
+        loadSweep={async () => ({ enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" })}
+        runSweepRound={runSweepRound}
+        saveSweep={saveSweep}
+      />
+    );
+    const bar = await screen.findByRole("region", { name: "定时巡检" });
+    // Off by default, and it says so rather than implying everything is current.
+    expect(within(bar).getByRole("checkbox")).not.toBeChecked();
+    expect(within(bar).getByText("还没有巡检过")).toBeInTheDocument();
+    // Nothing runs on its own while the schedule is off.
+    expect(runSweepRound).not.toHaveBeenCalled();
+
+    fireEvent.click(within(bar).getByRole("checkbox"));
+    await waitFor(() => expect(saveSweep).toHaveBeenCalledWith({ enabled: true }));
+
+    fireEvent.click(within(bar).getByRole("button", { name: "立即巡检一轮" }));
+    await waitFor(() => expect(runSweepRound).toHaveBeenCalledWith(true));
+    expect(await screen.findByText("采集 2 个源，没有变化。还有 3 个源排队。")).toBeInTheDocument();
+  });
+
+  it("⑪ 看板不在屏幕上时，计划轮次不发起——不在后台替用户敲别人的服务器", async () => {
+    const runSweepRound = vi.fn(async () => ({ ran: true, reason: "采集 1 个源，没有变化。", remaining: 0 }));
+    render(
+      <KnowledgeDashboard
+        act={noop}
+        isVisible={() => false}
+        loadBoard={async () => board}
+        loadOverview={async () => overview}
+        loadSweep={async () => ({ enabled: true, intervalMinutes: 30, maxPerRound: 6, lastRun: "2026-09-11T00:00:00Z" })}
+        runSweepRound={runSweepRound}
+      />
+    );
+    await screen.findByRole("region", { name: "定时巡检" });
+    await waitFor(() => expect(screen.getByRole("region", { name: "定时巡检" })).toBeInTheDocument());
+    expect(runSweepRound).not.toHaveBeenCalled();
+  });
 });

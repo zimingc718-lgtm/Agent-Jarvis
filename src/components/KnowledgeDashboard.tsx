@@ -64,9 +64,31 @@ type Props = {
   act?: (method: "POST" | "DELETE" | "PATCH", url: string, body?: unknown) => Promise<{ ok: boolean; message?: string }>;
   /** Hands a pre-filled question to the chat instead of running anything here. */
   onAsk?: (question: string) => void;
+  /** Scheduled collection seams (CR-20260911-scheduled-sweep). */
+  loadSweep?: () => Promise<SweepState>;
+  saveSweep?: (patch: Partial<SweepState>) => Promise<SweepState>;
+  runSweepRound?: (force: boolean) => Promise<SweepRun>;
+  /** Injected in tests; the real schedule only ticks while the board is on screen. */
+  isVisible?: () => boolean;
 };
 
+export type SweepState = { enabled: boolean; intervalMinutes: number; maxPerRound: number; lastRun: string };
+export type SweepRun = { ran: boolean; reason: string; remaining: number };
+
 const EMPTY_BOARD: DashboardData = { entities: [], pending: [], proposals: [] };
+const EMPTY_SWEEP: SweepState = { enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" };
+/**
+ * How often the board CHECKS whether a round is due — not how often it collects.
+ * The server decides what is due; this only wakes up to ask.
+ */
+const SWEEP_TICK_MS = 60_000;
+const SWEEP_INTERVAL_MIN = 30;
+const SWEEP_INTERVAL_MAX = 24 * 60;
+
+function formatWhen(iso: string): string {
+  const at = new Date(iso);
+  return Number.isNaN(at.getTime()) ? iso : at.toLocaleString("zh-CN", { hour12: false });
+}
 const EMPTY_OVERVIEW: OverviewData = { total: 0, byEntity: {}, byType: {}, unowned: 0, misses: [] };
 
 const KIND_LABEL = { competitor: "友商", authority: "规则与准入方", customer: "客户" } as const;
@@ -94,6 +116,29 @@ async function getJson<T>(url: string, fallback: T): Promise<T> {
   return (await response.json()) as T;
 }
 
+async function saveSweepViaApi(patch: Partial<SweepState>): Promise<SweepState> {
+  const response = await fetch("/api/entities/sweep", {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  const data = (await response.json().catch(() => ({}))) as Partial<SweepState> & { message?: string };
+  if (!response.ok) {
+    throw new Error(data.message ?? "保存失败");
+  }
+  return { ...EMPTY_SWEEP, ...data };
+}
+
+async function runSweepViaApi(force: boolean): Promise<SweepRun> {
+  const response = await fetch("/api/entities/sweep", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ force }),
+  });
+  const data = (await response.json().catch(() => ({}))) as Partial<SweepRun> & { message?: string };
+  return { ran: data.ran === true, reason: data.reason ?? data.message ?? "巡检未执行。", remaining: data.remaining ?? 0 };
+}
+
 async function actViaApi(method: "POST" | "DELETE" | "PATCH", url: string, body?: unknown) {
   const response = await fetch(url, {
     method,
@@ -119,12 +164,17 @@ export function KnowledgeDashboard({
   loadOverview = () => getJson<OverviewData>("/api/knowledge/overview", EMPTY_OVERVIEW),
   act = actViaApi,
   onAsk,
+  loadSweep = () => getJson<SweepState>("/api/entities/sweep", EMPTY_SWEEP),
+  saveSweep = saveSweepViaApi,
+  runSweepRound = runSweepViaApi,
+  isVisible = () => typeof document === "undefined" || document.visibilityState === "visible",
 }: Props) {
   const [board, setBoard] = useState<DashboardData>(initialData);
   const [overview, setOverview] = useState<OverviewData>(initialOverview);
   const [openName, setOpenName] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [sweep, setSweep] = useState<SweepState>(EMPTY_SWEEP);
 
   const reload = useCallback(() => {
     loadBoard()
@@ -144,6 +194,51 @@ export function KnowledgeDashboard({
     window.addEventListener(KNOWLEDGE_CHANGED_EVENT, reload);
     return () => window.removeEventListener(KNOWLEDGE_CHANGED_EVENT, reload);
   }, [reload]);
+
+  useEffect(() => {
+    loadSweep()
+      .then(setSweep)
+      .catch(() => {
+        /* the board still works without a schedule */
+      });
+  }, [loadSweep]);
+
+  /**
+   * The schedule ticks only while this board is on screen.
+   *
+   * Collection spends no model tokens, but it does spend someone else's bandwidth, and
+   * a hidden tab quietly hitting other people's servers is not a thing to start without
+   * the user present. The server still decides what is due; this only asks.
+   */
+  useEffect(() => {
+    if (!sweep.enabled) {
+      return;
+    }
+    let cancelled = false;
+    const tick = () => {
+      if (cancelled || !isVisible()) {
+        return;
+      }
+      void runSweepRound(false)
+        .then((outcome) => {
+          if (cancelled || !outcome.ran) {
+            return;
+          }
+          setNotice(outcome.remaining > 0 ? `${outcome.reason}还有 ${outcome.remaining} 个源排队。` : outcome.reason);
+          reload();
+          return loadSweep().then(setSweep);
+        })
+        .catch(() => {
+          /* a failed round is not worth interrupting the user over */
+        });
+    };
+    const timer = setInterval(tick, SWEEP_TICK_MS);
+    tick();
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [sweep.enabled, isVisible, runSweepRound, reload, loadSweep]);
 
   const run = async (key: string, label: string, method: "POST" | "DELETE" | "PATCH", url: string, body?: unknown) => {
     setBusy(key);
@@ -326,6 +421,65 @@ export function KnowledgeDashboard({
           <span className="rounded bg-muted px-2 py-0.5 text-muted-foreground">{waiting} 条待采纳</span>
         </div>
       </div>
+
+      <section
+        aria-label="定时巡检"
+        className="knowledge-dashboard__sweep flex flex-wrap items-center gap-3 rounded-md border border-border bg-card px-3 py-2 text-xs"
+      >
+        <label className="flex items-center gap-1.5">
+          <input
+            checked={sweep.enabled}
+            onChange={(event) => {
+              const enabled = event.target.checked;
+              setSweep((current) => ({ ...current, enabled }));
+              void saveSweep({ enabled })
+                .then(setSweep)
+                .catch(() => setNotice("巡检开关保存失败。"));
+            }}
+            type="checkbox"
+          />
+          定时巡检
+        </label>
+        <label className="flex items-center gap-1.5 text-muted-foreground">
+          每
+          <input
+            aria-label="巡检间隔（分钟）"
+            className="w-16 rounded border border-input bg-background px-1 py-0.5 text-right"
+            max={SWEEP_INTERVAL_MAX}
+            min={SWEEP_INTERVAL_MIN}
+            onBlur={(event) => {
+              void saveSweep({ intervalMinutes: Number(event.target.value) })
+                .then(setSweep)
+                .catch((error: Error) => setNotice(error.message));
+            }}
+            onChange={(event) => setSweep((current) => ({ ...current, intervalMinutes: Number(event.target.value) }))}
+            type="number"
+            value={sweep.intervalMinutes}
+          />
+          分钟，一轮最多 {sweep.maxPerRound} 个源
+        </label>
+        <button
+          className="knowledge-dashboard__sweep-now rounded px-1 underline underline-offset-2 disabled:opacity-50"
+          disabled={busy === "sweep"}
+          onClick={() => {
+            setBusy("sweep");
+            setNotice(null);
+            void runSweepRound(true)
+              .then((outcome) => {
+                setNotice(outcome.remaining > 0 ? `${outcome.reason}还有 ${outcome.remaining} 个源排队。` : outcome.reason);
+                reload();
+                return loadSweep().then(setSweep);
+              })
+              .catch(() => setNotice("巡检失败：网络错误。"))
+              .finally(() => setBusy(null));
+          }}
+          type="button"
+        >
+          立即巡检一轮
+        </button>
+        {/* "Never collected" and "they have been quiet" look the same; say which it is. */}
+        <span className="text-muted-foreground">{sweep.lastRun ? `上次巡检 ${formatWhen(sweep.lastRun)}` : "还没有巡检过"}</span>
+      </section>
 
       {waiting > 0 ? (
         <section

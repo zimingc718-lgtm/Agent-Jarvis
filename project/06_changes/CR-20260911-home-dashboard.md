@@ -76,7 +76,7 @@
 | 2 | `entity_pending` 流事件与 ☰ 列表联动 | 需要改 `types.ts` 的 `ChatDelta` 联合类型，同上被并行 CR 占用 |
 | 3 | 实体工具**按上下文分组注册** | 需要给 `ToolContext` 加字段，`registry.ts` 同上被占用。EV §8.2 实测：现有 11 个工具的 `tools` 数组已 857 token，超出 8k 窗口 655 token 的子预算 |
 | 4 | `BUDGET_SHARES.toolDefinitions` **声明了但从未被引用**，工具目录无截断 | 既有缺陷，非本 CR 引入；范围独立，另立小 CR |
-| 5 | ~~采集（`fetch_source`）~~、~~链接入库（`ingest_url`）~~、~~字段抽取回填（`extract_fields`）~~ **已清零**（TASK-125..127 / TEST-125..127）；只剩**定时巡检** | 三条路都已可用：卡片内「立即采集」、`ingest_url` 把链接抓成条目、`extract_fields` 把条目里的值带证据写到对象上。定时巡检的成本仍需按 B / C 期做法先实测再定 |
+| 5 | ~~采集（`fetch_source`）~~、~~链接入库（`ingest_url`）~~、~~字段抽取回填（`extract_fields`）~~、~~定时巡检~~ **已全部清零**（TASK-125..127 / TEST-125..127，定时巡检见 `CR-20260911-scheduled-sweep`） | 四条路都已可用：卡片内「立即采集」、`ingest_url` 把链接抓成条目、`extract_fields` 把条目里的值带证据写到对象上、看板巡检条按计划采集（默认关）。巡检的成本按约定先实测再定，实测与结论见 `EV-2026-09-11-scheduled-sweep`：模型 token 为 0，闸门因此设在礼貌一侧而非成本一侧 |
 
 ## 实施记录（2026-09-11）
 
