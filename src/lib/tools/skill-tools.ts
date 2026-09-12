@@ -15,6 +15,31 @@ import { TOOL_PRIORITY, type ToolDescriptor } from "./registry";
 
 const SKILL_RESULT_TOKEN_CAP = 8_000;
 
+/**
+ * What this host can actually do with a report (REQ-F-140 ①, DEC-120 ①).
+ *
+ * Skills are dropped in as-is, and a good one is usually written for a different host.
+ * `multi-agent-insight-reviewer` is the measured case: 167,755 characters across twenty
+ * reference files, a full standalone HTML template, instructions to "generate or update the
+ * final HTML or Word report artifact directly" — and **not one mention** of `save_insight`,
+ * which is the only way anything reaches the screen here. The model had to improvise the
+ * bridge, and what it produced was bare `<section>` fragments with none of the template's
+ * styling (EV-2026-09-12-skill-report-bridge §1).
+ *
+ * Appended to every `read_skill` result rather than written into the user's skill files:
+ * their folder is theirs, and re-installing the skill would wipe an edit of ours.
+ */
+export const HOST_OUTPUT_NOTE = [
+  "=== 本机（Agent-Jarvis）的产出约定 ===",
+  "以上技能可能是为别的宿主写的。在这里，报告的唯一出口是 save_insight 工具：",
+  "1. 没有文件系统产出，不能写 .html / .docx 文件，也没有 Word。技能里关于「生成文件」「导出 Word」的说法在这里不适用。",
+  "2. 首块调用 save_insight(html) 新建并返回 insightId；后续块带上该 id 追加。一个报告始终只用一个 insightId——同一会话里再新建会把报告拆成两份，展示屏只显示较新的那份。",
+  "3. 写错了顺序或结构，带该 id 并置 mode=replace 整篇重发，不要把缺失的开头追加到结尾。",
+  "4. **样式请一并写进第一块**：技能自带的 `<style>`（如 html-report-template.html 里的那套）会原样保留并优先于本机的基础样式。不带样式就只剩通用排版，技能的配色、表格、callout、置信度标记都不会出现。",
+  "5. 片段即可，不必输出 <html>/<body> 骨架——展示屏会包一层带主题的文档外壳。",
+  "6. 章节编号在整篇里保持一套，不要中文序号与阿拉伯数字混用。",
+].join("\n");
+
 export function createSkillTools(store: Store): ToolDescriptor[] {
   const listSkills: ToolDescriptor = {
     name: "list_skills",
@@ -65,7 +90,11 @@ export function createSkillTools(store: Store): ToolDescriptor[] {
       const { text, truncated } = truncateToTokens(body, SKILL_RESULT_TOKEN_CAP);
       return {
         ok: true,
-        content: text,
+        // REQ-F-140 ①: the host note goes AFTER the skill text, so it is the last thing
+        // read and cannot be pushed out by truncation.
+        content: `${text}
+
+${HOST_OUTPUT_NOTE}`,
         summary: `读取技能 ${name}${truncated ? "（已截断）" : ""}`,
       };
     },

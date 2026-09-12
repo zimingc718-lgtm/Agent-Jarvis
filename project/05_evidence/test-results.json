@@ -54,7 +54,8 @@
     "CR-20260912-sandbox-and-budget",
     "CR-20260912-local-documents",
     "CR-20260912-runtime-visibility",
-    "CR-20260912-context-degrade"
+    "CR-20260912-context-degrade",
+    "CR-20260912-skill-report-bridge"
   ],
   "tests": [
     {
@@ -801,8 +802,8 @@
       "result": "PASS",
       "command": "npm run test:e2e && npm run test:ui-contract && npm run test:visual",
       "real_entry": true,
-      "date": "2026-09-11",
-      "notes": "真实入口：模型两次 save_insight（第二次带 insightId）后 iframe 内为一份文档、两段标题、表格有边框、主题跟随；1024×700 抽屉完整在视口内且遮罩接管点击；指针移到展示屏后记录区收缩、回到输入框恢复。e2e 16 PASS；ui-contract 53/0/0；visual PASS。"
+      "date": "2026-09-12",
+      "notes": "真实入口：模型两次 save_insight（第二次带 insightId）后 iframe 内为一份文档、两段标题、表格有边框、主题跟随；1024×700 抽屉完整在视口内且遮罩接管点击；指针移到展示屏后记录区收缩、回到输入框恢复。e2e 16 PASS；ui-contract 53/0/0；visual PASS。 CR-20260912-skill-report-bridge 新增真实入口断言：报告落地后对话面板自动让开（opacity 0 + auto-hidden 类），输入框获焦即恢复。该断言逼出一条死代码——insight 流事件全仓无人发出。"
     },
     {
       "id": "TEST-097",
@@ -1027,6 +1028,14 @@
       "real_entry": true,
       "date": "2026-09-12",
       "notes": "超预算逐级收紧：份额不相容断言（0.15×4≥0.6）；装得下时不动且 degraded 为 null；三份 3 万 tokens 报告收紧后装得下；先削正文再放弃轮次；tool_call_id 保留；用户与助手文字逐字保留；只有对话文字超限才抛错；最后一级省略全部工具正文。8 PASS。真实入口：用户真实会话（36 条消息、tool 内容 328,849 字符）回放，由抛 ContextOverflowError（83,740 > 76,800）变为装配成功 54,214 tokens，三条大 PDF 各削至 9,535 tokens，其余 20 条一字未动，两轮均未放弃。"
+    },
+    {
+      "id": "TEST-200",
+      "result": "PASS",
+      "command": "npm test -- skill-report-bridge",
+      "real_entry": false,
+      "date": "2026-09-12",
+      "notes": "技能产出的宿主适配：read_skill 结果以宿主约定结尾；约定覆盖 save_insight/Word/拆成两份/mode=replace/<style>/编号；mode=replace 覆盖全文且旧开头不残留；append 仍为默认；replace 缺 insightId 被拒；同会话第二次新建点名旧 id 与后果；首次新建不带该提醒。7 PASS。"
     }
   ],
   "executed_commands": [
@@ -1255,6 +1264,12 @@
       "result": "PASS",
       "summary": "CR-20260912-context-degrade: tsc 0；单测 635 用例 PASS（新增 8）；ui-contract 53/0；真实会话回放由抛错变为装配成功。",
       "date": "2026-09-12"
+    },
+    {
+      "command": "npx tsc --noEmit && npm test && node scripts/ui-contract.mjs && npm run test:e2e",
+      "result": "PASS",
+      "summary": "CR-20260912-skill-report-bridge: tsc 0；单测 642 用例 PASS（新增 7）；ui-contract 53/0；e2e 19 passed。期间一轮 5 条 e2e 失败经 stash 对照确认与本改动无关（干净工作树同样失败，失败点为 provider 保存与 DELETE 超时，整轮耗时 2.7→6.0 分钟，当时机器可用内存 1.5–1.8 GB / 15.5 GB）；单独重跑各条均通过。",
+      "date": "2026-09-12"
     }
   ],
   "known_warnings": [
@@ -1358,6 +1373,11 @@
     },
     {
       "text": "BUDGET_SHARES remains internally inconsistent by design after CR-20260912-context-degrade: singleToolResult (0.15) x 4 equals totalInput (0.6), so four full-sized tool results still exhaust the whole input allowance by construction. The CR absorbs the consequence by tightening progressively rather than refusing the turn; it does NOT change the declared shares, because that would shorten every tool output and has a far wider blast radius. TEST-190 ① pins the inequality so the next person to touch the shares sees it. Also recorded honestly: CR-20260912-sandbox-and-budget widened the gap by 60% when it replaced the constant 12,000 cap with 0.15 of the real window — that change was correct on its own terms, and it made this failure more likely.",
+      "check": "manual",
+      "reviewed_at": "2026-09-12"
+    },
+    {
+      "text": "The multi-agent-insight-reviewer skill is 167,755 characters across twenty reference files against a 32KB injection cap and an 8,000-token read_skill cap, so roughly four fifths of it never reaches the model. CR-20260912-skill-report-bridge does not change that ratio. Also unresolved: the report column and the chat console still share one centre axis and overlap by 78% at 1440x900; the CR works around the default state by collapsing the console once a report lands, but a user who manually expands it still has the report covered.",
       "check": "manual",
       "reviewed_at": "2026-09-12"
     }

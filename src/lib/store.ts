@@ -189,6 +189,14 @@ export type Store = {
    * longer `html`.
    */
   appendInsightHtml(insightId: string, html: string): InsightRecord | null;
+  /**
+   * Overwrite an insight's body (REQ-F-140 ②). Append alone left the model unable to fix a
+   * report: on noticing the opening was missing it could only tack it onto the end, which is
+   * how one real report ended up ordered 八、九、十、十一、1、2…7.
+   */
+  replaceInsightHtml(insightId: string, html: string): InsightRecord | null;
+  /** Insights already produced in this conversation, newest first (REQ-F-140 ③). */
+  listInsightsForConversation(conversationId: string): InsightRecord[];
   // --- Display state (CR-20260909-display-screen, DEC-017) ---
   getDisplayState(): DisplayStateRecord;
   setDisplayState(next: { kind: string; refId?: string | null }): void;
@@ -756,6 +764,20 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
         return null;
       }
       return this.getInsight(insightId);
+    },
+
+    replaceInsightHtml(insightId, html) {
+      const changed = db.prepare("UPDATE insights SET html = ? WHERE id = ?").run(html, insightId);
+      if (Number(changed.changes) === 0) {
+        return null;
+      }
+      return this.getInsight(insightId);
+    },
+
+    listInsightsForConversation(conversationId) {
+      return db
+        .prepare("SELECT id, conversation_id AS conversationId, kind, html, created_at AS createdAt FROM insights WHERE conversation_id = ? ORDER BY created_at DESC")
+        .all(conversationId) as InsightRecord[];
     },
 
     getDisplayState() {
