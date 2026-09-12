@@ -55,7 +55,8 @@
     "CR-20260912-local-documents",
     "CR-20260912-runtime-visibility",
     "CR-20260912-context-degrade",
-    "CR-20260912-skill-report-bridge"
+    "CR-20260912-skill-report-bridge",
+    "CR-20260912-skill-paging"
   ],
   "tests": [
     {
@@ -1036,6 +1037,14 @@
       "real_entry": false,
       "date": "2026-09-12",
       "notes": "技能产出的宿主适配：read_skill 结果以宿主约定结尾；约定覆盖 save_insight/Word/拆成两份/mode=replace/<style>/编号；mode=replace 覆盖全文且旧开头不残留；append 仍为默认；replace 缺 insightId 被拒；同会话第二次新建点名旧 id 与后果；首次新建不带该提醒。7 PASS。"
+    },
+    {
+      "id": "TEST-210",
+      "result": "PASS",
+      "command": "npm test -- skill-paging",
+      "real_entry": true,
+      "date": "2026-09-12",
+      "notes": "技能按需分页读取：入口返回 SKILL.md + 清单且不内联大文件正文；清单含 KB 数与「不要假设你已经看过」；带 file 单独取到字母序靠后的小文件（改前不可达）；大文件单独读按预算截断并标注；../ 越界与 .png 非白名单被拒且不回显真实路径；清单外文件指回入口调用；宿主约定仍在末尾。7 PASS。真实技能实测：multi-agent-insight-reviewer 20 个文件 160 KB，入口由 32KB 拼接块降为 4,480 字符，改前不可达的 128 KB 现全部可达。 真实入口（生产构建 + 真实浏览器，1440×900）：控制台高度由 821 px 降为 668 px（占屏 74%，max-height 计算值 522 px = 58vh），报告顶部可见区域由 79 px 增至 232 px；展示屏 iframe 仍在，报告照常渲染。"
     }
   ],
   "executed_commands": [
@@ -1270,6 +1279,12 @@
       "result": "PASS",
       "summary": "CR-20260912-skill-report-bridge: tsc 0；单测 642 用例 PASS（新增 7）；ui-contract 53/0；e2e 19 passed。期间一轮 5 条 e2e 失败经 stash 对照确认与本改动无关（干净工作树同样失败，失败点为 provider 保存与 DELETE 超时，整轮耗时 2.7→6.0 分钟，当时机器可用内存 1.5–1.8 GB / 15.5 GB）；单独重跑各条均通过。",
       "date": "2026-09-12"
+    },
+    {
+      "command": "npx tsc --noEmit && npm test && node scripts/ui-contract.mjs && npm run test:e2e",
+      "result": "PASS",
+      "summary": "CR-20260912-skill-paging: tsc 0；单测 650 用例 PASS（新增 7，迁移 4）；ui-contract 53/0（含 RF-07/RF-09）；e2e 19 passed。真实技能入口由 32KB 拼接块降为 4,480 字符，128 KB 由不可达变为可达。",
+      "date": "2026-09-12"
     }
   ],
   "known_warnings": [
@@ -1378,6 +1393,11 @@
     },
     {
       "text": "The multi-agent-insight-reviewer skill is 167,755 characters across twenty reference files against a 32KB injection cap and an 8,000-token read_skill cap, so roughly four fifths of it never reaches the model. CR-20260912-skill-report-bridge does not change that ratio. Also unresolved: the report column and the chat console still share one centre axis and overlap by 78% at 1440x900; the CR works around the default state by collapsing the console once a report lands, but a user who manually expands it still has the report covered.",
+      "check": "manual",
+      "reviewed_at": "2026-09-12"
+    },
+    {
+      "text": "CR-20260912-skill-paging makes a large skill fully reachable, but two limits stay. The manifest is ordered by path, not by relevance, so the model decides what to read from filenames and sizes alone. And the report column still shares one centre axis with the chat console: this CR only lowered the step-stream height cap from 75vh to 58vh so the top of a report stays legible, and a user who manually expands the console still has most of the report covered. Resolving that needs the two to occupy different horizontal regions, which is a larger layout change.",
       "check": "manual",
       "reviewed_at": "2026-09-12"
     }

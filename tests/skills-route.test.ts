@@ -14,7 +14,7 @@ vi.mock("next-auth", () => ({ getServerSession: vi.fn() }));
 
 const { getServerSession } = await import("next-auth");
 const skillsRoute = await import("@/app/api/skills/route");
-const { SKILLS_ROOT, resolveSkillForTurn } = await import("@/lib/skills");
+const { SKILLS_ROOT, listSkillFiles } = await import("@/lib/skills");
 const { getStore } = await import("@/lib/store-singleton");
 
 function as(email: string | null) {
@@ -155,9 +155,9 @@ describe("POST /api/skills — zip 与回执 (TEST-045)", () => {
     expect((await created.json()).name).toBe("widened");
 
     const registered = getStore().listSkills("owner@example.com").at(-1)!;
-    const injected = await resolveSkillForTurn(registered.dirPath);
+    const listed = (await listSkillFiles(registered.dirPath)).map((f) => f.path);
     for (const name of ["notes.mdx", "conf.toml", "run.sh", "rows.jsonl", "doc.xml"]) {
-      expect(injected).toContain(`=== ${name} ===`);
+      expect(listed, `${name} 应出现在技能文件清单里`).toContain(name);
     }
   });
 

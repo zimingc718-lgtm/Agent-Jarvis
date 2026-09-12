@@ -1,4 +1,4 @@
-import { resolveSkillForTurn } from "../skills";
+import { listSkillFiles, readSkillDoc, readSkillFile, SkillFileError } from "../skills";
 import type { Store } from "../store";
 import { truncateToTokens } from "./budget";
 import { TOOL_PRIORITY, type ToolDescriptor } from "./registry";
@@ -38,6 +38,7 @@ export const HOST_OUTPUT_NOTE = [
   "4. **样式请一并写进第一块**：技能自带的 `<style>`（如 html-report-template.html 里的那套）会原样保留并优先于本机的基础样式。不带样式就只剩通用排版，技能的配色、表格、callout、置信度标记都不会出现。",
   "5. 片段即可，不必输出 <html>/<body> 骨架——展示屏会包一层带主题的文档外壳。",
   "6. 章节编号在整篇里保持一套，不要中文序号与阿拉伯数字混用。",
+  "7. 本技能的参考文件不会一次性给你——上面只有 SKILL.md 与文件清单。动手前先按清单把与本次任务相关的文件用 read_skill(name, file) 读进来，不要凭技能名猜它的规范。",
 ].join("\n");
 
 export function createSkillTools(store: Store): ToolDescriptor[] {
@@ -64,10 +65,14 @@ export function createSkillTools(store: Store): ToolDescriptor[] {
   const readSkill: ToolDescriptor = {
     name: "read_skill",
     priority: TOOL_PRIORITY.essential,
-    description: "读取一个技能的 SKILL.md 与其文件夹内的文本文件内容。参数 name 为技能名称。",
+    description:
+      "读取技能。不带 file 返回 SKILL.md 与该技能的文件清单；带 file 返回清单里的某一个文件。大技能请按清单逐个读，不要指望一次拿到全部。",
     parameters: {
       type: "object",
-      properties: { name: { type: "string", description: "技能名称" } },
+      properties: {
+        name: { type: "string", description: "技能名称" },
+        file: { type: "string", description: "可选。清单里的相对路径，例如 references/report-templates.md" },
+      },
       required: ["name"],
     },
     available: (context) => context.skillCount > 0,
@@ -84,10 +89,47 @@ export function createSkillTools(store: Store): ToolDescriptor[] {
           summary: `技能不存在：${name}`,
         };
       }
-      const body = await resolveSkillForTurn(skill.dirPath);
-      // The 32 KB folder cap still applies at read time; this second cap keeps one
-      // read from eating the whole turn budget (REQ-NF-007 ②).
-      const { text, truncated } = truncateToTokens(body, SKILL_RESULT_TOKEN_CAP);
+
+      const wanted = typeof args.file === "string" ? args.file.trim() : "";
+      if (wanted) {
+        // REQ-F-150 ②: one file at a time, so a big skill is reachable in full instead of
+        // arbitrarily cut off at the folder cap.
+        try {
+          const raw = await readSkillFile(skill.dirPath, wanted);
+          const { text, truncated } = truncateToTokens(raw, SKILL_RESULT_TOKEN_CAP);
+          return {
+            ok: true,
+            content: `=== ${name} / ${wanted} ===\n${text}`,
+            summary: `读取 ${name}/${wanted}${truncated ? "（已截断）" : ""}`,
+          };
+        } catch (error) {
+          return {
+            ok: false,
+            content: error instanceof SkillFileError ? error.message : `读取 ${wanted} 失败。`,
+            summary: "技能文件不可读",
+          };
+        }
+      }
+
+      /**
+       * REQ-F-150 ①. This used to concatenate SKILL.md with every text file in the folder
+       * and cut the result at 32 KB, then again at 8,000 tokens. Measured on
+       * `multi-agent-insight-reviewer` — 167,755 characters across twenty files — the model
+       * saw roughly a fifth of its own instructions, and which fifth depended on alphabetical
+       * order (EV-2026-09-12-skill-paging §1). A manifest plus on-demand reads makes the
+       * whole skill reachable without ever spending more than one file's budget at a time.
+       */
+      const doc = await readSkillDoc(skill.dirPath);
+      const files = await listSkillFiles(skill.dirPath);
+      const manifest =
+        files.length === 0
+          ? "（该技能只有 SKILL.md，没有其它可读文件。）"
+          : [
+              `该技能另有 ${files.length} 个文件，合计 ${Math.round(files.reduce((sum, f) => sum + f.bytes, 0) / 1024)} KB。`,
+              "需要哪个就用 read_skill 带上 file 参数单独读，**不要假设你已经看过它们**：",
+              ...files.map((f) => `- ${f.path}（${Math.round(f.bytes / 1024)} KB）`),
+            ].join("\n");
+      const { text, truncated } = truncateToTokens(`${doc}\n\n=== 本技能的文件清单 ===\n${manifest}`, SKILL_RESULT_TOKEN_CAP);
       return {
         ok: true,
         // REQ-F-140 ①: the host note goes AFTER the skill text, so it is the last thing

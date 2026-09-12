@@ -8,7 +8,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   generateSkillDoc,
   registerSkill,
-  resolveSkillForTurn,
+  readSkillDoc,
+  listSkillFiles,
+  readSkillFile,
+  SkillFileError,
   slugifySkillName,
   type Completer,
   type UploadedFile,
@@ -23,7 +26,7 @@ function fixedCompleter(answer: string | (() => never)): Completer {
 }
 
 
-describe("resolveSkillForTurn (REQ-F-022)", () => {
+describe("技能的正文与清单 (REQ-F-150 ①②)", () => {
   let dir: string;
 
   beforeEach(() => {
@@ -31,7 +34,7 @@ describe("resolveSkillForTurn (REQ-F-022)", () => {
   });
   afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
-  it("includes SKILL.md body + allowlisted text files and excludes non-allowlisted ones", async () => {
+  it("SKILL.md 去掉 frontmatter 单独返回；清单列出可读文件、排除非可读的", async () => {
     writeFileSync(join(dir, "SKILL.md"), "---\nname: x\ndescription: y\n---\n\nDo the thing.");
     writeFileSync(join(dir, "notes.txt"), "keep me");
     writeFileSync(join(dir, "data.json"), '{"a":1}');
@@ -39,21 +42,42 @@ describe("resolveSkillForTurn (REQ-F-022)", () => {
     mkdirSync(join(dir, "sub"));
     writeFileSync(join(dir, "sub", "more.md"), "nested note");
 
-    const assembled = await resolveSkillForTurn(dir);
-    expect(assembled).toContain("Do the thing.");
-    expect(assembled).toContain("=== notes.txt ===");
-    expect(assembled).toContain("keep me");
-    expect(assembled).toContain("=== data.json ===");
-    expect(assembled).toContain("=== sub/more.md ===");
-    expect(assembled).not.toContain("logo.png");
+    expect(await readSkillDoc(dir)).toContain("Do the thing.");
+    const paths = (await listSkillFiles(dir)).map((f) => f.path);
+    expect(paths).toContain("notes.txt");
+    expect(paths).toContain("data.json");
+    expect(paths).toContain("sub/more.md");
+    expect(paths).not.toContain("logo.png");
+    // SKILL.md is the entry point, not an item in its own manifest.
+    expect(paths).not.toContain("SKILL.md");
   });
 
-  it("truncates past 32KB and marks it", async () => {
-    writeFileSync(join(dir, "SKILL.md"), "---\nname: x\ndescription: y\n---\n");
+  it("大文件不再把整份技能挤掉——按需读一个，其余仍在清单里", async () => {
+    writeFileSync(join(dir, "SKILL.md"), "---\nname: x\ndescription: y\n---\n正文");
     writeFileSync(join(dir, "big.txt"), "A".repeat(40 * 1024));
-    const assembled = await resolveSkillForTurn(dir);
-    expect(Buffer.byteLength(assembled, "utf8")).toBeLessThanOrEqual(32 * 1024);
-    expect(assembled).toContain("已截断");
+    writeFileSync(join(dir, "small.md"), "还在");
+
+    // The old behaviour concatenated everything and cut at 32KB, so `small.md` could vanish
+    // purely because `big.txt` sorted before it. Now both are listed and each is fetched
+    // on its own budget.
+    const files = await listSkillFiles(dir);
+    expect(files.map((f) => f.path)).toEqual(["big.txt", "small.md"]);
+    expect(files.find((f) => f.path === "big.txt")!.bytes).toBe(40 * 1024);
+    expect(await readSkillFile(dir, "small.md")).toBe("还在");
+  });
+
+  it("按文件读取守得住目录边界：`..` 与非可读格式都被拒", async () => {
+    writeFileSync(join(dir, "SKILL.md"), "---\nname: x\ndescription: y\n---\n正文");
+    writeFileSync(join(dir, "logo.png"), "binary-ish");
+    const outside = join(dir, "..", "outside.md");
+    writeFileSync(outside, "不该读到");
+    try {
+      await expect(readSkillFile(dir, "../outside.md")).rejects.toThrow(SkillFileError);
+      await expect(readSkillFile(dir, "logo.png")).rejects.toThrow(/不是可读的文本格式/);
+      await expect(readSkillFile(dir, "不存在.md")).rejects.toThrow(/没有/);
+    } finally {
+      rmSync(outside, { force: true });
+    }
   });
 });
 
@@ -212,7 +236,7 @@ ${body}` }],
     expect(written).toContain("值 + 链接 + 原文定位，三者缺一不成立。");
     expect(written).not.toContain("（未生成描述，请补充本技能的说明）");
     // And the injected text still carries the instructions, not a stub.
-    expect(await resolveSkillForTurn(join(skillsRoot, "证据规范"))).toContain("三者缺一不成立");
+    expect(await readSkillDoc(join(skillsRoot, "证据规范"))).toContain("三者缺一不成立");
   });
 });
 

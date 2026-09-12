@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { MAX_INJECTION_BYTES, resolveSkillForTurn, slugifySkillName } from "@/lib/skills";
+import { listSkillFiles, MAX_INJECTION_BYTES, readSkillDoc, slugifySkillName } from "@/lib/skills";
 
 /**
  * TEST-128 — the skill library that ships with the repo
@@ -47,12 +47,16 @@ describe("skills library", () => {
     }
   });
 
-  it("④ 每本注入后都在单轮 32KB 预算之内，且不触发截断", async () => {
+  it("④ 每本的 SKILL.md 都非空，且入口读取不会被单文件体量挤爆 (REQ-F-150 ①)", async () => {
     for (const folder of folders()) {
-      const text = await resolveSkillForTurn(join(LIBRARY, folder));
-      expect(text.length, `${folder} 注入为空`).toBeGreaterThan(0);
-      expect(Buffer.byteLength(text, "utf8"), `${folder} 超出注入预算`).toBeLessThan(MAX_INJECTION_BYTES);
-      expect(text).not.toContain("已截断");
+      const doc = await readSkillDoc(join(LIBRARY, folder));
+      expect(doc.length, `${folder} 的 SKILL.md 为空`).toBeGreaterThan(0);
+      // The entry point is SKILL.md plus a manifest, so its size no longer depends on how
+      // large the reference files happen to be — that was the old injection's failure mode.
+      expect(Buffer.byteLength(doc, "utf8"), `${folder} 的 SKILL.md 本身就超预算`).toBeLessThan(MAX_INJECTION_BYTES);
+      for (const file of await listSkillFiles(join(LIBRARY, folder))) {
+        expect(file.bytes, `${folder}/${file.path} 体量为 0`).toBeGreaterThan(0);
+      }
     }
   });
 
