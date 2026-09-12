@@ -6,6 +6,7 @@ import { DisplayScreen } from "@/components/DisplayScreen";
 import { FloatingChat, type FloatingMessage } from "@/components/FloatingChat";
 import { KnowledgeList } from "@/components/KnowledgeList";
 import { MenuSection } from "@/components/MenuSection";
+import { DocumentSettings } from "@/components/DocumentSettings";
 import { SearchSettings } from "@/components/SearchSettings";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { SkillList } from "@/components/SkillList";
@@ -75,6 +76,7 @@ export default async function HomePage() {
         {storeReady ? <SkillList initialSkills={registeredSkills} /> : null}
         {storeReady ? <KnowledgeList initial={knowledge} /> : null}
         {/* REQ-F-038 ①: its own entry beside 「模型」, not inside that dialog. */}
+        {storeReady ? <DocumentSettings /> : null}
         {storeReady ? <SearchSettings /> : null}
         {/* REQ-F-060 ②: its own entry, off by default. */}
         {storeReady ? <WakeSettings /> : null}

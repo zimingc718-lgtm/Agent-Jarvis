@@ -51,7 +51,8 @@
     "CR-20260912-local-production",
     "CR-20260912-latency-and-report-layout",
     "CR-20260912-stage-reach",
-    "CR-20260912-sandbox-and-budget"
+    "CR-20260912-sandbox-and-budget",
+    "CR-20260912-local-documents"
   ],
   "tests": [
     {
@@ -966,6 +967,30 @@
       "real_entry": false,
       "date": "2026-09-12",
       "notes": "单条网页结果按真实窗口取上限：128k 窗口所得正文远多于 8k；两者均落在申报的 singleToolResult 份额内；8k 模型下单页不再独吞输入预算。旧实现恒等于 12000。3 PASS。"
+    },
+    {
+      "id": "TEST-170",
+      "result": "PASS",
+      "command": "npm test -- documents",
+      "real_entry": false,
+      "date": "2026-09-12",
+      "notes": "路径守卫与遍历：.. 走不出根；指向根外的符号链接被拒且不被列出；同前缀兄弟目录不算在根内；三种不可读情形说法各异；拒绝文案不含真实路径；只列可读格式并跳过隐藏与 node_modules；标识不含绝对路径；docx XML 还原；假 PDF 明确报错；缓存按 mtime+size 失效。18 PASS。"
+    },
+    {
+      "id": "TEST-171",
+      "result": "PASS",
+      "command": "npm test -- document-tools",
+      "real_entry": false,
+      "date": "2026-09-12",
+      "notes": "三个文档工具：未配置目录时仍注册并说明去哪配；检索标识可直接用于阅读；越界被拒且不回显路径；结果按真实窗口截断且被挤掉时出现在未加载名录、read_entity 仍在；只读性质由导出名正则断言；列目录超限时说明剩余。8 PASS。"
+    },
+    {
+      "id": "TEST-172",
+      "result": "PASS",
+      "command": "npm run test:e2e",
+      "real_entry": true,
+      "date": "2026-09-12",
+      "notes": "真实入口全链路：从 ☰ 文档目录输入绝对路径添加 → 「已添加，共 1 份可读文档」→ 摘要行显示 1 个目录 → 提问后步骤流先后出现 search_documents 与 read_document（第二步标识由桩模型从第一步结果解析得出，非预置）→ 助手回复含文件原文中的 1200 kW。移除目录后摘要行回到未配置，磁盘文件内容原封不动。e2e 18 passed。"
     }
   ],
   "executed_commands": [
@@ -1176,6 +1201,12 @@
       "result": "PASS",
       "summary": "CR-20260912-sandbox-and-budget 真实入口：16 passed。ux-display-console ① 内新增三条断言——iframe 有 sandbox、不含 allow-same-origin、frame 内读 localStorage 被拒。",
       "date": "2026-09-12"
+    },
+    {
+      "command": "npx tsc --noEmit && npm test && node scripts/ui-contract.mjs && npm run test:e2e",
+      "result": "PASS",
+      "summary": "CR-20260912-local-documents: tsc 0；单测 614 用例 PASS（新增 26）；ui-contract 53/0；e2e 18 passed（新增 2）。package.json dependencies 未改动。",
+      "date": "2026-09-12"
     }
   ],
   "known_warnings": [
@@ -1264,6 +1295,11 @@
     },
     {
       "text": "CR-20260912-sandbox-and-budget closes the sandbox exit obligation, but prompt injection itself is NOT solved: an attacker-controlled page can still make the model repeat or act on its content. Only the last link — attacker HTML gaining this app's origin — is cut. Detection route for the injection path itself remains '发现不了'. Also: under allow-scripts a framed script can still make outbound requests; acceptable while insights carry no user-private data, and recorded so it is re-evaluated if that changes.",
+      "check": "manual",
+      "reviewed_at": "2026-09-12"
+    },
+    {
+      "text": "CR-20260912-local-documents opens a new trust surface: the model can read files under user-configured folders and that content enters the context. The boundary is REQ-NF-050 (realpath before containment, relative() not startsWith, symlinks skipped during traversal, no real paths in refusals) and the layer exports no writer at all. NOT solved by this CR: whether the model chooses to consult local documents first. That belongs to the identity-prompt layer (the user's agent.md), which is still a single English sentence with no working order in it — so today the capability is reachable but not prioritised.",
       "check": "manual",
       "reviewed_at": "2026-09-12"
     }
