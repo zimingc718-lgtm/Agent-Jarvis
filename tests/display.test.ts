@@ -4,6 +4,14 @@ import { join } from "node:path";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createStore, type Store } from "@/lib/store";
 
+/**
+ * These cases open real SQLite files. Under a full-suite run (64 files in parallel on
+ * this machine) a single case has been measured at ~2 s, and three of them have twice
+ * touched the 5 s default and failed as timeouts while passing in 2 s when run alone.
+ * The work is not slow, the machine is busy — so the budget moves, not the test.
+ */
+vi.setConfig({ testTimeout: 20_000 });
+
 const encryptionKey = "0123456789abcdef0123456789abcdef";
 
 // ---------------------------------------------------------------------------

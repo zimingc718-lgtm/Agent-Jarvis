@@ -17,6 +17,14 @@ import {
 import type { ChatMessage } from "@/lib/types";
 
 /**
+ * These cases open real SQLite files. Under a full-suite run (64 files in parallel on
+ * this machine) a single case has been measured at ~2 s, and three of them have twice
+ * touched the 5 s default and failed as timeouts while passing in 2 s when run alone.
+ * The work is not slow, the machine is busy — so the budget moves, not the test.
+ */
+vi.setConfig({ testTimeout: 20_000 });
+
+/**
  * TEST-079 / TEST-080 / TEST-081 — context compaction (REQ-F-042, REQ-NF-012, REQ-F-004).
  */
 
