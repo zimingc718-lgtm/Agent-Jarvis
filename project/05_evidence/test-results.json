@@ -1,11 +1,12 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-10T00:00:00Z",
+  "generated_at": "2026-09-12",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
     "project/03_modules/模块任务开发说明书.md",
     "project/04_tests/测试说明书.md",
+    "project/06_changes/CR-20260911-home-dashboard.md",
     "project/06_changes/CR-20260911-knowledge-skills.md",
     "project/06_changes/CR-20260911-scheduled-sweep.md",
     "project/06_changes/CR-20260911-board-add-entity.md",
@@ -45,7 +46,7 @@
     "project/06_changes/CR-20260911-context-compaction.md",
     "project/06_changes/CR-20260911-knowledge-base.md",
     "project/06_changes/CR-20260911-proactive-wake.md",
-    "project/06_changes/CR-20260911-home-dashboard.md"
+    "CR-20260912-local-production"
   ],
   "tests": [
     {
@@ -826,6 +827,14 @@
       "notes": "CR-20260911-scheduled-sweep；默认关时一轮不跑且不发请求；force 让用户按钮越过开关；每轮条数上限且如实报剩余；游标轮转，第二轮从上次停处接着走；采集失败不推进 checkedAt 但游标照样前进（坏源不卡队列）；到期按对象 checkedAt 判，未到期整轮不跑、时间推进后重新到期；从没采集过的对象排最前；无源时如实说明而非报无变化；设置边界拒绝越界；rotateAfter 纯函数两例；路由 401/默认值/越界 400 带理由/无源如实回；看板默认关并写明「还没有巡检过」、开关即保存、按钮带 force、不可见时不发起。10 + 4 + 2 PASS。"
     },
     {
+      "id": "TEST-140",
+      "result": "PASS",
+      "command": "npm test -- single-admin auth config-check && npm run build:local && npm run test:smoke",
+      "real_entry": true,
+      "date": "2026-09-12",
+      "notes": "单管理员模式：生产+回环+显式 id 放行；未设 id 401；真实域名/局域网/IPv6 公网/URL 缺失或非法一律拒绝；localhost.evil.com 前缀域名被拒；真实会话优先；测试旁路未被放宽（auth.test.ts 原三条同时通过）；describeAuthMode 四态正确。真实入口：build:local + start:local 后 / 与 /api/providers 与 /api/display 均 200，Provider 与 dev 一致，写路由往返净效果为零；config:check 退出码由 1 修正为 0。实测常驻内存 prod 126 MB 对 dev 1,564 MB。7+8 PASS。"
+    },
+    {
       "id": "TEST-133",
       "result": "PASS",
       "command": "npm test -- tool-budget",
@@ -1010,29 +1019,10 @@
       "summary": "CR-20260911-proactive-wake: 9 CP rows declare door + detection route; R1 PASS; R2–R4 MATRIX_WAIVED_STANDARD_TIER"
     },
     {
-      "command": "npx tsc --noEmit",
+      "command": "npm test && npm run test:ui-contract && npm run test:smoke && npm run build:local && npx tsc --noEmit",
       "result": "PASS",
-      "summary": "CR-20260911-home-dashboard: no type errors"
-    },
-    {
-      "command": "npm test",
-      "result": "PASS",
-      "summary": "CR-20260911-home-dashboard: 58 test files, 471 tests passed (含并行会话的新增用例)"
-    },
-    {
-      "command": "npm run test:ui-contract",
-      "result": "PASS",
-      "summary": "CR-20260911-home-dashboard: static tier 53/53"
-    },
-    {
-      "command": "python tools/governance.py check-specs && check-changes && check-doors && review r1..r4",
-      "result": "PASS",
-      "summary": "CR-20260911-home-dashboard: 10 CP rows declare door + detection route; specs canonical; R1 PASS"
-    },
-    {
-      "command": "npm test",
-      "result": "PASS",
-      "summary": "CR-20260911-home-dashboard 续做: 59 test files, 487 tests passed"
+      "summary": "CR-20260912-local-production: 单测 65 文件 / 556 用例 PASS；ui-contract 53 规则 0 FAIL 0 WARN；smoke PASS；build:local 成功；tsc 0。verify 仍红：本 CR 与并行 CR 的文件待合并前 snapshot。",
+      "date": "2026-09-12"
     }
   ],
   "known_warnings": [
@@ -1087,6 +1077,16 @@
       "detail": "CR-20260910-agent-tooling (CP-20, 单向门; R1 架构角色提出): REQ-F-034 read_url lets attacker-controlled web page content enter the model's context. That content can instruct the model to call save_insight(html), placing attacker-authored HTML into the SAME unsandboxed same-origin <iframe srcdoc> covered by skill-html-unsandboxed. DEC-015's accepted-risk premise was 'the user dragged in a poisoned skill folder' — a source the user chose and trusts. This CR widens the source to ANY web page reachable by search, so the premise no longer holds and the trust surface is strictly larger. Attack chain: user question -> web_search -> read_url on attacker page -> prompt injection in page body -> model calls save_insight ->攻击者 HTML renders with same-origin script access (localStorage, DELETE /api/providers/[id]). The user was shown this chain and the three options (A: make 联网 and save_insight mutually exclusive; B: sandbox the iframe first; C: accept) and chose C — explicitly accepting the expanded risk (2026-09-10, R1 人工终裁 item 3). Mitigation remains only the non-dismissible notice bar (REQ-F-025 ②). Detection route is '发现不了' for the injection path itself, which is why CP-20 is registered as a 单向门 per DEC-021 ②. Sandboxing the iframe stays a mandatory exit obligation for a future CR and is now higher priority than before this CR.",
       "check": "manual",
       "reviewed_at": "2026-09-10"
+    },
+    {
+      "text": "Web reading limits measured on 2026-09-11 and NOT fixed by this CR: opencompute.org, iea.org (Cloudflare cf-mitigated: challenge) and tesla.com (Akamai) stay unreadable. Full browser headers do not change the 403, and driving Chromium — headless AND headed — sits on the interstitial for 25s and stays 403. The tool now reports this honestly and suggests another source or pasting the text into the knowledge base. Fingerprint spoofing is an explicit non-goal (REQ-F-057 ⑤).",
+      "check": "manual",
+      "reviewed_at": "2026-09-11"
+    },
+    {
+      "text": "next dev's resident memory grows to GBs over a long session (measured 772 MB -> 3,806 MB), and under memory pressure its compile workers die: GET routes keep answering 200 while on-demand routes return 500. CR-20260912-local-production adds a production run path (126 MB) as the answer; the dev path itself is unchanged and will behave the same way if left running for hours.",
+      "check": "manual",
+      "reviewed_at": "2026-09-12"
     }
   ]
 }

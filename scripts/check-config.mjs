@@ -28,7 +28,17 @@ function isRealValue(value) {
  * required — they are reported as「暂缓」and do not affect the exit code. Only
  * JARVIS_SECRET_KEY stays required in every mode.
  */
-const SINGLE_ADMIN = isRealValue(process.env.JARVIS_TEST_USER_ID);
+/**
+ * Whether this instance runs without a login. Assigned AFTER `loadEnv()` — see the
+ * assignment below.
+ *
+ * It used to be a `const` computed here, at module top level, which is before
+ * `.env.local` is read. So a single-admin setup configured in the env file was never
+ * detected: the Google variables stayed "required", the preflight exited 1, and it told
+ * the user two things were missing that the mode does not need. Same family as the three
+ * "diagnostics that lie" traps CR-20260909-config-preflight already caught.
+ */
+let SINGLE_ADMIN = false;
 
 const AUTH_VARS = [
   {
@@ -38,7 +48,7 @@ const AUTH_VARS = [
   { name: "NEXTAUTH_SECRET", why: "NextAuth 会话签名密钥。", secret: true },
   { name: "GOOGLE_CLIENT_ID", why: "Google OAuth client ID（Google Cloud > Credentials > Web application）。" },
   { name: "GOOGLE_CLIENT_SECRET", why: "Google OAuth client secret。", secret: true },
-].map((v) => ({ ...v, deferred: SINGLE_ADMIN }));
+];
 
 const REQUIRED = [
   ...AUTH_VARS,
@@ -107,9 +117,20 @@ function parseEnvFile(path) {
 
 const fileValues = parseEnvFile(envFile);
 
+// Now that `.env.local` is loaded, we can finally tell which mode this instance runs in.
+// Either switch means "no login on this machine", so Google's credentials are not required.
+SINGLE_ADMIN =
+  isRealValue(process.env.JARVIS_TEST_USER_ID) || isRealValue(process.env.JARVIS_SINGLE_ADMIN_ID);
+const AUTH_VAR_NAMES = new Set(AUTH_VARS.map((v) => v.name));
+
 const results = [
-  ...REQUIRED.map((v) => ({ ...v, required: !v.deferred })),
-  ...OPTIONAL.map((v) => ({ ...v, required: false })),
+  // `deferred` means "this mode does not need it" and prints as 暂缓; optional variables
+  // are simply not required and keep their own 未设 label.
+  ...REQUIRED.map((v) => {
+    const deferred = SINGLE_ADMIN && AUTH_VAR_NAMES.has(v.name);
+    return { ...v, deferred, required: !deferred };
+  }),
+  ...OPTIONAL.map((v) => ({ ...v, deferred: false, required: false })),
 ].map((v) => {
   const raw = process.env[v.name];
   const ok = isRealValue(raw);
@@ -190,8 +211,43 @@ if (shadowed.length > 0) {
 if (isRealValue(process.env.JARVIS_TEST_USER_ID)) {
   process.stdout.write(
     `\n  ${Y}注意${X} JARVIS_TEST_USER_ID=${process.env.JARVIS_TEST_USER_ID} 已设置 —— 它会绕过登录，\n` +
-      `       验证真实 Google 登录时必须取消设置，否则看不出 OAuth 是否真的通了。\n`
+      `       验证真实 Google 登录时必须取消设置，否则看不出 OAuth 是否真的通了。\n` +
+      `       ${D}它只在非生产生效；npm run start:local 走生产构建，靠 JARVIS_SINGLE_ADMIN_ID。${X}\n`
   );
+}
+
+// CR-20260912-local-production: the production build ignores JARVIS_TEST_USER_ID, so a
+// user who set only that one gets a 401 on every API call with nothing on screen saying
+// why. Report the state here, before they run into it.
+{
+  const adminId = process.env.JARVIS_SINGLE_ADMIN_ID?.trim();
+  const authUrl = process.env.NEXTAUTH_URL?.trim();
+  let loopback = false;
+  if (authUrl) {
+    try {
+      const host = new URL(authUrl).hostname.toLowerCase();
+      loopback = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(host);
+    } catch {
+      loopback = false;
+    }
+  }
+  if (isRealValue(adminId) && loopback) {
+    process.stdout.write(
+      `\n  ${G}单管理员模式（生产构建）就绪${X} JARVIS_SINGLE_ADMIN_ID=${adminId}\n` +
+        `       ${D}npm run build:local && npm run start:local —— 内存约为 next dev 的 1/20。${X}\n`
+    );
+    const testId = process.env.JARVIS_TEST_USER_ID?.trim();
+    if (isRealValue(testId) && testId !== adminId) {
+      process.stdout.write(
+        `  ${Y}警告${X} 与 JARVIS_TEST_USER_ID=${testId} 不一致 —— dev 与生产会看到两套不同的数据。请统一。\n`
+      );
+    }
+  } else if (isRealValue(adminId) && !loopback) {
+    process.stdout.write(
+      `\n  ${Y}单管理员模式已被拒绝${X} NEXTAUTH_URL=${authUrl ?? "(未设置)"} 不是回环地址。\n` +
+        `       ${D}免登录模式只允许开在本机；改回 http://localhost:<port>，或配置真实登录。${X}\n`
+    );
+  }
 }
 
 if (missingRequired.length === 0) {
