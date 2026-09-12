@@ -53,7 +53,8 @@
     "test:visual": "vitest run tests/visual.test.ts",
     "test:watch": "vitest",
     "test:zip": "vitest run tests/zip.test.ts",
-    "verify:all": "npm run test:typecheck && npm run test && npm run test:governance && npm run test:visual && npm run test:ui-contract && npm run test:smoke && npm run governance:p3"
+    "verify:all": "npm run test:typecheck && npm run test && npm run test:governance && npm run test:visual && npm run test:ui-contract && npm run test:smoke && npm run governance:p3",
+    "serve:local": "node scripts/serve-local.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "1.1.15",

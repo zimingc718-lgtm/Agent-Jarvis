@@ -119,9 +119,55 @@ export function buildStablePrefix(input: StablePrefixInput): string {
   return [input.identity, input.skillCatalogue, input.toolCatalogue].filter(Boolean).join("\n\n");
 }
 
-/** Everything that legitimately changes turn to turn goes after the prefix. */
-export function buildVolatileSuffix(input: { displayState?: string | null }): string {
-  return input.displayState ? `当前展示屏：${input.displayState}` : "";
+/**
+ * Everything that legitimately changes turn to turn goes after the prefix.
+ *
+ * `runtime` is here rather than in the identity for two reasons (REQ-F-120 ④, DEC-100 ③).
+ * It genuinely varies: the user can switch provider or model between turns, and REQ-F-040
+ * can fall back to another provider mid-conversation. And putting it in the stable prefix
+ * would rewrite that prefix on every such switch, throwing away the cache the prefix exists
+ * to protect (REQ-NF-008 ①). It is not a clock — it changes only when the runtime does — so
+ * it costs nothing on the turns where nothing changed.
+ *
+ * Why it exists at all: asked「现在你知道接了什么模型了吗」the assistant answered「我没有
+ * 自检接口，拿不到当前接入的是哪家模型」. That was true — nothing in the prompt said.
+ */
+export function buildVolatileSuffix(input: {
+  displayState?: string | null;
+  runtime?: string | null;
+}): string {
+  const lines: string[] = [];
+  if (input.runtime) {
+    lines.push(input.runtime);
+  }
+  if (input.displayState) {
+    lines.push(`当前展示屏：${input.displayState}`);
+  }
+  return lines.join("\n");
+}
+
+/**
+ * One line telling the model what it is actually running on (REQ-F-120 ④).
+ *
+ * Names the provider row the user configured as well as the model id, because「用的是
+ * DeepSeek 吗」and「用的是我配的那个 DeepSeek 吗」are different questions and only the
+ * second one is answerable from the row.
+ */
+export function describeRuntime(input: {
+  providerName: string;
+  kind: ProviderKind;
+  model: string;
+  contextWindow: number;
+}): string {
+  const kindLabel: Record<ProviderKind, string> = {
+    openai: "OpenAI 兼容",
+    deepseek: "DeepSeek",
+    local: "本地 / 自建兼容端点",
+  };
+  return (
+    `当前运行时：Provider「${input.providerName}」（${kindLabel[input.kind]}），模型 ${input.model}，` +
+    `上下文窗口约 ${input.contextWindow} tokens。用户问起接的是什么模型时，据此回答，不要说无法得知。`
+  );
 }
 
 export type TurnMessage = ChatMessage & {

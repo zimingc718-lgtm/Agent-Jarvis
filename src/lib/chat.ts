@@ -12,6 +12,7 @@ import {
   BUDGET_SHARES,
   buildStablePrefix,
   buildVolatileSuffix,
+  describeRuntime,
   contextWindowFor,
   ContextOverflowError,
   planCompaction,
@@ -211,7 +212,12 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     skillCatalogue: catalogue.text,
     toolCatalogue: toolsUsable ? registry.catalogueFor(toolContext, toolFit) : "",
   });
-  const volatileSuffix = buildVolatileSuffix({ displayState: describeDisplay() });
+  const volatileSuffix = buildVolatileSuffix({
+    // REQ-F-120 ④: without this the model has no way to know which provider or model it is
+    // running on, and said so when asked.
+    runtime: describeRuntime({ providerName: provider.name, kind: provider.kind, model, contextWindow: window }),
+    displayState: describeDisplay(),
+  });
 
   const { messages: history, lastRowIdByTurn } = loadHistory(input.store, conversationId);
   input.store.appendMessage({ conversationId, role: "user", content: message, status: "complete" });

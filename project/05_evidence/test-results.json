@@ -52,7 +52,8 @@
     "CR-20260912-latency-and-report-layout",
     "CR-20260912-stage-reach",
     "CR-20260912-sandbox-and-budget",
-    "CR-20260912-local-documents"
+    "CR-20260912-local-documents",
+    "CR-20260912-runtime-visibility"
   ],
   "tests": [
     {
@@ -122,7 +123,9 @@
       "id": "TEST-011",
       "result": "PASS",
       "command": "npm run test:floating-chat",
-      "evidence": "CR-20260909: bottom input default + expand; separate assistant bubbles per turn; conversationId reused across turns. No provider <select>/chip/model field; the chat request carries no providerId/model (server resolves by priority)."
+      "evidence": "CR-20260909: bottom input default + expand; separate assistant bubbles per turn; conversationId reused across turns. No provider <select>/chip/model field; the chat request carries no providerId/model (server resolves by priority).",
+      "notes": " CR-20260912-runtime-visibility 更新：上下文序列由 4 条变 5 条（每轮多一条易变后缀），并新增断言要求它位于稳定前缀之后。",
+      "date": "2026-09-12"
     },
     {
       "id": "TEST-012",
@@ -991,6 +994,30 @@
       "real_entry": true,
       "date": "2026-09-12",
       "notes": "真实入口全链路：从 ☰ 文档目录输入绝对路径添加 → 「已添加，共 1 份可读文档」→ 摘要行显示 1 个目录 → 提问后步骤流先后出现 search_documents 与 read_document（第二步标识由桩模型从第一步结果解析得出，非预置）→ 助手回复含文件原文中的 1200 kW。移除目录后摘要行回到未配置，磁盘文件内容原封不动。e2e 18 passed。"
+    },
+    {
+      "id": "TEST-180",
+      "result": "PASS",
+      "command": "npm test -- runtime-visibility",
+      "real_entry": false,
+      "date": "2026-09-12",
+      "notes": "失败可读与运行时自述：服务不在/仍在两种情形文案与下一步各不相同且互斥断言；探测自身抛错按服务不在处理；服务端错误原样传达且不发探测；只认 TypeError；运行时含 Provider 名/类型/模型/窗口与「不要说无法得知」；排在展示屏之前；无运行时时后缀退化原样。9 PASS。"
+    },
+    {
+      "id": "TEST-181",
+      "result": "PASS",
+      "command": "npm test -- runtime-visibility",
+      "real_entry": false,
+      "date": "2026-09-12",
+      "notes": "服务看护判定：长命退出→重启并清零计数；连续短命→give-up 且说明是起不来；退避递增末档封顶；脚本内常量副本与策略模块比对防漂移。4 PASS。"
+    },
+    {
+      "id": "TEST-182",
+      "result": "PASS",
+      "command": "npm run test:e2e",
+      "real_entry": true,
+      "date": "2026-09-12",
+      "notes": "真实入口：浏览器内配置 Provider 并真实发送一次，对桩 Provider 实际收到的 messages 断言——存在含「当前运行时」的 system 消息，内含 Provider 名 MockRuntime 与模型 id mock-model-x，且位于身份提示之后。e2e 19 passed。"
     }
   ],
   "executed_commands": [
@@ -1207,6 +1234,12 @@
       "result": "PASS",
       "summary": "CR-20260912-local-documents: tsc 0；单测 614 用例 PASS（新增 26）；ui-contract 53/0；e2e 18 passed（新增 2）。package.json dependencies 未改动。",
       "date": "2026-09-12"
+    },
+    {
+      "command": "npx tsc --noEmit && npm test && node scripts/ui-contract.mjs && npm run test:e2e",
+      "result": "PASS",
+      "summary": "CR-20260912-runtime-visibility: tsc 0；单测 627 用例 PASS（新增 13）；ui-contract 53/0；e2e 19 passed（新增 1）。",
+      "date": "2026-09-12"
     }
   ],
   "known_warnings": [
@@ -1300,6 +1333,11 @@
     },
     {
       "text": "CR-20260912-local-documents opens a new trust surface: the model can read files under user-configured folders and that content enters the context. The boundary is REQ-NF-050 (realpath before containment, relative() not startsWith, symlinks skipped during traversal, no real paths in refusals) and the layer exports no writer at all. NOT solved by this CR: whether the model chooses to consult local documents first. That belongs to the identity-prompt layer (the user's agent.md), which is still a single English sentence with no working order in it — so today the capability is reachable but not prioritised.",
+      "check": "manual",
+      "reviewed_at": "2026-09-12"
+    },
+    {
+      "text": "Intermittent 'Failed to fetch' was investigated on 2026-09-12 and traced to the machine running at ~90% memory, not to a defect: 600 requests succeeded with zero failures, 1,200 requests moved RSS by 1 MB, and there are no crash records. The largest single consumer on that machine was Claude Code itself (17 processes, ~2 GB) — the investigator, not Jarvis (656 MB). CR-20260912-runtime-visibility makes the consequence visible and recoverable; it does NOT fix the cause. Freeing memory remains the highest-value step and needs no code change.",
       "check": "manual",
       "reviewed_at": "2026-09-12"
     }
