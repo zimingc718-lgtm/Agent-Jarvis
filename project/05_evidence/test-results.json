@@ -5,7 +5,8 @@
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
     "project/03_modules/模块任务开发说明书.md",
-    "project/04_tests/测试说明书.md"
+    "project/04_tests/测试说明书.md",
+    "project/06_changes/CR-20260911-knowledge-skills.md"
   ],
   "change_records": [
     "project/06_changes/CR-20260908-floating-llm-chat.md",
@@ -799,6 +800,14 @@
       "real_entry": false,
       "date": "2026-09-11",
       "notes": "CR-20260911-home-dashboard 续做第三步；引文在条目里且值在引文里→通过，来源同域直接生效并留下链接+条目内定位的证据；引文不在条目里→拒绝，不写也不入队；引文属实但值不在其中→同样拒绝（句子真、数字飘）；换行与多空格不算不一致；条目来源不在已登记源内→只进待采纳区；一次调用里逐条判定互不牵连；对象/条目/原始链接缺一即整次失败；批量与引文长度上限；工具层全部不通过时 ok:false 且理由逐条可见。9 PASS。"
+    },
+    {
+      "id": "TEST-128",
+      "result": "PASS",
+      "command": "npm test -- skills-library",
+      "real_entry": false,
+      "date": "2026-09-11",
+      "notes": "CR-20260911-knowledge-skills；六本技能齐备且纪律类在列；每本 SKILL.md 前置块可被登记解析、name/description 非空且非占位符；文件夹名 slug 化后非空；每本注入在单轮 32KB 预算内且不触发截断；src/ 内无任何代码引用仓库 skills/（运行时技能只在 .data/skills）。不断言模型是否遵守——那是真实入口。5 PASS。"
     }
   ],
   "executed_commands": [
