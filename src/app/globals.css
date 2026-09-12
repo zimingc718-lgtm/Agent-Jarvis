@@ -122,6 +122,58 @@
 
 
 /*
+  The opening animation on the display screen (CR-20260912-display-stage).
+
+  Two elements, both decorative and both `aria-hidden`: a line that sweeps down the
+  screen, and a faint grid that breathes. CSS only — no canvas, no library, nothing
+  still painting once the board takes over, because this runs for at most three seconds
+  and then the element is gone.
+
+  The global reduced-motion rule below already neutralises both; the markup additionally
+  hides the sweep outright, so a user who asked for no motion gets a still title screen
+  rather than a frozen animation frame.
+*/
+@keyframes jarvis-scan {
+  0% {
+    transform: translateY(12vh);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(88vh);
+    opacity: 0;
+  }
+}
+
+@keyframes jarvis-breathe {
+  0%,
+  100% {
+    opacity: 0.04;
+  }
+  50% {
+    opacity: 0.09;
+  }
+}
+
+.display-screen__scan {
+  animation: jarvis-scan 2.6s ease-in-out infinite;
+  box-shadow: 0 0 12px 1px hsl(var(--primary) / 0.35);
+}
+
+.display-screen__grid {
+  animation: jarvis-breathe 4s ease-in-out infinite;
+  background-image:
+    linear-gradient(to right, hsl(var(--foreground) / 0.6) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--foreground) / 0.6) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/*
   The one cross-component rule left: users who ask for reduced motion get it
   globally, including inside primitives that animate their own open/close.
 */

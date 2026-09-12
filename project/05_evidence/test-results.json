@@ -12,7 +12,8 @@
     "project/06_changes/CR-20260911-skill-doc-preserved.md",
     "project/06_changes/CR-20260912-technical-spine.md",
     "project/06_changes/CR-20260912-tool-budget.md",
-    "project/06_changes/CR-20260912-entity-pending.md"
+    "project/06_changes/CR-20260912-entity-pending.md",
+    "project/06_changes/CR-20260912-display-stage.md"
   ],
   "change_records": [
     "project/06_changes/CR-20260908-floating-llm-chat.md",
@@ -831,6 +832,14 @@
       "real_entry": false,
       "date": "2026-09-12",
       "notes": "CR-20260912-tool-budget；预算够时全装且保持注册顺序；不够时按优先级丢（管理类先走、读取类最后）；被丢掉的在名录里被点名；预算装不下一个时仍装一个；未声明优先级按 normal；不可用工具不占预算；真实工具集 8k 下 590 token 落进 655 子预算且四个读取工具幸存，128k 下 18 个全装。7 PASS。"
+    },
+    {
+      "id": "TEST-135",
+      "result": "PASS",
+      "command": "npm test -- display-stage",
+      "real_entry": false,
+      "date": "2026-09-12",
+      "notes": "CR-20260912-display-stage；开场是标题屏且动画对读屏隐藏；没人动 3 秒自动切入看板；指针到达即切；焦点落进控制台即切（刻意不监听按键，UI 契约 LB-09 挡下了 keydown）；一次会话只播一次；洞察压过开场；看板态挂的是真组件且「问 Jarvis」只派事件。7 PASS。"
     }
   ],
   "executed_commands": [

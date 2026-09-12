@@ -31,6 +31,14 @@ export const USAGE_CHANGED_EVENT = "jarvis:usage-changed";
 export const KNOWLEDGE_CHANGED_EVENT = "jarvis:knowledge-changed";
 
 /**
+ * The board hands a half-written question to the chat (CR-20260912-display-stage).
+ * `detail` is `{ text }`. The board never runs anything itself — a card's 「问 Jarvis」
+ * fills the console and stops there, which is what keeps the board from growing into a
+ * second application.
+ */
+export const ASK_JARVIS_EVENT = "jarvis:ask";
+
+/**
  * Proactive wake-up (CR-20260911-proactive-wake). `WAKE_CHANGED_EVENT` tells the chat
  * that the schedule changed in the ☰ menu; `WAKE_NOTICE_EVENT` carries a reminder the
  * menu's 「现在唤醒」 produced, so the chat can show it — `detail` is `{ text, messageId }`.

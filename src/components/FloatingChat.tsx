@@ -3,6 +3,7 @@
 import { ChangeEvent, DragEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import {
   DISPLAY_CHANGED_EVENT,
+  ASK_JARVIS_EVENT,
   KNOWLEDGE_CHANGED_EVENT,
   SKILLS_CHANGED_EVENT,
   USAGE_CHANGED_EVENT,
@@ -728,6 +729,24 @@ export function FloatingChat({
     setErrorLine(null);
     endSession();
   }
+
+  /**
+   * The board hands over a half-written question (CR-20260912-display-stage). It fills
+   * the console and stops — sending is still the user's move, because the board cannot
+   * know whether the question is finished.
+   */
+  useEffect(() => {
+    const onAsk = (event: Event) => {
+      const text = (event as CustomEvent<{ text?: string }>).detail?.text;
+      if (!text) {
+        return;
+      }
+      setInput((current) => (current.trim() ? `${current.trim()} ${text}` : text));
+      setUserCollapsed(false);
+    };
+    window.addEventListener(ASK_JARVIS_EVENT, onAsk);
+    return () => window.removeEventListener(ASK_JARVIS_EVENT, onAsk);
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
