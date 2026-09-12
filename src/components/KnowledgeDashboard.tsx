@@ -393,19 +393,49 @@ export function KnowledgeDashboard({
     );
   };
 
-  const lane = (title: string, hint: string, rows: DashboardEntity[], grid: boolean) => (
+  const lane = (title: string, hint: string, rows: DashboardEntity[], grid: boolean, kind: DashboardEntity["kind"]) => (
     <section aria-label={title} className="knowledge-dashboard__lane flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
         <span className="text-xs text-muted-foreground">{hint}</span>
       </div>
       {rows.length === 0 ? (
-        <p className="text-xs text-muted-foreground">还没有{title}。在对话里说一句，让 Jarvis 提议一个。</p>
+        // The chat is one way in, not the only one: proposing through the model needs a
+        // configured provider, and an empty board should not depend on that.
+        <p className="text-xs text-muted-foreground">还没有{title}。可以在下面直接添加，也可以在对话里让 Jarvis 提议。</p>
       ) : (
         <ul className={grid ? "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" : "flex flex-col gap-2"}>
           {rows.map(card)}
         </ul>
       )}
+      {/* The kind comes from the lane, so there is nothing to choose and nothing to get wrong. */}
+      <form
+        className="knowledge-dashboard__add flex items-center gap-2 text-xs"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const input = event.currentTarget.elements.namedItem("title") as HTMLInputElement | null;
+          const value = input?.value.trim();
+          if (!value) {
+            return;
+          }
+          void run(`new:${kind}`, `已添加「${value}」。`, "POST", "/api/entities", { kind, title: value });
+          input!.value = "";
+        }}
+      >
+        <input
+          aria-label={`新增${title}`}
+          className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1"
+          name="title"
+          placeholder={`新增${title}，填名称`}
+        />
+        <button
+          className="shrink-0 rounded px-1 underline underline-offset-2 disabled:opacity-50"
+          disabled={busy === `new:${kind}`}
+          type="submit"
+        >
+          添加
+        </button>
+      </form>
     </section>
   );
 
@@ -544,11 +574,11 @@ export function KnowledgeDashboard({
         </section>
       ) : null}
 
-      {lane("友商", "顺序固定，不按新鲜度重排", competitors, true)}
+      {lane("友商", "顺序固定，不按新鲜度重排", competitors, true, "competitor")}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {lane("规则与准入方", "状态是容量与窗口", authorities, false)}
-        {lane("客户", "容量与其技术发布", customers, false)}
+        {lane("规则与准入方", "状态是容量与窗口", authorities, false, "authority")}
+        {lane("客户", "容量与其技术发布", customers, false, "customer")}
       </div>
 
       <section aria-label="知识库总览" className="knowledge-dashboard__library flex flex-col gap-2">

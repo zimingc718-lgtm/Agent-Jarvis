@@ -7,7 +7,8 @@
     "project/03_modules/模块任务开发说明书.md",
     "project/04_tests/测试说明书.md",
     "project/06_changes/CR-20260911-knowledge-skills.md",
-    "project/06_changes/CR-20260911-scheduled-sweep.md"
+    "project/06_changes/CR-20260911-scheduled-sweep.md",
+    "project/06_changes/CR-20260911-board-add-entity.md"
   ],
   "change_records": [
     "project/06_changes/CR-20260908-floating-llm-chat.md",
@@ -768,7 +769,7 @@
       "command": "npm test -- knowledge-dashboard",
       "real_entry": false,
       "date": "2026-09-11",
-      "notes": "CR-20260911-home-dashboard；三条泳道与固定顺序提示；每张卡同时给出内容变化与采集健康度（未配置源、解析失败各自可见）；汇总条三个计数；点开卡片即 PATCH seen 且 aria-expanded 变化；展开是源管理并可增删源、无源时明说安静不代表事实；问 Jarvis 交给对话框；待采纳区两类各走各的路由；总览缺口排序与库内篇数；空看板不假装有数据。"
+      "notes": "CR-20260911-home-dashboard；三条泳道与固定顺序提示；每张卡同时给出内容变化与采集健康度（未配置源、解析失败各自可见）；汇总条三个计数；点开卡片即 PATCH seen 且 aria-expanded 变化；展开是源管理并可增删源、无源时明说安静不代表事实；问 Jarvis 交给对话框；待采纳区两类各走各的路由；总览缺口排序与库内篇数；空看板不假装有数据。 CR-20260911-board-add-entity 小改：⑫三条泳道各自可直接新增对象，kind 由泳道决定；⑬空名不发请求；⑨空态文案改为「可以在下面直接添加，也可以在对话里让 Jarvis 提议」。13 PASS。"
     },
     {
       "id": "TEST-124",

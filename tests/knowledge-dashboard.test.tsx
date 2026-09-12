@@ -152,7 +152,9 @@ describe("KnowledgeDashboard", () => {
         act={noop}
       />
     );
-    await waitFor(() => expect(screen.getByText("还没有友商。在对话里说一句，让 Jarvis 提议一个。")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("还没有友商。可以在下面直接添加，也可以在对话里让 Jarvis 提议。")).toBeInTheDocument()
+    );
     expect(screen.getByText(/还没有查不到的检索/)).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "待采纳的提议" })).not.toBeInTheDocument();
   });
@@ -206,5 +208,47 @@ describe("KnowledgeDashboard", () => {
     await screen.findByRole("region", { name: "定时巡检" });
     await waitFor(() => expect(screen.getByRole("region", { name: "定时巡检" })).toBeInTheDocument());
     expect(runSweepRound).not.toHaveBeenCalled();
+  });
+
+  it("⑫ 三条泳道各自能直接新增对象，kind 由泳道决定，不需要用户选", async () => {
+    const act = vi.fn(async () => ({ ok: true }));
+    render(
+      <KnowledgeDashboard
+        act={act}
+        isVisible={() => false}
+        loadBoard={async () => board}
+        loadOverview={async () => overview}
+        loadSweep={async () => ({ enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" })}
+      />
+    );
+    const lane = await screen.findByRole("region", { name: "客户" });
+    const input = within(lane).getByLabelText("新增客户");
+    fireEvent.change(input, { target: { value: "客户 D" } });
+    fireEvent.click(within(lane).getByRole("button", { name: "添加" }));
+    await waitFor(() => expect(act).toHaveBeenCalledWith("POST", "/api/entities", { kind: "customer", title: "客户 D" }));
+
+    // The model's path still goes through the pending queue; this one is the user's own
+    // action, so it lands directly — the same split the API already makes.
+    const rules = screen.getByRole("region", { name: "规则与准入方" });
+    fireEvent.change(within(rules).getByLabelText("新增规则与准入方"), { target: { value: "TSO B" } });
+    fireEvent.click(within(rules).getByRole("button", { name: "添加" }));
+    await waitFor(() => expect(act).toHaveBeenLastCalledWith("POST", "/api/entities", { kind: "authority", title: "TSO B" }));
+  });
+
+  it("⑬ 空名不发请求", async () => {
+    const act = vi.fn(async () => ({ ok: true }));
+    render(
+      <KnowledgeDashboard
+        act={act}
+        isVisible={() => false}
+        loadBoard={async () => ({ entities: [], pending: [], proposals: [] })}
+        loadOverview={async () => ({ total: 0, byEntity: {}, byType: {}, unowned: 0, misses: [] })}
+        loadSweep={async () => ({ enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" })}
+      />
+    );
+    const lane = await screen.findByRole("region", { name: "友商" });
+    fireEvent.click(within(lane).getByRole("button", { name: "添加" }));
+    await waitFor(() => expect(screen.getByRole("region", { name: "友商" })).toBeInTheDocument());
+    expect(act).not.toHaveBeenCalled();
   });
 });
