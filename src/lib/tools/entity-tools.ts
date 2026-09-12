@@ -5,12 +5,15 @@ import {
   isEntityKind,
   KIND_LABEL,
   HEALTH_LABEL,
+  isReservedParamName,
   listEntities,
+  MAX_PARAM_NAME_CHARS,
+  normalizeParamName,
+  PARAM_STATE_LABEL,
   readEntity,
   saveEntity,
   UPDATABLE_FIELDS,
   type EntityKind,
-  type UpdatableField,
 } from "../entities";
 import { fetchSource } from "../sources";
 import { truncateToTokens } from "./budget";
@@ -65,6 +68,8 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
         const bits = [
           `${entity.name}｜${describe(entity.kind)}｜${entity.title}`,
           entity.summary,
+          // Requirements we do not meet are the reason to look at this row at all.
+          entity.params.length > 0 ? `参数 ${entity.params.length} 条${entity.unmet > 0 ? `，未对上 ${entity.unmet} 条` : ""}` : "",
           entity.capacity ? `容量 ${entity.capacity}` : "",
           entity.nextDate ? `下一步 ${entity.nextLabel || "里程碑"} ${entity.nextDate}` : "",
           entity.unread ? `未读变更：${entity.change}` : "",
@@ -81,7 +86,7 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
 
   const read: ToolDescriptor = {
     name: "read_entity",
-    description: "读取一个跟踪对象的全部内容：定位、容量、下一步、最新变更、采集源、证据与笔记。参数 name。",
+    description: "读取一个跟踪对象的全部内容：技术参数与我方是否满足、定位、下一步、最新变更、采集源、证据与笔记。参数 name。",
     parameters: {
       type: "object",
       properties: { name: { type: "string", description: "对象名称，来自 list_entities" } },
@@ -100,6 +105,13 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
       const parts = [
         `# ${entity.title}（${describe(entity.kind)}）`,
         entity.summary,
+        // The parameters come first: they are what this board is for.
+        entity.params.length > 0
+          ? [
+              "技术参数：",
+              ...entity.params.map((param) => `- ${param.name} = ${param.value}（我方：${PARAM_STATE_LABEL[param.status]}）`),
+            ].join("\n")
+          : "技术参数：还没有登记",
         entity.capacity ? `容量：${entity.capacity}` : "",
         entity.nextDate ? `下一步：${entity.nextLabel || "里程碑"} ${entity.nextDate}` : "",
         entity.change ? `最新变更：${entity.change}（${entity.changeAt}）` : "最新变更：无",
@@ -163,7 +175,7 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
       type: "object",
       properties: {
         name: { type: "string", description: "对象名称" },
-        field: { type: "string", description: UPDATABLE_FIELDS.join(" / ") },
+        field: { type: "string", description: `${UPDATABLE_FIELDS.join(" / ")}，或任意技术参数名（如 LVRT 持续时间）` },
         value: { type: "string", description: "新的值" },
         source_url: { type: "string", description: "该值的出处链接" },
         locator: { type: "string", description: "出处定位，如第 3 节表 2" },
@@ -181,8 +193,19 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
       if (!name || !field || !value || !sourceUrl) {
         return { ok: false, content: "name、field、value、source_url 都是必填。没有来源的值不写入。", summary: "参数缺失" };
       }
-      if (!(UPDATABLE_FIELDS as readonly string[]).includes(field)) {
-        return { ok: false, content: `字段「${field}」不可更新。可用：${UPDATABLE_FIELDS.join("、")}。`, summary: "字段不可更新" };
+      // Outside the seven housekeeping fields, a name is a technical parameter
+      // (CR-20260912-technical-spine). Status is never set here: whether WE meet a
+      // requirement is not in anyone's source page.
+      const isField = (UPDATABLE_FIELDS as readonly string[]).includes(field);
+      if (!isField && isReservedParamName(field)) {
+        return {
+          ok: false,
+          content: `「${field}」是对象自身的结构字段，不能当作技术参数。可用字段：${UPDATABLE_FIELDS.join("、")}；其余名字一律按技术参数登记。`,
+          summary: "字段不可更新",
+        };
+      }
+      if (!isField && normalizeParamName(field) !== field) {
+        return { ok: false, content: `参数名「${field}」不合法：需单行、不含「|」、不超过 ${MAX_PARAM_NAME_CHARS} 字。`, summary: "参数名不合法" };
       }
       const entity = await readEntity(name, root);
       if (!entity) {
@@ -207,7 +230,7 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
 
       const { proposeEntityUpdate } = await import("../entity-proposals");
       const record = await proposeEntityUpdate(
-        { name, field: field as UpdatableField, value, evidence: { url: sourceUrl, at: "", locator } },
+        { name, kind: isField ? "field" : "param", field, value, evidence: { url: sourceUrl, at: "", locator } },
         { root, autoApply: trusted }
       );
 

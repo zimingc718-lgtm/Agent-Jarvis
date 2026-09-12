@@ -1,6 +1,6 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
-import { ENTITIES_ROOT, EntityError, updateEntity, type EntitySummary, type UpdatableField } from "./entities";
+import { ENTITIES_ROOT, EntityError, setParam, updateEntity, type EntitySummary, type UpdatableField } from "./entities";
 
 /**
  * The approval queue for field changes (EV-2026-09-11-home-dashboard §6).
@@ -21,7 +21,14 @@ const MAX_PROPOSALS = 200;
 export type EntityUpdateProposal = {
   id: string;
   entity: string;
-  field: UpdatableField;
+  /**
+   * `field` writes one of the seven housekeeping fields; `param` writes a named
+   * technical requirement (CR-20260912-technical-spine). Records written before that CR
+   * carry no `kind` and are read as `field` — the same tolerance the entity files get.
+   */
+  kind: "field" | "param";
+  /** An `UpdatableField` when `kind` is `field`, otherwise the parameter's name. */
+  field: string;
   value: string;
   url: string;
   locator: string;
@@ -49,10 +56,29 @@ function isSafeId(id: string): boolean {
 
 export type ProposeInput = {
   name: string;
-  field: UpdatableField;
+  /** Omitted means a housekeeping field, for callers written before the spine change. */
+  kind?: "field" | "param";
+  /** An `UpdatableField`, or a parameter name when `kind` is `param`. */
+  field: UpdatableField | string;
   value: string;
   evidence: { url: string; at: string; locator: string };
 };
+
+/** One write, routed by kind. Both paths take the same evidence; neither sets a status. */
+async function applyProposal(
+  proposal: Pick<EntityUpdateProposal, "entity" | "kind" | "field" | "value" | "url" | "locator">,
+  at: string,
+  root: string
+): Promise<EntitySummary | null> {
+  const evidence = { url: proposal.url, at, locator: proposal.locator };
+  return proposal.kind === "param"
+    ? setParam(proposal.entity, { name: proposal.field, value: proposal.value, evidence, now: () => new Date(at) }, root)
+    : updateEntity(
+        proposal.entity,
+        { field: proposal.field as UpdatableField, value: proposal.value, evidence, now: () => new Date(at) },
+        root
+      );
+}
 
 export async function proposeEntityUpdate(
   input: ProposeInput,
@@ -61,8 +87,14 @@ export async function proposeEntityUpdate(
   const root = opts.root ?? ENTITIES_ROOT;
   const createdAt = (opts.now ?? (() => new Date()))().toISOString();
   const proposal: EntityUpdateProposal = {
-    id: `${input.name}-${input.field}-${createdAt.replace(/[^0-9]/g, "").slice(0, 14)}`.toLowerCase().replace(/[^0-9a-z-]/g, "-"),
+    // A parameter name may be Chinese; the id keeps only characters a filename likes,
+    // and the timestamp keeps two proposals for the same parameter apart.
+    id: `${input.name}-${input.field}-${createdAt.replace(/[^0-9]/g, "").slice(0, 14)}`
+      .toLowerCase()
+      .replace(/[^0-9a-z-]/g, "-")
+      .replace(/-{2,}/g, "-"),
     entity: input.name,
+    kind: input.kind ?? "field",
     field: input.field,
     value: input.value,
     url: input.evidence.url,
@@ -71,11 +103,7 @@ export async function proposeEntityUpdate(
   };
 
   if (opts.autoApply) {
-    const entity = await updateEntity(
-      input.name,
-      { field: input.field, value: input.value, evidence: { url: input.evidence.url, at: createdAt, locator: input.evidence.locator }, now: () => new Date(createdAt) },
-      root
-    );
+    const entity = await applyProposal(proposal, createdAt, root);
     return { applied: true, proposal, entity };
   }
 
@@ -127,9 +155,9 @@ export async function adoptProposal(id: string, root: string = ENTITIES_ROOT): P
   } catch {
     return null;
   }
-  const entity = await updateEntity(
-    proposal.entity,
-    { field: proposal.field, value: proposal.value, evidence: { url: proposal.url, at: proposal.createdAt, locator: proposal.locator } },
+  const entity = await applyProposal(
+    { ...proposal, kind: proposal.kind === "param" ? "param" : "field" },
+    proposal.createdAt,
     root
   );
   // Drop the record either way: a proposal pointing at a deleted entity is not something

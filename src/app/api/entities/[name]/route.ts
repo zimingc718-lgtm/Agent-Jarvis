@@ -7,6 +7,11 @@ import { fetchSource } from "@/lib/sources";
 import {
   addSource,
   deleteEntity,
+  isParamState,
+  isReservedParamName,
+  normalizeParamName,
+  removeParam,
+  setParam,
   ENTITIES_ROOT,
   EntityError,
   markSeen,
@@ -72,6 +77,52 @@ export async function PATCH(request: Request, { params }: Params) {
         return NextResponse.json({ message: "缺少 url。" }, { status: 400 });
       }
       const entity = action === "addSource" ? await addSource(name, url, ENTITIES_ROOT) : await removeSource(name, url, ENTITIES_ROOT);
+      return entity
+        ? NextResponse.json({ ok: true, entity })
+        : NextResponse.json({ message: `没有名为「${name}」的跟踪对象。` }, { status: 404 });
+    }
+
+    // The board's spine: named technical parameters (CR-20260912-technical-spine).
+    // `status` is only ever set here, from a person's click — never by a tool.
+    if (action === "setParam" || action === "paramStatus" || action === "removeParam") {
+      const paramName = normalizeParamName(typeof body.param === "string" ? body.param : "");
+      if (!paramName) {
+        return NextResponse.json({ message: "缺少参数名。" }, { status: 400 });
+      }
+      if (isReservedParamName(paramName)) {
+        return NextResponse.json({ message: `「${paramName}」是对象自身的结构字段，不能当作技术参数。` }, { status: 400 });
+      }
+      if (action === "removeParam") {
+        const entity = await removeParam(name, paramName, ENTITIES_ROOT);
+        return entity
+          ? NextResponse.json({ ok: true, entity })
+          : NextResponse.json({ message: `没有名为「${name}」的跟踪对象。` }, { status: 404 });
+      }
+      const status = isParamState(body.status) ? body.status : undefined;
+      if (action === "paramStatus" && !status) {
+        return NextResponse.json({ message: "status 必须是 unknown、meets 或 unmet 之一。" }, { status: 400 });
+      }
+      const current = await readEntity(name, ENTITIES_ROOT);
+      if (!current) {
+        return NextResponse.json({ message: `没有名为「${name}」的跟踪对象。` }, { status: 404 });
+      }
+      // A status-only change keeps the value it already had; `setParam` carries a value.
+      const existing = current.params.find((param) => param.name === paramName);
+      const value = action === "paramStatus" ? (existing?.value ?? "") : typeof body.value === "string" ? body.value : "";
+      if (action === "paramStatus" && !existing) {
+        return NextResponse.json({ message: `对象上没有名为「${paramName}」的参数。` }, { status: 404 });
+      }
+      const url = typeof body.url === "string" ? body.url.trim() : "";
+      const entity = await setParam(
+        name,
+        {
+          name: paramName,
+          value,
+          status,
+          evidence: url ? { url, at: "", locator: typeof body.locator === "string" ? body.locator : "" } : undefined,
+        },
+        ENTITIES_ROOT
+      );
       return entity
         ? NextResponse.json({ ok: true, entity })
         : NextResponse.json({ message: `没有名为「${name}」的跟踪对象。` }, { status: 404 });

@@ -161,7 +161,8 @@ describe("extractFields", () => {
       return;
     }
     expect(outcome.results.map((r) => r.status)).toEqual(["applied", "rejected", "rejected", "rejected"]);
-    expect(outcome.results[2].reason).toContain("字段不可更新");
+    // `name` is the entity's own structural field, so it cannot slip in as a parameter.
+    expect(outcome.results[2].reason).toContain("结构字段");
     expect((await readEntity("电网-a", entitiesRoot))?.capacity).toBe("1200 MW");
   });
 
@@ -194,5 +195,57 @@ describe("extractFields", () => {
     expect(longQuote.ok && longQuote.results[0].status).toBe("rejected");
 
     expect(await extractFields({ entity: "电网-a", entryName, claims: [] }, deps())).toMatchObject({ ok: false });
+  });
+
+  it("⑩ 白名单之外的名字按具名技术参数写入，状态一律「未判定」——是否满足只有人能填", async () => {
+    const outcome = await extractFields(
+      {
+        entity: "电网-a",
+        entryName,
+        claims: [{ field: "并网容量", value: "1200 MW", quote: "本年度已核准并网容量为 1200 MW，较上年增加 300 MW。" }],
+      },
+      deps()
+    );
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) {
+      return;
+    }
+    expect(outcome.results[0]).toMatchObject({ kind: "param", status: "applied" });
+
+    const entity = await readEntity("电网-a", entitiesRoot);
+    expect(entity?.params).toEqual([{ name: "并网容量", value: "1200 MW", status: "unknown" }]);
+    // The citation is filed under the parameter's own name.
+    expect(entity?.evidence.find((item) => item.field === "并网容量")?.url).toBe("https://grid.example/notices/2026");
+    // Seven housekeeping fields still behave as fields.
+    expect(entity?.capacity).toBe("");
+  });
+
+  it("⑪ 对象自身的结构字段名不能借道成为参数", async () => {
+    const outcome = await extractFields(
+      {
+        entity: "电网-a",
+        entryName,
+        claims: [{ field: "title", value: "1200 MW", quote: "本年度已核准并网容量为 1200 MW，较上年增加 300 MW。" }],
+      },
+      deps()
+    );
+    expect(outcome.ok && outcome.results[0].status).toBe("rejected");
+    if (outcome.ok) {
+      expect(outcome.results[0].reason).toContain("结构字段");
+    }
+    expect((await readEntity("电网-a", entitiesRoot))?.params).toEqual([]);
+  });
+
+  it("⑫ 参数的证据核对与字段一视同仁：编造的引用照样拒绝", async () => {
+    const outcome = await extractFields(
+      {
+        entity: "电网-a",
+        entryName,
+        claims: [{ field: "谐波限值", value: "3%", quote: "本区域谐波限值为 3%。" }],
+      },
+      deps()
+    );
+    expect(outcome.ok && outcome.results[0]).toMatchObject({ kind: "param", status: "rejected" });
+    expect((await readEntity("电网-a", entitiesRoot))?.params).toEqual([]);
   });
 });

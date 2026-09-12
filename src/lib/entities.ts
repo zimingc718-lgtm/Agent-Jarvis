@@ -63,6 +63,55 @@ export type Evidence = {
   locator: string;
 };
 
+/**
+ * Whether WE meet this requirement (CR-20260912-technical-spine).
+ *
+ * Deliberately NOT settable by a tool. The value of a parameter is a fact read out of
+ * someone's document and can be checked against the document; whether our own product
+ * meets it is a judgement about us, which no source page contains. A model that could
+ * write `meets` would be inventing the one thing the board exists to tell the truth about.
+ */
+export const PARAM_STATES = ["unknown", "meets", "unmet"] as const;
+export type ParamState = (typeof PARAM_STATES)[number];
+export const PARAM_STATE_LABEL: Record<ParamState, string> = {
+  unknown: "未判定",
+  meets: "满足",
+  unmet: "不满足",
+};
+
+/** A named technical requirement or parameter carried by an entity. */
+export type Param = {
+  /** e.g. 「LVRT 持续时间」, 「效率」, 「通信规约」. */
+  name: string;
+  /** Exactly as the source states it, unit included. */
+  value: string;
+  status: ParamState;
+};
+
+export const MAX_PARAMS = 60;
+export const MAX_PARAM_NAME_CHARS = 40;
+
+/**
+ * Names that belong to the entity's own structure and therefore may NOT become a
+ * parameter. Without this, a caller aiming at a field that simply is not updatable
+ * through that path (`title`) would silently get a parameter named 「title」 sitting on
+ * the card — a shadow of a real field, which is worse than a refusal.
+ */
+export const RESERVED_PARAM_NAMES = ["name", "title", "kind", "body", "sources", "source", "evidence", "param", "params", "created", "status"] as const;
+
+export function isReservedParamName(raw: string): boolean {
+  return (RESERVED_PARAM_NAMES as readonly string[]).includes(raw.trim().toLowerCase());
+}
+
+export function isParamState(value: unknown): value is ParamState {
+  return typeof value === "string" && (PARAM_STATES as readonly string[]).includes(value);
+}
+
+/** Names are display text, so the only rules are: non-empty, bounded, single-line, no separator. */
+export function normalizeParamName(raw: string): string {
+  return raw.replace(/[|\r\n]/g, " ").replace(/\s+/g, " ").trim().slice(0, MAX_PARAM_NAME_CHARS);
+}
+
 export type Entity = {
   name: string;
   kind: EntityKind;
@@ -83,6 +132,12 @@ export type Entity = {
   /** When the user last opened this entity's message list. */
   seenAt: string;
   sources: string[];
+  /**
+   * Named technical parameters and requirements — the board's spine
+   * (用户 2026-09-12：「我是技术方，不是市场方」). Order is the order they were added;
+   * nothing re-sorts them, for the same reason the lanes never re-sort.
+   */
+  params: Param[];
   evidence: Evidence[];
   createdAt: string;
   /** Free notes below the frontmatter. */
@@ -92,6 +147,8 @@ export type Entity = {
 export type EntitySummary = Omit<Entity, "body" | "evidence"> & {
   /** Derived: a change arrived after the last time the user looked. */
   unread: boolean;
+  /** Derived: how many of this entity's requirements we do not meet. */
+  unmet: number;
 };
 
 export class EntityError extends Error {
@@ -167,6 +224,7 @@ export function renderEntityFile(entity: Omit<Entity, "name">): string {
     line("seen_at", entity.seenAt) +
     line("created", entity.createdAt) +
     entity.sources.map((url) => line("source", url)).join("") +
+    entity.params.map((p) => line("param", [p.name, p.value, p.status].join(" | "))).join("") +
     entity.evidence.map((e) => line("evidence", [e.field, e.url, e.at, e.locator].join(" | "))).join("") +
     "---\n";
   return `${head}\n${entity.body.trim()}\n`;
@@ -178,6 +236,7 @@ export function parseEntityFile(raw: string, fallback: { name: string; createdAt
   const match = FRONTMATTER.exec(text);
   const meta: Record<string, string> = {};
   const sources: string[] = [];
+  const params: Param[] = [];
   const evidence: Evidence[] = [];
   let body = text;
   if (match) {
@@ -192,6 +251,13 @@ export function parseEntityFile(raw: string, fallback: { name: string; createdAt
       if (key === "source") {
         if (value) {
           sources.push(value);
+        }
+      } else if (key === "param") {
+        // `name | value | status`; a hand-written line may stop after the value.
+        const [rawName, rawValue, rawStatus] = value.split("|").map((part) => part.trim());
+        const name = normalizeParamName(rawName ?? "");
+        if (name && params.length < MAX_PARAMS) {
+          params.push({ name, value: rawValue ?? "", status: isParamState(rawStatus) ? rawStatus : "unknown" });
         }
       } else if (key === "evidence") {
         const [field, url, when, ...rest] = value.split("|").map((part) => part.trim());
@@ -219,6 +285,7 @@ export function parseEntityFile(raw: string, fallback: { name: string; createdAt
     changeAt: meta.change_at ?? "",
     seenAt: meta.seen_at ?? "",
     sources,
+    params,
     evidence,
     createdAt: meta.created || fallback.createdAt,
     body: content,
@@ -277,6 +344,8 @@ export function summarize(entity: Entity, now: Date = new Date()): EntitySummary
     ...rest,
     health: effectiveHealth(entity, now),
     unread: Boolean(entity.changeAt) && (!entity.seenAt || entity.changeAt > entity.seenAt),
+    // Counted, never stored: the count is always whatever the rows say right now.
+    unmet: entity.params.filter((param) => param.status === "unmet").length,
   };
 }
 
@@ -361,6 +430,7 @@ export async function saveEntity(input: SaveEntityInput, root: string = ENTITIES
   const name = await uniqueName(dir, base);
   const sources = (input.sources ?? []).map((url) => url.trim()).filter(Boolean);
   const entity: Omit<Entity, "name"> = {
+    params: [],
     kind: input.kind,
     title: title.slice(0, MAX_TITLE_CHARS),
     summary: (input.summary ?? "").trim(),
@@ -428,6 +498,78 @@ export async function updateEntity(name: string, input: UpdateEntityInput, root:
   const { name: _n, ...rest } = next;
   await writeFile(entityPath(root, name), renderEntityFile(rest), "utf8");
   return summarize(next, new Date(at));
+}
+
+export type SetParamInput = {
+  name: string;
+  value: string;
+  /**
+   * Omitted keeps whatever the row already says, and a new row starts at `unknown`.
+   * Only a person may pass this; `entity-tools` never does (see PARAM_STATES).
+   */
+  status?: ParamState;
+  /** Same rule as a field: a second-hand value must say where it came from. */
+  evidence?: Omit<Evidence, "field">;
+  now?: () => Date;
+};
+
+/**
+ * Write one named technical parameter (CR-20260912-technical-spine).
+ *
+ * Matching is by name, so writing the same name twice UPDATES rather than appends — a
+ * requirement that gets restated in a newer document should not turn into two rows
+ * saying different numbers. Evidence is keyed by the parameter name, which means the
+ * latest write replaces the citation for that parameter and older citations do not
+ * accumulate into a pile nobody reads.
+ */
+export async function setParam(entityName: string, input: SetParamInput, root: string = ENTITIES_ROOT): Promise<EntitySummary | null> {
+  const entity = await readEntity(entityName, root);
+  if (!entity) {
+    return null;
+  }
+  const paramName = normalizeParamName(input.name);
+  if (!paramName) {
+    throw new EntityError("参数名不能为空。", 400);
+  }
+  const value = input.value.replace(/[|\r\n]/g, " ").trim().slice(0, MAX_LINE_CHARS);
+  const at = (input.now ?? (() => new Date()))().toISOString();
+
+  const existing = entity.params.find((param) => param.name === paramName);
+  if (!existing && entity.params.length >= MAX_PARAMS) {
+    throw new EntityError(`一个对象最多 ${MAX_PARAMS} 条参数，请先清理。`, 409);
+  }
+  const status = input.status ?? existing?.status ?? "unknown";
+  const params = existing
+    ? entity.params.map((param) => (param.name === paramName ? { name: paramName, value, status } : param))
+    : [...entity.params, { name: paramName, value, status }];
+
+  const next: Entity = { ...entity, params };
+  if (input.evidence) {
+    next.evidence = [
+      ...next.evidence.filter((e) => e.field !== paramName),
+      { field: paramName, url: input.evidence.url, at: input.evidence.at || at, locator: input.evidence.locator },
+    ];
+  }
+  const { name: _n, ...rest } = next;
+  await writeFile(entityPath(root, entityName), renderEntityFile(rest), "utf8");
+  return summarize(next, new Date(at));
+}
+
+/** Removing a parameter takes its citation with it; a citation for nothing is litter. */
+export async function removeParam(entityName: string, paramName: string, root: string = ENTITIES_ROOT): Promise<EntitySummary | null> {
+  const entity = await readEntity(entityName, root);
+  if (!entity) {
+    return null;
+  }
+  const target = normalizeParamName(paramName);
+  const next: Entity = {
+    ...entity,
+    params: entity.params.filter((param) => param.name !== target),
+    evidence: entity.evidence.filter((e) => e.field !== target),
+  };
+  const { name: _n, ...rest } = next;
+  await writeFile(entityPath(root, entityName), renderEntityFile(rest), "utf8");
+  return summarize(next);
 }
 
 /** Opening the entity's message list is what marks it read (user ruling, 2026-09-11). */

@@ -175,4 +175,36 @@ describe("/api/entities", () => {
     // Most-asked first: that ordering is what makes it a to-do list.
     expect(body.misses[0]).toMatchObject({ query: "液冷选型对比", count: 2 });
   });
+
+  it("⑥ 参数的三个动作：写入、切换我方状态、删除；状态只走这条路", async () => {
+    as("owner@example.com");
+    await listRoute.POST(post({ kind: "authority", title: "TSO 参数" }));
+
+    const written = await oneRoute.PATCH(
+      patch({ action: "setParam", param: "LVRT 持续时间", value: "150 ms", url: "https://tso.example/r", locator: "第 4.2 节" }),
+      params("tso-参数")
+    );
+    expect(written.status).toBe(200);
+    expect((await written.json()).entity.params).toEqual([{ name: "LVRT 持续时间", value: "150 ms", status: "unknown" }]);
+
+    const marked = await oneRoute.PATCH(
+      patch({ action: "paramStatus", param: "LVRT 持续时间", status: "unmet" }),
+      params("tso-参数")
+    );
+    const body = await marked.json();
+    expect(body.entity.params[0]).toMatchObject({ value: "150 ms", status: "unmet" });
+    expect(body.entity.unmet).toBe(1);
+
+    const removed = await oneRoute.PATCH(patch({ action: "removeParam", param: "LVRT 持续时间" }), params("tso-参数"));
+    expect((await removed.json()).entity.params).toEqual([]);
+  });
+
+  it("⑦ 参数动作的边界：空名、非法状态、不存在的参数、结构字段名", async () => {
+    as("owner@example.com");
+    await listRoute.POST(post({ kind: "competitor", title: "边界 P" }));
+    expect((await oneRoute.PATCH(patch({ action: "setParam", param: "  " }), params("边界-p"))).status).toBe(400);
+    expect((await oneRoute.PATCH(patch({ action: "setParam", param: "title", value: "x" }), params("边界-p"))).status).toBe(400);
+    expect((await oneRoute.PATCH(patch({ action: "paramStatus", param: "x", status: "nope" }), params("边界-p"))).status).toBe(400);
+    expect((await oneRoute.PATCH(patch({ action: "paramStatus", param: "没这条", status: "meets" }), params("边界-p"))).status).toBe(404);
+  });
 });

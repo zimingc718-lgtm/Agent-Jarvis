@@ -9,7 +9,8 @@
     "project/06_changes/CR-20260911-knowledge-skills.md",
     "project/06_changes/CR-20260911-scheduled-sweep.md",
     "project/06_changes/CR-20260911-board-add-entity.md",
-    "project/06_changes/CR-20260911-skill-doc-preserved.md"
+    "project/06_changes/CR-20260911-skill-doc-preserved.md",
+    "project/06_changes/CR-20260912-technical-spine.md"
   ],
   "change_records": [
     "project/06_changes/CR-20260908-floating-llm-chat.md",
@@ -746,8 +747,8 @@
       "result": "PASS",
       "command": "npm test -- entities",
       "real_entry": false,
-      "date": "2026-09-11",
-      "notes": "CR-20260911-home-dashboard；保存即带 frontmatter 的 .md 并读回一致；手写最小文件可读；非法 kind/空名拒绝、路径穿越在 slug 层消失；同名加序号；顺序固定（改过的对象不前移）；健康度四例（无源→未接入、有源未采集→陈旧而非正常、超期→陈旧、近期采集但解析失败→解析失败）；移除末个源退回未接入；源须 http/https、拒凭据、拒重复；写 change 令未读、markSeen 清除且变更文字仍在；更新只收白名单字段、证据按字段去重；待采纳区四例。"
+      "date": "2026-09-12",
+      "notes": "CR-20260911-home-dashboard；保存即带 frontmatter 的 .md 并读回一致；手写最小文件可读；非法 kind/空名拒绝、路径穿越在 slug 层消失；同名加序号；顺序固定（改过的对象不前移）；健康度四例（无源→未接入、有源未采集→陈旧而非正常、超期→陈旧、近期采集但解析失败→解析失败）；移除末个源退回未接入；源须 http/https、拒凭据、拒重复；写 change 令未读、markSeen 清除且变更文字仍在；更新只收白名单字段、证据按字段去重；待采纳区四例。 CR-20260912-technical-spine 增 9 例：param 行落盘与读回、同名更新不追加、状态只在显式给出时才变、unmet 是数出来的、证据按参数名归档且删参数连证据一起删、手写半行可读、名长与条数上限、值里的分隔符被消掉、结构字段名保留。"
     },
     {
       "id": "TEST-121",
@@ -762,16 +763,16 @@
       "result": "PASS",
       "command": "npm test -- entity-route",
       "real_entry": false,
-      "date": "2026-09-11",
-      "notes": "CR-20260911-home-dashboard；未登录全部 401；GET 一次返回三队列；POST 直接建、kind 非法 400；PATCH 四种 action 及其 400/404；单个 GET/DELETE 与穿越形名称 404；待采纳实体与待采纳修改的采纳/忽略；已登记源写入不入队；知识总览按实体/按类型/无归属计数与缺口按次数排序。"
+      "date": "2026-09-12",
+      "notes": "CR-20260911-home-dashboard；未登录全部 401；GET 一次返回三队列；POST 直接建、kind 非法 400；PATCH 四种 action 及其 400/404；单个 GET/DELETE 与穿越形名称 404；待采纳实体与待采纳修改的采纳/忽略；已登记源写入不入队；知识总览按实体/按类型/无归属计数与缺口按次数排序。 CR-20260912-technical-spine 增 2 例：setParam / paramStatus / removeParam 三个动作；空名、非法状态、不存在的参数、结构字段名四类边界。"
     },
     {
       "id": "TEST-123",
       "result": "PASS",
       "command": "npm test -- knowledge-dashboard",
       "real_entry": false,
-      "date": "2026-09-11",
-      "notes": "CR-20260911-home-dashboard；三条泳道与固定顺序提示；每张卡同时给出内容变化与采集健康度（未配置源、解析失败各自可见）；汇总条三个计数；点开卡片即 PATCH seen 且 aria-expanded 变化；展开是源管理并可增删源、无源时明说安静不代表事实；问 Jarvis 交给对话框；待采纳区两类各走各的路由；总览缺口排序与库内篇数；空看板不假装有数据。 CR-20260911-board-add-entity 小改：⑫三条泳道各自可直接新增对象，kind 由泳道决定；⑬空名不发请求；⑨空态文案改为「可以在下面直接添加，也可以在对话里让 Jarvis 提议」。13 PASS。"
+      "date": "2026-09-12",
+      "notes": "CR-20260911-home-dashboard；三条泳道与固定顺序提示；每张卡同时给出内容变化与采集健康度（未配置源、解析失败各自可见）；汇总条三个计数；点开卡片即 PATCH seen 且 aria-expanded 变化；展开是源管理并可增删源、无源时明说安静不代表事实；问 Jarvis 交给对话框；待采纳区两类各走各的路由；总览缺口排序与库内篇数；空看板不假装有数据。 CR-20260911-board-add-entity 小改：⑫三条泳道各自可直接新增对象，kind 由泳道决定；⑬空名不发请求；⑨空态文案改为「可以在下面直接添加，也可以在对话里让 Jarvis 提议」。13 PASS。 CR-20260912-technical-spine 增 2 例：汇总条与卡片芯片换成未对上计数（容量退到展开区）；展开区可看参数、切三态、删除、直接写一条。"
     },
     {
       "id": "TEST-124",
@@ -802,8 +803,8 @@
       "result": "PASS",
       "command": "npm test -- extract",
       "real_entry": false,
-      "date": "2026-09-11",
-      "notes": "CR-20260911-home-dashboard 续做第三步；引文在条目里且值在引文里→通过，来源同域直接生效并留下链接+条目内定位的证据；引文不在条目里→拒绝，不写也不入队；引文属实但值不在其中→同样拒绝（句子真、数字飘）；换行与多空格不算不一致；条目来源不在已登记源内→只进待采纳区；一次调用里逐条判定互不牵连；对象/条目/原始链接缺一即整次失败；批量与引文长度上限；工具层全部不通过时 ok:false 且理由逐条可见。9 PASS。"
+      "date": "2026-09-12",
+      "notes": "CR-20260911-home-dashboard 续做第三步；引文在条目里且值在引文里→通过，来源同域直接生效并留下链接+条目内定位的证据；引文不在条目里→拒绝，不写也不入队；引文属实但值不在其中→同样拒绝（句子真、数字飘）；换行与多空格不算不一致；条目来源不在已登记源内→只进待采纳区；一次调用里逐条判定互不牵连；对象/条目/原始链接缺一即整次失败；批量与引文长度上限；工具层全部不通过时 ok:false 且理由逐条可见。9 PASS。 CR-20260912-technical-spine 增 3 例：白名单之外按具名参数写入且状态一律未判定、结构字段名不许借道、参数的证据核对与字段一视同仁。"
     },
     {
       "id": "TEST-128",

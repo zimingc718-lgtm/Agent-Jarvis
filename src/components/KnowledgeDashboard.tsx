@@ -18,6 +18,9 @@ import { KNOWLEDGE_CHANGED_EVENT } from "@/lib/ui-events";
  * "does not support" and web search silently became unreachable.
  */
 
+export type ParamState = "unknown" | "meets" | "unmet";
+export type DashboardParam = { name: string; value: string; status: ParamState };
+
 export type DashboardEntity = {
   name: string;
   kind: "competitor" | "authority" | "customer";
@@ -32,8 +35,21 @@ export type DashboardEntity = {
   changeAt: string;
   seenAt: string;
   sources: string[];
+  /** Named technical requirements — the board's spine (用户 2026-09-12). */
+  params: DashboardParam[];
   createdAt: string;
   unread: boolean;
+  /** Derived server-side: how many of this object's requirements we do not meet. */
+  unmet: number;
+};
+
+const PARAM_STATE_LABEL: Record<ParamState, string> = { unknown: "未判定", meets: "满足", unmet: "不满足" };
+/** Clicking cycles through the three; there is no fourth state to hide in. */
+const NEXT_PARAM_STATE: Record<ParamState, ParamState> = { unknown: "meets", meets: "unmet", unmet: "unknown" };
+const PARAM_STATE_CLASS: Record<ParamState, string> = {
+  unknown: "text-muted-foreground",
+  meets: "text-emerald-700 dark:text-emerald-500",
+  unmet: "text-destructive",
 };
 
 export type DashboardProposal = {
@@ -272,6 +288,8 @@ export function KnowledgeDashboard({
   const unreadCount = board.entities.filter((entity) => entity.unread).length;
   const brokenCount = board.entities.filter((entity) => entity.health === "failed_fetch" || entity.health === "parse_failed").length;
   const waiting = board.pending.length + board.proposals.length;
+  const unmetTotal = board.entities.reduce((total, entity) => total + (entity.unmet ?? 0), 0);
+  const paramTotal = board.entities.reduce((total, entity) => total + (entity.params?.length ?? 0), 0);
 
   const card = (entity: DashboardEntity) => {
     const open = openName === entity.name;
@@ -290,8 +308,13 @@ export function KnowledgeDashboard({
               className={`size-2 shrink-0 rounded-full border-[1.5px] ${entity.unread ? "border-primary bg-primary" : "border-border"}`}
             />
             <span className="text-sm font-medium">{entity.title}</span>
-            {entity.capacity ? (
-              <span className="rounded bg-muted px-1.5 text-xs text-foreground">{entity.capacity}</span>
+            {/* The chip slot goes to requirements; capacity stays inside the card. */}
+            {entity.params?.length ? (
+              <span
+                className={`rounded px-1.5 text-xs ${entity.unmet > 0 ? "bg-destructive/10 text-destructive" : "bg-muted text-foreground"}`}
+              >
+                {entity.unmet > 0 ? `未对上 ${entity.unmet}/${entity.params.length}` : `${entity.params.length} 条要求`}
+              </span>
             ) : null}
             {entity.nextDate ? (
               <span className="ml-auto text-xs text-muted-foreground">
@@ -312,6 +335,94 @@ export function KnowledgeDashboard({
 
         {open ? (
           <div className="knowledge-dashboard__detail mt-2 flex flex-col gap-2 border-t border-border pt-2">
+            <p className="text-xs font-medium text-muted-foreground">技术参数与要求</p>
+            {(entity.params?.length ?? 0) === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                还没有登记。可以在对话里让 Jarvis 从已入库的材料里抽，或者在下面直接写一条。
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-1">
+                {entity.params.map((param) => (
+                  <li className="flex items-center gap-2 text-xs" key={param.name}>
+                    <span className="min-w-0 flex-1 truncate">
+                      {param.name} = {param.value || "（无值）"}
+                    </span>
+                    {/* Only a person sets this: no source page says whether WE meet it. */}
+                    <button
+                      aria-label={`${entity.title} 的 ${param.name}：我方${PARAM_STATE_LABEL[param.status]}，点击切换`}
+                      className={`knowledge-dashboard__param-status shrink-0 rounded px-1 underline underline-offset-2 disabled:opacity-50 ${PARAM_STATE_CLASS[param.status]}`}
+                      disabled={busy === `param:${entity.name}`}
+                      onClick={() =>
+                        void run(
+                          `param:${entity.name}`,
+                          `已标记「${param.name}」为${PARAM_STATE_LABEL[NEXT_PARAM_STATE[param.status]]}。`,
+                          "PATCH",
+                          `/api/entities/${encodeURIComponent(entity.name)}`,
+                          { action: "paramStatus", param: param.name, status: NEXT_PARAM_STATE[param.status] }
+                        )
+                      }
+                      type="button"
+                    >
+                      我方{PARAM_STATE_LABEL[param.status]}
+                    </button>
+                    <button
+                      aria-label={`删除 ${entity.title} 的参数 ${param.name}`}
+                      className="knowledge-dashboard__remove-param shrink-0 rounded px-1 text-destructive underline underline-offset-2 disabled:opacity-50"
+                      disabled={busy === `param:${entity.name}`}
+                      onClick={() =>
+                        void run(`param:${entity.name}`, "已删除参数。", "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
+                          action: "removeParam",
+                          param: param.name,
+                        })
+                      }
+                      type="button"
+                    >
+                      删除
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <form
+              className="flex items-center gap-2 text-xs"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const form = event.currentTarget;
+                const nameInput = form.elements.namedItem("param") as HTMLInputElement | null;
+                const valueInput = form.elements.namedItem("value") as HTMLInputElement | null;
+                const paramName = nameInput?.value.trim();
+                if (!paramName) {
+                  return;
+                }
+                void run(`param:${entity.name}`, "已写入参数。", "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
+                  action: "setParam",
+                  param: paramName,
+                  value: valueInput?.value.trim() ?? "",
+                });
+                nameInput!.value = "";
+                if (valueInput) {
+                  valueInput.value = "";
+                }
+              }}
+            >
+              <input
+                aria-label={`为 ${entity.title} 添加技术要求`}
+                className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1"
+                name="param"
+                placeholder="要求名，如 LVRT 持续时间"
+              />
+              <input
+                aria-label={`${entity.title} 的要求取值`}
+                className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1"
+                name="value"
+                placeholder="取值，如 150 ms"
+              />
+              <button className="shrink-0 rounded px-1 underline underline-offset-2" type="submit">
+                写入
+              </button>
+            </form>
+            {entity.capacity ? <p className="text-xs text-muted-foreground">容量：{entity.capacity}</p> : null}
+
             <p className="text-xs font-medium text-muted-foreground">采集源</p>
             {entity.sources.length === 0 ? (
               <p className="text-xs text-muted-foreground">未配置。没有源时，这张卡的安静不代表任何事实。</p>
@@ -444,6 +555,12 @@ export function KnowledgeDashboard({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-semibold tracking-tight">知识看板</h2>
         <div className="flex flex-wrap items-center gap-2 text-xs">
+          {/* The spine reads first: what have we not matched. */}
+          <span
+            className={`rounded px-2 py-0.5 ${unmetTotal > 0 ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}
+          >
+            {paramTotal === 0 ? "还没有登记技术要求" : `${unmetTotal} 条要求未对上 · 共 ${paramTotal} 条`}
+          </span>
           <span className="rounded bg-accent px-2 py-0.5 text-accent-foreground">{unreadCount} 项未读变更</span>
           <span className={`rounded px-2 py-0.5 ${brokenCount > 0 ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
             {brokenCount} 个采集异常

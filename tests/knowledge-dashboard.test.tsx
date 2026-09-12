@@ -12,6 +12,8 @@ import {
 
 const entity = (over: Partial<DashboardEntity> & Pick<DashboardEntity, "name" | "kind" | "title">): DashboardEntity => ({
   summary: "",
+  params: [],
+  unmet: 0,
   capacity: "",
   nextLabel: "",
   nextDate: "",
@@ -250,5 +252,90 @@ describe("KnowledgeDashboard", () => {
     fireEvent.click(within(lane).getByRole("button", { name: "添加" }));
     await waitFor(() => expect(screen.getByRole("region", { name: "友商" })).toBeInTheDocument());
     expect(act).not.toHaveBeenCalled();
+  });
+
+  it("⑭ 技术要求是主轴：汇总条先说未对上几条，卡片芯片也换成它", async () => {
+    const withParams: DashboardData = {
+      ...board,
+      entities: [
+        entity({
+          name: "tso-p",
+          kind: "authority",
+          title: "TSO P",
+          capacity: "可用 1.2 GW",
+          params: [
+            { name: "LVRT 持续时间", value: "150 ms", status: "unmet" },
+            { name: "谐波", value: "3%", status: "meets" },
+          ],
+          unmet: 1,
+        }),
+      ],
+      pending: [],
+      proposals: [],
+    };
+    render(
+      <KnowledgeDashboard
+        act={noop}
+        isVisible={() => false}
+        loadBoard={async () => withParams}
+        loadOverview={async () => overview}
+        loadSweep={async () => ({ enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" })}
+      />
+    );
+    await waitFor(() => expect(screen.getByText("1 条要求未对上 · 共 2 条")).toBeInTheDocument());
+    // The chip slot belongs to requirements now; capacity moved inside the card.
+    expect(screen.getByText("未对上 1/2")).toBeInTheDocument();
+    expect(screen.queryByText("可用 1.2 GW")).not.toBeInTheDocument();
+  });
+
+  it("⑮ 展开后能看参数、切换我方状态、删除、写一条新的；状态只走 paramStatus", async () => {
+    const act = vi.fn(async () => ({ ok: true }));
+    const withParams: DashboardData = {
+      ...board,
+      entities: [
+        entity({
+          name: "tso-p",
+          kind: "authority",
+          title: "TSO P",
+          params: [{ name: "LVRT 持续时间", value: "150 ms", status: "unknown" }],
+          unmet: 0,
+        }),
+      ],
+      pending: [],
+      proposals: [],
+    };
+    render(
+      <KnowledgeDashboard
+        act={act}
+        isVisible={() => false}
+        loadBoard={async () => withParams}
+        loadOverview={async () => overview}
+        loadSweep={async () => ({ enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" })}
+      />
+    );
+    fireEvent.click(await screen.findByText("TSO P"));
+    expect(await screen.findByText("LVRT 持续时间 = 150 ms")).toBeInTheDocument();
+
+    // unknown → meets on the first click; a person decides this, never a tool.
+    fireEvent.click(screen.getByRole("button", { name: /我方未判定，点击切换/ }));
+    await waitFor(() =>
+      expect(act).toHaveBeenCalledWith("PATCH", "/api/entities/tso-p", {
+        action: "paramStatus",
+        param: "LVRT 持续时间",
+        status: "meets",
+      })
+    );
+
+    fireEvent.change(screen.getByLabelText("为 TSO P 添加技术要求"), { target: { value: "谐波" } });
+    fireEvent.change(screen.getByLabelText("TSO P 的要求取值"), { target: { value: "3%" } });
+    fireEvent.click(screen.getByRole("button", { name: "写入" }));
+    await waitFor(() =>
+      expect(act).toHaveBeenLastCalledWith("PATCH", "/api/entities/tso-p", { action: "setParam", param: "谐波", value: "3%" })
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "删除 TSO P 的参数 LVRT 持续时间" }));
+    await waitFor(() =>
+      expect(act).toHaveBeenLastCalledWith("PATCH", "/api/entities/tso-p", { action: "removeParam", param: "LVRT 持续时间" })
+    );
   });
 });

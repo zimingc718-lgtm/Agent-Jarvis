@@ -1,4 +1,11 @@
-import { ENTITIES_ROOT, readEntity, UPDATABLE_FIELDS, type UpdatableField } from "./entities";
+import {
+  ENTITIES_ROOT,
+  isReservedParamName,
+  MAX_PARAM_NAME_CHARS,
+  normalizeParamName,
+  readEntity,
+  UPDATABLE_FIELDS,
+} from "./entities";
 import { proposeEntityUpdate } from "./entity-proposals";
 import { KNOWLEDGE_ROOT, readKnowledge } from "./knowledge";
 
@@ -21,6 +28,10 @@ import { KNOWLEDGE_ROOT, readKnowledge } from "./knowledge";
  * correctly in context — that stays a human matter — but together they mean every field
  * on the board can be traced to text that is on this machine.
  *
+ * 参数即主轴（CR-20260912-technical-spine）：七个固定字段之外的名字一律按**具名技术参数**
+ * 写入。参数只带「值 + 证据」，**不带我方是否满足**——那是关于我们自己的判断，任何来源
+ * 页面里都没有，只有人能填。
+ *
  * Whether a verified claim lands directly or waits follows the same rule as everywhere
  * else: the entry's own source link, compared against the entity's registered sources.
  * The judgement stays at the tool boundary; this module is handed `trustedHost` logic
@@ -36,6 +47,8 @@ export type FieldClaim = { field: string; value: string; quote: string };
 
 export type ClaimOutcome = {
   field: string;
+  /** `field` for one of the seven housekeeping fields, `param` for a named requirement. */
+  kind: "field" | "param";
   value: string;
   /** `applied` went straight onto the entity; `queued` is waiting for the user. */
   status: "applied" | "queued" | "rejected";
@@ -122,31 +135,55 @@ export async function extractFields(
     const value = claim.value.trim();
     const quote = claim.quote.trim();
 
+    // Anything outside the seven housekeeping fields is a NAMED TECHNICAL PARAMETER
+    // (CR-20260912-technical-spine). That is the board's spine, so the common case has
+    // to be the easy one: the model writes 「LVRT 持续时间」 and it lands as a
+    // requirement, with no second argument to get wrong.
+    const isField = (UPDATABLE_FIELDS as readonly string[]).includes(field);
+    const kind: "field" | "param" = isField ? "field" : "param";
+
     if (!field || !value || !quote) {
-      results.push({ field, value, status: "rejected", reason: "field、value、quote 都是必填，缺一不写。" });
+      results.push({ field, kind, value, status: "rejected", reason: "field、value、quote 都是必填，缺一不写。" });
       continue;
     }
-    if (!(UPDATABLE_FIELDS as readonly string[]).includes(field)) {
-      results.push({ field, value, status: "rejected", reason: `字段不可更新。可用：${UPDATABLE_FIELDS.join("、")}。` });
+    if (!isField && isReservedParamName(field)) {
+      results.push({
+        field,
+        kind,
+        value,
+        status: "rejected",
+        reason: `「${field}」是对象自身的结构字段，不能当作技术参数。可用字段：${UPDATABLE_FIELDS.join("、")}。`,
+      });
+      continue;
+    }
+    if (!isField && normalizeParamName(field) !== field) {
+      results.push({
+        field,
+        kind,
+        value,
+        status: "rejected",
+        reason: `参数名需为单行、不含「|」、不超过 ${MAX_PARAM_NAME_CHARS} 字。`,
+      });
       continue;
     }
     if (quote.length > MAX_QUOTE_CHARS) {
-      results.push({ field, value, status: "rejected", reason: `原文超过 ${MAX_QUOTE_CHARS} 字，请只引与该值相关的一句或一行。` });
+      results.push({ field, kind, value, status: "rejected", reason: `原文超过 ${MAX_QUOTE_CHARS} 字，请只引与该值相关的一句或一行。` });
       continue;
     }
     if (!haystack.includes(normalize(quote))) {
-      results.push({ field, value, status: "rejected", reason: "这句原文不在该条目里。不能凭记忆引用，只能引条目中确实存在的文字。" });
+      results.push({ field, kind, value, status: "rejected", reason: "这句原文不在该条目里。不能凭记忆引用，只能引条目中确实存在的文字。" });
       continue;
     }
     if (!normalize(quote).includes(normalize(value))) {
-      results.push({ field, value, status: "rejected", reason: "值没有出现在所引原文里。值必须能在原文中逐字找到。" });
+      results.push({ field, kind, value, status: "rejected", reason: "值没有出现在所引原文里。值必须能在原文中逐字找到。" });
       continue;
     }
 
     const record = await proposeEntityUpdate(
       {
         name: entityName,
-        field: field as UpdatableField,
+        kind,
+        field,
         value,
         evidence: { url: entry.sourceUrl, at: "", locator: `条目 ${entry.name}：${quote}` },
       },
@@ -154,6 +191,7 @@ export async function extractFields(
     );
     results.push({
       field,
+      kind,
       value,
       status: record.applied ? "applied" : "queued",
       reason: record.applied

@@ -9,14 +9,18 @@ import {
   discardPendingEntity,
   effectiveHealth,
   EntityError,
+  isReservedParamName,
   listEntities,
+  MAX_PARAMS,
   listPendingEntities,
   markSeen,
   parseEntityFile,
   readEntity,
+  removeParam,
   removeSource,
   renderEntityFile,
   saveEntity,
+  setParam,
   slugifyEntityName,
   STALE_AFTER_DAYS,
   updateEntity,
@@ -194,6 +198,7 @@ describe("采集健康度与未读，两个独立的指示", () => {
 
   it("renderEntityFile 把换行折成空格，不破坏 frontmatter", () => {
     const raw = renderEntityFile({
+      params: [],
       kind: "competitor",
       title: "两\n行",
       summary: "",
@@ -247,5 +252,88 @@ describe("待采纳区", () => {
     const adopted = await adoptPendingEntity("友商-z", root);
     expect(adopted?.name).toBe("友商-z-2");
     expect((await readEntity("友商-z", root))?.summary).toBe("原有的");
+  });
+});
+
+describe("具名技术参数（CR-20260912-technical-spine）", () => {
+  let root: string;
+  beforeEach(async () => {
+    root = mkdtempSync(join(tmpdir(), "agent-jarvis-param-"));
+    await saveEntity({ kind: "authority", title: "TSO P" }, root);
+  });
+  afterEach(() => rmSync(root, { recursive: true, force: true }));
+
+  it("① 写入即落到 frontmatter 的 param 行，读回一致，默认未判定", async () => {
+    const summary = await setParam("tso-p", { name: "LVRT 持续时间", value: "150 ms" }, root);
+    expect(summary?.params).toEqual([{ name: "LVRT 持续时间", value: "150 ms", status: "unknown" }]);
+    expect(readFileSync(join(root, "tso-p.md"), "utf8")).toContain("param: LVRT 持续时间 | 150 ms | unknown");
+    expect((await readEntity("tso-p", root))?.params[0]).toMatchObject({ name: "LVRT 持续时间", value: "150 ms" });
+  });
+
+  it("② 同名再写是更新而不是追加——同一条要求不该变成两行互相打架的数字", async () => {
+    await setParam("tso-p", { name: "效率", value: "98.0%" }, root);
+    const summary = await setParam("tso-p", { name: "效率", value: "98.5%" }, root);
+    expect(summary?.params).toHaveLength(1);
+    expect(summary?.params[0].value).toBe("98.5%");
+  });
+
+  it("③ 状态只在显式给出时才变；不给就保留原状态", async () => {
+    await setParam("tso-p", { name: "谐波", value: "3%", status: "unmet" }, root);
+    const kept = await setParam("tso-p", { name: "谐波", value: "2%" }, root);
+    expect(kept?.params[0]).toMatchObject({ value: "2%", status: "unmet" });
+    const changed = await setParam("tso-p", { name: "谐波", value: "2%", status: "meets" }, root);
+    expect(changed?.params[0].status).toBe("meets");
+  });
+
+  it("④ unmet 是数出来的，不是存下来的", async () => {
+    await setParam("tso-p", { name: "a", value: "1", status: "unmet" }, root);
+    await setParam("tso-p", { name: "b", value: "2", status: "unmet" }, root);
+    await setParam("tso-p", { name: "c", value: "3", status: "meets" }, root);
+    expect((await listEntities(root))[0].unmet).toBe(2);
+    await setParam("tso-p", { name: "a", value: "1", status: "meets" }, root);
+    expect((await listEntities(root))[0].unmet).toBe(1);
+  });
+
+  it("⑤ 证据按参数名归档；删参数把它的证据一并带走", async () => {
+    await setParam(
+      "tso-p",
+      { name: "LVRT", value: "150 ms", evidence: { url: "https://tso.example/rule", at: "", locator: "第 4.2 节" } },
+      root
+    );
+    expect((await readEntity("tso-p", root))?.evidence).toMatchObject([{ field: "LVRT", url: "https://tso.example/rule" }]);
+    const after = await removeParam("tso-p", "LVRT", root);
+    expect(after?.params).toEqual([]);
+    expect((await readEntity("tso-p", root))?.evidence).toEqual([]);
+  });
+
+  it("⑥ 手写的半行也读得回来：只有名字和值，没有状态", async () => {
+    writeFileSync(join(root, "手写.md"), "---\nkind: authority\ntitle: 手写\nparam: 只有名字\nparam: 有值 | 10 A\n---\n\n正文", "utf8");
+    const entity = await readEntity("手写", root);
+    expect(entity?.params).toEqual([
+      { name: "只有名字", value: "", status: "unknown" },
+      { name: "有值", value: "10 A", status: "unknown" },
+    ]);
+  });
+
+  it("⑦ 参数名与条数都有上限，空名拒绝", async () => {
+    await expect(setParam("tso-p", { name: "   ", value: "x" }, root)).rejects.toBeInstanceOf(EntityError);
+    for (let index = 0; index < MAX_PARAMS; index += 1) {
+      await setParam("tso-p", { name: `p${index}`, value: "1" }, root);
+    }
+    await expect(setParam("tso-p", { name: "再来一条", value: "1" }, root)).rejects.toBeInstanceOf(EntityError);
+    // Updating one that already exists is still allowed at the ceiling.
+    await expect(setParam("tso-p", { name: "p0", value: "2" }, root)).resolves.toBeTruthy();
+  });
+
+  it("⑧ 值里的分隔符被消掉，不会撑坏那一行", async () => {
+    const summary = await setParam("tso-p", { name: "通信规约", value: "IEC 61850 | 私有\n扩展" }, root);
+    expect(summary?.params[0].value).toBe("IEC 61850   私有 扩展");
+    expect((await readEntity("tso-p", root))?.params).toHaveLength(1);
+  });
+
+  it("⑨ 对象自身的结构字段不能当参数名", () => {
+    expect(isReservedParamName("title")).toBe(true);
+    expect(isReservedParamName("Sources")).toBe(true);
+    expect(isReservedParamName("LVRT 持续时间")).toBe(false);
   });
 });
