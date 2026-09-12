@@ -14,6 +14,7 @@ import {
   type WakeClientSettings,
 } from "@/lib/ui-events";
 import type { ChatDelta, Source } from "@/lib/types";
+import { describeSendFailure } from "@/lib/send-failure";
 import {
   ChevronDown,
   FileArchive,
@@ -950,7 +951,11 @@ export function FloatingChat({
         // REQ-F-016: request-level error — nothing was persisted, so drop the optimistic
         // turn, show a red line above the input, and leave the session untouched.
         rollbackOptimistic();
-        setErrorLine(error instanceof Error ? error.message : "对话请求失败。");
+        // REQ-F-120 ①②: a raw `Failed to fetch` tells the user nothing and carries no
+        // time. One probe separates "the server is gone" from "the transfer broke", which
+        // are the two cases with different next steps.
+        const failure = await describeSendFailure(error);
+        setErrorLine(failure.message);
       } else {
         setMessages((current) =>
           current.map((item) => (item.id === assistantId ? { ...item, status: "error" } : item))

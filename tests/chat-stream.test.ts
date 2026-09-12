@@ -99,10 +99,16 @@ describe("runChatTurn", () => {
     expect(received[0]).toEqual({ role: "system", content: expect.stringContaining("Agent-Jarvis") });
     expect(received.map((m) => m.content)).toEqual([
       expect.stringContaining("Agent-Jarvis"),
+      // REQ-F-120 ④ (CR-20260912-runtime-visibility): the volatile suffix now always
+      // carries which provider and model this turn is running on. It sits AFTER the stable
+      // prefix and BEFORE the replayed history — switching model must not rewrite the
+      // prefix, which is what REQ-NF-008 ① protects.
+      expect.stringContaining("当前运行时"),
       "My name is Ada.",
       "Nice to meet you, Ada.",
       "What is my name?",
     ]);
+    expect(received[1]).toMatchObject({ role: "system" });
   });
 
   it("rejects a conversation the user does not own", async () => {
