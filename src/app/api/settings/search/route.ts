@@ -5,7 +5,9 @@ import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
 import { getStore } from "@/lib/store-singleton";
 import {
+  browserFallbackEnabled,
   readWebSettings,
+  SETTING_BROWSER_FALLBACK,
   SETTING_SEARCH_BASE_URL,
   SETTING_WEB_ENABLED,
   validateSearchBaseUrl,
@@ -27,8 +29,13 @@ export async function GET() {
   if (unavailable) {
     return unavailable;
   }
-  const settings = readWebSettings(getStore());
-  return NextResponse.json({ enabled: settings.enabled, baseUrl: settings.baseUrl ?? "" });
+  const store = getStore();
+  const settings = readWebSettings(store);
+  return NextResponse.json({
+    enabled: settings.enabled,
+    baseUrl: settings.baseUrl ?? "",
+    browserFallback: browserFallbackEnabled(store),
+  });
 }
 
 export async function PUT(request: Request) {
@@ -48,6 +55,12 @@ export async function PUT(request: Request) {
     store.setSetting(SETTING_WEB_ENABLED, String(body.enabled));
   }
 
+  // REQ-F-057 ④: the browser channel is a switch of its own — it costs seconds and RAM
+  // per blocked page, and it only helps on some of them.
+  if (typeof body.browserFallback === "boolean") {
+    store.setSetting(SETTING_BROWSER_FALLBACK, String(body.browserFallback));
+  }
+
   if (typeof body.baseUrl === "string") {
     const raw = body.baseUrl.trim();
     if (!raw) {
@@ -64,5 +77,10 @@ export async function PUT(request: Request) {
   }
 
   const settings = readWebSettings(store);
-  return NextResponse.json({ ok: true, enabled: settings.enabled, baseUrl: settings.baseUrl ?? "" });
+  return NextResponse.json({
+    ok: true,
+    enabled: settings.enabled,
+    baseUrl: settings.baseUrl ?? "",
+    browserFallback: browserFallbackEnabled(store),
+  });
 }

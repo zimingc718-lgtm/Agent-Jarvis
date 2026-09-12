@@ -162,6 +162,23 @@ export async function assertAllowedUrl(raw: string, options: UrlGuardOptions): P
 export const MAX_REDIRECTS = 5;
 
 /**
+ * Headers a normal browser sends (REQ-F-056 ①).
+ *
+ * Node's fetch identifies itself as `undici`, and some servers answer that alone with a
+ * 403. This is honest identification rather than evasion — and measured not to be enough
+ * on its own: the three sites that blocked us return the same 403 with these headers,
+ * because they gate on a JavaScript challenge (EV-2026-09-11-web-reading §2). It is kept
+ * because it does fix the servers that only check for a missing User-Agent, and because
+ * `application/pdf` in `accept` stops servers from refusing the PDFs we can now read.
+ */
+export const DEFAULT_FETCH_HEADERS: Record<string, string> = {
+  "user-agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+  accept: "text/html,application/xhtml+xml,application/xml;q=0.9,application/pdf;q=0.9,text/plain;q=0.8,*/*;q=0.7",
+  "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
+};
+
+/**
  * Fetch with redirects followed by hand so **every hop** is re-validated (REQ-NF-009 ③).
  * `redirect: "manual"` is what makes that possible — the platform's automatic following
  * would take hop 2 onto the LAN without ever consulting the guard.
@@ -184,7 +201,7 @@ export async function fetchWithGuardedRedirects(
     const response = await fetcher(url.toString(), {
       redirect: "manual",
       signal,
-      headers: { accept: "text/html,text/plain;q=0.9,*/*;q=0.5" },
+      headers: DEFAULT_FETCH_HEADERS,
     });
     if (response.status < 300 || response.status >= 400) {
       return response;
