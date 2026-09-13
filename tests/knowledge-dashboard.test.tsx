@@ -353,6 +353,7 @@ describe("KnowledgeDashboard", () => {
           ],
           unmet: 0,
           quoted: ["核对过的"],
+          cited: ["核对过的", "没核对的"],
         }),
       ],
       pending: [],
@@ -372,5 +373,41 @@ describe("KnowledgeDashboard", () => {
     const unchecked = (await screen.findByText(/没核对的 =/)).closest("li");
     expect(unchecked?.textContent).toContain("推断");
     expect(checked?.textContent).not.toContain("推断");
+  });
+
+  it("⑰ 白名单字段同样要分辨：有出处没核对的标推断，用户自己填的不标", async () => {
+    const withFields: DashboardData = {
+      ...board,
+      entities: [
+        entity({
+          name: "tso-q",
+          kind: "authority",
+          title: "TSO Q",
+          change: "限值上调至 250kW",
+          capacity: "可用 1.2 GW",
+          quoted: [],
+          // change 有出处但没核对过；capacity 根本没有出处，是用户自己填的。
+          cited: ["change"],
+        }),
+      ],
+      pending: [],
+      proposals: [],
+    };
+    render(
+      <KnowledgeDashboard
+        act={noop}
+        isVisible={() => false}
+        loadBoard={async () => withFields}
+        loadOverview={async () => overview}
+        loadSweep={async () => ({ enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" })}
+      />
+    );
+    const changeRow = (await screen.findByText("限值上调至 250kW")).closest("span");
+    expect(changeRow?.parentElement?.textContent).toContain("推断");
+
+    fireEvent.click(screen.getByText("TSO Q"));
+    const capacityRow = (await screen.findByText(/容量：/)).closest("p");
+    // 用户自己填的值没有出处，它不是推断——把它说成推断是另一种谎。
+    expect(capacityRow?.textContent).not.toContain("推断");
   });
 });

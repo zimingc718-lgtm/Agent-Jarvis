@@ -47,9 +47,32 @@ export type DashboardEntity = {
    * right, but nothing verified it, and the card must not let the two look alike.
    */
   quoted?: string[];
+  /**
+   * Fields and parameters that carry a citation at all. Without it the card cannot tell
+   * 「没有出处」 from 「有出处但没核对过」——and only the second one is an inference. A
+   * value the user typed in has no citation and is not an inference; marking it as one
+   * would be its own kind of lie.
+   */
+  cited?: string[];
 };
 
 const PARAM_STATE_LABEL: Record<ParamState, string> = { unknown: "未判定", meets: "满足", unmet: "不满足" };
+
+/** 有出处、但那份出处没有被逐字核对过（REQ-F-180 ⑥）。 */
+function isInferred(entity: DashboardEntity, field: string): boolean {
+  return Boolean(entity.cited?.includes(field)) && !entity.quoted?.includes(field);
+}
+
+function InferredTag() {
+  return (
+    <span
+      className="knowledge-dashboard__inferred shrink-0 rounded bg-amber-500/15 px-1 text-amber-700 dark:text-amber-500"
+      title="没有可核对的条目原文，本条记为推断"
+    >
+      推断
+    </span>
+  );
+}
 /** Clicking cycles through the three; there is no fourth state to hide in. */
 const NEXT_PARAM_STATE: Record<ParamState, ParamState> = { unknown: "meets", meets: "unmet", unmet: "unknown" };
 const PARAM_STATE_CLASS: Record<ParamState, string> = {
@@ -323,14 +346,16 @@ export function KnowledgeDashboard({
               </span>
             ) : null}
             {entity.nextDate ? (
-              <span className="ml-auto text-xs text-muted-foreground">
+              <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
                 {entity.nextLabel || "下一步"} {entity.nextDate}
+                {isInferred(entity, "nextDate") ? <InferredTag /> : null}
               </span>
             ) : null}
           </span>
           {entity.summary ? <span className="truncate text-xs text-muted-foreground">{entity.summary}</span> : null}
-          <span className={`truncate text-xs ${entity.unread ? "text-foreground" : "text-muted-foreground"}`}>
-            {entity.change || "无新变更"}
+          <span className={`flex items-center gap-1 text-xs ${entity.unread ? "text-foreground" : "text-muted-foreground"}`}>
+            <span className="truncate">{entity.change || "无新变更"}</span>
+            {isInferred(entity, "change") ? <InferredTag /> : null}
           </span>
           <span className={`flex items-center gap-1.5 text-xs ${HEALTH_COLOR[entity.health]}`}>
             <SignalIcon className="shrink-0" />
@@ -355,14 +380,7 @@ export function KnowledgeDashboard({
                     </span>
                     {/* 推断项必须一眼可辨（REQ-F-180 ⑥）。没有标记的才是核对过原文的那一类，
                         所以标记打在「没验证过」这一侧——沉默永远意味着更弱的那个断言。 */}
-                    {entity.quoted?.includes(param.name) ? null : (
-                      <span
-                        className="knowledge-dashboard__inferred shrink-0 rounded bg-amber-500/15 px-1 text-amber-700 dark:text-amber-500"
-                        title="没有可核对的条目原文，本条记为推断"
-                      >
-                        推断
-                      </span>
-                    )}
+                    {isInferred(entity, param.name) ? <InferredTag /> : null}
                     {/* Only a person sets this: no source page says whether WE meet it. */}
                     <button
                       aria-label={`${entity.title} 的 ${param.name}：我方${PARAM_STATE_LABEL[param.status]}，点击切换`}
@@ -437,7 +455,12 @@ export function KnowledgeDashboard({
                 写入
               </button>
             </form>
-            {entity.capacity ? <p className="text-xs text-muted-foreground">容量：{entity.capacity}</p> : null}
+            {entity.capacity ? (
+              <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                容量：{entity.capacity}
+                {isInferred(entity, "capacity") ? <InferredTag /> : null}
+              </p>
+            ) : null}
 
             <p className="text-xs font-medium text-muted-foreground">采集源</p>
             {entity.sources.length === 0 ? (

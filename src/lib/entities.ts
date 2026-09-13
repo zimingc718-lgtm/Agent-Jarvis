@@ -161,6 +161,12 @@ export type EntitySummary = Omit<Entity, "body" | "evidence"> & {
    * like a checked one; everything absent from the list is inferred.
    */
   quoted: string[];
+  /**
+   * Everything that carries a citation at all. The board needs both lists: absent from
+   * `cited` means nobody claimed a source (the user typed it), absent from `quoted`
+   * while present here means a source was claimed but never checked word for word.
+   */
+  cited: string[];
   /** Derived: how many of this entity's requirements we do not meet. */
   unmet: number;
 };
@@ -371,6 +377,7 @@ export function summarize(entity: Entity, now: Date = new Date()): EntitySummary
     health: effectiveHealth(entity, now),
     unread: Boolean(entity.changeAt) && (!entity.seenAt || entity.changeAt > entity.seenAt),
     quoted: entity.evidence.filter((item) => item.basis === "quoted").map((item) => item.field),
+    cited: entity.evidence.map((item) => item.field),
     // Counted, never stored: the count is always whatever the rows say right now.
     unmet: entity.params.filter((param) => param.status === "unmet").length,
   };
