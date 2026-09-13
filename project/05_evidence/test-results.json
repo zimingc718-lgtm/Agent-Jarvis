@@ -1054,7 +1054,7 @@
       "command": "npm test -- knowledge-attribution",
       "real_entry": true,
       "date": "2026-09-13",
-      "notes": "知识元数据全链路。单测 11 例全绿（三字段落盘、不存在对象被拒且回列现有对象名、__通用__ 为具名归属、read_knowledge 带元数据头、双语 fixture 中文对象名命中英文正文、命中项带 entity、list_knowledge 分组计数与过滤、零条目仍注册而其余读取工具不注册）。真实入口（生产构建 .next-prod，POST /api/chat/stream）：① 一轮对话调用 save_knowledge 并带 entity/source_url/doc_type，GET /api/knowledge 显示新条目 800vdc-母线试点 entity=维谛技术-vertiv、docType=厂商新闻稿、url=https://vertiv.example/800vdc-pilot——改前该路径落盘恒为三字段皆空；② 同轮 list_knowledge 返回「知识库 2 条」；③ 另一轮 search_knowledge「维谛」命中 1 条（改前 0 条），read_knowledge 后模型答出归属「维谛技术-vertiv」与**绝对** URL，改前它报「未归属」并把正文里的相对路径当成来源。"
+      "notes": "知识元数据全链路。单测 11 例全绿（三字段落盘、不存在对象被拒且回列现有对象名、__通用__ 为具名归属、read_knowledge 带元数据头、双语 fixture 中文对象名命中英文正文、命中项带 entity、list_knowledge 分组计数与过滤、零条目仍注册而其余读取工具不注册）。真实入口（生产构建 .next-prod，POST /api/chat/stream）：① 一轮对话调用 save_knowledge 并带 entity/source_url/doc_type，GET /api/knowledge 显示新条目 800vdc-母线试点 entity=维谛技术-vertiv、docType=厂商新闻稿、url=https://vertiv.example/800vdc-pilot——改前该路径落盘恒为三字段皆空；② 同轮 list_knowledge 返回「知识库 2 条」；③ 另一轮 search_knowledge「维谛」命中 1 条（改前 0 条），read_knowledge 后模型答出归属「维谛技术-vertiv」与**绝对** URL，改前它报「未归属」并把正文里的相对路径当成来源。 2026-09-13 增 ⑨：看板把 __通用__ 显示为具名分组、与无归属并列不合并，为零不显示；组件与工具的字面量由断言钉住。此前 REQ-F-170 ③ 只落到工具层，看板从未显示过它。"
     },
     {
       "id": "TEST-240",

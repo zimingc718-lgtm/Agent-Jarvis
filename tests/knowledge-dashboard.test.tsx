@@ -410,4 +410,46 @@ describe("KnowledgeDashboard", () => {
     // 用户自己填的值没有出处，它不是推断——把它说成推断是另一种谎。
     expect(capacityRow?.textContent).not.toContain("推断");
   });
+
+  it("⑱ `__通用__` 是具名分组，不并进「无归属」（REQ-F-170 ③）", async () => {
+    const withGeneral: OverviewData = {
+      ...overview,
+      total: 12,
+      unowned: 5,
+      byEntity: { ...overview.byEntity, "__通用__": 3 },
+    };
+    render(
+      <KnowledgeDashboard
+        act={noop}
+        isVisible={() => false}
+        loadBoard={async () => board}
+        loadOverview={async () => withGeneral}
+        loadSweep={async () => ({ enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" })}
+      />
+    );
+    // 两个数必须同时在，而且是两个数——合并了就看不出模型是不是在往通用桶里丢。
+    await waitFor(() => expect(screen.getByText(/共 12 条 · 无归属 5 条 · 通用 3 条/)).toBeInTheDocument());
+  });
+
+  it("⑲ 通用桶为零时不显示——那不是信号，是噪声", async () => {
+    render(
+      <KnowledgeDashboard
+        act={noop}
+        isVisible={() => false}
+        loadBoard={async () => board}
+        loadOverview={async () => overview}
+        loadSweep={async () => ({ enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" })}
+      />
+    );
+    await waitFor(() => expect(screen.getByText(/共 12 条 · 无归属 5 条/)).toBeInTheDocument());
+    expect(screen.queryByText(/通用/)).not.toBeInTheDocument();
+  });
+
+  it("⑳ 看板与工具用的是同一个字面量——两处各写一份，不许漂移", async () => {
+    const { GENERAL_ENTITY } = await import("@/lib/tools/knowledge-tools");
+    const source = await import("node:fs").then((fs) =>
+      fs.readFileSync("src/components/KnowledgeDashboard.tsx", "utf8")
+    );
+    expect(source).toContain(`const GENERAL_ENTITY = "${GENERAL_ENTITY}"`);
+  });
 });

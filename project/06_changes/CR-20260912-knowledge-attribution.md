@@ -136,6 +136,7 @@ REQ-F-170、REQ-F-171、DEC-150、TASK-230、TEST-230。当前刻意不声明占
 
 ## 实施记录（2026-09-13）
 
+- **2026-09-13 补**：REQ-F-170 ③ 此前只落到工具层——`save_knowledge` 接受并校验 `__通用__`，存储层照存，但看板从没显示过它（卡片按已跟踪对象取数，而总览那行的「无归属」取的是空串桶，与它是两回事）。现在总览显示为「· 通用 N 条」，与无归属并列；为零时不显示，那不是信号是噪声。两处字面量由一条断言钉住不漂移。
 - `knowledge.ts`：索引 tokens 由 `title\ncontent` 扩为并入 `entity` 与 `docType`（`sourceUrl` 不进——URL 多是噪声 token）；`KnowledgeHit` 增 `entity`；新增 `readPendingKnowledge`（显式命名而非给 `readKnowledge` 加布尔开关）。
 - `knowledge-tools.ts`：`save_knowledge` 增 `entity`（必填）/`source_url`/`doc_type`，对象不存在即拒绝并回列现有对象名；导出 `GENERAL_ENTITY = "__通用__"`；`read_knowledge` 正文前置元数据头；`search_knowledge` 命中带归属；新增 `list_knowledge`（分组计数 + `offset` 分页，`essential`，零条目仍注册）。
 - 既有 `tests/knowledge-tools.test.ts` 按新契约更新三处断言：工具数、空库注册集合（现为 `save_knowledge` + `list_knowledge`）、检索输出格式。

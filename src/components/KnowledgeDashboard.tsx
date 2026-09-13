@@ -56,6 +56,15 @@ export type DashboardEntity = {
   cited?: string[];
 };
 
+/**
+ * 「不属于任何跟踪对象」的具名归属（REQ-F-170 ②③）。
+ *
+ * 与 `knowledge-tools.ts` 的 `GENERAL_ENTITY` 是同一个字面量，写两份是因为那个模块碰
+ * 文件系统、进不了客户端；`tests/knowledge-dashboard.test.tsx` 有一条断言把两边钉在
+ * 一起，免得哪天一边改了另一边不知道。
+ */
+const GENERAL_ENTITY = "__通用__";
+
 const PARAM_STATE_LABEL: Record<ParamState, string> = { unknown: "未判定", meets: "满足", unmet: "不满足" };
 
 /** 有出处、但那份出处没有被逐字核对过（REQ-F-180 ⑥）。 */
@@ -317,6 +326,7 @@ export function KnowledgeDashboard({
   const unreadCount = board.entities.filter((entity) => entity.unread).length;
   const brokenCount = board.entities.filter((entity) => entity.health === "failed_fetch" || entity.health === "parse_failed").length;
   const waiting = board.pending.length + board.proposals.length;
+  const generalCount = overview.byEntity[GENERAL_ENTITY] ?? 0;
   const unmetTotal = board.entities.reduce((total, entity) => total + (entity.unmet ?? 0), 0);
   const paramTotal = board.entities.reduce((total, entity) => total + (entity.params?.length ?? 0), 0);
 
@@ -742,6 +752,9 @@ export function KnowledgeDashboard({
           <h3 className="text-sm font-semibold tracking-tight">知识库</h3>
           <span className="text-xs text-muted-foreground">
             共 {overview.total} 条 · 无归属 {overview.unowned} 条
+            {/* 具名分组，不并进「无归属」（REQ-F-170 ③）：那是空串桶，这是模型明确说
+                「不属于任何对象」的一桶。两者混在一起，就看不出模型是不是在偷懒。 */}
+            {generalCount > 0 ? ` · 通用 ${generalCount} 条` : ""}
           </span>
         </div>
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
