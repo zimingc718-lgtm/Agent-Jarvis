@@ -222,6 +222,23 @@ export async function readKnowledge(name: string, root: string = KNOWLEDGE_ROOT)
   return readEntryAt(entryPath(root, name), name);
 }
 
+/**
+ * Reads an entry that is still waiting for adoption (CR-20260912-ingest-extract-chain).
+ *
+ * Deliberately a separate function rather than a `pending` flag on `readKnowledge`: the
+ * rule that a pending entry does not take part in retrieval is worth keeping hard to
+ * switch off by accident, and a boolean parameter is the easiest thing in the world for
+ * the next caller to pass `true` to. Only the evidence pipeline should reach for this —
+ * `extract_fields` needs it because `ingest_url` files a page as pending, which used to
+ * deadlock the two tools against each other inside a single turn.
+ */
+export async function readPendingKnowledge(name: string, root: string = KNOWLEDGE_ROOT): Promise<KnowledgeEntry | null> {
+  if (!isSafeName(name)) {
+    return null;
+  }
+  return readEntryAt(entryPath(root, name, true), name);
+}
+
 export type SaveKnowledgeInput = {
   title?: string;
   content: string;
@@ -429,7 +446,8 @@ export function snippetFor(content: string, query: string[], maxChars = 160): st
 
 // ---------------------------------------------------------------- retrieval (over the folder)
 
-export type KnowledgeHit = { name: string; title: string; score: number; snippet: string };
+/** `entity` rides along so the model can group hits by object without a second read. */
+export type KnowledgeHit = { name: string; title: string; entity: string; score: number; snippet: string };
 
 type IndexCache = { signature: string; entries: KnowledgeEntry[]; docs: IndexedDoc[] };
 const indexCache = new Map<string, IndexCache>();
@@ -448,7 +466,15 @@ async function indexFor(root: string): Promise<IndexCache> {
     return cached;
   }
   const entries = await listEntries(root);
-  const docs = entries.map((entry) => ({ id: entry.name, tokens: tokenize(`${entry.title}\n${entry.content}`) }));
+  // The metadata joins the index (CR-20260912-knowledge-attribution). `entity` and
+  // `docType` were stored and then used by nothing: a Chinese object name lives only in
+  // front matter, which `parseEntryFile` keeps out of `content`, so searching 「维谛」 could
+  // never reach an English press release filed under 维谛技术-vertiv. `sourceUrl` stays out —
+  // a URL is mostly noise tokens.
+  const docs = entries.map((entry) => ({
+    id: entry.name,
+    tokens: tokenize(`${entry.title}\n${entry.entity}\n${entry.docType}\n${entry.content}`),
+  }));
   const next = { signature, entries, docs };
   indexCache.set(root, next);
   return next;
@@ -465,7 +491,13 @@ export async function searchKnowledge(query: string, limit = 5, root: string = K
     .slice(0, Math.max(1, Math.min(limit, 20)))
     .map((hit) => {
       const entry = byName.get(hit.id)!;
-      return { name: entry.name, title: entry.title, score: hit.score, snippet: snippetFor(entry.content, terms) };
+      return {
+        name: entry.name,
+        title: entry.title,
+        entity: entry.entity,
+        score: hit.score,
+        snippet: snippetFor(entry.content, terms),
+      };
     });
 }
 

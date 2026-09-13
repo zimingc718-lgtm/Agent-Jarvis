@@ -5,7 +5,7 @@ import { Globe } from "lucide-react";
 import { Dialog } from "./Dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { USAGE_CHANGED_EVENT } from "@/lib/ui-events";
+import { TURN_USAGE_EVENT, USAGE_CHANGED_EVENT } from "@/lib/ui-events";
 import type { TokenUsage } from "@/lib/types";
 
 /**
@@ -63,6 +63,8 @@ export function SearchSettings({ load = loadFromApi, save = saveToApi, test = te
   const [browserFallback, setBrowserFallback] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
   const [usage, setUsage] = useState<TokenUsage | null>(null);
+  /** REQ-NF-060 ④: what the question you just asked cost, next to what the session cost. */
+  const [turnUsage, setTurnUsage] = useState<{ inputTokens: number; outputTokens: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,8 +87,14 @@ export function SearchSettings({ load = loadFromApi, save = saveToApi, test = te
   useEffect(() => {
     // The chat owns the stream and the menu owns the display; neither imports the other.
     const onUsage = (event: Event) => setUsage((event as CustomEvent<TokenUsage>).detail);
+    const onTurnUsage = (event: Event) =>
+      setTurnUsage((event as CustomEvent<{ inputTokens: number; outputTokens: number }>).detail);
     window.addEventListener(USAGE_CHANGED_EVENT, onUsage);
-    return () => window.removeEventListener(USAGE_CHANGED_EVENT, onUsage);
+    window.addEventListener(TURN_USAGE_EVENT, onTurnUsage);
+    return () => {
+      window.removeEventListener(USAGE_CHANGED_EVENT, onUsage);
+      window.removeEventListener(TURN_USAGE_EVENT, onTurnUsage);
+    };
   }, []);
 
   const persist = async (next: SearchSettingsValue) => {
@@ -112,6 +120,9 @@ export function SearchSettings({ load = loadFromApi, save = saveToApi, test = te
       </p>
 
       <p className="search-settings__usage px-3 text-xs text-muted-foreground">
+        本轮用量：
+        {turnUsage ? `输入 ${turnUsage.inputTokens} / 输出 ${turnUsage.outputTokens} tokens` : "尚无数据"}
+        <br />
         本会话用量：
         {usage
           ? `输入 ${usage.inputTokens} / 输出 ${usage.outputTokens} tokens${usage.estimated ? "（估算）" : ""}`

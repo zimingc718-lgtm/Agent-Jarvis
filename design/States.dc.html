@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    a { color: hsl(262 83% 45%); } a:hover { color: hsl(262 83% 35%); }
+  </style>
+</helmet>
+
+<div style="width: 1080px; min-height: 540px; box-sizing: border-box; background: hsl(270 33% 99%); color: hsl(264 33% 16%); line-height: 1.5; padding: 28px; display: flex; flex-direction: column; gap: 18px;">
+
+  <div style="display: flex; flex-direction: column; gap: 4px;">
+    <h2 style="margin: 0; font-size: 18px; line-height: 24px; font-weight: 600; letter-spacing: -0.01em;">采集健康度：沉默的四种原因</h2>
+    <p style="margin: 0; font-size: 13px; line-height: 18px; color: hsl(264 15% 40%);">卡片上的第二个指示。它回答的不是「对方有没有动静」，而是「我们的采集是否还在工作」。这两件事看上去都是一片安静，代价完全不同。</p>
+  </div>
+
+  <div style="display: flex; flex-direction: column; border: 1px solid hsl(264 18% 87%); border-radius: 6px; background: hsl(0 0% 100%); overflow: hidden;">
+
+    <div style="display: grid; grid-template-columns: 150px 210px 1fr 250px; gap: 16px; padding: 10px 16px; background: hsl(264 22% 94%); font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(264 15% 40%);">
+      <span>指示</span><span>卡片上显示</span><span>含义</span><span>该做什么</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 150px 210px 1fr 250px; gap: 16px; align-items: center; padding: 12px 16px; border-top: 1px solid hsl(264 18% 87%); font-size: 13px; line-height: 18px;">
+      <span style="display: inline-flex; align-items: center; gap: 6px; color: hsl(264 15% 40%);">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 9.5V7.75M6 9.5V5.25M10 9.5V2.5" stroke="hsl(264 15% 40%)" stroke-width="1.5" stroke-linecap="round"></path></svg>fresh</span>
+      <span style="color: hsl(264 15% 40%);">5 小时前采集</span>
+      <span>采集正常，对方确实没有新动静</span>
+      <span style="color: hsl(264 15% 40%);">无需动作</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 150px 210px 1fr 250px; gap: 16px; align-items: center; padding: 12px 16px; border-top: 1px solid hsl(264 18% 87%); font-size: 13px; line-height: 18px;">
+      <span style="display: inline-flex; align-items: center; gap: 6px; color: #b45309;">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 9.5V7.75M6 9.5V5.25M10 9.5V2.5" stroke="#b45309" stroke-width="1.5" stroke-linecap="round"></path></svg>stale</span>
+      <span style="color: #b45309;">23 天未成功采集</span>
+      <span>采集链路还在，但我们手里的信息已经旧了</span>
+      <span style="color: hsl(264 15% 40%);">确认对方是否真的沉寂，或换一个源</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 150px 210px 1fr 250px; gap: 16px; align-items: center; padding: 12px 16px; border-top: 1px solid hsl(264 18% 87%); font-size: 13px; line-height: 18px;">
+      <span style="display: inline-flex; align-items: center; gap: 6px; color: hsl(0 72% 45%);">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 9.5V7.75M6 9.5V5.25M10 9.5V2.5" stroke="hsl(0 72% 45%)" stroke-width="1.5" stroke-linecap="round"></path></svg>failed_fetch</span>
+      <span style="color: hsl(0 72% 45%);">抓取失败：连续 3 次超时</span>
+      <span>拿不到页面。对方可能封了，也可能只是网络</span>
+      <span style="color: hsl(264 15% 40%);">看失败次数，连续多次才值得处理</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 150px 210px 1fr 250px; gap: 16px; align-items: center; padding: 12px 16px; border-top: 1px solid hsl(264 18% 87%); font-size: 13px; line-height: 18px;">
+      <span style="display: inline-flex; align-items: center; gap: 6px; color: hsl(0 72% 45%);">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 9.5V7.75M6 9.5V5.25M10 9.5V2.5" stroke="hsl(0 72% 45%)" stroke-width="1.5" stroke-linecap="round"></path></svg>parse_failed</span>
+      <span style="color: hsl(0 72% 45%);">解析失败：官网改版</span>
+      <span>抓到了页面，但取不出内容。最危险的一种：页面还在更新，我们却什么也没看见</span>
+      <span style="color: hsl(264 15% 40%);">重配这个源的取数方式</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 150px 210px 1fr 250px; gap: 16px; align-items: center; padding: 12px 16px; border-top: 1px solid hsl(264 18% 87%); font-size: 13px; line-height: 18px;">
+      <span style="display: inline-flex; align-items: center; gap: 6px; color: #b45309;">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 9.5V7.75M6 9.5V5.25M10 9.5V2.5" stroke="#b45309" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"></path></svg>未接入</span>
+      <span style="color: #b45309;">未配置采集源</span>
+      <span>这张卡从来就没被跟踪过。它的安静不代表任何事实</span>
+      <span style="color: hsl(264 15% 40%);">配一个源，或明确标为「只手工维护」</span>
+    </div>
+
+  </div>
+
+  <div style="display: flex; gap: 10px; border-left: 2px solid hsl(262 83% 45%); padding: 2px 0 2px 12px;">
+    <p style="margin: 0; font-size: 13px; line-height: 19px; color: hsl(264 33% 16%);">这一条比整个布局都重要。一个精致的看板会用完全相同的自信外观呈现一张残缺的图，而读者看不出缺口。这个项目已经踩过同一类坑：把「未探测」当成「不支持」，结果联网搜索根本调不起来。<span style="color: hsl(264 15% 40%);">沉默不等于正常。</span></p>
+  </div>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":1080,"height":540}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>

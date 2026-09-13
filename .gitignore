@@ -30,3 +30,6 @@ __pycache__/
 # OS / editor
 .DS_Store
 Thumbs.db
+
+# 会话工作区：另一个会话在这里开 worktree，不该进版本库
+.claude/worktrees/

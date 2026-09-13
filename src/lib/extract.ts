@@ -1,13 +1,14 @@
 import {
   ENTITIES_ROOT,
   isReservedParamName,
+  listEntities,
   MAX_PARAM_NAME_CHARS,
   normalizeParamName,
   readEntity,
   UPDATABLE_FIELDS,
 } from "./entities";
 import { proposeEntityUpdate } from "./entity-proposals";
-import { KNOWLEDGE_ROOT, readKnowledge } from "./knowledge";
+import { KNOWLEDGE_ROOT, readKnowledge, readPendingKnowledge } from "./knowledge";
 
 /**
  * Filing a field value that came out of a stored document
@@ -53,6 +54,12 @@ export type ClaimOutcome = {
   /** `applied` went straight onto the entity; `queued` is waiting for the user. */
   status: "applied" | "queued" | "rejected";
   reason: string;
+  /**
+   * True when this claim replaced an existing proposal instead of adding one
+   * (CR-20260912-proposal-id-collision). A caller reporting «写入 N 个字段» must count
+   * records, not attempts. Absent on rejected claims — nothing was written at all.
+   */
+  overwrote?: boolean;
 };
 
 export type ExtractOutcome =
@@ -80,7 +87,7 @@ export type ExtractDeps = {
  * because that is precisely what is being checked. Case is folded for Latin only in
  * effect; CJK has no case.
  */
-function normalize(text: string): string {
+export function normalizeEvidenceText(text: string): string {
   return text.replace(/\s+/gu, "").toLowerCase();
 }
 
@@ -113,11 +120,22 @@ export async function extractFields(
 
   const entity = await readEntity(entityName, entitiesRoot);
   if (!entity) {
-    return { ok: false, reason: `没有名为「${entityName}」的跟踪对象。` };
+    // Name what exists (CR-20260912-ingest-extract-chain). A bare «没有这个对象» leaves the
+    // model guessing, and the measured behaviour when it has to guess is that it invents
+    // a reason and files that as evidence.
+    const known = (await listEntities(entitiesRoot)).map((item) => item.name);
+    const hint = known.length > 0 ? `现有对象：${known.join("、")}。` : "目前一个跟踪对象都还没有，请先建对象。";
+    return { ok: false, reason: `没有名为「${entityName}」的跟踪对象。${hint}` };
   }
-  const entry = await readKnowledge(entryName, knowledgeRoot);
+  // A page filed by `ingest_url` sits in the pending queue, so look there too — those two
+  // tools used to deadlock inside one turn, and the failure surfaced as a bare «未写入».
+  const entry =
+    (await readKnowledge(entryName, knowledgeRoot)) ?? (await readPendingKnowledge(entryName, knowledgeRoot));
   if (!entry) {
-    return { ok: false, reason: `知识库里没有名为「${entryName}」的条目。只能从已入库的材料里抽字段。` };
+    return {
+      ok: false,
+      reason: `知识库里没有名为「${entryName}」的条目——正式库与待采纳区都没有。只能从已入库的材料里抽字段。`,
+    };
   }
   if (!entry.sourceUrl) {
     return { ok: false, reason: `条目「${entry.title}」没有原始链接，抽出来的值无处溯源，不写入。` };
@@ -126,7 +144,7 @@ export async function extractFields(
   // Trust is a property of where the DOCUMENT came from, not of what the model says
   // about it — the same rule `propose_entity_update` applies to a bare URL.
   const trusted = entity.sources.some((registered) => sameHost(registered, entry.sourceUrl));
-  const haystack = normalize(entry.content);
+  const haystack = normalizeEvidenceText(entry.content);
   const now = deps.now ?? (() => new Date());
 
   const results: ClaimOutcome[] = [];
@@ -170,11 +188,11 @@ export async function extractFields(
       results.push({ field, kind, value, status: "rejected", reason: `原文超过 ${MAX_QUOTE_CHARS} 字，请只引与该值相关的一句或一行。` });
       continue;
     }
-    if (!haystack.includes(normalize(quote))) {
+    if (!haystack.includes(normalizeEvidenceText(quote))) {
       results.push({ field, kind, value, status: "rejected", reason: "这句原文不在该条目里。不能凭记忆引用，只能引条目中确实存在的文字。" });
       continue;
     }
-    if (!normalize(quote).includes(normalize(value))) {
+    if (!normalizeEvidenceText(quote).includes(normalizeEvidenceText(value))) {
       results.push({ field, kind, value, status: "rejected", reason: "值没有出现在所引原文里。值必须能在原文中逐字找到。" });
       continue;
     }
@@ -186,6 +204,8 @@ export async function extractFields(
         field,
         value,
         evidence: { url: entry.sourceUrl, at: "", locator: `条目 ${entry.name}：${quote}` },
+        // This path already proved the quote is in the entry verbatim (② and ③ above).
+        basis: "quoted",
       },
       { root: entitiesRoot, autoApply: trusted, now }
     );
@@ -194,6 +214,7 @@ export async function extractFields(
       kind,
       value,
       status: record.applied ? "applied" : "queued",
+      overwrote: record.overwrote,
       reason: record.applied
         ? "原文核对通过，来源在该对象已登记的采集源内，已直接生效。"
         : "原文核对通过；来源不在该对象已登记的采集源内，待你在看板上采纳。",

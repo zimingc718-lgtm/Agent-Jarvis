@@ -1,6 +1,8 @@
+import { ENTITIES_ROOT, listEntities } from "../entities";
 import {
   KNOWLEDGE_ROOT,
   KnowledgeError,
+  listKnowledge,
   MAX_ENTRY_BYTES,
   readKnowledge,
   recordSearchMiss,
@@ -28,10 +30,24 @@ import { TOOL_PRIORITY, type ToolDescriptor } from "./registry";
 const SEARCH_RESULT_TOKEN_CAP = 2_000;
 const READ_RESULT_TOKEN_CAP = 6_000;
 
-export type KnowledgeToolDeps = { root?: string };
+/**
+ * The one attribution that is not a tracked object (REQ-F-170 ②③).
+ *
+ * `entity` is required so the base stops growing new orphans, but a note like 「我方产能
+ * 约束」 belongs to no competitor, customer or authority. Without an explicit home for it
+ * the model would be pushed into inventing an object — so there is one, and the board
+ * shows it as a real group rather than folding it into 未分类.
+ */
+export const GENERAL_ENTITY = "__通用__";
+
+/** A listing has to fit a tool result; past this only the per-object counts are returned. */
+const LIST_PAGE_SIZE = 30;
+
+export type KnowledgeToolDeps = { root?: string; entitiesRoot?: string };
 
 export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescriptor[] {
   const root = deps.root ?? KNOWLEDGE_ROOT;
+  const entitiesRoot = deps.entitiesRoot ?? ENTITIES_ROOT;
 
   const search: ToolDescriptor = {
     name: "search_knowledge",
@@ -58,7 +74,12 @@ export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescript
         await recordSearchMiss(query, root);
         return { ok: true, content: `知识库中没有与「${query}」相关的条目。`, summary: `知识检索无结果：${query}` };
       }
-      const lines = hits.map((hit) => `- ${hit.name}｜${hit.title}：${hit.snippet}`);
+      // Each hit says whose it is (REQ-F-170 ⑤): grouping hits by object is what the list
+      // is for, and the absolute URL can wait for `read_knowledge` — five hits carrying a
+      // full metadata header each would be five times the cost for one useful field.
+      const lines = hits.map(
+        (hit) => `- ${hit.name}｜${hit.title}｜归属 ${hit.entity || "（无）"}：${hit.snippet}`
+      );
       const { text, truncated } = truncateToTokens(lines.join("\n"), SEARCH_RESULT_TOKEN_CAP);
       return {
         ok: true,
@@ -91,8 +112,18 @@ export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescript
           summary: `知识条目不存在：${name}`,
         };
       }
-      // One read must not eat the turn (REQ-NF-013 ③, mirroring read_skill).
-      const { text, truncated } = truncateToTokens(`# ${entry.title}\n\n${entry.content}`, READ_RESULT_TOKEN_CAP);
+      // The metadata leads (REQ-F-170 ④). It was stored all along and returned to nobody,
+      // so the model reported an attributed entry as 「未归属」 and quoted a relative link
+      // out of the page body as its source.
+      const header = [
+        `归属：${entry.entity || "（无）"}`,
+        `类型：${entry.docType || "（无）"}`,
+        `来源：${entry.sourceUrl || "（无）"}`,
+      ].join("\n");
+      const { text, truncated } = truncateToTokens(
+        `# ${entry.title}\n\n${header}\n\n---\n\n${entry.content}`,
+        READ_RESULT_TOKEN_CAP
+      );
       return { ok: true, content: text, summary: `读取知识 ${entry.title}${truncated ? "（已截断）" : ""}` };
     },
   };
@@ -106,15 +137,47 @@ export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescript
       properties: {
         title: { type: "string", description: "条目标题，一句话" },
         content: { type: "string", description: "条目正文，Markdown" },
+        entity: { type: "string", description: `归属对象名（来自 list_entities）；不属于任何对象时填 ${GENERAL_ENTITY}` },
+        source_url: { type: "string", description: "该内容的原始链接" },
+        doc_type: { type: "string", description: "厂商新闻稿 / 标准说明书 / 技术论文 等" },
       },
-      required: ["title", "content"],
+      required: ["title", "content", "entity"],
     },
     available: () => true,
     async execute(args) {
       const title = typeof args.title === "string" ? args.title.trim() : "";
       const content = typeof args.content === "string" ? args.content : "";
+      const entity = typeof args.entity === "string" ? args.entity.trim() : "";
+      const sourceUrl = typeof args.source_url === "string" ? args.source_url.trim() : "";
+      const docType = typeof args.doc_type === "string" ? args.doc_type.trim() : "";
+
+      // Required, and checked against the real objects (REQ-F-170 ②). Optional attribution
+      // does not stop new orphans from appearing, and orphans are what made the board's
+      // per-object counts structurally empty.
+      if (!entity) {
+        const known = (await listEntities(entitiesRoot)).map((item) => item.name);
+        return {
+          ok: false,
+          content: `entity 是必填：请给出归属对象，或填 ${GENERAL_ENTITY} 表示不属于任何对象。现有对象：${known.join("、") || "（还没有）"}。`,
+          summary: "缺少归属对象",
+        };
+      }
+      if (entity !== GENERAL_ENTITY) {
+        const known = (await listEntities(entitiesRoot)).map((item) => item.name);
+        if (!known.includes(entity)) {
+          return {
+            ok: false,
+            content: `没有名为「${entity}」的跟踪对象。现有对象：${known.join("、") || "（还没有）"}；不属于任何对象时填 ${GENERAL_ENTITY}。`,
+            summary: `对象不存在：${entity}`,
+          };
+        }
+      }
+
       try {
-        const saved = await saveKnowledge({ title, content, source: "model", pending: true }, root);
+        const saved = await saveKnowledge(
+          { title, content, source: "model", pending: true, entity, sourceUrl, docType },
+          root
+        );
         return {
           ok: true,
           content: `已提议知识条目「${saved.title}」（${saved.name}），放入待采纳区；用户在 ☰ 菜单「知识库」中采纳后才会被检索到。`,
@@ -161,7 +224,9 @@ export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescript
         signal: context.signal,
       });
       if (!outcome.ok) {
-        return { ok: false, content: outcome.reason, summary: "未入库" };
+        // The reason travels to the step row too (CR-20260912-ingest-extract-chain);
+        // 「未入库」 on its own is what the model had to guess around.
+        return { ok: false, content: outcome.reason, summary: `未入库：${outcome.reason.split(/[。；]/u)[0] ?? ""}` };
       }
       return {
         ok: true,
@@ -172,5 +237,55 @@ export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescript
     },
   };
 
-  return [search, read, save, ingest];
+  const list: ToolDescriptor = {
+    name: "list_knowledge",
+    // Without it the model can only guess keywords — a silent degradation, which is
+    // exactly what `essential` is for (CR-20260912-tool-budget).
+    priority: TOOL_PRIORITY.essential,
+    description: "列出知识库里有什么：按归属对象分组计数，并返回条目名称、标题与类型。可用 entity 过滤。",
+    parameters: {
+      type: "object",
+      properties: {
+        entity: { type: "string", description: "只看某个归属对象，留空为全部" },
+        offset: { type: "integer", description: "从第几条开始（默认 0）" },
+      },
+    },
+    // Registers even at zero entries (REQ-F-171 ④), unlike the other read tools: the model
+    // has to be able to answer 「库是空的」 and say what to do about it. Taking stock of an
+    // empty base by keyword guessing was measured at 15 fruitless searches.
+    available: () => true,
+    async execute(args) {
+      const wanted = typeof args.entity === "string" ? args.entity.trim() : "";
+      const offset = Number.isInteger(args.offset) ? Math.max(0, args.offset as number) : 0;
+      const all = await listKnowledge(root);
+      if (all.length === 0) {
+        return {
+          ok: true,
+          content: "知识库还是空的。可以用 ingest_url 把一个网页存进来，或让用户拖入文件；存入时要给出归属对象。",
+          summary: "知识库为空",
+        };
+      }
+
+      const counts = new Map<string, number>();
+      for (const entry of all) {
+        const key = entry.entity || "（无归属）";
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
+      const grouped = [...counts.entries()].map(([name, count]) => `${name} ${count} 条`).join("；");
+
+      const rows = wanted ? all.filter((entry) => entry.entity === wanted) : all;
+      const page = rows.slice(offset, offset + LIST_PAGE_SIZE);
+      const lines = page.map(
+        (entry) => `- ${entry.name}｜${entry.title}｜归属 ${entry.entity || "（无）"}｜类型 ${entry.docType || "（无）"}`
+      );
+      const more = rows.length > offset + page.length ? `\n（还有 ${rows.length - offset - page.length} 条，可用 offset 继续）` : "";
+      const { text, truncated } = truncateToTokens(
+        `共 ${all.length} 条，按归属：${grouped}\n\n${lines.join("\n")}${more}`,
+        SEARCH_RESULT_TOKEN_CAP
+      );
+      return { ok: true, content: text, summary: `知识库 ${all.length} 条${truncated ? "（已截断）" : ""}` };
+    },
+  };
+
+  return [search, read, save, ingest, list];
 }

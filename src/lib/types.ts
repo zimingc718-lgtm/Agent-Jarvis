@@ -70,6 +70,14 @@ export type ChatDelta =
   | { type: "usage"; usage: TokenUsage }
   // REQ-F-029 ②: the step ceiling (MAX_TOOL_STEPS) was reached; partial work is kept.
   | { type: "truncated"; steps: number }
+  // REQ-NF-060 ②: the provider stopped at its output cap. Typed rather than a prose
+  // notice so the loop can continue the answer itself; the notice is emitted by the
+  // loop only when it stops continuing.
+  | { type: "length_capped" }
+  // REQ-NF-060 ④: THIS turn's running total. The conversation total (REQ-F-037) hides
+  // the event that matters — one research question came to 1,028,825 input tokens and
+  // was invisible because it only ever landed in a session sum.
+  | { type: "turn_usage"; usage: { inputTokens: number; outputTokens: number } }
   // REQ-F-040 ③: the resolved provider cannot call tools, so this turn ran tool-free.
   | { type: "tools-unavailable"; reason: string }
   // REQ-F-023 ③: a plain informational line in the transcript — "no insight this turn"

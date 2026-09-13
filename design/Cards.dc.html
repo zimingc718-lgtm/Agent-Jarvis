@@ -1,0 +1,174 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    a { color: hsl(262 83% 45%); } a:hover { color: hsl(262 83% 35%); }
+  </style>
+</helmet>
+
+<div style="width: 1420px; min-height: 480px; box-sizing: border-box; background: hsl(270 33% 99%); color: hsl(264 33% 16%); line-height: 1.5; padding: 28px; display: flex; flex-direction: column; gap: 20px;">
+
+  <div style="display: flex; flex-direction: column; gap: 4px;">
+    <h2 style="margin: 0; font-size: 18px; line-height: 24px; font-weight: 600; letter-spacing: -0.01em;">四类实体，四套状态模型</h2>
+    <p style="margin: 0; font-size: 13px; line-height: 18px; color: hsl(264 15% 40%);">共用一个实体记录，状态字段按类型分化。客户是唯一有两面的一类：商业面是关系阶段，技术面和友商同构，都是「对方又发了什么」。</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px;">
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: baseline; gap: 8px;">
+        <span style="font-size: 13px; line-height: 18px; font-weight: 600;">友商</span>
+        <span style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">变化检测</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 5px; box-sizing: border-box; border: 1px solid hsl(264 18% 87%); border-radius: 6px; background: hsl(0 0% 100%); padding: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="width: 8px; height: 8px; border-radius: 9999px; flex-shrink: 0; box-sizing: border-box; background: hsl(262 83% 45%); border: 1.5px solid hsl(262 83% 45%);"></span>
+          <span style="font-size: 14px; line-height: 20px; font-weight: 500;">友商 B</span>
+        </div>
+        <div style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">工业交换机，价格战主力</div>
+        <div style="font-size: 12px; line-height: 16px;">定价页千兆型号下调 12%</div>
+        <div style="display: flex; align-items: center; gap: 6px; padding-top: 2px; font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style="flex-shrink: 0;">
+            <path d="M2 9.5V7.75M6 9.5V5.25M10 9.5V2.5" stroke="hsl(264 15% 40%)" stroke-width="1.5" stroke-linecap="round"></path>
+          </svg>
+          <span>5 小时前采集</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; gap: 8px;">
+          <span style="width: 8px; height: 8px; margin-top: 5px; border-radius: 9999px; flex-shrink: 0; background: hsl(262 83% 45%);"></span>
+          <span style="font-size: 12px; line-height: 16px;"><span style="font-weight: 500;">实心点</span><span style="color: hsl(264 15% 40%);"> 有未读变更，空心为已跟进</span></span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style="flex-shrink: 0; margin-top: 3px;">
+            <path d="M2 9.5V7.75M6 9.5V5.25M10 9.5V2.5" stroke="hsl(264 15% 40%)" stroke-width="1.5" stroke-linecap="round"></path>
+          </svg>
+          <span style="font-size: 12px; line-height: 16px;"><span style="font-weight: 500;">信号图标</span><span style="color: hsl(264 15% 40%);"> 采集健康度，与内容变化分开</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: baseline; gap: 8px;">
+        <span style="font-size: 13px; line-height: 18px; font-weight: 600;">标准</span>
+        <span style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">生命周期阶段</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; border: 1px solid hsl(264 18% 87%); border-radius: 6px; background: hsl(0 0% 100%); padding: 14px;">
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-size: 14px; line-height: 20px; font-weight: 500;">IEC 62443-3-3</span>
+          <span style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">工业通信网络安全等级</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="display: flex; gap: 2px;">
+            <span style="width: 18px; height: 4px; border-radius: 2px; background: hsl(262 83% 45%);"></span>
+            <span style="width: 18px; height: 4px; border-radius: 2px; background: hsl(262 83% 45%);"></span>
+            <span style="width: 18px; height: 4px; border-radius: 2px; background: hsl(262 83% 45%);"></span>
+            <span style="width: 18px; height: 4px; border-radius: 2px; background: hsl(264 22% 94%);"></span>
+            <span style="width: 18px; height: 4px; border-radius: 2px; background: hsl(264 22% 94%);"></span>
+          </span>
+          <span style="font-size: 12px; line-height: 16px;">征询</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">
+          <span>下一里程碑</span><span style="color: hsl(264 33% 16%);">11-20 投票截止</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; gap: 8px;">
+          <span style="width: 8px; height: 4px; margin-top: 7px; border-radius: 2px; flex-shrink: 0; background: hsl(262 83% 45%);"></span>
+          <span style="font-size: 12px; line-height: 16px;"><span style="font-weight: 500;">五段进度</span><span style="color: hsl(264 15% 40%);"> 提案 · 委员会 · 征询 · 批准 · 发布</span></span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <span style="width: 8px; height: 8px; margin-top: 5px; border-radius: 2px; flex-shrink: 0; background: hsl(264 22% 94%);"></span>
+          <span style="font-size: 12px; line-height: 16px;"><span style="font-weight: 500;">里程碑日期</span><span style="color: hsl(264 15% 40%);"> 比「最近是否变化」更该被盯住</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: baseline; gap: 8px;">
+        <span style="font-size: 13px; line-height: 18px; font-weight: 600;">客户</span>
+        <span style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">商业阶段 + 技术发布</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px; box-sizing: border-box; border: 1px solid hsl(264 18% 87%); border-radius: 6px; background: hsl(0 0% 100%); padding: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="width: 8px; height: 8px; border-radius: 9999px; flex-shrink: 0; box-sizing: border-box; background: hsl(262 83% 45%); border: 1.5px solid hsl(262 83% 45%);"></span>
+          <span style="font-size: 14px; line-height: 20px; font-weight: 500;">客户 A</span>
+          <span style="font-size: 12px; line-height: 16px; border-radius: 4px; background: hsl(286 37% 93%); color: hsl(278 42% 23%); padding: 0 6px;">方案评估</span>
+        </div>
+        <div style="font-size: 12px; line-height: 16px;">发布液冷选型白皮书 v3</div>
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">
+          <span>库内 6 篇</span><span>5 天前接触</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; padding-top: 2px; font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style="flex-shrink: 0;">
+            <path d="M2 9.5V7.75M6 9.5V5.25M10 9.5V2.5" stroke="hsl(264 15% 40%)" stroke-width="1.5" stroke-linecap="round"></path>
+          </svg>
+          <span>4 小时前采集</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; gap: 8px;">
+          <span style="width: 8px; height: 8px; margin-top: 5px; border-radius: 9999px; flex-shrink: 0; background: hsl(262 83% 45%);"></span>
+          <span style="font-size: 12px; line-height: 16px;"><span style="font-weight: 500;">技术面</span><span style="color: hsl(264 15% 40%);"> 与友商同构：白皮书、准入要求、招标技术文件</span></span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <span style="width: 8px; height: 8px; margin-top: 5px; border-radius: 2px; flex-shrink: 0; background: hsl(286 37% 85%);"></span>
+          <span style="font-size: 12px; line-height: 16px;"><span style="font-weight: 500;">商业面</span><span style="color: hsl(264 15% 40%);"> 阶段加最近接触，不做健康分</span></span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <span style="width: 8px; height: 8px; margin-top: 5px; border-radius: 2px; flex-shrink: 0; background: hsl(264 22% 94%);"></span>
+          <span style="font-size: 12px; line-height: 16px;"><span style="font-weight: 500;">库内篇数</span><span style="color: hsl(264 15% 40%);"> 跟踪板与知识库经实体连起来</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: baseline; gap: 8px;">
+        <span style="font-size: 13px; line-height: 18px; font-weight: 600;">监管与接入机构</span>
+        <span style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">容量与窗口</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px; box-sizing: border-box; border: 1px solid hsl(264 18% 87%); border-radius: 6px; background: hsl(0 0% 100%); padding: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 14px; line-height: 20px; font-weight: 500;">TSO A</span>
+          <span style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%); flex-grow: 1;">北部</span>
+          <span style="font-size: 12px; line-height: 16px; border-radius: 4px; background: hsl(264 22% 94%); padding: 0 6px;">可用 1.2 GW</span>
+        </div>
+        <div style="font-size: 12px; line-height: 16px;">发布 2027 并网规则征求意见</div>
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">
+          <span>下一窗口</span><span style="color: #b45309; font-weight: 500;">10-15 意见截止</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; padding-top: 2px; font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style="flex-shrink: 0;">
+            <path d="M2 9.5V7.75M6 9.5V5.25M10 9.5V2.5" stroke="hsl(264 15% 40%)" stroke-width="1.5" stroke-linecap="round"></path>
+          </svg>
+          <span>3 小时前采集</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; gap: 8px;">
+          <span style="width: 8px; height: 8px; margin-top: 5px; border-radius: 2px; flex-shrink: 0; background: hsl(264 22% 94%);"></span>
+          <span style="font-size: 12px; line-height: 16px;"><span style="font-weight: 500;">容量与队列</span><span style="color: hsl(264 15% 40%);"> 它是闸门，不是对手也不是客户</span></span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <span style="width: 8px; height: 8px; margin-top: 5px; border-radius: 2px; flex-shrink: 0; background: #b45309;"></span>
+          <span style="font-size: 12px; line-height: 16px;"><span style="font-weight: 500;">窗口日期</span><span style="color: hsl(264 15% 40%);"> 错过就等下一轮，所以顶部另有截止条</span></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":1420,"height":480}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>

@@ -338,4 +338,39 @@ describe("KnowledgeDashboard", () => {
       expect(act).toHaveBeenLastCalledWith("PATCH", "/api/entities/tso-p", { action: "removeParam", param: "LVRT 持续时间" })
     );
   });
+
+  it("⑯ 推断项与有据可查项在卡片上不得长得一样（REQ-F-180 ⑥）", async () => {
+    const withBasis: DashboardData = {
+      ...board,
+      entities: [
+        entity({
+          name: "tso-p",
+          kind: "authority",
+          title: "TSO P",
+          params: [
+            { name: "核对过的", value: "150 ms", status: "unknown" },
+            { name: "没核对的", value: "整体领先", status: "unknown" },
+          ],
+          unmet: 0,
+          quoted: ["核对过的"],
+        }),
+      ],
+      pending: [],
+      proposals: [],
+    };
+    render(
+      <KnowledgeDashboard
+        act={noop}
+        isVisible={() => false}
+        loadBoard={async () => withBasis}
+        loadOverview={async () => overview}
+        loadSweep={async () => ({ enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" })}
+      />
+    );
+    fireEvent.click(await screen.findByText("TSO P"));
+    const checked = (await screen.findByText(/核对过的 =/)).closest("li");
+    const unchecked = (await screen.findByText(/没核对的 =/)).closest("li");
+    expect(unchecked?.textContent).toContain("推断");
+    expect(checked?.textContent).not.toContain("推断");
+  });
 });

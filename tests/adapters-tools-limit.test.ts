@@ -103,7 +103,7 @@ describe("TEST-091 输出上限与截断可见 (REQ-F-051)", () => {
     expect(call2.truncated).toBeUndefined();
   });
 
-  it("③ 无工具调用而 finish_reason=length → 一条 notice", async () => {
+  it("③ 无工具调用而 finish_reason=length → 一条 length_capped 信号（CR-20260912-turn-budget-continue 起不再由适配器出文案）", async () => {
     const fetcher = vi.fn(async () =>
       sse([
         { choices: [{ delta: { content: "第一段…" } }] },
@@ -111,9 +111,10 @@ describe("TEST-091 输出上限与截断可见 (REQ-F-051)", () => {
       ])
     );
     const events = await collect(sendProviderStream({ provider: deepseek, messages, fetcher: fetcher as unknown as typeof fetch }));
-    const notice = events.filter((event) => event.type === "notice");
-    expect(notice).toHaveLength(1);
-    expect((notice[0] as { text: string }).text).toMatch(/输出上限/);
+    // 文案改由 agent-loop 在**停止续写时**出：适配器每次都喊「可以让我继续」，
+    // 与「系统正在自动续写」直接矛盾（REQ-F-051 ④ 经本 CR 修订）。
+    expect(events.filter((event) => event.type === "notice")).toHaveLength(0);
+    expect(events.filter((event) => event.type === "length_capped")).toHaveLength(1);
     // Text deltas still arrive in order before the notice.
     expect(events.filter((event) => event.type === "delta").map((event) => (event as { text: string }).text)).toEqual(["第一段…", "第二段"]);
   });

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { listPending, saveKnowledge, searchKnowledge } from "@/lib/knowledge";
-import { createKnowledgeTools } from "@/lib/tools/knowledge-tools";
+import { createKnowledgeTools, GENERAL_ENTITY } from "@/lib/tools/knowledge-tools";
 import { ToolRegistry, type ToolContext } from "@/lib/tools/registry";
 
 /** TEST-086 — the knowledge tool suite (REQ-F-045, REQ-F-046 ③, REQ-NF-013 ③; TASK-083). */
@@ -27,22 +27,31 @@ describe("knowledge tools", () => {
     for (const tool of createKnowledgeTools({ root })) {
       expect(() => registry.register(tool)).not.toThrow();
     }
-    expect(registry.availableFor(context).map((tool) => tool.name)).toEqual(["search_knowledge", "read_knowledge", "save_knowledge"]);
+    expect(registry.availableFor(context).map((tool) => tool.name)).toEqual([
+      "search_knowledge",
+      "read_knowledge",
+      "save_knowledge",
+      // CR-20260912-knowledge-attribution：枚举工具，`essential`。
+      "list_knowledge",
+    ]);
   });
 
-  it("② 知识库为空时只注册 save_knowledge，检索与读取不占提示词预算（REQ-NF-008 ④）", () => {
+  it("② 知识库为空时只注册写入与枚举，检索与读取不占提示词预算（REQ-NF-008 ④）", () => {
     const empty = { ...context, knowledgeCount: 0, contextWindow: 128_000 };
     const names = createKnowledgeTools({ root })
       .filter((tool) => tool.available(empty))
       .map((tool) => tool.name);
-    expect(names).toEqual(["save_knowledge"]);
+    // `list_knowledge` 是 REQ-F-045 ③ 的**局部例外**（REQ-F-171 ④）：模型得能回答「库是空的」，
+    // 而实测冷启动时它靠关键词猜测做了 15 次徒劳检索。其余读取工具的约束不变。
+    expect(names).toEqual(["save_knowledge", "list_knowledge"]);
   });
 
   it("③ search_knowledge 返回名称｜标题：片段；read_knowledge 返回全文；未知名称失败并提示先检索", async () => {
     const [search, read] = createKnowledgeTools({ root });
     const hits = await search.execute({ query: "部署端口" }, context);
     expect(hits.ok).toBe(true);
-    expect(hits.content).toContain("部署说明｜部署说明：");
+    // 命中项带归属（REQ-F-170 ⑤）。
+    expect(hits.content).toContain("部署说明｜部署说明｜归属 ");
     expect(hits.content).toContain("8443");
     expect(hits.summary).toContain("知识检索到 1 条");
 
@@ -70,7 +79,10 @@ describe("knowledge tools", () => {
 
   it("⑤ save_knowledge 只写待采纳区：不进检索，附带 knowledge_pending 事件（REQ-F-046 ③）", async () => {
     const [search, , save] = createKnowledgeTools({ root });
-    const result = await save.execute({ title: "用户偏好", content: "偏好用中文回答，代码用 TypeScript。" }, context);
+    const result = await save.execute(
+      { title: "用户偏好", content: "偏好用中文回答，代码用 TypeScript。", entity: GENERAL_ENTITY },
+      context
+    );
     expect(result.ok).toBe(true);
     expect(result.summary).toBe("提议知识：用户偏好");
     expect(result.events).toEqual([{ type: "knowledge_pending", name: "用户偏好", title: "用户偏好" }]);
@@ -82,10 +94,10 @@ describe("knowledge tools", () => {
 
   it("⑥ save_knowledge 拒绝空内容与超大内容，作为失败结果回喂而非抛错", async () => {
     const [, , save] = createKnowledgeTools({ root });
-    const empty = await save.execute({ title: "x", content: "  " }, context);
+    const empty = await save.execute({ title: "x", content: "  ", entity: GENERAL_ENTITY }, context);
     expect(empty.ok).toBe(false);
     expect(empty.content).toContain("为空");
-    const huge = await save.execute({ title: "x", content: "字".repeat(70_000) }, context);
+    const huge = await save.execute({ title: "x", content: "字".repeat(70_000), entity: GENERAL_ENTITY }, context);
     expect(huge.ok).toBe(false);
     expect(huge.content).toContain("KB");
     expect(await listPending(root)).toEqual([]);

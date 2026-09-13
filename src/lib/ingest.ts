@@ -1,4 +1,4 @@
-import { ENTITIES_ROOT, readEntity } from "./entities";
+import { ENTITIES_ROOT, listEntities, readEntity } from "./entities";
 import { KNOWLEDGE_ROOT, MAX_ENTRY_BYTES, saveKnowledge, type KnowledgeSummary } from "./knowledge";
 import { fetchReadable, type FetchSourceDeps } from "./sources";
 
@@ -68,7 +68,11 @@ export async function ingestUrl(url: string, deps: IngestDeps = {}): Promise<Ing
   if (entityName) {
     const entity = await readEntity(entityName, entitiesRoot);
     if (!entity) {
-      return { ok: false, reason: `没有名为「${entityName}」的跟踪对象。` };
+      // Say what exists (CR-20260912-ingest-extract-chain): a dead-end error is what the
+      // model has to work around, and it works around it by inventing a reason.
+      const known = (await listEntities(entitiesRoot)).map((item) => item.name);
+      const hint = known.length > 0 ? `现有对象：${known.join("、")}。` : "目前一个跟踪对象都还没有，可留空进无归属桶。";
+      return { ok: false, reason: `没有名为「${entityName}」的跟踪对象。${hint}` };
     }
     trusted = entity.sources.some((registered) => sameHost(registered, url));
   }
