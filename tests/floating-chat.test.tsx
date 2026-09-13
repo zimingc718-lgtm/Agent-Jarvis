@@ -597,6 +597,35 @@ describe("FloatingChat", () => {
       window.removeEventListener(KNOWLEDGE_CHANGED_EVENT, changed);
     });
 
+    it("CR-20260912-entity-pending: 提议对象与提议修改说的是两句话，且都刷新看板", async () => {
+      for (const [what, expected] of [
+        ["entity", /模型提议跟踪对象「友商 X」/],
+        ["update", /模型提议修改「友商 X」/],
+      ] as const) {
+        const changed = vi.fn();
+        window.addEventListener(KNOWLEDGE_CHANGED_EVENT, changed);
+        const view = render(
+          <FloatingChat
+            hasEnabledProvider
+            probeProviders={readyProbe}
+            onStream={async function* () {
+              yield { type: "start", conversationId: "c1", messageId: "m" };
+              yield { type: "entity_pending", title: "友商 X", what };
+              yield { type: "delta", text: "已提议。" };
+              yield { type: "done", messageId: "m" };
+            }}
+          />
+        );
+        fireEvent.change(screen.getByPlaceholderText("Ask Agent-Jarvis"), { target: { value: "跟一下友商 X" } });
+        fireEvent.click(screen.getByRole("button", { name: "发送" }));
+        // 两个队列采纳时是两次不同的点击，所以话也必须是两句，不能都说「有提议」。
+        await waitFor(() => expect(screen.getByText(expected)).toBeInTheDocument());
+        expect(changed).toHaveBeenCalled();
+        window.removeEventListener(KNOWLEDGE_CHANGED_EVENT, changed);
+        view.unmount();
+      }
+    });
+
     it("② dropping a zip posts it to /api/skills as `archive`", async () => {
       const fetchMock = vi.fn(
         async () =>

@@ -709,8 +709,8 @@
       "result": "PASS",
       "command": "npm test -- knowledge-list && npm run test:floating-chat && npm run test:ui-contract",
       "real_entry": false,
-      "date": "2026-09-11",
-      "notes": "CR-20260911-knowledge-base；列表标题/来源/名称与空态；待采纳 region + 计数、采纳 POST 后刷新、忽略 DELETE、失败文案；事件重取、删除确认；拖入 .md → POST multipart 收据；助手气泡「存入知识库」真实按钮只在助手回复、POST JSON conversation；knowledge_pending → 提示 + 事件；ui-contract LB-12（52/0）；TEST-044 ① 文案更新。"
+      "date": "2026-09-13",
+      "notes": "CR-20260911-knowledge-base；列表标题/来源/名称与空态；待采纳 region + 计数、采纳 POST 后刷新、忽略 DELETE、失败文案；事件重取、删除确认；拖入 .md → POST multipart 收据；助手气泡「存入知识库」真实按钮只在助手回复、POST JSON conversation；knowledge_pending → 提示 + 事件；ui-contract LB-12（52/0）；TEST-044 ① 文案更新。 2026-09-13 增 ⑧：entity_pending 的两种 what 说两句不同的话，且都派发 KNOWLEDGE_CHANGED_EVENT（CR-20260912-entity-pending 客户端分支里机器可守的那一半）。"
     },
     {
       "id": "TEST-089",
