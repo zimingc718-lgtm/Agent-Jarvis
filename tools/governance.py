@@ -88,6 +88,15 @@ IGNORED_DIR_NAMES = {
 # Framework-managed build directories (next.config.mjs NEXT_DIST_DIR isolation).
 IGNORED_DIR_PREFIXES = (".next-",)
 
+# Session scratch, matched on the relative path rather than on a directory name.
+#
+# Claude Code puts its worktrees under `.claude/worktrees/<name>`, and a worktree is a
+# whole second checkout of this repository: every file in it surfaced as UNBASELINED and
+# `verify` went red on a tree that was otherwise clean. Matching the full prefix rather
+# than the bare name keeps a directory that merely happens to be called `worktrees`
+# elsewhere in the project under control. Mirrors the `.gitignore` entry.
+IGNORED_REL_PREFIXES = ((".claude", "worktrees"),)
+
 IGNORED_FILE_NAMES = {
     ".env",
     ".env.local",
@@ -376,6 +385,8 @@ def discover_controlled_files(root: Path) -> list[str]:
         if any(part in IGNORED_DIR_NAMES for part in rel_parts[:-1]):
             continue
         if any(part.startswith(IGNORED_DIR_PREFIXES) for part in rel_parts[:-1]):
+            continue
+        if any(rel_parts[: len(prefix)] == prefix for prefix in IGNORED_REL_PREFIXES):
             continue
         if rel_path.parts[:2] == ("project", ".governance"):
             continue

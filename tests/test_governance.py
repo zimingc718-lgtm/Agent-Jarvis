@@ -93,6 +93,29 @@ def write_project(root: Path, overrides: dict[str, str] | None = None) -> None:
 
 
 class GovernanceCliTests(unittest.TestCase):
+    def test_session_worktrees_are_not_controlled_files(self) -> None:
+        """A worktree under .claude/ is a second checkout, not product source.
+
+        Claude Code puts worktrees at `.claude/worktrees/<name>`; every file in one
+        surfaced as UNBASELINED and turned `verify` red on an otherwise clean tree. The
+        prefix is matched in full so that a directory merely named `worktrees` elsewhere
+        stays under control.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            nested = root / ".claude" / "worktrees" / "some-branch" / "src"
+            nested.mkdir(parents=True)
+            (nested / "app.ts").write_text("export const x = 1;", encoding="utf-8")
+            elsewhere = root / "src" / "worktrees"
+            elsewhere.mkdir(parents=True)
+            (elsewhere / "real.ts").write_text("export const y = 2;", encoding="utf-8")
+
+            discovered = governance.discover_controlled_files(root)
+
+        self.assertNotIn(".claude/worktrees/some-branch/src/app.ts", discovered)
+        self.assertIn("src/worktrees/real.ts", discovered)
+
     def test_verify_requires_governance_files(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             code, output = governance.run(["verify", "--root", directory])
