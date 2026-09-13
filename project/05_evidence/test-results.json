@@ -15,7 +15,8 @@
     "project/06_changes/CR-20260912-tool-budget.md",
     "project/06_changes/CR-20260912-entity-pending.md",
     "project/06_changes/CR-20260912-display-stage.md",
-    "project/06_changes/CR-20260912-r1-signoff-marker.md"
+    "project/06_changes/CR-20260912-r1-signoff-marker.md",
+    "project/06_changes/CR-20260913-real-entry-ledger.md"
   ],
   "change_records": [
     "project/06_changes/CR-20260908-floating-llm-chat.md",
@@ -1086,6 +1087,14 @@
       "real_entry": false,
       "date": "2026-09-13",
       "notes": "CR-20260912-r1-signoff-marker；反例：只写「R1 时一并终裁」这类将来式承诺的记录必须 FAIL（旧判据下它是绿的）；结构化行带日期 PASS；不带日期同样 PASS（迁移来的老记录常查不到当天日期，不造）；DRAFT 记录返回 0 且输出含 SKIPPED_DRAFT 与记录名。治理单测 80 通过。"
+    },
+    {
+      "id": "TEST-290",
+      "result": "PASS",
+      "command": "npm run test:governance",
+      "real_entry": false,
+      "date": "2026-09-13",
+      "notes": "CR-20260913-real-entry-ledger；漏账（声明了真实入口但既无证据也无未执行行）FAIL；有 real_entry PASS 证据时 PASS；写了「- 真实入口: 未执行（原因）」时 PASS 且输出含 REAL_ENTRY_DECLARED_UNRUN 与记录名。实跑对账：21 份有执行证据，7 份明确未执行并被点名。治理单测 83 通过。"
     }
   ],
   "executed_commands": [

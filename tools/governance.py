@@ -171,6 +171,8 @@ def run(argv: list[str] | None = None) -> tuple[int, str]:
         messages = check_ids(root)
     elif args.command == "check-warnings":
         messages = check_warnings(root)
+    elif args.command == "check-real-entry":
+        messages = check_real_entry(root)
     elif args.command == "new-cr":
         messages = new_cr(root, args.name)
     elif args.command == "matrix":
@@ -233,6 +235,12 @@ def build_parser() -> argparse.ArgumentParser:
         "check-warnings", help="re-check known_warnings against the tools they talk about (DEC-021)"
     )
     warnings_parser.add_argument("--root", default=".", help="project root")
+
+    real_entry_parser = subparsers.add_parser(
+        "check-real-entry",
+        help="每条声明了真实入口的记录，要么有执行证据，要么明说未执行 (DEC-200)",
+    )
+    real_entry_parser.add_argument("--root", default=".", help="project root")
 
     new_cr_parser = subparsers.add_parser("new-cr", help="scaffold a compliant change record")
     new_cr_parser.add_argument("name", help="change record name, e.g. CR-20260911-my-change")
@@ -986,6 +994,79 @@ def check_review(root: Path, level: str, cr: str | None = None) -> list[str]:
     return messages
 
 
+def _declares_real_entry(row: str) -> bool:
+    """只看「发现方式」那一列，不看整行。
+
+    第一版在整行里找「真实入口」四个字，于是一条只是**提到**真实入口的变化点——比如本
+    检查自己的 CP-1「按记录查这一条的真实入口跑过吗」——被当成了**声明**。那正是它要修的
+    那个毛病（旧 R1 判据在整篇里找「R1 + 终裁」）的同一形态，而且是在同一小时里犯的。
+    """
+    if not row.startswith("| CP-"):
+        return False
+    cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
+    # 门与发现方式是 CR-20260910-risk-scaled-gates 之后才有的两列；更早的记录没有，
+    # 也就无从声明。
+    if len(cells) < 7:
+        return False
+    return "真实入口" in cells[-1]
+
+
+REAL_ENTRY_UNRUN = re.compile(r"^-\s*真实入口:\s*未执行(?:（|\()(?P<why>[^）)]+)(?:）|\))\s*$", re.M)
+
+
+def check_real_entry(root: Path) -> list[str]:
+    """逐条对账：声明了真实入口的记录，要么有执行证据，要么明说没执行（DEC-200）。
+
+    与 `gate g3.5` 的区别就在「逐条」两个字。那道门问的是「这个仓库里有没有人跑过真实
+    入口」，回答几乎永远是有——于是一份 CP 表里写着「真实入口：开场观感」的记录，靠另一
+    条记录的旧证据就过了门，而那条入口一次都没跑过。这道检查问的是「**这一条**跑过吗」。
+
+    三种结果，第二种是有意留的：目的不是逼人去跑，是让「登记了没跑」在纸面上看得见。
+    """
+    evidence = load_test_results(root)
+    if isinstance(evidence, str):
+        return [evidence.replace("G3_BLOCKED", "REAL_ENTRY_BLOCKED")]
+    by_id = {str(item.get("id")): item for item in evidence}
+
+    findings: list[str] = []
+    executed: list[str] = []
+    unrun: list[str] = []
+
+    for path in sorted((root / "project/06_changes").glob("CR-*.md")):
+        text = read_text(path)
+        declared = [line for line in text.splitlines() if _declares_real_entry(line)]
+        if not declared:
+            continue
+        name = path.stem
+        related = cr_related_tests(root, name) or set()
+        ran = any(
+            by_id.get(test_id, {}).get("real_entry") is True
+            and str(by_id.get(test_id, {}).get("result", "")).upper() == "PASS"
+            for test_id in related
+        )
+        if ran:
+            executed.append(name)
+        elif REAL_ENTRY_UNRUN.search(text):
+            unrun.append(name)
+        else:
+            findings.append(
+                f"FAIL REAL_ENTRY_UNACCOUNTED {name}: declares {len(declared)} real-entry "
+                "detection route(s) but registers no real-entry PASS and carries no "
+                "`- 真实入口: 未执行（原因）` line"
+            )
+
+    if findings:
+        return findings
+    messages = [f"OK REAL_ENTRY_ACCOUNTED {len(executed)} record(s) have a registered real-entry PASS"]
+    if unrun:
+        # 列名，永远不静默：这条输出就是本次改动的全部目的。
+        messages.append(
+            f"OK REAL_ENTRY_DECLARED_UNRUN {len(unrun)} record(s) declare a real entry that has NOT "
+            "been run, and say so: " + ", ".join(sorted(unrun))
+        )
+    return messages
+
+
 # --- CR-20260910-process-hardening: scoping, stages, scaffolding, spec contract ---
 
 def cr_related_tests(root: Path, cr: str) -> set[str] | None:
@@ -1009,10 +1090,10 @@ STAGE_GATES: dict[str, list[str]] = {
     "p1": ["verify", "check-changes", "check-doors", "check-ids", "review r1"],
     "p2": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "gate g1", "gate g2",
            "review r1", "review r2", "review r3", "review r4"],
-    "p3": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "check-warnings", "ui",
+    "p3": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "check-warnings", "check-real-entry", "ui",
            "gate g1", "gate g2", "gate g3", "gate g3.5",
            "review r1", "review r2", "review r3", "review r4"],
-    "release": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "check-warnings", "ui",
+    "release": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "check-warnings", "check-real-entry", "ui",
                 "gate g1", "gate g2", "gate g3", "gate g3.5",
                 "gate g4", "review r1", "review r2", "review r3", "review r4"],
 }
@@ -1038,6 +1119,8 @@ def check_stage(root: Path, stage: str, cr: str | None = None) -> list[str]:
             messages = check_ids(root)
         elif head == "check-warnings":
             messages = check_warnings(root)
+        elif head == "check-real-entry":
+            messages = check_real_entry(root)
         elif head == "ui":
             messages = check_ui_process_control(root)
         elif head == "gate":

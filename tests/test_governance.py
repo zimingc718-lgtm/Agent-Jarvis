@@ -546,6 +546,90 @@ class GovernanceCliTests(unittest.TestCase):
         self.assertIn("SKIPPED_DRAFT", output)
         self.assertIn("CR-2099-demo", output)
 
+    # DEC-200 / CR-20260913-real-entry-ledger — TEST-290
+    def _cr_declaring_a_real_entry(self, extra: str = "") -> str:
+        return (
+            "# CR-2099-demo\n\n"
+            "- 影响测试: TEST-999\n"
+            "- R1 终裁: 已完成 | 用户 | 2026-09-13\n"
+            + extra
+            + "\n## 变化点登记\n\n"
+            "| CP | 来源角色 | 一句话 | 关联 ID | 类型 | 门 | 发现方式 |\n"
+            "|---|---|---|---|---|---|---|\n"
+            "| CP-1 | 产品 | demo | TEST-999 | 新增 | 双向 | 真实入口：开着用一天看看 |\n\n"
+        )
+
+    def _with_evidence(self, root: Path, real_entry: bool) -> None:
+        payload = {
+            "schema_version": 1,
+            "generated_at": "2026-09-13",
+            "source_documents": [],
+            "tests": [
+                {
+                    "id": "TEST-999",
+                    "result": "PASS",
+                    "real_entry": real_entry,
+                    "command": "demo",
+                    "date": "2026-09-13",
+                }
+            ],
+        }
+        (root / "project/05_evidence/test-results.json").write_text(
+            json.dumps(payload, ensure_ascii=False), encoding="utf-8"
+        )
+
+    def test_real_entry_unaccounted_is_a_failure(self) -> None:
+        """声明了真实入口、却既没跑也没说没跑——这正是此前看不出来的那种状态。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_declaring_a_real_entry())
+            self._with_evidence(root, real_entry=False)
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("REAL_ENTRY_UNACCOUNTED", output)
+
+    def test_real_entry_with_evidence_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_declaring_a_real_entry())
+            self._with_evidence(root, real_entry=True)
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("REAL_ENTRY_ACCOUNTED", output)
+
+    def test_real_entry_declared_unrun_is_named_not_hidden(self) -> None:
+        """说了「没跑」就不拦——但必须被点名。让未执行显形，就是这条检查的全部目的。"""
+        unrun = "- 真实入口: 未执行（要连续用几天才看得出来）\n"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_declaring_a_real_entry(unrun))
+            self._with_evidence(root, real_entry=False)
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("REAL_ENTRY_DECLARED_UNRUN", output)
+        self.assertIn("CR-2099-demo", output)
+
+    def test_real_entry_only_reads_the_detection_column(self) -> None:
+        """一条只是在「一句话」里提到真实入口的变化点，不算声明。
+
+        第一版在整行里找那四个字，于是本检查自己的 CP-1 被它自己判成漏账——与它要修的
+        旧 R1 判据（在整篇里找「R1 + 终裁」）是同一个毛病，而且是在同一小时里犯的。
+        """
+        mentions = self._cr_declaring_a_real_entry().replace(
+            "真实入口：开着用一天看看", "机器：TEST-999"
+        ).replace("| demo |", "| 查这一条的真实入口跑过吗 |")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, mentions)
+            self._with_evidence(root, real_entry=False)
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertNotIn("CR-2099-demo", output)
+
     def test_review_passes_vacuously_without_the_cp_model(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
