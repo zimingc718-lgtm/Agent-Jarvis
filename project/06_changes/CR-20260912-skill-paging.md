@@ -22,6 +22,7 @@
   - 标准档不产出 R2/R3/R4 矩阵；三层说明书各含 `变更响应 · CR-20260912-skill-paging` 节。
   - P3/P4: TASK-210 DONE；TEST-210 PASS；迁移后的三处既有断言 PASS；`gate g3|g3.5` PASS；`ui-contract` 53/0（含 RF-07、RF-09）；`npm run test:e2e` 19 passed。
 - 评审记录: 标准档，相关角色意见见 `## 角色意见`。R1 人工终裁见文件末尾。
+- R1 终裁: 已完成 | 用户
 
 ## 变化点登记
 

@@ -24,6 +24,7 @@
   - 本 CR 走**旧模型**（现 g1-g4 + verify + check-changes + ui 全 PASS）；新模型从下一个 CR 起生效。
   - 9 个既有 CR 各加一行「reviewed under pre-R1234 model」，不追溯改造。
 - 评审记录: 本 CR 为旧模型下最后一个 CR，走 g1-g4；R1「定义新治理模型」在本对话进行——用户逐轮精化并拍板「执行」。
+- R1 终裁: 已完成 | 用户 | 2026-09-09
   - 产品 owner：不动任何产品需求；改的是流程控制层。R1 的"清晰明确需求定义"模板（CP 清单 + 逐条验收 + 非目标 + 用户确认痕迹）强化了原则 3/15。结论：APPROVED。
   - 架构角色：`review` 子命令纯读 + 正则解析 CR/说明书的 markdown 表，无 schema/IO 副作用；CP 表格式复用现有 ID 提取机制；`gate` 命令面保留（g3/g3.5/g4 不变），`review` 并列新增。反馈日志 `CR-xxx.feedback.jsonl` 与 CR 正文分离、保持可读。结论：APPROVED。
   - 模块开发角色：TASK-032 单一职责（治理工具），绑定 TEST-033；`governance.py` 改动集中在新增函数 + `build_parser`/`run` 两处派发点。结论：APPROVED。

@@ -24,6 +24,7 @@
   - 标准档不产出 R2/R3/R4 矩阵；三层说明书各含 `变更响应 · CR-20260911-proactive-wake` 节逐 CP 落点；`review r2|r3|r4` 以 `MATRIX_WAIVED_STANDARD_TIER` 通过。
   - P3/P4: TASK-100..103 DONE、TEST-100..104 PASS；`gate g3|g3.5` PASS；零新增运行依赖；`git diff --stat package.json` 为空。
 - 评审记录: 标准档，相关角色意见见 `## 角色意见`。**R1 人工终裁**：用户 2026-09-11 总授权推进，决策清单同日追认通过（见 `## R1 人工终裁`）。
+- R1 终裁: 已完成 | 用户 | 2026-09-11
 
 ## 变化点登记
 

@@ -22,6 +22,7 @@
   - R2/R3/R4: 三层说明书各含 `变更响应 · CR-20260910-test-subprocess-encoding` 节逐一响应 CP-1/CP-2；三张矩阵无空、无 REJECTED；`review r2|r3|r4` PASS。
   - P3/P4: 在 EV 文件所述的确定性复现根上，修复前 `stdout is None`、修复后得到正确中文文本；`tools/migrate_specs.py` 逐字节未改；治理单测 44 全过；全量门禁无回归；基线重新 snapshot。
 - 评审记录: R1 四角色独立评审见下节。**R1 人工终裁**：用户 2026-09-10「把 test_053_5 的编码问题也修了」。
+- R1 终裁: 已完成 | 用户 | 2026-09-10
 
 ## 变化点登记
 

@@ -30,6 +30,7 @@
   - P3/P4: 全部 TASK DONE、TEST PASS；`gate g3|g3.5` PASS；`ui-contract` 0 FAIL；**零新增运行依赖**（`package.json` `dependencies` 不变）；REQ-F-002..028 回归全绿；真实入口冒烟覆盖「注册技能 → 提问 → 步骤流显示 read_skill → 回答」与「配置 SearXNG → 提问 → 步骤流显示 web_search/read_url → 回答附来源」两条主路径；SSRF 对抗样本（loopback / 私网 / 元数据地址 / 重定向到内网 / 非 http 协议）逐条拒绝断言。
   - 出口义务（实现前逐条清零，P2 补齐）：① 新增写文件 / 执行命令类工具的审批机制；② 未沙箱化执行面（本 CR 无执行类工具，义务为「不得在无审批机制时引入」）；③ **（R1 架构角色改写）**`skill-html-unsandboxed` 的信任面**确已扩大**——`read_url` 使 HTML 来源从「用户自选的技能文件夹」变为「任意网页」，原措辞「不扩大」只看 sink 不看 source，不成立；用户终裁 3 明示接受，风险登记为 `skill-html-unsandboxed-web-source`，**iframe 沙箱化为未来 CR 的强制出口义务且优先级提高**；④ REQ-F-025 ② 的不可关闭提示条必须覆盖经 `save_insight` 上屏的 HTML，不限于技能轮产出。
 - 评审记录: R1 四角色（产品 / 架构 / 模块开发 / 测试）独立 ReAct 评审**已完成**，四角色**全部 CONDITIONAL，零 REJECTED**；逐 CP 裁决与条件见 `## R1 评审意见` 与 `CR-20260910-agent-tooling.feedback.jsonl`；各角色派生变化点已合并去重后追加为 CP-26..CP-43。**R1 人工终裁**：用户 2026-09-10 逐项拍板 7 项（保留告知 / `show_insight` 保留并改写非目标 / 明示接受信任面扩大 / 联网默认开 / 面板 75% 分情形 / adapters 缩为接口预留 / 迁移框架纳入 A 期），见 `## R1 人工终裁`。R1 **PASS**。
+- R1 终裁: 已完成 | 用户 | 2026-09-10
 
 ## 事前验尸（重型变更必需）
 

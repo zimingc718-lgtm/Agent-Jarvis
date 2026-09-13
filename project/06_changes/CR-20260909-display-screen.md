@@ -25,6 +25,7 @@
   - P3/P4：TASK-036..039 DONE；TEST-039..042 PASS（含 e2e）；TEST-021/032 + appearance/account e2e 回归通过；`gate g3|g3.5` PASS；`ui-contract` 0 FAIL。
   - DEC-015 出口义务清单（CR-20260909-skills R4 矩阵末②）在本 CR 更新为"F2 已落地不可关闭提示条；沙箱化仍为后续 CR 义务"。
 - 评审记录: R1 四角色（产品 / 架构 / 模块开发 / 测试）以本职说明书 + 行业惯例独立 ReAct 评审，详见 `EV-2026-09-09-display-screen-requirements.md §3`；反馈闭环记录见 `CR-20260909-display-screen.feedback.jsonl`（1 轮收敛）。**R1 人工终裁**：待用户拍板（CP-1..CP-15、REQ-F-015 重写、未沙箱化渲染 + 不可关闭提示条、`display_state` 全局单行、`routeTurn` 扩 `display`、F1/F2 P3 合并实现）。
+- R1 终裁: 已完成 | 用户 | 2026-09-10
   - **产品 owner（R1）**：F2 把"首页"从"极简空页"变成"动态屏"，是 REQ-F-015 的 MUST 验收重写，须记为用户确认变更。展示屏是"一块屏幕"（全局单行 `display_state`），不是 per-conversation——与用户"Jarvis 的动态显示屏"表述一致。非目标须锁：不做多屏/分屏、不做展示历史回看、不做展示屏手动编辑、不做内容导出。结论：**APPROVED**（REQ-F-015 重写记为用户确认变更；非目标 4 行已入说明书）。
   - **架构角色（R1 → R2 轮闭环）**：
     - R1 CONDITIONAL：① 提示条须**不可关闭**且**渲染 insight 时常驻**（非"首次渲染前"一次性）；② 展示屏内容流机制（`display_state` 存储形态 + 事件流）须在 R1 锁定，不留 P2 开放问题。

@@ -775,6 +775,26 @@ def parse_id_reservation(cr_text: str) -> set[str]:
     return out
 
 
+# R1 是人工终止门（`docs/WORKFLOW.md`：四角色出意见 → 人拍板）。旧判据是「同一行里同时
+# 出现 R1 与拍板/终裁/人工确认」，它防得住「漏写签置」，防不住「签置还没发生」——
+# 2026-09-12 有四条 CR 靠一句「R1 时一并终裁」全部报绿，而用户一次板都还没拍；另有一条
+# 记录匹配到的是「选择理由」里顺带提到 R1 的散文，与签置毫无关系。
+#
+# 新判据要求一条**明确断言过去事实**的结构化行：谁、什么时候、已经完成。它挡不住有人
+# 明知故写——任何文本检查都挡不住——但它把「随口一句被当成签置」这条路堵死了，而那正是
+# 实际发生过的失败。日期可选：新记录写得出来就写，迁移过来的老记录不硬造。
+R1_SIGNOFF_LINE = re.compile(
+    r"^-\s*R1\s*终裁:\s*已完成\s*\|\s*(?P<who>[^|\n]+?)\s*(?:\|\s*(?P<when>\d{4}-\d{2}-\d{2})\s*)?$",
+    re.M,
+)
+
+
+def _is_draft(cr_text: str) -> bool:
+    """状态以 DRAFT 开头即视为在途——它还没走到 R1，不该被当成没写签置。"""
+    match = re.search(r"^-\s*状态:\s*(.+)$", cr_text, re.M)
+    return bool(match) and match.group(1).strip().upper().startswith("DRAFT")
+
+
 def check_review(root: Path, level: str, cr: str | None = None) -> list[str]:
     changes_dir = root / "project/06_changes"
     records = sorted(path for path in changes_dir.glob("CR-*.md") if path.is_file())
@@ -839,6 +859,7 @@ def check_review(root: Path, level: str, cr: str | None = None) -> list[str]:
     # coverage (every CP addressed in the layer doc's own section) is NOT waived — only
     # the matrix is.
     standard_tier: set[str] = set()
+    drafts: set[str] = set()
     if level in {"r2", "r3", "r4"}:
         remaining: list[tuple[Path, list[dict[str, str]]]] = []
         for path, cps in with_model:
@@ -866,8 +887,16 @@ def check_review(root: Path, level: str, cr: str | None = None) -> list[str]:
             for entry in cps:
                 if not entry["role"]:
                     findings.append(f"FAIL REVIEW_R1_BLOCKED {name}: {entry['cp']} has no 来源角色")
-            if not re.search(r"R1[^\n]*(拍板|终裁|人工确认)", cr_text):
-                findings.append(f"FAIL REVIEW_R1_BLOCKED {name}: no R1 human sign-off marker (expected 'R1 … 拍板/终裁')")
+            if _is_draft(cr_text):
+                # 明说跳过，不静默放行：一条还在讨论的记录不该拦住别人发布，但它也不该
+                # 看起来像已经过门（DEC-190 ②）。
+                drafts.add(name)
+                continue
+            if not R1_SIGNOFF_LINE.search(cr_text):
+                findings.append(
+                    f"FAIL REVIEW_R1_BLOCKED {name}: no R1 sign-off line "
+                    f"(expected a line like `- R1 终裁: 已完成 | 用户 | 2026-09-13`)"
+                )
             continue
 
         # r2 / r3 / r4: downward coverage + review matrix.
@@ -946,6 +975,13 @@ def check_review(root: Path, level: str, cr: str | None = None) -> list[str]:
             f"OK REVIEW_{level.upper()}_MATRIX_WAIVED_STANDARD_TIER {len(standard_tier)} record(s) are all two-way "
             "doors with a human detection route and carry 角色意见; coverage judged, matrix waived (DEC-021 ①): "
             + ", ".join(sorted(standard_tier))
+        )
+    if drafts:
+        # A record still under discussion has not reached R1; say so by name rather than
+        # letting it read as passed (DEC-190 ②).
+        messages.append(
+            f"OK REVIEW_{level.upper()}_SKIPPED_DRAFT {len(drafts)} record(s) are still DRAFT and have not "
+            "reached R1: " + ", ".join(sorted(drafts))
         )
     return messages
 
@@ -1055,6 +1091,9 @@ def cr_template(name: str) -> str:
         f"  - R2/R3/R4: 三层说明书各含 `变更响应 · {name}` 节逐一响应全部 CP；本文件三张矩阵无空、无 REJECTED；`review r2|r3|r4` PASS。",
         "  - P3/P4: <任务 DONE、测试 PASS、门禁通过>",
         "- 评审记录: R1 四角色（产品 / 架构 / 模块开发 / 测试）独立评审。**R1 人工终裁**：待用户拍板。",
+        # 人拍板后改成「已完成」，`review r1` 只认这一行（DEC-190）。写成「未完成」时它不匹配，
+        # 于是门禁如实报红——这正是脚手架该有的初始状态。
+        "- R1 终裁: 未完成（用户拍板后改为：已完成 | 用户 | YYYY-MM-DD）",
         "",
         "## 变化点登记",
         "",

@@ -497,6 +497,55 @@ class GovernanceCliTests(unittest.TestCase):
         self.assertIn("REVIEW_R1_BLOCKED", output)
         self.assertIn("sign-off", output)
 
+    # DEC-190 / CR-20260912-r1-signoff-marker — TEST-280
+    def test_review_r1_rejects_a_promise_about_the_future(self) -> None:
+        """没有这条反例，这次修复等于没做。
+
+        2026-09-12 的实际现场：四条 CR 里写的是「R1 时一并终裁」，旧判据（同一行出现
+        R1 与终裁）因此全部报绿，而用户一次板都还没拍。R1 是人工终止门，机器绿灯被
+        读成「人已经拍过了」，正是这道门存在的意义被架空的方式。
+        """
+        promise = self._CP_REGISTRY + "- 评审记录: 四角色已出意见，R1 时一并终裁。\n"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, promise)
+            code, output = governance.run(["review", "r1", "--root", directory])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("REVIEW_R1_BLOCKED", output)
+
+    def test_review_r1_accepts_the_structured_sign_off(self) -> None:
+        signed = self._CP_REGISTRY + "- R1 终裁: 已完成 | 用户 | 2026-09-13\n"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, signed)
+            code, output = governance.run(["review", "r1", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("REVIEW_R1_PASS", output)
+
+    def test_review_r1_accepts_a_sign_off_without_a_date(self) -> None:
+        """迁移过来的老记录常常查不到签置当天的日期，不写好过编一个。"""
+        signed = self._CP_REGISTRY + "- R1 终裁: 已完成 | 用户\n"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, signed)
+            code, output = governance.run(["review", "r1", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+
+    def test_review_r1_skips_drafts_by_name(self) -> None:
+        """在途记录不该拦住别人发布，也不该看起来像已经过门。"""
+        draft = self._CP_REGISTRY + "- 状态: DRAFT\n"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, draft)
+            code, output = governance.run(["review", "r1", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("SKIPPED_DRAFT", output)
+        self.assertIn("CR-2099-demo", output)
+
     def test_review_passes_vacuously_without_the_cp_model(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

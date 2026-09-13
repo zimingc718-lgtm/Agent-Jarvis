@@ -14,7 +14,8 @@
     "project/06_changes/CR-20260912-technical-spine.md",
     "project/06_changes/CR-20260912-tool-budget.md",
     "project/06_changes/CR-20260912-entity-pending.md",
-    "project/06_changes/CR-20260912-display-stage.md"
+    "project/06_changes/CR-20260912-display-stage.md",
+    "project/06_changes/CR-20260912-r1-signoff-marker.md"
   ],
   "change_records": [
     "project/06_changes/CR-20260908-floating-llm-chat.md",
@@ -1077,6 +1078,14 @@
       "real_entry": true,
       "date": "2026-09-13",
       "notes": "实体提议 ID 去碰撞。单测 5 例全绿，其中 ① 同时断言「四个纯中文字段名 id 互不相同」与「四条全部落盘」——只断言前者的话，一个静默丢弃后来者的实现照样能过；红测阶段实测四条塌成 1 条。真实入口：一轮对话提交两个纯中文字段名（母线形态、保护配合状态），GET /api/entities 显示两条提议均落盘、id 分别为 vertiv-fc352ac8-20260913004902188 与 vertiv-19457a55-20260913004902202（可读前缀 + 8 位哈希 + 毫秒戳），工具 summary 报「已提议 2 个字段，待采纳」。改前：同一实体同一秒的纯中文字段名 id 完全相同并互相覆盖，而 summary 报的是入参条数。审计遗留的旧形态提议 -vertiv-20260912174032 按裁定共存且 basis 读作未验证。"
+    },
+    {
+      "id": "TEST-280",
+      "result": "PASS",
+      "command": "npm run test:governance",
+      "real_entry": false,
+      "date": "2026-09-13",
+      "notes": "CR-20260912-r1-signoff-marker；反例：只写「R1 时一并终裁」这类将来式承诺的记录必须 FAIL（旧判据下它是绿的）；结构化行带日期 PASS；不带日期同样 PASS（迁移来的老记录常查不到当天日期，不造）；DRAFT 记录返回 0 且输出含 SKIPPED_DRAFT 与记录名。治理单测 80 通过。"
     }
   ],
   "executed_commands": [

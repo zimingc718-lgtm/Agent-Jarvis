@@ -26,6 +26,7 @@
   - P3: TASK-110 DONE；TEST-140 PASS；`npm test` / `test:ui-contract` / `tsc` / `build:local` 全绿。
   - P4 真实入口：`npm run build:local && npm run start:local` 后，`/`、`/api/providers`、`/api/display` 均 200，且看到的 Provider 与 dev 完全一致；写路由往返成功；`npm run config:check` 退出码 0 并报告单管理员模式。
 - 评审记录: 标准档，相关角色意见见下。**R1 人工终裁**：助手在 2026-09-11 末尾明确提出取舍与两个前提（需重新构建、需先解决登录），用户 2026-09-12 回复「要。继续」。授权明确。**一处如实更正**：助手当时估计「内存约为 dev 的三分之一」，实测为十二分之一到二十一分之一，估计偏保守，已在 EV §2 用实测数据更正。
+- R1 终裁: 已完成 | 用户 | 2026-09-11
 
 ## 变化点登记
 
