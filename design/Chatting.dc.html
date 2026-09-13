@@ -1,0 +1,304 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    a { color: hsl(262 83% 45%); } a:hover { color: hsl(262 83% 35%); }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 1440px; height: 900px; overflow: hidden; box-sizing: border-box; background: hsl(270 33% 99%); color: hsl(264 33% 16%); line-height: 1.5;">
+
+  <div style="position: absolute; inset: 0; display: flex; justify-content: center; padding: 28px 0 88px; box-sizing: border-box;">
+  <div style="width: 1152px; display: flex; flex-direction: column; gap: 22px;">
+
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+      <div style="display: flex; align-items: baseline; gap: 10px;">
+        <span style="font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: -0.01em;">Agent-Jarvis</span>
+        <span style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">2026-09-11 周五</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; gap: 6px; border-radius: 4px; background: hsl(286 37% 93%); color: hsl(278 42% 23%); padding: 3px 8px; font-size: 12px; line-height: 16px;">
+          <span style="width: 6px; height: 6px; border-radius: 9999px; background: hsl(262 83% 45%);"></span>3 家有新变更</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px; border-radius: 4px; background: hsl(0 72% 45% / 0.1); color: hsl(0 72% 35%); padding: 3px 8px; font-size: 12px; line-height: 16px;">
+          <span style="width: 6px; height: 6px; border-radius: 9999px; background: hsl(0 72% 45%);"></span>2 个采集异常</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px; border-radius: 4px; background: hsl(38 92% 50% / 0.14); color: #b45309; padding: 3px 8px; font-size: 12px; line-height: 16px;">
+        <span style="width: 6px; height: 6px; border-radius: 9999px; background: #b45309;"></span>3 项截止 30 天内</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px; border-radius: 4px; background: hsl(264 22% 94%); color: hsl(264 15% 40%); padding: 3px 8px; font-size: 12px; line-height: 16px;">6 条待采纳</span>
+      </div>
+    </div>
+
+  <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(264 15% 40%); flex-shrink: 0;">临近截止</span>
+      <sc-for list="{{deadlines}}" as="d" hint-placeholder-count="3">
+        <span style="display: inline-flex; align-items: center; gap: 8px; border-radius: 4px; background: {{d.bg}}; padding: 4px 10px; font-size: 12px; line-height: 16px; color: hsl(264 33% 16%);">
+          <span>{{d.label}}</span><span style="font-weight: 600; color: {{d.color}};">{{d.days}}</span>
+        </span>
+      </sc-for>
+      <span style="font-size: 12px; line-height: 16px; color: hsl(262 83% 45%); text-decoration: underline; text-underline-offset: 2px;">全部 7 项</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+        <h2 style="margin: 0; font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -0.01em;">行业跟踪</h2>
+        <span style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">友商 Top 8 · 顺序固定，不按新鲜度重排</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px;">
+        <sc-for list="{{competitors}}" as="c" hint-placeholder-count="8">
+          <div style="display: flex; flex-direction: column; gap: 5px; box-sizing: border-box; min-height: 108px; border: 1px solid hsl(264 18% 87%); border-radius: 6px; background: hsl(0 0% 100%); padding: 14px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="width: 8px; height: 8px; border-radius: 9999px; flex-shrink: 0; box-sizing: border-box; background: {{c.dotBg}}; border: 1.5px solid {{c.dotBorder}};"></span>
+              <span style="font-size: 14px; line-height: 20px; font-weight: 500;">{{c.name}}</span>
+            </div>
+            <div style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{c.pos}}</div>
+            <div style="font-size: 12px; line-height: 16px; color: {{c.changeColor}}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{c.change}}</div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 2px; font-size: 12px; line-height: 16px; color: {{c.healthColor}};">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style="flex-shrink: 0;">
+                <path d="M2 9.5V7.75M6 9.5V5.25M10 9.5V2.5" stroke="{{c.healthColor}}" stroke-width="1.5" stroke-linecap="round"></path>
+              </svg>
+              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{c.healthText}}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;">
+      <div style="display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; border: 1px solid hsl(264 18% 87%); border-radius: 6px; background: hsl(0 0% 100%); padding: 14px;">
+        <h3 style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(264 15% 40%);">标准</h3>
+        <sc-for list="{{standards}}" as="s" hint-placeholder-count="4">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="display: flex; flex-direction: column; min-width: 0; flex-grow: 1;">
+              <span style="font-size: 13px; line-height: 18px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{s.id}}</span>
+              <span style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{s.name}}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+              <span style="display: flex; gap: 2px;">
+                <sc-for list="{{s.segments}}" as="seg" hint-placeholder-count="5">
+                  <span style="width: 14px; height: 4px; border-radius: 2px; background: {{seg.bg}};"></span>
+                </sc-for>
+              </span>
+              <span style="font-size: 12px; line-height: 16px; width: 48px;">{{s.stageName}}</span>
+            </div>
+            <span style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%); flex-shrink: 0; width: 104px; text-align: right;">{{s.next}}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; border: 1px solid hsl(264 18% 87%); border-radius: 6px; background: hsl(0 0% 100%); padding: 14px;">
+        <h3 style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(264 15% 40%);">客户</h3>
+        <sc-for list="{{customers}}" as="u" hint-placeholder-count="4">
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span style="width: 8px; height: 8px; border-radius: 9999px; flex-shrink: 0; box-sizing: border-box; align-self: center; background: {{u.dotBg}}; border: 1.5px solid {{u.dotBorder}};"></span>
+              <span style="font-size: 13px; line-height: 18px; font-weight: 500; flex-shrink: 0;">{{u.name}}</span>
+              <span style="font-size: 12px; line-height: 16px; border-radius: 4px; background: hsl(286 37% 93%); color: hsl(278 42% 23%); padding: 0 6px; flex-shrink: 0;">{{u.stage}}</span>
+              <span style="flex-grow: 1;"></span>
+              <span style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%); flex-shrink: 0;">库内 {{u.docs}} 篇 · {{u.touch}}</span>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 8px; padding-left: 16px;">
+              <span style="font-size: 12px; line-height: 16px; color: {{u.techColor}}; flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{u.tech}}</span>
+              <span style="font-size: 12px; line-height: 16px; color: {{u.healthColor}}; flex-shrink: 0;">{{u.healthText}}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+
+      <div style="display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; border: 1px solid hsl(264 18% 87%); border-radius: 6px; background: hsl(0 0% 100%); padding: 14px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px;">
+          <h3 style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(264 15% 40%);">监管与接入机构</h3>
+          <span style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">状态是容量与窗口</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 20px;">
+          <sc-for list="{{bodies}}" as="b" hint-placeholder-count="4">
+            <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+              <div style="display: flex; align-items: baseline; gap: 8px;">
+                <span style="font-size: 13px; line-height: 18px; font-weight: 500; flex-shrink: 0;">{{b.name}}</span>
+                <span style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%); flex-grow: 1;">{{b.area}}</span>
+                <span style="font-size: 12px; line-height: 16px; border-radius: 4px; background: hsl(264 22% 94%); padding: 0 6px; flex-shrink: 0;">{{b.cap}}</span>
+                <span style="font-size: 12px; line-height: 16px; flex-shrink: 0; width: 96px; text-align: right;">{{b.next}}</span>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 8px;">
+                <span style="font-size: 12px; line-height: 16px; color: {{b.changeColor}}; flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{b.change}}</span>
+                <span style="font-size: 12px; line-height: 16px; color: {{b.healthColor}}; flex-shrink: 0;">{{b.healthText}}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+        <h2 style="margin: 0; font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -0.01em;">知识库</h2>
+        <span style="font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">共 130 条 · 本周新增 9 条</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 14px;">
+        <div style="display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; border: 1px solid hsl(264 18% 87%); border-radius: 6px; background: hsl(0 0% 100%); padding: 14px; min-height: 148px;">
+          <h3 style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(264 15% 40%);">内容缺口 · 搜索无结果</h3>
+          <sc-for list="{{gaps}}" as="g" hint-placeholder-count="5">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 13px; line-height: 18px; flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{g.q}}</span>
+              <span style="display: inline-flex; align-items: center; justify-content: center; min-width: 20px; border-radius: 4px; background: hsl(264 22% 94%); padding: 1px 6px; font-size: 12px; line-height: 16px; flex-shrink: 0;">{{g.n}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; border: 1px solid hsl(264 18% 87%); border-radius: 6px; background: hsl(0 0% 100%); padding: 14px;">
+          <h3 style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(264 15% 40%);">按类型</h3>
+          <sc-for list="{{types}}" as="t" hint-placeholder-count="5">
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px;">
+                <span style="font-size: 12px; line-height: 16px; color: {{t.labelColor}};">{{t.label}}</span>
+                <span style="font-size: 12px; line-height: 16px; color: {{t.labelColor}};">{{t.n}}</span>
+              </div>
+              <span style="display: block; width: 100%; height: 4px; border-radius: 2px; background: hsl(264 22% 94%); overflow: hidden;">
+                <span style="display: block; height: 4px; border-radius: 2px; width: {{t.barWidth}}; background: {{t.barColor}};"></span>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; border: 1px solid hsl(264 18% 87%); border-radius: 6px; background: hsl(0 0% 100%); padding: 14px;">
+          <h3 style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(264 15% 40%);">待采纳</h3>
+          <sc-for list="{{pending}}" as="p" hint-placeholder-count="3">
+            <div style="display: flex; flex-direction: column; gap: 4px; border-left: 2px solid hsl(286 37% 85%); padding-left: 8px;">
+              <span style="font-size: 13px; line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{p.title}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; padding: 16px; box-sizing: border-box;">
+    <div style="width: 768px; display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; flex-direction: column; gap: 12px; max-height: 450px;">
+        <div style="align-self: flex-end; max-width: 85%; border-radius: 8px; background: hsl(262 83% 45%); color: hsl(0 0% 100%); padding: 8px 12px; font-size: 14px; line-height: 20px; box-shadow: 0 1px 2px hsl(264 33% 16% / 0.08);">友商 B 这次降价，和上次那批型号是同一条线吗</div>
+        <div style="align-self: flex-start; max-width: 85%; display: flex; flex-direction: column; gap: 4px; border-radius: 6px; border: 1px solid hsl(264 18% 87%); background: hsl(264 22% 94%); padding: 4px 8px; font-size: 12px; line-height: 16px; color: hsl(264 15% 40%);">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style="flex-shrink: 0;"><path d="M2.5 6.5L4.75 8.75L9.5 3.5" stroke="hsl(262 83% 45%)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg><span style="font-weight: 500; color: hsl(264 33% 16%);">search_knowledge</span><span>友商 B 定价</span>
+          </div>
+        </div>
+        <div style="align-self: flex-start; max-width: 85%; border-radius: 8px; background: hsl(264 22% 94%); color: hsl(264 33% 16%); padding: 8px 12px; font-size: 14px; line-height: 20px; box-shadow: 0 1px 2px hsl(264 33% 16% / 0.08);">是同一条千兆线。库里有 3 月那次调价的记录，当时降的是同系列的两个型号；这次覆盖面更宽，含主力款。要我把两次对比存成一条知识吗？</div>
+      </div>
+      <div style="display: flex; align-items: flex-end; gap: 8px;">
+        <span style="width: 10px; height: 10px; border-radius: 9999px; background: hsl(262 83% 45%); margin-bottom: 17px; flex-shrink: 0;"></span>
+        <div style="flex-grow: 1; min-height: 44px; box-sizing: border-box; border-radius: 6px; border: 1px solid hsl(264 18% 52%); background: hsl(270 33% 99%); padding: 11px 12px; font-size: 14px; line-height: 20px; color: hsl(264 15% 40%);">Ask Agent-Jarvis</div>
+        <div style="display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 6px; border: 1px solid hsl(264 18% 87%); background: hsl(0 0% 100%); padding: 0 14px; font-size: 14px; line-height: 20px;">新对话</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const MUTED = 'hsl(264 15% 40%)';
+    const INK = 'hsl(264 33% 16%)';
+    const PRIMARY = 'hsl(262 83% 45%)';
+    const DANGER = 'hsl(0 72% 45%)';
+    const WARN = '#b45309';
+    const TRACK = 'hsl(264 22% 94%)';
+    const LINE = 'hsl(264 18% 87%)';
+
+    const health = { fresh: MUTED, stale: WARN, failed_fetch: DANGER, parse_failed: DANGER, unconfigured: WARN };
+
+    const competitors = [
+      { name: '友商 A', pos: '边缘网关，主打低功耗', change: '发布 v4.2 固件，新增 OPC UA', changed: true, h: 'fresh', healthText: '2 小时前采集' },
+      { name: '友商 B', pos: '工业交换机，价格战主力', change: '定价页千兆型号下调 12%', changed: true, h: 'fresh', healthText: '5 小时前采集' },
+      { name: '友商 C', pos: '协议栈授权，标准参与度高', change: '无新变更', changed: false, h: 'fresh', healthText: '1 天前采集' },
+      { name: '友商 D', pos: '国产替代，政企渠道强', change: '招聘页新增 12 个射频岗', changed: true, h: 'fresh', healthText: '6 小时前采集' },
+      { name: '友商 E', pos: '海外品牌，本地化较弱', change: '无新变更', changed: false, h: 'stale', healthText: '23 天未成功采集' },
+      { name: '友商 F', pos: '新进入者，融资阶段', change: '无新变更', changed: false, h: 'parse_failed', healthText: '解析失败：官网改版' },
+      { name: '友商 G', pos: '方案商，与 A 深度绑定', change: '无新变更', changed: false, h: 'fresh', healthText: '1 天前采集' },
+      { name: '友商 H', pos: '渠道新秀，暂无公开资料', change: '无新变更', changed: false, h: 'unconfigured', healthText: '未配置采集源' }
+    ].map((c) => ({
+      name: c.name, pos: c.pos, change: c.change, healthText: c.healthText,
+      dotBg: c.changed ? PRIMARY : 'transparent',
+      dotBorder: c.changed ? PRIMARY : LINE,
+      changeColor: c.changed ? INK : MUTED,
+      healthColor: health[c.h]
+    }));
+
+    const standards = [
+      { id: 'IEC 62443-3-3', name: '工业通信网络安全等级', stage: 3, stageName: '征询', next: '11-20 投票截止' },
+      { id: 'GB/T 22239', name: '网络安全等级保护基本要求', stage: 4, stageName: '批准', next: '12 月发布' },
+      { id: 'ISO/IEC 27001', name: '信息安全管理体系', stage: 5, stageName: '已发布', next: '2027 换版预研' },
+      { id: 'IEEE 802.1AS', name: '时间敏感网络时钟同步', stage: 2, stageName: '委员会', next: '2027-03 草案' }
+    ].map((s) => {
+      const segments = [];
+      for (let i = 1; i <= 5; i += 1) { segments.push({ bg: i <= s.stage ? PRIMARY : TRACK }); }
+      return { id: s.id, name: s.name, stageName: s.stageName, next: s.next, segments: segments };
+    });
+
+    const TREND = { up: { path: 'M2 8L6 4L10 8', color: PRIMARY }, down: { path: 'M2 4L6 8L10 4', color: DANGER }, flat: { path: 'M2 6H10', color: MUTED } };
+    const customers = [
+      { name: '客户 A', stage: '方案评估', touch: '5 天前接触', tech: '发布液冷选型白皮书 v3', changed: true, docs: 6, h: 'fresh', healthText: '4 小时前采集' },
+      { name: '客户 B', stage: '技术交流', touch: '12 天前接触', tech: '更新供应商技术准入要求', changed: true, docs: 3, h: 'fresh', healthText: '1 天前采集' },
+      { name: '客户 C', stage: '长期跟进', touch: '31 天前接触', tech: '无新发布', changed: false, docs: 9, h: 'fresh', healthText: '2 天前采集' },
+      { name: '客户 D', stage: '暂缓', touch: '90 天前接触', tech: '无新发布', changed: false, docs: 1, h: 'stale', healthText: '26 天未成功采集' }
+    ].map((u) => ({
+      name: u.name, stage: u.stage, touch: u.touch, tech: u.tech, docs: u.docs, healthText: u.healthText,
+      dotBg: u.changed ? PRIMARY : 'transparent',
+      dotBorder: u.changed ? PRIMARY : LINE,
+      techColor: u.changed ? INK : MUTED,
+      healthColor: health[u.h]
+    }));
+
+
+    const deadlines = [
+      { label: '项目甲 · 并网协议签署', days: 12 },
+      { label: '项目乙 · 可研报告提交', days: 26 },
+      { label: '认证 X · 年度复审', days: 41 }
+    ].map((d) => ({
+      label: d.label,
+      days: d.days + ' 天',
+      color: d.days <= 14 ? DANGER : d.days <= 30 ? WARN : MUTED,
+      bg: d.days <= 14 ? 'hsl(0 72% 45% / 0.1)' : d.days <= 30 ? 'hsl(38 92% 50% / 0.14)' : TRACK
+    }));
+
+    const bodies = [
+      { name: 'TSO A', area: '北部', change: '发布 2027 并网规则征求意见', changed: true, cap: '可用 1.2 GW', next: '10-15 意见截止', h: 'fresh', healthText: '3 小时前采集' },
+      { name: 'DSO B', area: '中部', change: '容量拍卖公告，Q4 开放 400 MW', changed: true, cap: '队列 37 位', next: '11-03 申请开放', h: 'fresh', healthText: '1 天前采集' },
+      { name: 'TSO C', area: '西部', change: '无新变更', changed: false, cap: '可用 0 GW', next: '队列冻结', h: 'stale', healthText: '18 天未成功采集' },
+      { name: 'DSO D', area: '南部', change: '无新变更', changed: false, cap: '容量未知', next: '尚未申请', h: 'unconfigured', healthText: '未配置采集源' }
+    ].map((b) => ({
+      name: b.name, area: b.area, change: b.change, cap: b.cap, next: b.next, healthText: b.healthText,
+      changeColor: b.changed ? INK : MUTED,
+      healthColor: health[b.h]
+    }));
+
+    const gaps = [
+      { q: 'OPC UA 一致性测试报告', n: 7 },
+      { q: '友商 B 千兆型号价格', n: 5 },
+      { q: 'IEC 62443 SL2 落地清单', n: 4 },
+      { q: '客户 D 现场拓扑', n: 3 },
+      { q: '射频前端选型对比', n: 2 }
+    ];
+
+    const types = [
+      { label: '产品规格书', n: 42, warn: false },
+      { label: '标准说明书', n: 18, warn: false },
+      { label: '技术论文', n: 31, warn: false },
+      { label: '其它笔记', n: 12, warn: false },
+      { label: '未分类', n: 27, warn: true }
+    ].map((t) => ({ label: t.label, n: t.n, barWidth: Math.round((t.n / 42) * 100) + '%',
+      barColor: t.warn ? WARN : PRIMARY, labelColor: t.warn ? WARN : INK }));
+
+    const pending = [{ title: '友商 B 定价调整要点' }, { title: 'IEC 62443 阶段变化' }, { title: '客户 D 停滞原因推测' }];
+
+    return { deadlines: deadlines, bodies: bodies, competitors: competitors, standards: standards, customers: customers, gaps: gaps, types: types, pending: pending };
+  }
+}
+</script>
+</body>
+</html>

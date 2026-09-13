@@ -41,6 +41,12 @@ export type DashboardEntity = {
   unread: boolean;
   /** Derived server-side: how many of this object's requirements we do not meet. */
   unmet: number;
+  /**
+   * Field and parameter names whose value was checked word for word against a stored
+   * entry (REQ-F-180 ⑥). Everything not in here is inferred — the model may have been
+   * right, but nothing verified it, and the card must not let the two look alike.
+   */
+  quoted?: string[];
 };
 
 const PARAM_STATE_LABEL: Record<ParamState, string> = { unknown: "未判定", meets: "满足", unmet: "不满足" };
@@ -347,6 +353,16 @@ export function KnowledgeDashboard({
                     <span className="min-w-0 flex-1 truncate">
                       {param.name} = {param.value || "（无值）"}
                     </span>
+                    {/* 推断项必须一眼可辨（REQ-F-180 ⑥）。没有标记的才是核对过原文的那一类，
+                        所以标记打在「没验证过」这一侧——沉默永远意味着更弱的那个断言。 */}
+                    {entity.quoted?.includes(param.name) ? null : (
+                      <span
+                        className="knowledge-dashboard__inferred shrink-0 rounded bg-amber-500/15 px-1 text-amber-700 dark:text-amber-500"
+                        title="没有可核对的条目原文，本条记为推断"
+                      >
+                        推断
+                      </span>
+                    )}
                     {/* Only a person sets this: no source page says whether WE meet it. */}
                     <button
                       aria-label={`${entity.title} 的 ${param.name}：我方${PARAM_STATE_LABEL[param.status]}，点击切换`}

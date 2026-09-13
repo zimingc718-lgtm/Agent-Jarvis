@@ -168,7 +168,7 @@ export function extractReadableText(html: string): string {
     .replace(/<noscript\b[\s\S]*?<\/noscript>/gi, " ")
     .replace(/<!--[\s\S]*?-->/g, " ");
   const body = /<body\b[^>]*>([\s\S]*?)<\/body>/i.exec(withoutNoise)?.[1] ?? withoutNoise;
-  return body
+  const flattened = body
     .replace(/<\/(p|div|section|article|li|h[1-6]|tr)>/gi, "\n")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
@@ -178,13 +178,60 @@ export function extractReadableText(html: string): string {
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+    .replace(/[ \t]+/g, " ");
+
+  // Trim per line BEFORE collapsing blank runs (CR-20260912-ingest-extract-chain).
+  // `[ \t]+ -> " "` leaves a single space on every structurally-empty element, so those
+  // lines are not empty and `\n{3,}` never matched them. A real ingest came back with
+  // dozens of " " lines for exactly this reason.
+  const lines = flattened.split("\n").map((line) => line.trim());
+  return dropLeadingDataBlob(lines).join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
+/**
+ * Drops a front-matter-like data line that some CMSs render into the body — the Vertiv
+ * page opened with its language-switch JSON, which then became the entry's first line,
+ * polluted the search index, and made the model report `UrlForCurrentLanguage` as the
+ * entry's source (it was not inventing one; it was the only URL-shaped thing it could see).
+ *
+ * Only a LEADING line is dropped, and only when it parses as a complete JSON object: a
+ * JSON snippet quoted inside an article is content, not boilerplate.
+ */
+function dropLeadingDataBlob(lines: string[]): string[] {
+  const first = lines.findIndex((line) => line !== "");
+  if (first === -1) {
+    return lines;
+  }
+  const candidate = lines[first];
+  if (!candidate.startsWith("{") || !candidate.endsWith("}")) {
+    return lines;
+  }
+  try {
+    const parsed: unknown = JSON.parse(candidate);
+    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return lines;
+    }
+  } catch {
+    return lines;
+  }
+  return [...lines.slice(0, first), ...lines.slice(first + 1)];
+}
+
+/**
+ * The page's title, preferring `og:title` over `<title>`.
+ *
+ * `<title>` is what a site tunes for search-result width, so it is the one that arrives
+ * truncated — a real ingest stored «… reference architecture for the NVIDIA GB300 NVL72
+ * platform, available», a sentence cut mid-phrase. Open Graph titles are written for
+ * sharing and are normally the complete headline.
+ */
 export function extractTitle(html: string): string {
-  return /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1]?.replace(/\s+/g, " ").trim() ?? "";
+  const head = /<head\b[^>]*>([\s\S]*?)<\/head>/i.exec(html)?.[1] ?? html;
+  const og =
+    /<meta\b[^>]*property\s*=\s*["']og:title["'][^>]*content\s*=\s*["']([^"']*)["']/i.exec(head)?.[1] ??
+    /<meta\b[^>]*content\s*=\s*["']([^"']*)["'][^>]*property\s*=\s*["']og:title["']/i.exec(head)?.[1];
+  const tag = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1];
+  return (og ?? tag ?? "").replace(/\s+/g, " ").trim();
 }
 
 export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {

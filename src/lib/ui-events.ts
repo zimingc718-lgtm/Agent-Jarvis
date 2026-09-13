@@ -25,6 +25,16 @@ export const SKILLS_CHANGED_EVENT = "jarvis:skills-changed";
 export const USAGE_CHANGED_EVENT = "jarvis:usage-changed";
 
 /**
+ * Carries THIS turn's running total to the ☰ menu (REQ-NF-060 ④).
+ *
+ * Separate from `USAGE_CHANGED_EVENT` because the two answer different questions:
+ * the conversation total says what the session has cost, this says what the question
+ * you just asked cost. A 1M-token research turn was invisible while only the former
+ * existed — it simply moved a large number slightly larger.
+ */
+export const TURN_USAGE_EVENT = "jarvis:turn-usage";
+
+/**
  * Tells the ☰ menu's KnowledgeList to refetch — after a drop, a 「存入知识库」 click, or a
  * `knowledge_pending` event from the stream (CR-20260911-knowledge-base, REQ-F-044 ④).
  */

@@ -42,6 +42,17 @@ function describe(kind: EntityKind): string {
   return KIND_LABEL[kind];
 }
 
+/**
+ * The first sentence of a failure reason, for a step-row summary.
+ *
+ * Step rows are one line, so the full reason cannot go there — but 「未写入」 alone is
+ * what left the model guessing (CR-20260912-ingest-extract-chain).
+ */
+function firstClause(reason: string, max = 40): string {
+  const head = reason.split(/[。；\n]/u)[0]?.trim() ?? reason.trim();
+  return head.length > max ? `${head.slice(0, max)}…` : head;
+}
+
 export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
   const root = deps.root ?? ENTITIES_ROOT;
   const knowledgeRoot = deps.knowledgeRoot;
@@ -186,6 +197,8 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
         value: { type: "string", description: "新的值" },
         source_url: { type: "string", description: "该值的出处链接" },
         locator: { type: "string", description: "出处定位，如第 3 节表 2" },
+        entry: { type: "string", description: "该值出自的知识条目名；给了才可能记为有据可查" },
+        quote: { type: "string", description: "条目中逐字支持该值的原文；对不上则本条记为推断" },
       },
       required: ["name", "field", "value", "source_url"],
     },
@@ -196,6 +209,8 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
       const value = typeof args.value === "string" ? args.value.trim() : "";
       const sourceUrl = typeof args.source_url === "string" ? args.source_url.trim() : "";
       const locator = typeof args.locator === "string" ? args.locator.trim() : "";
+      const entryName = typeof args.entry === "string" ? args.entry.trim() : "";
+      const quote = typeof args.quote === "string" ? args.quote.trim() : "";
 
       if (!name || !field || !value || !sourceUrl) {
         return { ok: false, content: "name、field、value、source_url 都是必填。没有来源的值不写入。", summary: "参数缺失" };
@@ -235,18 +250,51 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
         }
       });
 
+      // Two classes of evidence, decided by a check rather than by the caller
+      // (CR-20260912-ingest-extract-chain, REQ-F-180 ④⑤). Naming a stored entry and
+      // quoting it verbatim earns 「有据可查」; anything else is recorded as 推断. The
+      // model may choose to supply a quote — it may not choose which class it lands in.
+      // Letting it self-report would leave the guardrail entirely voluntary: the measured
+      // failure was a fabricated 「页面需登录」 filed straight into the evidence field.
+      const { normalizeEvidenceText } = await import("../extract");
+      const { readKnowledge, readPendingKnowledge } = await import("../knowledge");
+      let basis: "quoted" | "inferred" = "inferred";
+      let evidenceLocator = locator;
+      if (entryName && quote) {
+        const cited =
+          (await readKnowledge(entryName, knowledgeRoot)) ?? (await readPendingKnowledge(entryName, knowledgeRoot));
+        const body = cited ? normalizeEvidenceText(cited.content) : "";
+        if (cited && body.includes(normalizeEvidenceText(quote)) && normalizeEvidenceText(quote).includes(normalizeEvidenceText(value))) {
+          basis = "quoted";
+          evidenceLocator = `条目 ${cited.name}：${quote}`;
+        }
+      }
+
       const { proposeEntityUpdate } = await import("../entity-proposals");
       const record = await proposeEntityUpdate(
-        { name, kind: isField ? "field" : "param", field, value, evidence: { url: sourceUrl, at: "", locator } },
+        {
+          name,
+          kind: isField ? "field" : "param",
+          field,
+          value,
+          evidence: { url: sourceUrl, at: "", locator: evidenceLocator },
+          basis,
+        },
         { root, autoApply: trusted }
       );
 
+      const basisNote =
+        basis === "quoted"
+          ? "证据：条目原文逐字命中，记为有据可查。"
+          : "证据：没有可核对的条目原文，本条记为**推断**——看板上不会与有据可查的字段同等显示。";
       return {
         ok: true,
-        content: record.applied
-          ? `已更新「${entity.title}」的 ${field} 为「${value}」，来源在该对象已登记的采集源内，直接生效。`
-          : `已提议把「${entity.title}」的 ${field} 改为「${value}」。来源 ${host} 不在该对象已登记的采集源内，需用户在看板上采纳后才生效。`,
-        summary: record.applied ? `更新 ${entity.title}.${field}` : `提议更新 ${entity.title}.${field}`,
+        content: `${
+          record.applied
+            ? `已更新「${entity.title}」的 ${field} 为「${value}」，来源在该对象已登记的采集源内，直接生效。`
+            : `已提议把「${entity.title}」的 ${field} 改为「${value}」。来源 ${host} 不在该对象已登记的采集源内，需用户在看板上采纳后才生效。`
+        }\n${basisNote}`,
+        summary: `${record.applied ? "更新" : "提议更新"} ${entity.title}.${field}${basis === "inferred" ? "（推断）" : ""}`,
         // Only the queued case is news: a direct write already shows up on the card.
         events: record.applied ? undefined : [{ type: "entity_pending", title: entity.title, what: "update" }],
       };
@@ -334,21 +382,37 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
       const { extractFields } = await import("../extract");
       const outcome = await extractFields({ entity: name, entryName: entry, claims }, { entitiesRoot: root, knowledgeRoot });
       if (!outcome.ok) {
-        return { ok: false, content: outcome.reason, summary: "未写入" };
+        // Carry the reason into the step row too (CR-20260912-ingest-extract-chain).
+        // A bare 「未写入」 told the model nothing, and a model with nothing to go on
+        // invented a cause and filed it as evidence.
+        return { ok: false, content: outcome.reason, summary: `未写入：${firstClause(outcome.reason)}` };
       }
       const lines = outcome.results.map((result) => {
         const label = result.status === "applied" ? "已生效" : result.status === "queued" ? "待采纳" : "已拒绝";
         return `${result.field} = ${result.value} —— ${label}：${result.reason}`;
       });
-      const written = outcome.results.filter((result) => result.status !== "rejected").length;
-      const queued = outcome.results.filter((result) => result.status === "queued").length;
+      // Count records, not attempts (CR-20260912-proposal-id-collision). The old count
+      // was «non-rejected claims», which reported four writes for a call that landed two
+      // because their ids collided — a success message covering silent data loss. An
+      // overwrite replaced a record instead of adding one, so it is not counted either.
+      const landed = outcome.results.filter((result) => result.status !== "rejected" && !result.overwrote);
+      const applied = landed.filter((result) => result.status === "applied").length;
+      const queued = landed.filter((result) => result.status === "queued").length;
+      const parts: string[] = [];
+      if (applied > 0) {
+        parts.push(`已生效 ${applied} 个字段`);
+      }
+      if (queued > 0) {
+        // «提议» rather than «写入»: the value is not on the entity until the user adopts it.
+        parts.push(`已提议 ${queued} 个字段，待采纳`);
+      }
       return {
         // A call where every claim failed its evidence check is a failed call: the model
         // must see that, not a cheerful summary of nothing happening.
-        ok: written > 0,
+        ok: landed.length > 0,
         events: queued > 0 ? [{ type: "entity_pending", title: name, what: "update" }] : undefined,
         content: `条目「${outcome.entryName}」→ 对象「${name}」：\n${lines.join("\n")}`,
-        summary: written > 0 ? `写入 ${written} 个字段：${name}` : `原文核对未通过：${name}`,
+        summary: parts.length > 0 ? `${parts.join("；")}：${name}` : `原文核对未通过：${name}`,
         sources: [{ url: outcome.sourceUrl, title: outcome.entryName }],
       };
     },

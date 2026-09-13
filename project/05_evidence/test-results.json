@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-12",
+  "generated_at": "2026-09-13",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
@@ -1045,6 +1045,38 @@
       "real_entry": true,
       "date": "2026-09-12",
       "notes": "技能按需分页读取：入口返回 SKILL.md + 清单且不内联大文件正文；清单含 KB 数与「不要假设你已经看过」；带 file 单独取到字母序靠后的小文件（改前不可达）；大文件单独读按预算截断并标注；../ 越界与 .png 非白名单被拒且不回显真实路径；清单外文件指回入口调用；宿主约定仍在末尾。7 PASS。真实技能实测：multi-agent-insight-reviewer 20 个文件 160 KB，入口由 32KB 拼接块降为 4,480 字符，改前不可达的 128 KB 现全部可达。 真实入口（生产构建 + 真实浏览器，1440×900）：控制台高度由 821 px 降为 668 px（占屏 74%，max-height 计算值 522 px = 58vh），报告顶部可见区域由 79 px 增至 232 px；展示屏 iframe 仍在，报告照常渲染。"
+    },
+    {
+      "id": "TEST-230",
+      "result": "PASS",
+      "command": "npm test -- knowledge-attribution",
+      "real_entry": true,
+      "date": "2026-09-13",
+      "notes": "知识元数据全链路。单测 11 例全绿（三字段落盘、不存在对象被拒且回列现有对象名、__通用__ 为具名归属、read_knowledge 带元数据头、双语 fixture 中文对象名命中英文正文、命中项带 entity、list_knowledge 分组计数与过滤、零条目仍注册而其余读取工具不注册）。真实入口（生产构建 .next-prod，POST /api/chat/stream）：① 一轮对话调用 save_knowledge 并带 entity/source_url/doc_type，GET /api/knowledge 显示新条目 800vdc-母线试点 entity=维谛技术-vertiv、docType=厂商新闻稿、url=https://vertiv.example/800vdc-pilot——改前该路径落盘恒为三字段皆空；② 同轮 list_knowledge 返回「知识库 2 条」；③ 另一轮 search_knowledge「维谛」命中 1 条（改前 0 条），read_knowledge 后模型答出归属「维谛技术-vertiv」与**绝对** URL，改前它报「未归属」并把正文里的相对路径当成来源。"
+    },
+    {
+      "id": "TEST-240",
+      "result": "PASS",
+      "command": "npm test -- ingest-extract-chain",
+      "real_entry": true,
+      "date": "2026-09-13",
+      "notes": "证据管线一轮内闭合。单测 13 例全绿（待采纳条目可抽字段、采纳前后均成功的回归锁、错误文本回列现有对象名、条目不存在时说明正式库与待采纳区皆无、空格行不再制造大段空白、起始 JSON 对象行被剔除而正文内 JSON 片段保留、og:title 优先且无 og 时回退、两类字段按有无 quote 结构性归类）。真实入口：对一条仍在**待采纳区**的条目 800vdc-母线试点 调用 extract_fields，ok=true——改前同一形态连续失败两次且 summary 只有「未写入」三个字，须人工采纳后才成功。落盘的两条提议 basis=quoted，证明 quote 逐字校验在该路径上生效。"
+    },
+    {
+      "id": "TEST-250",
+      "result": "PASS",
+      "command": "npm test -- turn-budget",
+      "real_entry": false,
+      "date": "2026-09-13",
+      "notes": "单轮累计成本护栏与续写。单测 8 例全绿（占位带 summary 原值、无 summary 时退回裸标记、占位显著短于原文、fitToolLoopContext 透传摘要、上限按窗口比例、累计未达/达到上限的判定、小窗口上限更低）。**real_entry=false，如实登记未覆盖项**：真实入口只观察到 CP-5——三次 turn_usage 事件下发，末次 {inputTokens:12576,outputTokens:436}，本轮用量与会话累计已是两个数。CP-3（输出截断自动续写）与 CP-4（累计触阈停止调工具）**未在真实入口触发**：前者需要构造一次真被 finish_reason=length 截断的回答，后者需要一轮累计逼近 921,600 tokens（约 1.5 美元）。两项按人工发现项登记，待专门触发后补证据，不以单测冒充覆盖。另注：本 CR 的根因在实施前经复核更正——单次请求的预算由 DEC-080 的 fitToolLoopContext 一直守着，1,028,825 是会话累计值；据此撤回了「修订 REQ-F-041 ①」，详见 EV-2026-09-12-cto-persona-audit §2.7。"
+    },
+    {
+      "id": "TEST-260",
+      "result": "PASS",
+      "command": "npm test -- proposal-id",
+      "real_entry": true,
+      "date": "2026-09-13",
+      "notes": "实体提议 ID 去碰撞。单测 5 例全绿，其中 ① 同时断言「四个纯中文字段名 id 互不相同」与「四条全部落盘」——只断言前者的话，一个静默丢弃后来者的实现照样能过；红测阶段实测四条塌成 1 条。真实入口：一轮对话提交两个纯中文字段名（母线形态、保护配合状态），GET /api/entities 显示两条提议均落盘、id 分别为 vertiv-fc352ac8-20260913004902188 与 vertiv-19457a55-20260913004902202（可读前缀 + 8 位哈希 + 毫秒戳），工具 summary 报「已提议 2 个字段，待采纳」。改前：同一实体同一秒的纯中文字段名 id 完全相同并互相覆盖，而 summary 报的是入参条数。审计遗留的旧形态提议 -vertiv-20260912174032 按裁定共存且 basis 读作未验证。"
     }
   ],
   "executed_commands": [
@@ -1285,7 +1317,11 @@
       "result": "PASS",
       "summary": "CR-20260912-skill-paging: tsc 0；单测 650 用例 PASS（新增 7，迁移 4）；ui-contract 53/0（含 RF-07/RF-09）；e2e 19 passed。真实技能入口由 32KB 拼接块降为 4,480 字符，128 KB 由不可达变为可达。",
       "date": "2026-09-12"
-    }
+    },
+    "npx vitest run  (80 files / 687 tests passed)",
+    "npx tsc --noEmit  (0)",
+    "npm run test:ui-contract  (53 passed / 0 failed)",
+    "npm run build:local  →  npm run serve:local  (生产构建重启，按需编译路由 /api/knowledge 与 /api/entities 均 200)"
   ],
   "known_warnings": [
     {
@@ -1405,6 +1441,11 @@
       "text": "CR-20260912-reading-lane was built on a misread requirement and has been reverted in full. The user's ruling 「报告不用跟着位移」 meant 'leave the console position alone, and the report need not move for it' — i.e. keep things as they are. It was read as 'separate them horizontally, but keep the report fixed', which is the opposite. The user corrected it: 「我说了不修改对话框位置。还是底下居中，展开后可以遮挡报告内容，因为展开意味着需要对话。」 Everything that CR introduced (REQ-F-160, DEC-140, TASK-220, TEST-220, and its revisions to REQ-F-002, REQ-F-090 ①, ui-contract LB-02 and the in-iframe breakpoint) is rolled back; code and specs are back to the state before it. The user's reasoning is worth keeping on its own: expanding the console IS the signal that the user wants to converse rather than read, so covering the report at that moment is correct behaviour, not a defect. That premise invalidates the 'overlap = problem' assumption behind the preceding CRs' framing — the mitigations they shipped (auto-collapse on report, 58vh step-stream cap) remain, and were not objected to.",
       "check": "manual",
       "reviewed_at": "2026-09-12"
+    },
+    {
+      "text": "TEST-250 的 CP-3（输出截断自动续写）与 CP-4（本轮累计触阈停止调工具）未在真实入口触发：前者需构造一次真实的 finish_reason=length 截断，后者需一轮累计逼近 921,600 tokens。已按人工发现项登记，不以单测冒充真实入口覆盖。",
+      "check": "manual",
+      "reviewed_at": "2026-09-13"
     }
   ]
 }

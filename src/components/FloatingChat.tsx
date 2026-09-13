@@ -7,6 +7,7 @@ import {
   KNOWLEDGE_CHANGED_EVENT,
   DISPLAY_STAGE_EVENT,
   SKILLS_CHANGED_EVENT,
+  TURN_USAGE_EVENT,
   USAGE_CHANGED_EVENT,
   WAKE_CHANGED_EVENT,
   WAKE_NOTICE_EVENT,
@@ -915,6 +916,8 @@ export function FloatingChat({
           );
         } else if (chunk.type === "usage") {
           window.dispatchEvent(new CustomEvent(USAGE_CHANGED_EVENT, { detail: chunk.usage }));
+        } else if (chunk.type === "turn_usage") {
+          window.dispatchEvent(new CustomEvent(TURN_USAGE_EVENT, { detail: chunk.usage }));
         } else if (chunk.type === "truncated") {
           appendSystemMessage(`已达 ${chunk.steps} 步上限，已停止。已完成的部分保留，可继续追问。`);
         } else if (chunk.type === "tools-unavailable") {

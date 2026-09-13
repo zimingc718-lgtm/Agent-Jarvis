@@ -340,8 +340,10 @@ export async function* sendProviderStream(input: SendProviderStreamInput): Async
       };
     }
   } else if (lengthCapped && sawText) {
-    // REQ-F-051 ④: a plain reply that hit the cap is told, not silently shortened.
-    yield { type: "notice", text: "回复因达到模型输出上限而被截断，内容可能不完整。可以让我继续或分段输出。" };
+    // REQ-F-051 ④ + REQ-NF-060 ②: a plain reply that hit the cap is reported as a typed
+    // signal. The loop continues the answer on its own and only tells the user when it
+    // stops doing so — 「可以让我继续」 was asking the user to pay for a whole extra turn.
+    yield { type: "length_capped" };
   }
 }
 

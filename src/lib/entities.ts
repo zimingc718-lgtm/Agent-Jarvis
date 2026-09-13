@@ -61,6 +61,14 @@ export type Evidence = {
   at: string;
   /** Where in the source, free text, e.g. 第 3 节表 2. */
   locator: string;
+  /**
+   * Whether a stored entry's text was checked word for word (REQ-F-180 ⑥).
+   *
+   * Absent means `inferred`, and that is the safe direction: a line written before this
+   * existed was verified by nothing, so it may not claim to have been. Only `quoted` is
+   * ever written to disk — the absence carries the other case.
+   */
+  basis?: "quoted" | "inferred";
 };
 
 /**
@@ -147,6 +155,12 @@ export type Entity = {
 export type EntitySummary = Omit<Entity, "body" | "evidence"> & {
   /** Derived: a change arrived after the last time the user looked. */
   unread: boolean;
+  /**
+   * Which fields and parameters were verified against a stored entry's text
+   * (REQ-F-180 ⑥). The board needs this to keep an inferred value from looking exactly
+   * like a checked one; everything absent from the list is inferred.
+   */
+  quoted: string[];
   /** Derived: how many of this entity's requirements we do not meet. */
   unmet: number;
 };
@@ -226,6 +240,12 @@ export function renderEntityFile(entity: Omit<Entity, "name">): string {
     entity.sources.map((url) => line("source", url)).join("") +
     entity.params.map((p) => line("param", [p.name, p.value, p.status].join(" | "))).join("") +
     entity.evidence.map((e) => line("evidence", [e.field, e.url, e.at, e.locator].join(" | "))).join("") +
+    // Its own line, not a fifth segment of `evidence`: a locator is free text that may
+    // contain 「|」, so the parser folds everything past the third separator back into it.
+    entity.evidence
+      .filter((e) => e.basis === "quoted")
+      .map((e) => line("evidence_basis", [e.field, "quoted"].join(" | ")))
+      .join("") +
     "---\n";
   return `${head}\n${entity.body.trim()}\n`;
 }
@@ -238,6 +258,7 @@ export function parseEntityFile(raw: string, fallback: { name: string; createdAt
   const sources: string[] = [];
   const params: Param[] = [];
   const evidence: Evidence[] = [];
+  const quotedFields = new Set<string>();
   let body = text;
   if (match) {
     body = text.slice(match[0].length);
@@ -264,6 +285,11 @@ export function parseEntityFile(raw: string, fallback: { name: string; createdAt
         if (field && url) {
           evidence.push({ field, url, at: when ?? "", locator: rest.join(" | ") });
         }
+      } else if (key === "evidence_basis") {
+        const [field, basis] = value.split("|").map((part) => part.trim());
+        if (field && basis === "quoted") {
+          quotedFields.add(field);
+        }
       } else {
         meta[key] = value;
       }
@@ -286,7 +312,7 @@ export function parseEntityFile(raw: string, fallback: { name: string; createdAt
     seenAt: meta.seen_at ?? "",
     sources,
     params,
-    evidence,
+    evidence: evidence.map((item) => (quotedFields.has(item.field) ? { ...item, basis: "quoted" as const } : item)),
     createdAt: meta.created || fallback.createdAt,
     body: content,
   };
@@ -344,6 +370,7 @@ export function summarize(entity: Entity, now: Date = new Date()): EntitySummary
     ...rest,
     health: effectiveHealth(entity, now),
     unread: Boolean(entity.changeAt) && (!entity.seenAt || entity.changeAt > entity.seenAt),
+    quoted: entity.evidence.filter((item) => item.basis === "quoted").map((item) => item.field),
     // Counted, never stored: the count is always whatever the rows say right now.
     unmet: entity.params.filter((param) => param.status === "unmet").length,
   };
@@ -492,7 +519,14 @@ export async function updateEntity(name: string, input: UpdateEntityInput, root:
   if (input.evidence) {
     next.evidence = [
       ...next.evidence.filter((e) => e.field !== input.field),
-      { field: input.field, url: input.evidence.url, at: input.evidence.at || at, locator: input.evidence.locator },
+      {
+        field: input.field,
+        url: input.evidence.url,
+        at: input.evidence.at || at,
+        locator: input.evidence.locator,
+        // Carried, not re-derived: only the caller that ran the quote check knows this.
+        basis: input.evidence.basis,
+      },
     ];
   }
   const { name: _n, ...rest } = next;
@@ -547,7 +581,13 @@ export async function setParam(entityName: string, input: SetParamInput, root: s
   if (input.evidence) {
     next.evidence = [
       ...next.evidence.filter((e) => e.field !== paramName),
-      { field: paramName, url: input.evidence.url, at: input.evidence.at || at, locator: input.evidence.locator },
+      {
+        field: paramName,
+        url: input.evidence.url,
+        at: input.evidence.at || at,
+        locator: input.evidence.locator,
+        basis: input.evidence.basis,
+      },
     ];
   }
   const { name: _n, ...rest } = next;

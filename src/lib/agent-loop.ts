@@ -1,7 +1,7 @@
 import type { ToolSpec } from "./adapters";
 import type { ChatDelta, ChatMessage, Source, ToolCall } from "./types";
 import { normalizeArgs, parseToolArguments, summarizeArgs, type ToolContext, type ToolRegistry } from "./tools/registry";
-import { fitToolLoopContext } from "./tools/budget";
+import { fitToolLoopContext, overTurnCeiling } from "./tools/budget";
 
 /**
  * The tool loop (DEC-022, REQ-F-029, TASK-065).
@@ -16,6 +16,22 @@ import { fitToolLoopContext } from "./tools/budget";
 
 /** REQ-F-029 ①. Each `tool_call` counts one step. */
 export const MAX_TOOL_STEPS = 100;
+
+/**
+ * How many times one turn will continue an answer the provider cut at its output cap
+ * (REQ-NF-060 ③).
+ *
+ * Industry guidance on `finish_reason: "length"` is to append what arrived and ask for the
+ * rest, repeating until the reply ends naturally — but explicitly NOT to retry blindly,
+ * because each round re-sends the whole context. Measured here: 5 of 11 turns hit the cap,
+ * and gpt-5 spent most of one 8,192-token output budget on reasoning, yielding 1,574 visible
+ * characters. Three rounds cover that; beyond it the answer is not converging and the user
+ * should narrow the question instead.
+ */
+export const MAX_CONTINUATIONS = 3;
+
+/** Said to the model, not the user: the user already asked once. */
+const CONTINUE_PROMPT = "接着上面被截断的地方继续写完，不要重复已经写过的内容，也不要重新开头。";
 /** REQ-F-029 ④. Same tool, same normalised arguments, twice in a row. */
 export const REPEAT_FAILURE_LIMIT = 2;
 /** How long a single tool may run before it is abandoned (P2 value). */
@@ -99,6 +115,13 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
 
   let text = "";
   let steps = 0;
+  /** One line per tool call, so a narrowed result still says what it found (REQ-NF-060). */
+  const toolSummaries = new Map<string, string>();
+  /** This turn's running total across every provider call in the loop (REQ-NF-060 ①). */
+  const turnUsage = { inputTokens: 0, outputTokens: 0 };
+  let ceilingAnnounced = false;
+  /** How many times this turn has continued an answer the provider cut at its output cap. */
+  let continuations = 0;
   /** The narrowing notice is worth saying once per send, not once per step. */
   let narrowedAnnounced = false;
 
@@ -112,7 +135,7 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
     // measured. Narrowing here is on-pressure only — see `fitToolLoopContext`.
     let outgoing = conversation;
     if (input.contextWindow) {
-      const fit = fitToolLoopContext(conversation, input.contextWindow);
+      const fit = fitToolLoopContext(conversation, input.contextWindow, toolSummaries);
       if (!fit.fits) {
         input.emit({
           type: "notice",
@@ -133,6 +156,7 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
     }
 
     let stepText = "";
+    let lengthCapped = false;
     const pendingCalls: ToolCall[] = [];
     // REQ-F-051 ③: calls the adapter labelled as cut by the output cap. They are never
     // executed; the model gets a precise reason instead (DEC-032 ①).
@@ -162,7 +186,20 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
         }
         continue;
       }
-      if (delta.type === "usage" || delta.type === "notice") {
+      if (delta.type === "usage") {
+        // Every call in this turn lands in the same running total — that sum is what had
+        // nobody watching it, not any single request (CR-20260912-turn-budget-continue).
+        turnUsage.inputTokens += delta.usage.inputTokens;
+        turnUsage.outputTokens += delta.usage.outputTokens;
+        input.emit(delta);
+        input.emit({ type: "turn_usage", usage: { ...turnUsage } });
+        continue;
+      }
+      if (delta.type === "length_capped") {
+        lengthCapped = true;
+        continue;
+      }
+      if (delta.type === "notice") {
         input.emit(delta);
         continue;
       }
@@ -189,8 +226,44 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
       return { text, status: "error", steps, sources, toolsUsed, errorMessage: failed };
     }
 
-    // No tools requested: the model answered, the loop is done.
+    // No tools requested: the model answered — unless the provider cut it off.
     if (pendingCalls.length === 0) {
+      // REQ-NF-060 ②③: continue the answer ourselves rather than asking the user to say
+      // 「继续」 and pay for a whole extra turn. Bounded twice over — by the continuation
+      // count and by this turn's cumulative cost — because an answer that never reaches a
+      // natural end would otherwise be an unbounded bill the system runs up by itself.
+      const overCeiling = Boolean(input.contextWindow) && overTurnCeiling(turnUsage, input.contextWindow ?? 0);
+      if (lengthCapped && continuations < MAX_CONTINUATIONS && !overCeiling) {
+        continuations += 1;
+        input.persist({ role: "assistant", content: stepText, status: "complete" });
+        conversation.push({ role: "assistant", content: stepText });
+        conversation.push({ role: "user", content: CONTINUE_PROMPT });
+        continue;
+      }
+      if (lengthCapped) {
+        input.emit({
+          type: "notice",
+          text:
+            continuations >= MAX_CONTINUATIONS
+              ? `回复已自动续写 ${continuations} 次仍未写完，为免无上限消耗在此停下。可以让我就某一部分单独展开。`
+              : "回复因达到模型输出上限而被截断，且本轮预算已用尽，在此停下。可以让我就某一部分单独展开。",
+        });
+      }
+      input.persist({ role: "assistant", content: stepText, status: "complete", sources });
+      return { text, status: "complete", steps, sources, toolsUsed };
+    }
+
+    // Cumulative cost ceiling for the turn (REQ-NF-060 ①). Checked here, before the
+    // calls are executed, for the same reason as the step ceiling below: past this point
+    // the money is already spent. The turn does not fail — it answers with what it has.
+    if (input.contextWindow && overTurnCeiling(turnUsage, input.contextWindow)) {
+      if (!ceilingAnnounced) {
+        ceilingAnnounced = true;
+        input.emit({
+          type: "notice",
+          text: `本轮累计已用约 ${turnUsage.inputTokens + turnUsage.outputTokens} tokens，达到本轮预算上限，不再调用工具，改用已获得的材料作答。`,
+        });
+      }
       input.persist({ role: "assistant", content: stepText, status: "complete", sources });
       return { text, status: "complete", steps, sources, toolsUsed };
     }
@@ -255,6 +328,7 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
               sources.push(source);
             }
           }
+          toolSummaries.set(call.id, result.summary);
           input.emit({ type: "tool_result", callId: call.id, ok: result.ok, summary: result.summary });
           for (const event of result.events ?? []) {
             input.emit(event);

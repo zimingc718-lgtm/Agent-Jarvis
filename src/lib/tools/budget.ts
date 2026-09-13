@@ -283,19 +283,62 @@ export function applySummary(messages: TurnMessage[], summary: string, through: 
  * Operates on plain `ChatMessage`s with no turn numbers, because inside one send there are
  * no turns — only loop steps.
  */
-export function narrowToolResults(messages: ChatMessage[], keepLast: number): ChatMessage[] {
+export function narrowToolResults(
+  messages: ChatMessage[],
+  keepLast: number,
+  summaries?: ReadonlyMap<string, string>
+): ChatMessage[] {
   const toolIndexes = messages.flatMap((message, index) => (message.role === "tool" ? [index] : []));
   if (toolIndexes.length <= keepLast) {
     return messages;
   }
   const keep = new Set(toolIndexes.slice(-keepLast));
-  return messages.map((message, index) =>
-    message.role === "tool" && !keep.has(index) ? { ...message, content: OMITTED_RESULT } : message
-  );
+  return messages.map((message, index) => {
+    if (message.role !== "tool" || keep.has(index)) {
+      return message;
+    }
+    // Keep the one line the tool already produced (CR-20260912-turn-budget-continue).
+    // `ToolResult.summary` exists for the step row (REQ-F-035 ①), so this costs no extra
+    // tokens to produce and no extra request. A bare marker made the model forget what it
+    // had read — and reading several sources and then synthesising is the one thing this
+    // product is actually good at, so the saving was buying the wrong thing.
+    const summary = message.tool_call_id ? summaries?.get(message.tool_call_id) : undefined;
+    return { ...message, content: summary ? `${OMITTED_RESULT}｜${summary}` : OMITTED_RESULT };
+  });
 }
 
 /** Progressively tighter retention attempts before the loop gives up (DEC-080 ②). */
 export const IN_TURN_RETENTION_STEPS = [3, 2, 1];
+
+/**
+ * How many full-budget provider calls one user turn may add up to
+ * (CR-20260912-turn-budget-continue, REQ-NF-060 ①).
+ *
+ * The per-REQUEST budget was never the leak: `fitToolLoopContext` has enforced it before
+ * every call since DEC-080. What had no ceiling was the number of calls — `MAX_TOOL_STEPS`
+ * allows 100 — and `addUsage` quietly adds each one to the conversation total. A measured
+ * research question came to 1,028,825 input + 35,261 output across ~38 calls, every one of
+ * them inside budget, and nothing anywhere was looking at the sum.
+ *
+ * Expressed as a multiple of the per-request budget rather than an absolute number, so a
+ * small-window model gets a proportionally smaller allowance. Twelve is deliberately
+ * generous: the point is to stop a runaway, not to cut short the multi-source reading this
+ * product is bought for.
+ */
+export const TURN_COST_BUDGET_MULTIPLE = 12;
+
+/** The cumulative input+output a single turn may spend before the loop stops calling tools. */
+export function turnCostCeiling(contextWindow: number): number {
+  return budgetTokens(contextWindow, BUDGET_SHARES.totalInput) * TURN_COST_BUDGET_MULTIPLE;
+}
+
+/** Whether this turn's running total has reached its ceiling. */
+export function overTurnCeiling(
+  used: { inputTokens: number; outputTokens: number },
+  contextWindow: number
+): boolean {
+  return used.inputTokens + used.outputTokens >= turnCostCeiling(contextWindow);
+}
 
 export type ToolLoopFit =
   | { fits: true; messages: ChatMessage[]; narrowed: boolean; estimatedTokens: number }
@@ -315,7 +358,11 @@ export type ToolLoopFit =
  * break exactly the multi-source synthesis the loop exists for. REQ-F-041 ① governs turns,
  * not steps, so it is not in tension with this.
  */
-export function fitToolLoopContext(messages: ChatMessage[], contextWindow: number): ToolLoopFit {
+export function fitToolLoopContext(
+  messages: ChatMessage[],
+  contextWindow: number,
+  summaries?: ReadonlyMap<string, string>
+): ToolLoopFit {
   const limit = budgetTokens(contextWindow, BUDGET_SHARES.totalInput);
   const cost = (rows: ChatMessage[]): number =>
     rows.reduce((total, message) => total + estimateTokens(message.content ?? "") + 4, 0);
@@ -325,7 +372,7 @@ export function fitToolLoopContext(messages: ChatMessage[], contextWindow: numbe
     return { fits: true, messages, narrowed: false, estimatedTokens: full };
   }
   for (const keepLast of IN_TURN_RETENTION_STEPS) {
-    const narrowed = narrowToolResults(messages, keepLast);
+    const narrowed = narrowToolResults(messages, keepLast, summaries);
     const narrowedCost = cost(narrowed);
     if (narrowedCost <= limit) {
       return { fits: true, messages: narrowed, narrowed: true, estimatedTokens: narrowedCost };
