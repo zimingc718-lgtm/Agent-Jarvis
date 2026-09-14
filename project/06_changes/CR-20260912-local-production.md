@@ -2,7 +2,7 @@
 
 - 级别: L2（新增一个身份来源与两条运行脚本，改变可观察行为；**无 schema 变更、无新增依赖、无新增出网面**。信任模型的变化被限制在「仅回环」内，且默认不启用）
 - 提出人: user（P6 运行反馈：dev server 连续四次被系统因内存不足杀掉，表现为「删不掉 Provider / 优先级不生效」；助手提出走生产构建，用户 2026-09-12 回复「要。继续」）
-- 状态: APPROVED（R1 人工终裁：用户明确授权）→ P3/P4 完成
+- 状态: CLOSED（闭环完成：1 个任务 DONE、1 条测试 PASS；2026-09-14 按 DEC-270 ③ 收口。原记：APPROVED（R1 人工终裁：用户明确授权）→ P3/P4 完成）
 - 占用 ID: REQ-F-080, REQ-NF-040, DEC-060, TASK-110, TEST-140
 - 评审模型: 标准档（DEC-021 ①：CP-1 与 CP-2 依赖人工发现 → 不走快车道）
 - 影响需求: 新增 REQ-F-080（本机生产运行与单管理员模式）、REQ-NF-040（免登录模式的边界）；修正 `scripts/check-config.mjs` 对 REQ-F-001 DEFERRED 形态的判定缺陷
@@ -90,3 +90,10 @@
 | CP-3 | APPROVED 负面用例是本 CR 重点 | APPROVED 覆盖真实域名 / 局域网 / IPv6 / 缺失 / 非法 / 前缀钓鱼 | APPROVED env 注入，测试不污染全局 | APPROVED TEST-140 ③④⑤（自审） |
 | CP-4 | APPROVED 退出码本身即断言 | APPROVED 不需要新增用例即可守住 | APPROVED 既有 config-check 8 条覆盖回归 | APPROVED TEST-140 真实入口（自审） |
 
+## 复验（2026-09-14）
+
+`CR-20260913-process-hardening-six` 的 DEC-210 ③ 让「在哪儿验的」显形之后，本 CR 落在「只在一次性服务器上验过」那一格。2026-09-14 在**用户自己那台**服务器上按原样复验：`npm run build:local` + `npm run serve:local` 之后 `/`、`/api/providers`、`/api/display`、`/api/knowledge`、`/api/tools` 全部 200；`npm run config:check` 报「配置完整（单管理员模式）」并退出 0；`node scripts/check-dev-server.mjs` 报 `PASS served build matches HEAD (591cd471)`。
+
+TEST-140 的 `entry` 据此由 `isolated` 改为 `user`。
+
+**其余八条仍是 `isolated`**——它们要么需要往用户的真实知识库里写入（knowledge-attribution、ingest-extract-chain、proposal-id-collision），要么要花用户的 API 额度跑真实对话（skill-report-bridge、context-degrade、web-reading），要么需要用户先配置本地文档目录（local-documents）。这些不该由我单方面执行，**如实留在账上**。

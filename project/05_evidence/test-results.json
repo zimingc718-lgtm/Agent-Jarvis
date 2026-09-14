@@ -115,22 +115,26 @@
       "result": "PASS",
       "command": "npm run test:chat-stop && npm run test:e2e",
       "real_entry": true,
-      "evidence": "abort persists partial text with status=stopped; e2e 'Stop halts the stream server-side' clicks the real Stop button and asserts the persisted assistant turn status is 'stopped'"
+      "evidence": "abort persists partial text with status=stopped; e2e 'Stop halts the stream server-side' clicks the real Stop button and asserts the persisted assistant turn status is 'stopped'",
+      "entry": "isolated"
     },
     {
       "id": "TEST-010",
       "result": "PASS",
       "command": "npm run test:settings-ui && npm run test:provider-crud && npm run test:e2e",
       "real_entry": true,
-      "evidence": "settings UI create/edit(no dup)/enable/disable/delete/test; e2e fills+saves provider, runs Test connection ('Connection OK.')"
+      "evidence": "settings UI create/edit(no dup)/enable/disable/delete/test; e2e fills+saves provider, runs Test connection ('Connection OK.')",
+      "entry": "isolated"
     },
     {
       "id": "TEST-011",
       "result": "PASS",
       "command": "npm run test:floating-chat",
       "evidence": "CR-20260909: bottom input default + expand; separate assistant bubbles per turn; conversationId reused across turns. No provider <select>/chip/model field; the chat request carries no providerId/model (server resolves by priority).",
-      "notes": " CR-20260912-runtime-visibility 更新：上下文序列由 4 条变 5 条（每轮多一条易变后缀），并新增断言要求它位于稳定前缀之后。",
-      "date": "2026-09-12"
+      "notes": " CR-20260912-runtime-visibility 更新：上下文序列由 4 条变 5 条（每轮多一条易变后缀），并新增断言要求它位于稳定前缀之后。 2026-09-14 增三例（DEC-260）：探测被 429 拒 → unknown；探测超时 → unknown；对方正常应答但没发 tool_calls → no（真结论仍要落地）。 真实入口（用户自己那台服务器）：同一条探测改前回 no 且把 {\"deepseek-chat\":\"no\"} 写回库，改后回 unknown 且库里保持 NULL。此前两个 Provider 都被这样记成不支持工具，而当天用 gpt-5 真跑通了 list_entities → read_entity → propose_entity_update 三步工具循环。",
+      "date": "2026-09-14",
+      "real_entry": true,
+      "entry": "user"
     },
     {
       "id": "TEST-012",
@@ -143,7 +147,8 @@
       "result": "PASS",
       "command": "npm run test:smoke",
       "real_entry": true,
-      "evidence": "real Next.js server: home renders the title plus the 配置 / 账号登录 dialog buttons -> settings deep link -> provider save -> edit (1 row, name changed) -> /models test -> chat ctx=2 -> follow-up ctx=4 -> /api/conversations/[id]/messages restore (user,assistant,user,assistant) -> disable drops input -> delete Runs in an isolated .next-smoke build dir (NEXT_DIST_DIR) so it cannot corrupt a developer's .next."
+      "evidence": "real Next.js server: home renders the title plus the 配置 / 账号登录 dialog buttons -> settings deep link -> provider save -> edit (1 row, name changed) -> /models test -> chat ctx=2 -> follow-up ctx=4 -> /api/conversations/[id]/messages restore (user,assistant,user,assistant) -> disable drops input -> delete Runs in an isolated .next-smoke build dir (NEXT_DIST_DIR) so it cannot corrupt a developer's .next.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-014",
@@ -183,21 +188,24 @@
       "result": "PASS",
       "command": "npm run test:theme && npm run test:e2e",
       "real_entry": true,
-      "evidence": "component: defaults to light, dark writes data-theme + localStorage, unknown stored value ignored, bootstrap script applies stored theme. e2e: toggling dark in the settings dialog applies immediately and survives a page reload; switching back to light applies."
+      "evidence": "component: defaults to light, dark writes data-theme + localStorage, unknown stored value ignored, bootstrap script applies stored theme. e2e: toggling dark in the settings dialog applies immediately and survives a page reload; switching back to light applies.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-020",
       "result": "PASS",
       "command": "npm run test:markdown && npm run test:e2e",
       "real_entry": true,
-      "evidence": "renderer: fenced code (incl. unclosed fence while streaming), inline code, bold, italic, ul/ol, h3-h5 only, http/https/mailto links only (javascript: left literal), raw model HTML escaped (no <img>/<b> emitted). e2e: assistant bubble renders <code>npm test</code>, <strong>ship</strong> and 2 <li>, and never shows literal **ship**."
+      "evidence": "renderer: fenced code (incl. unclosed fence while streaming), inline code, bold, italic, ul/ol, h3-h5 only, http/https/mailto links only (javascript: left literal), raw model HTML escaped (no <img>/<b> emitted). e2e: assistant bubble renders <code>npm test</code>, <strong>ship</strong> and 2 <li>, and never shows literal **ship**.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-021",
       "result": "PASS",
       "command": "npm run test:auth-ui && npm run test:e2e",
       "real_entry": true,
-      "evidence": "component: both dialogs start closed and open/close on their buttons; settings dialog exposes the appearance group + Model Providers and adds no second h1 / nested main; account dialog covers signed-in, signed-out and missing-OAuth states. e2e: home shows only the h1 plus the two dialog buttons with no dialog open; provider is saved through the settings dialog; account dialog shows the 账号 ≠ 模型授权 boundary."
+      "evidence": "component: both dialogs start closed and open/close on their buttons; settings dialog exposes the appearance group + Model Providers and adds no second h1 / nested main; account dialog covers signed-in, signed-out and missing-OAuth states. e2e: home shows only the h1 plus the two dialog buttons with no dialog open; provider is saved through the settings dialog; account dialog shows the 账号 ≠ 模型授权 boundary.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-022",
@@ -221,7 +229,8 @@
       "result": "PASS",
       "command": "npm run test:smoke && npm run test:e2e",
       "real_entry": true,
-      "evidence": "smoke asserts /api/auth/csrf -> 200 + csrfToken and /api/auth/providers exposes the google provider; e2e asserts /api/auth/signin -> 200 (not 500). Regression guard for .next build-dir corruption (vendor-chunks/jose.js MODULE_NOT_FOUND) that the JARVIS_TEST_USER_ID bypass otherwise hides. Verified: a `npm run build:verify` (into .next-verify) run against a live interactive dev server no longer breaks that server's /api/auth/* or /."
+      "evidence": "smoke asserts /api/auth/csrf -> 200 + csrfToken and /api/auth/providers exposes the google provider; e2e asserts /api/auth/signin -> 200 (not 500). Regression guard for .next build-dir corruption (vendor-chunks/jose.js MODULE_NOT_FOUND) that the JARVIS_TEST_USER_ID bypass otherwise hides. Verified: a `npm run build:verify` (into .next-verify) run against a live interactive dev server no longer breaks that server's /api/auth/* or /.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-025",
@@ -235,14 +244,16 @@
       "result": "PASS",
       "command": "npm run test:chat-stream && npm run test:smoke",
       "real_entry": true,
-      "evidence": "runChatTurn with nothing enabled rejects with status 409 and creates no conversation (listRecentConversations stays empty). smoke: after disabling the only provider, POST /api/chat/stream returns 409 and the home HTML renders .floating-chat__light--off."
+      "evidence": "runChatTurn with nothing enabled rejects with status 409 and creates no conversation (listRecentConversations stays empty). smoke: after disabling the only provider, POST /api/chat/stream returns 409 and the home HTML renders .floating-chat__light--off.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-027",
       "result": "PASS",
       "command": "npm run test:floating-chat && npm run test:visual && npm run test:e2e",
       "real_entry": true,
-      "evidence": "component: light class is floating-chat__light--checking until the (mocked) probe resolves, then --ready; --busy while streaming; --off with hasEnabledProvider=false. ui-contract LB-06 asserts all four states are rendered and styled. No real network in vitest (probe is a test seam). e2e exercises the real probe via the mock model server. P6 fix: the probe effect no longer gates on the SSR hasEnabledProvider snapshot — it probes on mount and re-probes on window focus / a jarvis:providers-changed event that ModelSettings dispatches after every save/toggle/delete/reorder, so the light turns green right after a provider is configured without a reload (test: 're-probes when providers change')."
+      "evidence": "component: light class is floating-chat__light--checking until the (mocked) probe resolves, then --ready; --busy while streaming; --off with hasEnabledProvider=false. ui-contract LB-06 asserts all four states are rendered and styled. No real network in vitest (probe is a test seam). e2e exercises the real probe via the mock model server. P6 fix: the probe effect no longer gates on the SSR hasEnabledProvider snapshot — it probes on mount and re-probes on window focus / a jarvis:providers-changed event that ModelSettings dispatches after every save/toggle/delete/reorder, so the light turns green right after a provider is configured without a reload (test: 're-probes when providers change').",
+      "entry": "isolated"
     },
     {
       "id": "TEST-028",
@@ -256,28 +267,33 @@
       "result": "PASS",
       "command": "npm run test:chat-stop && npm run test:e2e",
       "real_entry": true,
-      "evidence": "component: clicking 停止 aborts the stream, marks the last assistant bubble （已停止）, sets jarvis:chat-session-ended, and the next submit sends conversationId=undefined (new conversation). e2e 'Stop halts the stream server-side': real 停止 button; persisted assistant status is 'stopped'."
+      "evidence": "component: clicking 停止 aborts the stream, marks the last assistant bubble （已停止）, sets jarvis:chat-session-ended, and the next submit sends conversationId=undefined (new conversation). e2e 'Stop halts the stream server-side': real 停止 button; persisted assistant status is 'stopped'.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-030",
       "result": "PASS",
       "command": "npm run test:floating-chat && npm run test:e2e",
       "real_entry": true,
-      "evidence": "component: button reads 新对话 while the input is empty (with or without history); clicking clears the transcript DOM, drops conversationId, sets jarvis:chat-session-ended; the next send has conversationId=undefined and no row is created before it. A session flagged ended does not hydrate initialMessages. e2e '新对话 clears the transcript and a refresh stays empty': after 新对话 the sent message is hidden and a page.reload() stays empty. RF-09 asserts .floating-chat--expanded max-height <=50vh. CR-20260909-collapsible-panel: re-verified PASS after the expanded->showTranscript refactor (DEC-013); handleNewConversation no longer calls setExpanded, showTranscript follows messages."
+      "evidence": "component: button reads 新对话 while the input is empty (with or without history); clicking clears the transcript DOM, drops conversationId, sets jarvis:chat-session-ended; the next send has conversationId=undefined and no row is created before it. A session flagged ended does not hydrate initialMessages. e2e '新对话 clears the transcript and a refresh stays empty': after 新对话 the sent message is hidden and a page.reload() stays empty. RF-09 asserts .floating-chat--expanded max-height <=50vh. CR-20260909-collapsible-panel: re-verified PASS after the expanded->showTranscript refactor (DEC-013); handleNewConversation no longer calls setExpanded, showTranscript follows messages.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-031",
       "result": "PASS",
       "command": "npm run test:floating-chat && npm run test:e2e",
       "real_entry": true,
-      "evidence": "component (7 sub-assertions): collapse control renders only once a transcript exists; collapsing removes .floating-chat__messages from the DOM while conversationId is retained, jarvis:chat-session-ended stays unset, and the next send reuses the same conversationId; expanding restores the same messages; while collapsed the light stays --busy during streaming then pulses --done and settles to --ready after 1.2s (fake timers); sending while collapsed auto-expands and clears localStorage['jarvis:chat-collapsed']; the stored preference is honoured across a remount; preference=collapsed with no transcript shows just the input bar with no control (no empty middle state). e2e 'collapsing the panel keeps the conversation and survives a reload': real 收起对话 button -> .floating-chat__messages hidden -> page.reload() -> still hidden + 展开对话 button -> sending re-expands and the mock echoes ctx=4 (same conversation continued)."
+      "evidence": "component (7 sub-assertions): collapse control renders only once a transcript exists; collapsing removes .floating-chat__messages from the DOM while conversationId is retained, jarvis:chat-session-ended stays unset, and the next send reuses the same conversationId; expanding restores the same messages; while collapsed the light stays --busy during streaming then pulses --done and settles to --ready after 1.2s (fake timers); sending while collapsed auto-expands and clears localStorage['jarvis:chat-collapsed']; the stored preference is honoured across a remount; preference=collapsed with no transcript shows just the input bar with no control (no empty middle state). e2e 'collapsing the panel keeps the conversation and survives a reload': real 收起对话 button -> .floating-chat__messages hidden -> page.reload() -> still hidden + 展开对话 button -> sending re-expands and the mock echoes ctx=4 (same conversation continued). 2026-09-13 增 ⑤（REQ-F-054 ⑩，CR-20260913-console-decisions）：收起后再展开，记录区停在最新一条。收起会把记录区从 DOM 移除（REQ-F-019 ②），再展开是重新挂载、滚动位置从 0 起算，而消息未变故只依赖 messages 的滚动效果不会再跑。断言把 scrollHeight 钉成 4321、scrollTo 换成收集器，改前红：expected [] to include 4321；改后 floating-chat 37 例全绿。",
+      "entry": "isolated",
+      "date": "2026-09-13"
     },
     {
       "id": "TEST-032",
       "result": "PASS",
       "command": "npm run test:auth-ui && npm run test:e2e",
       "real_entry": true,
-      "evidence": "component (tests/corner-menu.test.tsx): ☰ trigger has aria-haspopup=menu + aria-expanded; menu items are unmounted until opened; open -> role=menu with inline ThemeToggle + 模型 + 账号登录; Esc closes and returns focus to the trigger; mousedown outside closes; clicking 深色 sets data-theme=dark + localStorage['jarvis-theme'] with NO dialog[open]; 模型 opens the Model Providers dialog, 账号登录 opens the account dialog. SettingsDialog (tests/home-dialogs.test.tsx) trigger is 「模型」, dialog holds only provider settings (no 外观 group). e2e: home header exposes only the ☰ trigger (no 配置/模型/账号 buttons); appearance toggle now lives in the ☰ menu, switches without opening a dialog, and persists across page.reload(); the ☰ menu stays reachable while the chat panel is expanded (z-index 30 > 20)."
+      "evidence": "component (tests/corner-menu.test.tsx): ☰ trigger has aria-haspopup=menu + aria-expanded; menu items are unmounted until opened; open -> role=menu with inline ThemeToggle + 模型 + 账号登录; Esc closes and returns focus to the trigger; mousedown outside closes; clicking 深色 sets data-theme=dark + localStorage['jarvis-theme'] with NO dialog[open]; 模型 opens the Model Providers dialog, 账号登录 opens the account dialog. SettingsDialog (tests/home-dialogs.test.tsx) trigger is 「模型」, dialog holds only provider settings (no 外观 group). e2e: home header exposes only the ☰ trigger (no 配置/模型/账号 buttons); appearance toggle now lives in the ☰ menu, switches without opening a dialog, and persists across page.reload(); the ☰ menu stays reachable while the chat panel is expanded (z-index 30 > 20).",
+      "entry": "isolated"
     },
     {
       "id": "TEST-033",
@@ -324,7 +340,8 @@
       "result": "PASS",
       "command": "npm run test:e2e",
       "real_entry": true,
-      "evidence": "tests/e2e/skills-display.spec.ts + tests/skills-route.test.ts: POST /api/skills stores a folder raw, generates SKILL.md, registers it (GET lists it), 409 on a duplicate slug, drops path-traversal entries; a skill turn producing ```html surfaces the insight; a follow-up unrelated send does not re-trigger the skill (per-message); a skill turn with no HTML shows 「Plain reply, no HTML.」 in the transcript."
+      "evidence": "tests/e2e/skills-display.spec.ts + tests/skills-route.test.ts: POST /api/skills stores a folder raw, generates SKILL.md, registers it (GET lists it), 409 on a duplicate slug, drops path-traversal entries; a skill turn producing ```html surfaces the insight; a follow-up unrelated send does not re-trigger the skill (per-message); a skill turn with no HTML shows 「Plain reply, no HTML.」 in the transcript.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-039",
@@ -345,7 +362,8 @@
       "result": "PASS",
       "command": "npm run test:e2e",
       "real_entry": true,
-      "evidence": "tests/e2e/skills-display.spec.ts (real browser): home renders a full-screen .display-screen--home with the title; a skill turn's ```html renders in .display-screen__frame behind a visible .display-screen__notice; Escape does not dismiss the notice; the insight survives page.reload(); 「显示首页」 routes the screen back to the title view and that also survives a reload; the ☰ menu opens on top of the display screen."
+      "evidence": "tests/e2e/skills-display.spec.ts (real browser): home renders a full-screen .display-screen--home with the title; a skill turn's ```html renders in .display-screen__frame behind a visible .display-screen__notice; Escape does not dismiss the notice; the insight survives page.reload(); 「显示首页」 routes the screen back to the title view and that also survives a reload; the ☰ menu opens on top of the display screen.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-042",
@@ -368,7 +386,8 @@
       "result": "PASS",
       "command": "npm run test:floating-chat && npm run test:e2e",
       "real_entry": true,
-      "evidence": "tests/floating-chat.test.tsx skill-intake block: a drop that is neither folder nor zip has preventDefault called (fireEvent.drop returns false) and the transcript explains the refusal — the P6 root-cause guard; dropping a zip posts `archive` to /api/skills; the upload button路径 posts the same shape and renders the same receipt (one shared submit); classifyDrop and describeExcluded unit-checked. e2e drives the real 上传 zip button through the browser file chooser."
+      "evidence": "tests/floating-chat.test.tsx skill-intake block: a drop that is neither folder nor zip has preventDefault called (fireEvent.drop returns false) and the transcript explains the refusal — the P6 root-cause guard; dropping a zip posts `archive` to /api/skills; the upload button路径 posts the same shape and renders the same receipt (one shared submit); classifyDrop and describeExcluded unit-checked. e2e drives the real 上传 zip button through the browser file chooser.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-045",
@@ -382,7 +401,8 @@
       "result": "PASS",
       "command": "npm run test:auth-ui && npm run test:e2e",
       "real_entry": true,
-      "evidence": "tests/skill-list.test.tsx (5): list renders name — description, empty state 尚未注册技能, refetch on jarvis:skills-changed without a reload, read-only guard (no buttons/inputs), last-good list kept when a refetch fails. tests/floating-chat.test.tsx: 本轮使用技能：X appears on a skill turn and is absent otherwise. e2e asserts the ☰ list picks up a fresh registration with no reload."
+      "evidence": "tests/skill-list.test.tsx (5): list renders name — description, empty state 尚未注册技能, refetch on jarvis:skills-changed without a reload, read-only guard (no buttons/inputs), last-good list kept when a refetch fails. tests/floating-chat.test.tsx: 本轮使用技能：X appears on a skill turn and is absent otherwise. e2e asserts the ☰ list picks up a fresh registration with no reload.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-051",
@@ -424,21 +444,24 @@
       "result": "PASS",
       "command": "npm run test:theme && npm run test:auth-ui && npm run test:e2e",
       "real_entry": true,
-      "evidence": "① theme-toggle 5/5: light is the default with nothing stored, an explicit dark choice writes data-theme + jarvis-theme and survives a reload. ② corner-menu 5/5 and e2e TEST-032 regression: DisplayScreen, the bottom console and the ☰ menu stack correctly (z 0 / 20 / 30) in a real browser. ③ Esc closes the menu and returns focus to the trigger; light-dismiss on outside pointer. ④ the item is 「模型」 and opens the model dialog. ⑤ LB-05 (static + live) confirms the console carries no provider/model selector and the request body has no providerId/model. ⑥ display.test.ts 6/6 plus e2e: GET /api/display and jarvis:display-changed behave as before."
+      "evidence": "① theme-toggle 5/5: light is the default with nothing stored, an explicit dark choice writes data-theme + jarvis-theme and survives a reload. ② corner-menu 5/5 and e2e TEST-032 regression: DisplayScreen, the bottom console and the ☰ menu stack correctly (z 0 / 20 / 30) in a real browser. ③ Esc closes the menu and returns focus to the trigger; light-dismiss on outside pointer. ④ the item is 「模型」 and opens the model dialog. ⑤ LB-05 (static + live) confirms the console carries no provider/model selector and the request body has no providerId/model. ⑥ display.test.ts 6/6 plus e2e: GET /api/display and jarvis:display-changed behave as before.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-049",
       "result": "PASS",
       "command": "npm run test:settings-ui && npm run test:providers && npm run test:e2e",
       "real_entry": true,
-      "evidence": "① the 模型 dialog and /settings/models render the same ModelSettings component, so the form semantics are identical by construction. ② settings-models 8/8 + provider-routes: add, edit, test, enable/disable and ↑/↓ priority all still go through the existing Provider API (POST /api/providers, PATCH/DELETE /api/providers/[id], POST /api/providers/test) — no request shape changed. ③ the native <dialog> keeps the platform focus trap, Esc and focus restore; the body scrolls within a max-height so a long provider form cannot push the dialog off-screen. ④ every field is a Label+Input pair, the ↑/↓ icon buttons carry both an aria-label and a Tooltip and render at 44x44 (LV-TARGET ≥24px passes with margin), status stays role=status. ⑤ no .dialog__*/.provider-*/.settings-* rules remain in the stylesheet."
+      "evidence": "① the 模型 dialog and /settings/models render the same ModelSettings component, so the form semantics are identical by construction. ② settings-models 8/8 + provider-routes: add, edit, test, enable/disable and ↑/↓ priority all still go through the existing Provider API (POST /api/providers, PATCH/DELETE /api/providers/[id], POST /api/providers/test) — no request shape changed. ③ the native <dialog> keeps the platform focus trap, Esc and focus restore; the body scrolls within a max-height so a long provider form cannot push the dialog off-screen. ④ every field is a Label+Input pair, the ↑/↓ icon buttons carry both an aria-label and a Tooltip and render at 44x44 (LV-TARGET ≥24px passes with margin), status stays role=status. ⑤ no .dialog__*/.provider-*/.settings-* rules remain in the stylesheet.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-050",
       "result": "PASS",
       "command": "npm run test:floating-chat && npm run test:markdown && npm run test:e2e && npm run test:ui-contract:live",
       "real_entry": true,
-      "evidence": "① floating-chat 25/25 and markdown 8/8: streaming, stop, new conversation, collapse/reload, the four status-light states, request-level error line and Markdown rendering are unchanged — only the visual layer was replaced. ② the composer uses Button/Textarea/Tooltip with Lucide icons; the light keeps its four distinct tones and its role=status text. ③ live tier at 320/390/1280px in both themes: no horizontal overflow on / or /settings/models, LV-CONTRAST and LV-CONTRAST-DARK both pass, focus indicators present, targets ≥24px, reduced-motion honoured. ④ e2e 10/10 walks provider priority → chat → display screen → theme → reload in a real browser. ⑤ the P3 upload/skill UI is preserved unchanged but is NOT part of this CR's passing evidence — TEST-043..046 remain its own CR's证据. Live tier total: 68 pass / 0 fail / 0 warn / 0 skip, incl. axe-core with no serious/critical violations."
+      "evidence": "① floating-chat 25/25 and markdown 8/8: streaming, stop, new conversation, collapse/reload, the four status-light states, request-level error line and Markdown rendering are unchanged — only the visual layer was replaced. ② the composer uses Button/Textarea/Tooltip with Lucide icons; the light keeps its four distinct tones and its role=status text. ③ live tier at 320/390/1280px in both themes: no horizontal overflow on / or /settings/models, LV-CONTRAST and LV-CONTRAST-DARK both pass, focus indicators present, targets ≥24px, reduced-motion honoured. ④ e2e 10/10 walks provider priority → chat → display screen → theme → reload in a real browser. ⑤ the P3 upload/skill UI is preserved unchanged but is NOT part of this CR's passing evidence — TEST-043..046 remain its own CR's证据. Live tier total: 68 pass / 0 fail / 0 warn / 0 skip, incl. axe-core with no serious/critical violations.",
+      "entry": "isolated"
     },
     {
       "id": "TEST-055",
@@ -469,8 +492,9 @@
       "result": "PASS",
       "command": "node scripts/check-dev-server.mjs && npx vitest run tests/check-dev-server.test.ts",
       "real_entry": true,
-      "date": "2026-09-10",
-      "notes": "CR-20260910-risk-scaled-gates；含阳性用例（构造违规输入并断言具体错误码），非仅通过路径。"
+      "date": "2026-09-13",
+      "notes": "CR-20260910-risk-scaled-gates；含阳性用例（构造违规输入并断言具体错误码），非仅通过路径。 2026-09-13 增 ④ 构建戳（DEC-210 ①）：五例——供的提交与 HEAD 一致 → current；服务器较旧 → stale 且话里直说「你在浏览器里看到的东西早于你的提交」并给出生产模式的重建命令；页面没有该 meta → absent 亦 FAIL；戳为空（起服务器处无 git）→ SKIP，不伪装成通过；meta 两个属性顺序反过来仍读得出。 **真实入口（用户自己那台，端口 3000，`npm run build:local` + `npm run serve:local`）**：`node scripts/check-dev-server.mjs` 报 `PASS served build matches HEAD (591cd471)`，exit 0。这一跑当场逮到本条建议自己的实现缺陷：第一版把 `<meta>` 手写在 layout 的 `<head>` 里，五条单测全绿而服务器返回的 HTML 里一个字都没有——App Router 会丢掉手写的 `<head>`；改用 `metadata.other` 后才真的出现在页面上。局限：它比的是提交，未提交的改动对它不可见。",
+      "entry": "user"
     },
     {
       "id": "TEST-059",
@@ -630,7 +654,8 @@
       "command": "npm run test:smoke && npm run test:e2e",
       "real_entry": true,
       "date": "2026-09-10",
-      "notes": "CR-20260910-agent-tooling；真实入口：工具循环端到端、步骤流可见、show_home 经工具、刷新重建、未产出洞察的告知。smoke OK，e2e 10 PASS。"
+      "notes": "CR-20260910-agent-tooling；真实入口：工具循环端到端、步骤流可见、show_home 经工具、刷新重建、未产出洞察的告知。smoke OK，e2e 10 PASS。",
+      "entry": "isolated"
     },
     {
       "id": "TEST-079",
@@ -670,7 +695,8 @@
       "command": "npm run test:e2e",
       "real_entry": true,
       "date": "2026-09-11",
-      "notes": "CR-20260911-context-compaction；真实入口：4 个长轮次经 HTTP 灌入、第 5 轮从真实浏览器发出；模型收到的消息数 11→8（压缩确实改变发送内容）、对话照常完成；标记可见可展开、刷新后重建于同一位置；GET messages 返回摘要行且每行仍只有 id/role/content/status 四个旧字段。e2e 11 PASS。"
+      "notes": "CR-20260911-context-compaction；真实入口：4 个长轮次经 HTTP 灌入、第 5 轮从真实浏览器发出；模型收到的消息数 11→8（压缩确实改变发送内容）、对话照常完成；标记可见可展开、刷新后重建于同一位置；GET messages 返回摘要行且每行仍只有 id/role/content/status 四个旧字段。e2e 11 PASS。",
+      "entry": "isolated"
     },
     {
       "id": "TEST-084",
@@ -708,9 +734,10 @@
       "id": "TEST-088",
       "result": "PASS",
       "command": "npm test -- knowledge-list && npm run test:floating-chat && npm run test:ui-contract",
-      "real_entry": false,
-      "date": "2026-09-13",
-      "notes": "CR-20260911-knowledge-base；列表标题/来源/名称与空态；待采纳 region + 计数、采纳 POST 后刷新、忽略 DELETE、失败文案；事件重取、删除确认；拖入 .md → POST multipart 收据；助手气泡「存入知识库」真实按钮只在助手回复、POST JSON conversation；knowledge_pending → 提示 + 事件；ui-contract LB-12（52/0）；TEST-044 ① 文案更新。 2026-09-13 增 ⑧：entity_pending 的两种 what 说两句不同的话，且都派发 KNOWLEDGE_CHANGED_EVENT（CR-20260912-entity-pending 客户端分支里机器可守的那一半）。"
+      "real_entry": true,
+      "date": "2026-09-14",
+      "notes": "CR-20260911-knowledge-base；列表标题/来源/名称与空态；待采纳 region + 计数、采纳 POST 后刷新、忽略 DELETE、失败文案；事件重取、删除确认；拖入 .md → POST multipart 收据；助手气泡「存入知识库」真实按钮只在助手回复、POST JSON conversation；knowledge_pending → 提示 + 事件；ui-contract LB-12（52/0）；TEST-044 ① 文案更新。 2026-09-13 增 ⑧：entity_pending 的两种 what 说两句不同的话，且都派发 KNOWLEDGE_CHANGED_EVENT（CR-20260912-entity-pending 客户端分支里机器可守的那一半）。 真实入口（2026-09-14，用户自己那台服务器 + 真实 Provider gpt-5）：一轮真实对话里模型自发走完`propose_entity_update`，来源不在该对象已登记的采集源内 → 进待采纳区（未直接生效）→ 流上回来 `entity_pending {title: 台达 Delta, what: update}`，控制台据此出系统消息并派发看板刷新。另一轮用已登记源的提议走的是直接生效分支、**按设计不发该事件**——两条分支都实跑过一次，此前只有单测。turn_usage 6,554 in / 492 out。",
+      "entry": "user"
     },
     {
       "id": "TEST-089",
@@ -718,7 +745,8 @@
       "command": "npm run test:e2e",
       "real_entry": true,
       "date": "2026-09-11",
-      "notes": "CR-20260911-knowledge-base；真实入口：API 存知识 → 新对话里模型调 search_knowledge 检到（步骤行 + 回复含 8443）；模型调 save_knowledge → 转录区提示、pending 不在 entries、☰ 待采纳（1）、采纳后进 entries；真实浏览器拖入 .md → 收据 + 条目；刷新后 ☰ 首开含全部条目。e2e 12 PASS。"
+      "notes": "CR-20260911-knowledge-base；真实入口：API 存知识 → 新对话里模型调 search_knowledge 检到（步骤行 + 回复含 8443）；模型调 save_knowledge → 转录区提示、pending 不在 entries、☰ 待采纳（1）、采纳后进 entries；真实浏览器拖入 .md → 收据 + 条目；刷新后 ☰ 首开含全部条目。e2e 12 PASS。",
+      "entry": "isolated"
     },
     {
       "id": "TEST-100",
@@ -758,7 +786,8 @@
       "command": "npm run test:e2e",
       "real_entry": true,
       "date": "2026-09-11",
-      "notes": "CR-20260911-proactive-wake；真实入口：默认关、用量可见；现在唤醒 → 模型恰一次非流式调用（max_tokens 200 + 唤醒指令）→ 转录区 system 行；刷新后仍在、GET messages 字段兼容；上限设 1 后零调用并显示已达上限；开关持久。e2e 13 PASS。"
+      "notes": "CR-20260911-proactive-wake；真实入口：默认关、用量可见；现在唤醒 → 模型恰一次非流式调用（max_tokens 200 + 唤醒指令）→ 转录区 system 行；刷新后仍在、GET messages 字段兼容；上限设 1 后零调用并显示已达上限；开关持久。e2e 13 PASS。",
+      "entry": "isolated"
     },
     {
       "id": "TEST-091",
@@ -806,7 +835,8 @@
       "command": "npm run test:e2e && npm run test:ui-contract && npm run test:visual",
       "real_entry": true,
       "date": "2026-09-12",
-      "notes": "真实入口：模型两次 save_insight（第二次带 insightId）后 iframe 内为一份文档、两段标题、表格有边框、主题跟随；1024×700 抽屉完整在视口内且遮罩接管点击；指针移到展示屏后记录区收缩、回到输入框恢复。e2e 16 PASS；ui-contract 53/0/0；visual PASS。 CR-20260912-skill-report-bridge 新增真实入口断言：报告落地后对话面板自动让开（opacity 0 + auto-hidden 类），输入框获焦即恢复。该断言逼出一条死代码——insight 流事件全仓无人发出。"
+      "notes": "真实入口：模型两次 save_insight（第二次带 insightId）后 iframe 内为一份文档、两段标题、表格有边框、主题跟随；1024×700 抽屉完整在视口内且遮罩接管点击；指针移到展示屏后记录区收缩、回到输入框恢复。e2e 16 PASS；ui-contract 53/0/0；visual PASS。 CR-20260912-skill-report-bridge 新增真实入口断言：报告落地后对话面板自动让开（opacity 0 + auto-hidden 类），输入框获焦即恢复。该断言逼出一条死代码——insight 流事件全仓无人发出。",
+      "entry": "isolated"
     },
     {
       "id": "TEST-097",
@@ -830,7 +860,8 @@
       "command": "npm test -- web-reading search-settings && npm run test:smoke",
       "real_entry": true,
       "date": "2026-09-11",
-      "notes": "read_url 分流与回退（桩 launcher）：PDF 走提取且不含结构噪音、octet-stream 按文件头嗅探、扫描件报失败、被拦截调浏览器一次并标注来路、仍在校验页则报失败且不返回校验页内容、404 不启动浏览器、开关可关/默认开、正常 HTML 不启动浏览器、设置开关持久化并写明边界。真实入口：本机 SearXNG 返回 20 条 JSON，web_search 出 10 条；UALink 英文 PDF 提取 33,675 字、东兴证券中文 PDF 提取 230,992 字；opencompute.org 如实报「人机校验未通过」。15+1 PASS。"
+      "notes": "read_url 分流与回退（桩 launcher）：PDF 走提取且不含结构噪音、octet-stream 按文件头嗅探、扫描件报失败、被拦截调浏览器一次并标注来路、仍在校验页则报失败且不返回校验页内容、404 不启动浏览器、开关可关/默认开、正常 HTML 不启动浏览器、设置开关持久化并写明边界。真实入口：本机 SearXNG 返回 20 条 JSON，web_search 出 10 条；UALink 英文 PDF 提取 33,675 字、东兴证券中文 PDF 提取 230,992 字；opencompute.org 如实报「人机校验未通过」。15+1 PASS。",
+      "entry": "isolated"
     },
     {
       "id": "TEST-120",
@@ -860,9 +891,10 @@
       "id": "TEST-123",
       "result": "PASS",
       "command": "npm test -- knowledge-dashboard",
-      "real_entry": false,
-      "date": "2026-09-12",
-      "notes": "CR-20260911-home-dashboard；三条泳道与固定顺序提示；每张卡同时给出内容变化与采集健康度（未配置源、解析失败各自可见）；汇总条三个计数；点开卡片即 PATCH seen 且 aria-expanded 变化；展开是源管理并可增删源、无源时明说安静不代表事实；问 Jarvis 交给对话框；待采纳区两类各走各的路由；总览缺口排序与库内篇数；空看板不假装有数据。 CR-20260911-board-add-entity 小改：⑫三条泳道各自可直接新增对象，kind 由泳道决定；⑬空名不发请求；⑨空态文案改为「可以在下面直接添加，也可以在对话里让 Jarvis 提议」。13 PASS。 CR-20260912-technical-spine 增 2 例：汇总条与卡片芯片换成未对上计数（容量退到展开区）；展开区可看参数、切三态、删除、直接写一条。"
+      "real_entry": true,
+      "date": "2026-09-14",
+      "notes": "CR-20260911-home-dashboard；三条泳道与固定顺序提示；每张卡同时给出内容变化与采集健康度（未配置源、解析失败各自可见）；汇总条三个计数；点开卡片即 PATCH seen 且 aria-expanded 变化；展开是源管理并可增删源、无源时明说安静不代表事实；问 Jarvis 交给对话框；待采纳区两类各走各的路由；总览缺口排序与库内篇数；空看板不假装有数据。 CR-20260911-board-add-entity 小改：⑫三条泳道各自可直接新增对象，kind 由泳道决定；⑬空名不发请求；⑨空态文案改为「可以在下面直接添加，也可以在对话里让 Jarvis 提议」。13 PASS。 CR-20260912-technical-spine 增 2 例：汇总条与卡片芯片换成未对上计数（容量退到展开区）；展开区可看参数、切三态、删除、直接写一条。 真实入口（2026-09-14，用户自己那台服务器，端口 3000）：给 6 个跟踪对象配上用本机 SearXNG 搜到的真实采集源，逐个走 `PATCH /api/entities/<name>` 的 addSource + fetch。5 个取到正文记 `fresh`；**英维克官网 https://www.envicool.com/news.html 对任何请求回 403（换浏览器 UA 亦然），采集链路如实记 `failed_fetch`**——CR-20260911-home-dashboard CP-2「源坏掉时用户能否看出来」由此真跑一次：数据层给出 failed_fetch，看板汇总条的「N 个采集异常」与卡片的「抓取失败」都走 destructive 色（渲染由本条 ③ 断言）。随后把该源换成官方信息披露平台巨潮资讯的该股公告页（002837），采集成功记 fresh。配源前全库健康度 10 个 unconfigured、采集源总数 0；配源后 6 fresh / 4 unconfigured（后者是测试夹具对象）。",
+      "entry": "user"
     },
     {
       "id": "TEST-124",
@@ -918,7 +950,8 @@
       "command": "npm test -- single-admin auth config-check && npm run build:local && npm run test:smoke",
       "real_entry": true,
       "date": "2026-09-12",
-      "notes": "单管理员模式：生产+回环+显式 id 放行；未设 id 401；真实域名/局域网/IPv6 公网/URL 缺失或非法一律拒绝；localhost.evil.com 前缀域名被拒；真实会话优先；测试旁路未被放宽（auth.test.ts 原三条同时通过）；describeAuthMode 四态正确。真实入口：build:local + start:local 后 / 与 /api/providers 与 /api/display 均 200，Provider 与 dev 一致，写路由往返净效果为零；config:check 退出码由 1 修正为 0。实测常驻内存 prod 126 MB 对 dev 1,564 MB。7+8 PASS。"
+      "notes": "单管理员模式：生产+回环+显式 id 放行；未设 id 401；真实域名/局域网/IPv6 公网/URL 缺失或非法一律拒绝；localhost.evil.com 前缀域名被拒；真实会话优先；测试旁路未被放宽（auth.test.ts 原三条同时通过）；describeAuthMode 四态正确。真实入口：build:local + start:local 后 / 与 /api/providers 与 /api/display 均 200，Provider 与 dev 一致，写路由往返净效果为零；config:check 退出码由 1 修正为 0。实测常驻内存 prod 126 MB 对 dev 1,564 MB。7+8 PASS。 2026-09-14 在**用户自己那台**服务器上复验同一组断言（DEC-210 ③，entry 由 isolated 改为 user）：build:local + serve:local 之后 / 、/api/providers、/api/display、/api/knowledge、/api/tools 全部 200；config:check 报「配置完整（单管理员模式）」退出 0；check-dev-server 报 PASS served build matches HEAD 591cd471。此前这条只在一次性服务器上验过。",
+      "entry": "user"
     },
     {
       "id": "TEST-133",
@@ -998,7 +1031,8 @@
       "command": "npm run test:e2e",
       "real_entry": true,
       "date": "2026-09-12",
-      "notes": "真实入口全链路：从 ☰ 文档目录输入绝对路径添加 → 「已添加，共 1 份可读文档」→ 摘要行显示 1 个目录 → 提问后步骤流先后出现 search_documents 与 read_document（第二步标识由桩模型从第一步结果解析得出，非预置）→ 助手回复含文件原文中的 1200 kW。移除目录后摘要行回到未配置，磁盘文件内容原封不动。e2e 18 passed。"
+      "notes": "真实入口全链路：从 ☰ 文档目录输入绝对路径添加 → 「已添加，共 1 份可读文档」→ 摘要行显示 1 个目录 → 提问后步骤流先后出现 search_documents 与 read_document（第二步标识由桩模型从第一步结果解析得出，非预置）→ 助手回复含文件原文中的 1200 kW。移除目录后摘要行回到未配置，磁盘文件内容原封不动。e2e 18 passed。",
+      "entry": "isolated"
     },
     {
       "id": "TEST-180",
@@ -1011,10 +1045,11 @@
     {
       "id": "TEST-181",
       "result": "PASS",
-      "command": "npm test -- runtime-visibility",
-      "real_entry": false,
-      "date": "2026-09-12",
-      "notes": "服务看护判定：长命退出→重启并清零计数；连续短命→give-up 且说明是起不来；退避递增末档封顶；脚本内常量副本与策略模块比对防漂移。4 PASS。"
+      "command": "npm test -- supervisor-policy（单测）+ 真机杀进程复验",
+      "real_entry": true,
+      "date": "2026-09-14",
+      "notes": "服务看护判定：长命退出→重启并清零计数；连续短命→give-up 且说明是起不来；退避递增末档封顶；脚本内常量副本与策略模块比对防漂移。4 PASS。 真实入口（2026-09-14，用户自己那台机器，端口 3000，生产构建 + serve:local）：对正在服务的 `next start` 进程发强制终止（模拟系统在内存紧张时把它停掉），随后 `.data/server-events.log` 依次出现 `server-exited code=4294967295 uptime=24930s` 与 `restarting 第 1 次，1000ms 后`；约 12 秒后 `/`、`/api/tools`、`/api/display` 全部 200，`check-dev-server` 报 `PASS served build matches HEAD (591cd471)`。此前这条只有策略单测——「被系统停掉之后会不会自己起来」从没在真机上发生过。",
+      "entry": "user"
     },
     {
       "id": "TEST-182",
@@ -1022,7 +1057,8 @@
       "command": "npm run test:e2e",
       "real_entry": true,
       "date": "2026-09-12",
-      "notes": "真实入口：浏览器内配置 Provider 并真实发送一次，对桩 Provider 实际收到的 messages 断言——存在含「当前运行时」的 system 消息，内含 Provider 名 MockRuntime 与模型 id mock-model-x，且位于身份提示之后。e2e 19 passed。"
+      "notes": "真实入口：浏览器内配置 Provider 并真实发送一次，对桩 Provider 实际收到的 messages 断言——存在含「当前运行时」的 system 消息，内含 Provider 名 MockRuntime 与模型 id mock-model-x，且位于身份提示之后。e2e 19 passed。",
+      "entry": "isolated"
     },
     {
       "id": "TEST-190",
@@ -1030,7 +1066,8 @@
       "command": "npm test -- context-degrade",
       "real_entry": true,
       "date": "2026-09-12",
-      "notes": "超预算逐级收紧：份额不相容断言（0.15×4≥0.6）；装得下时不动且 degraded 为 null；三份 3 万 tokens 报告收紧后装得下；先削正文再放弃轮次；tool_call_id 保留；用户与助手文字逐字保留；只有对话文字超限才抛错；最后一级省略全部工具正文。8 PASS。真实入口：用户真实会话（36 条消息、tool 内容 328,849 字符）回放，由抛 ContextOverflowError（83,740 > 76,800）变为装配成功 54,214 tokens，三条大 PDF 各削至 9,535 tokens，其余 20 条一字未动，两轮均未放弃。"
+      "notes": "超预算逐级收紧：份额不相容断言（0.15×4≥0.6）；装得下时不动且 degraded 为 null；三份 3 万 tokens 报告收紧后装得下；先削正文再放弃轮次；tool_call_id 保留；用户与助手文字逐字保留；只有对话文字超限才抛错；最后一级省略全部工具正文。8 PASS。真实入口：用户真实会话（36 条消息、tool 内容 328,849 字符）回放，由抛 ContextOverflowError（83,740 > 76,800）变为装配成功 54,214 tokens，三条大 PDF 各削至 9,535 tokens，其余 20 条一字未动，两轮均未放弃。",
+      "entry": "isolated"
     },
     {
       "id": "TEST-200",
@@ -1046,7 +1083,8 @@
       "command": "npm test -- skill-paging",
       "real_entry": true,
       "date": "2026-09-12",
-      "notes": "技能按需分页读取：入口返回 SKILL.md + 清单且不内联大文件正文；清单含 KB 数与「不要假设你已经看过」；带 file 单独取到字母序靠后的小文件（改前不可达）；大文件单独读按预算截断并标注；../ 越界与 .png 非白名单被拒且不回显真实路径；清单外文件指回入口调用；宿主约定仍在末尾。7 PASS。真实技能实测：multi-agent-insight-reviewer 20 个文件 160 KB，入口由 32KB 拼接块降为 4,480 字符，改前不可达的 128 KB 现全部可达。 真实入口（生产构建 + 真实浏览器，1440×900）：控制台高度由 821 px 降为 668 px（占屏 74%，max-height 计算值 522 px = 58vh），报告顶部可见区域由 79 px 增至 232 px；展示屏 iframe 仍在，报告照常渲染。"
+      "notes": "技能按需分页读取：入口返回 SKILL.md + 清单且不内联大文件正文；清单含 KB 数与「不要假设你已经看过」；带 file 单独取到字母序靠后的小文件（改前不可达）；大文件单独读按预算截断并标注；../ 越界与 .png 非白名单被拒且不回显真实路径；清单外文件指回入口调用；宿主约定仍在末尾。7 PASS。真实技能实测：multi-agent-insight-reviewer 20 个文件 160 KB，入口由 32KB 拼接块降为 4,480 字符，改前不可达的 128 KB 现全部可达。 真实入口（生产构建 + 真实浏览器，1440×900）：控制台高度由 821 px 降为 668 px（占屏 74%，max-height 计算值 522 px = 58vh），报告顶部可见区域由 79 px 增至 232 px；展示屏 iframe 仍在，报告照常渲染。",
+      "entry": "isolated"
     },
     {
       "id": "TEST-230",
@@ -1054,7 +1092,8 @@
       "command": "npm test -- knowledge-attribution",
       "real_entry": true,
       "date": "2026-09-13",
-      "notes": "知识元数据全链路。单测 11 例全绿（三字段落盘、不存在对象被拒且回列现有对象名、__通用__ 为具名归属、read_knowledge 带元数据头、双语 fixture 中文对象名命中英文正文、命中项带 entity、list_knowledge 分组计数与过滤、零条目仍注册而其余读取工具不注册）。真实入口（生产构建 .next-prod，POST /api/chat/stream）：① 一轮对话调用 save_knowledge 并带 entity/source_url/doc_type，GET /api/knowledge 显示新条目 800vdc-母线试点 entity=维谛技术-vertiv、docType=厂商新闻稿、url=https://vertiv.example/800vdc-pilot——改前该路径落盘恒为三字段皆空；② 同轮 list_knowledge 返回「知识库 2 条」；③ 另一轮 search_knowledge「维谛」命中 1 条（改前 0 条），read_knowledge 后模型答出归属「维谛技术-vertiv」与**绝对** URL，改前它报「未归属」并把正文里的相对路径当成来源。 2026-09-13 增 ⑨：看板把 __通用__ 显示为具名分组、与无归属并列不合并，为零不显示；组件与工具的字面量由断言钉住。此前 REQ-F-170 ③ 只落到工具层，看板从未显示过它。"
+      "notes": "知识元数据全链路。单测 11 例全绿（三字段落盘、不存在对象被拒且回列现有对象名、__通用__ 为具名归属、read_knowledge 带元数据头、双语 fixture 中文对象名命中英文正文、命中项带 entity、list_knowledge 分组计数与过滤、零条目仍注册而其余读取工具不注册）。真实入口（生产构建 .next-prod，POST /api/chat/stream）：① 一轮对话调用 save_knowledge 并带 entity/source_url/doc_type，GET /api/knowledge 显示新条目 800vdc-母线试点 entity=维谛技术-vertiv、docType=厂商新闻稿、url=https://vertiv.example/800vdc-pilot——改前该路径落盘恒为三字段皆空；② 同轮 list_knowledge 返回「知识库 2 条」；③ 另一轮 search_knowledge「维谛」命中 1 条（改前 0 条），read_knowledge 后模型答出归属「维谛技术-vertiv」与**绝对** URL，改前它报「未归属」并把正文里的相对路径当成来源。 2026-09-13 增 ⑨：看板把 __通用__ 显示为具名分组、与无归属并列不合并，为零不显示；组件与工具的字面量由断言钉住。此前 REQ-F-170 ③ 只落到工具层，看板从未显示过它。",
+      "entry": "isolated"
     },
     {
       "id": "TEST-240",
@@ -1062,15 +1101,16 @@
       "command": "npm test -- ingest-extract-chain",
       "real_entry": true,
       "date": "2026-09-13",
-      "notes": "证据管线一轮内闭合。单测 13 例全绿（待采纳条目可抽字段、采纳前后均成功的回归锁、错误文本回列现有对象名、条目不存在时说明正式库与待采纳区皆无、空格行不再制造大段空白、起始 JSON 对象行被剔除而正文内 JSON 片段保留、og:title 优先且无 og 时回退、两类字段按有无 quote 结构性归类）。真实入口：对一条仍在**待采纳区**的条目 800vdc-母线试点 调用 extract_fields，ok=true——改前同一形态连续失败两次且 summary 只有「未写入」三个字，须人工采纳后才成功。落盘的两条提议 basis=quoted，证明 quote 逐字校验在该路径上生效。"
+      "notes": "证据管线一轮内闭合。单测 13 例全绿（待采纳条目可抽字段、采纳前后均成功的回归锁、错误文本回列现有对象名、条目不存在时说明正式库与待采纳区皆无、空格行不再制造大段空白、起始 JSON 对象行被剔除而正文内 JSON 片段保留、og:title 优先且无 og 时回退、两类字段按有无 quote 结构性归类）。真实入口：对一条仍在**待采纳区**的条目 800vdc-母线试点 调用 extract_fields，ok=true——改前同一形态连续失败两次且 summary 只有「未写入」三个字，须人工采纳后才成功。落盘的两条提议 basis=quoted，证明 quote 逐字校验在该路径上生效。",
+      "entry": "isolated"
     },
     {
       "id": "TEST-250",
       "result": "PASS",
       "command": "npm test -- turn-budget",
       "real_entry": false,
-      "date": "2026-09-13",
-      "notes": "单轮累计成本护栏与续写。单测 8 例全绿（占位带 summary 原值、无 summary 时退回裸标记、占位显著短于原文、fitToolLoopContext 透传摘要、上限按窗口比例、累计未达/达到上限的判定、小窗口上限更低）。**real_entry=false，如实登记未覆盖项**：真实入口只观察到 CP-5——三次 turn_usage 事件下发，末次 {inputTokens:12576,outputTokens:436}，本轮用量与会话累计已是两个数。CP-3（输出截断自动续写）与 CP-4（累计触阈停止调工具）**未在真实入口触发**：前者需要构造一次真被 finish_reason=length 截断的回答，后者需要一轮累计逼近 921,600 tokens（约 1.5 美元）。两项按人工发现项登记，待专门触发后补证据，不以单测冒充覆盖。另注：本 CR 的根因在实施前经复核更正——单次请求的预算由 DEC-080 的 fitToolLoopContext 一直守着，1,028,825 是会话累计值；据此撤回了「修订 REQ-F-041 ①」，详见 EV-2026-09-12-cto-persona-audit §2.7。"
+      "date": "2026-09-14",
+      "notes": "单轮累计成本护栏与续写。单测 8 例全绿（占位带 summary 原值、无 summary 时退回裸标记、占位显著短于原文、fitToolLoopContext 透传摘要、上限按窗口比例、累计未达/达到上限的判定、小窗口上限更低）。**real_entry=false，如实登记未覆盖项**：真实入口只观察到 CP-5——三次 turn_usage 事件下发，末次 {inputTokens:12576,outputTokens:436}，本轮用量与会话累计已是两个数。CP-3（输出截断自动续写）与 CP-4（累计触阈停止调工具）**未在真实入口触发**：前者需要构造一次真被 finish_reason=length 截断的回答，后者需要一轮累计逼近 921,600 tokens（约 1.5 美元）。两项按人工发现项登记，待专门触发后补证据，不以单测冒充覆盖。另注：本 CR 的根因在实施前经复核更正——单次请求的预算由 DEC-080 的 fitToolLoopContext 一直守着，1,028,825 是会话累计值；据此撤回了「修订 REQ-F-041 ①」，详见 EV-2026-09-12-cto-persona-audit §2.7。 2026-09-14 真实入口（用户自己那台服务器 + gpt-5）：①CP-5「单轮花费可见」**已验**——`turn_usage` 真随流回来（6,554/492、29,674/9,728），控制台常驻行的数据源成立；②CP-2 的逐级收紧在真实轮次里触发并说了话：「本轮工具结果较多，较早几条已省略正文以腾出预算」；③**CP-4 累计触阈仍未触发**：把窗口临时调到 6000（天花板 = 窗口 × 0.6 × 12 ≈ 43,200），一轮 26 次工具调用累计 39,402，**逼到 91% 未过线**；再调小窗口会让约 3,200 tokens 的稳定前缀装不进单次预算，等于换一个毛病去验这个毛病。④CP-3 输出截断续写仍未触发：本轮 9,728 output 自然结束，没撞上 max_tokens。验毕已把 context_window 恢复为 NULL。"
     },
     {
       "id": "TEST-260",
@@ -1078,7 +1118,8 @@
       "command": "npm test -- proposal-id",
       "real_entry": true,
       "date": "2026-09-13",
-      "notes": "实体提议 ID 去碰撞。单测 5 例全绿，其中 ① 同时断言「四个纯中文字段名 id 互不相同」与「四条全部落盘」——只断言前者的话，一个静默丢弃后来者的实现照样能过；红测阶段实测四条塌成 1 条。真实入口：一轮对话提交两个纯中文字段名（母线形态、保护配合状态），GET /api/entities 显示两条提议均落盘、id 分别为 vertiv-fc352ac8-20260913004902188 与 vertiv-19457a55-20260913004902202（可读前缀 + 8 位哈希 + 毫秒戳），工具 summary 报「已提议 2 个字段，待采纳」。改前：同一实体同一秒的纯中文字段名 id 完全相同并互相覆盖，而 summary 报的是入参条数。审计遗留的旧形态提议 -vertiv-20260912174032 按裁定共存且 basis 读作未验证。"
+      "notes": "实体提议 ID 去碰撞。单测 5 例全绿，其中 ① 同时断言「四个纯中文字段名 id 互不相同」与「四条全部落盘」——只断言前者的话，一个静默丢弃后来者的实现照样能过；红测阶段实测四条塌成 1 条。真实入口：一轮对话提交两个纯中文字段名（母线形态、保护配合状态），GET /api/entities 显示两条提议均落盘、id 分别为 vertiv-fc352ac8-20260913004902188 与 vertiv-19457a55-20260913004902202（可读前缀 + 8 位哈希 + 毫秒戳），工具 summary 报「已提议 2 个字段，待采纳」。改前：同一实体同一秒的纯中文字段名 id 完全相同并互相覆盖，而 summary 报的是入参条数。审计遗留的旧形态提议 -vertiv-20260912174032 按裁定共存且 basis 读作未验证。",
+      "entry": "isolated"
     },
     {
       "id": "TEST-280",
@@ -1095,6 +1136,56 @@
       "real_entry": false,
       "date": "2026-09-13",
       "notes": "CR-20260913-real-entry-ledger；漏账（声明了真实入口但既无证据也无未执行行）FAIL；有 real_entry PASS 证据时 PASS；写了「- 真实入口: 未执行（原因）」时 PASS 且输出含 REAL_ENTRY_DECLARED_UNRUN 与记录名。实跑对账：21 份有执行证据，7 份明确未执行并被点名。治理单测 83 通过。"
+    },
+    {
+      "id": "TEST-300",
+      "result": "PASS",
+      "command": "npm run test:governance",
+      "real_entry": false,
+      "date": "2026-09-13",
+      "notes": "流程护栏九例（DEC-210，全部落在 tests/test_governance.py）。①真实入口证据标 entry=isolated → PASS 且被 REAL_ENTRY_ISOLATED_ONLY 点名；②标 user → 不点名；③未标注 → 单独计数且不被算成隔离（旧记录不被追认）；④拼错的环境名 → FAIL REAL_ENTRY_BAD_ENVIRONMENT（否则这个字段会退化成谁都能随手填的一栏）；⑤需求只点了工具名、不提界面 → 被 HUMAN_SIDE_UNSTATED 点名；⑥提了看板 → 不点名；⑦写了「人的一侧：无（原因）」→ 不点名；⑧advisories() 只取 `OK ADVISORY ` 前缀行；⑨.git 是文件时 snapshot 报 SNAPSHOT_REFUSED **且基线文件不存在**——只断言退出码的话，一个先写后拒的实现照样能过。全套 93 例绿。"
+    },
+    {
+      "id": "TEST-310",
+      "result": "PASS",
+      "command": "npm run test:governance",
+      "real_entry": false,
+      "date": "2026-09-13",
+      "notes": "说明书自检六例（DEC-220，落在 tests/test_governance.py）。①R1 已终裁且任务全 DONE 的需求仍挂 REVIEWING → 被 REQ_STATUS_STALE 点名且不拦；②同一情形加 --strict → FAIL；③任务仍 DOING → 不点名（不能把「在做」催成「已批准」）；④R1 待终裁 → 不点名（那是用户的同意，不是工具的推论）；⑤单元格内未转义竖线 → FAIL TABLE_ROW_MALFORMED；⑥转义后 → PASS。③④ 断言的是「不点名」——只写会点名的用例，一个见谁都点名的实现照样能过。全套 99 例绿。 本仓库全量：check-tables 1554 行 PASS、check-req-status --strict PASS、check-human-side PASS。"
+    },
+    {
+      "id": "TEST-320",
+      "result": "PASS",
+      "command": "npx vitest run tests/insight-export.test.ts tests/insight-archive.test.tsx",
+      "real_entry": true,
+      "entry": "user",
+      "date": "2026-09-14",
+      "notes": "洞察双产物与归档（REQ-F-190，DEC-230）。单测 24 例全绿：转换 6（含「认不出的标签只脱壳不丢字」、表格竖线转义、&amp;lt; 解为字面量）、工具 4（未配目录不注册、落盘、别人的洞察归档不了、越界被拒且目标目录为空）、界面 2（点击调用并就地回话 / 失败原因照原样显示）、目录边界 5、写盘 5（含同名不覆盖而换名）。 真实入口（用户自己那台服务器，端口 3000，生产构建 + serve:local）：用用户知识库里 23,434 字符的真实报告 0c4ddb34 走全程真实 HTTP——越界归档目录被 400 拒绝并说清边界；根内不存在的子目录被接受并在归档时建出；POST /api/insights/archive 写出 18,923 字节 Markdown，id 为 realentry-docs/报告/2026-09-14-AIDC-…md。不丢字复核：源 HTML 去标签得 6,165 字正文，逐字按序为归档 Markdown 的子序列（True）。验毕把用户设置恢复到改前（roots=[]、archive=\"\"，app_settings 里 documents* 行为空）。 未验：浏览器里点那一下（按钮到 API 的接线由组件测覆盖）；磁盘写满/无权限只有原始错误回显，登记为人工发现项。"
+    },
+    {
+      "id": "TEST-330",
+      "result": "PASS",
+      "command": "npx vitest run tests/settings-on-display.test.tsx",
+      "real_entry": true,
+      "entry": "user",
+      "date": "2026-09-14",
+      "notes": "设置界面上动态屏（REQ-F-200，DEC-240）。组件测 8 例全绿：唤起→面板出现在展示屏、返回不残留、panel=null 亦可退回、未拿到 Provider 模板时明说打不开、面板 bottom 取自 --jarvis-console-h、未注册的工具落在「未注册」那一组里（只断言「出现在页面上」的话，混在一起显示的实现照样能过）、摘要行说清判定条件、读不到时说人话。 真实入口（用户自己那台服务器，端口 3000，生产构建 + serve:local，check-dev-server 报 PASS served build matches HEAD 591cd471）：GET /api/tools 返回登记工具 24 个、本轮可调用 23 个、未注册 1 个（archive_insight，因归档目录当前未配置——这是此刻真实状态，不是构造的用例）；判定条件 skillCount=7 / knowledgeCount=8 / webEnabled=true / Provider=DeepSeek。首页 HTML 里能 grep 到「在屏上打开」与 4 处 floating-chat__panel，证明新入口真的被服务出去了。 未验：控制台让位之后的观感（要连着用几天，登记为人工发现项）；ResizeObserver 在 jsdom 不存在，发布侧在组件测里不执行，断言落在消费侧。"
+    },
+    {
+      "id": "TEST-340",
+      "result": "PASS",
+      "command": "npm run test:governance",
+      "real_entry": false,
+      "date": "2026-09-14",
+      "notes": "真实入口逐路线对账（DEC-250）。五例全绿：①点名的路线其证据未跑、兄弟测试跑了 → FAIL（这正是 2026-09-14 真实发生的一次「靠别人的证据过门」：看板测试 TEST-123 被标成真实入口 PASS 后，CR-20260912-technical-spine 当场从未执行名单里消失）；②点名的路线其证据跑了 → PASS；③散文里的编号不算点名 → 退回记录级判定且不判红（第一版在整格抓编号，当场误伤 context-compaction、knowledge-base、local-documents、runtime-visibility 四条）；④写了待裁定 → 被点名且不混进未执行；⑤同一记录里另一条路线跑过时待裁定仍照报。全套 104 例绿。 本仓库全量 check-real-entry exit 0：3 条转待裁定、未执行由 7 降到 4、53 条未点名路线进迁移账。"
+    },
+    {
+      "id": "TEST-350",
+      "result": "PASS",
+      "command": "npm run test:governance",
+      "real_entry": false,
+      "date": "2026-09-14",
+      "notes": "文档状态登记（DEC-270）。四例全绿：①有变更响应节却没在批准状态里登记 → FAIL APPROVAL_LOG_GAP 并点名该 CR；②登记了 → PASS；③需求输入.md 状态块日期早于最后一条输入 → FAIL APPROVAL_LOG_STALE_INPUT 且输出含那条更晚的日期；④跟上了 → PASS。②④ 断言的是放行——只写判红的用例，一个见谁都判红的实现照样能过。全套 109 例绿。 本仓库全量：check-approval-log 报 158 个变更响应节全部有登记（补齐前只有 39 个，断档三天）；需求输入.md 状态块由 2026-09-08 更正为 2026-09-13（27 条输入）。 另增 ⑤⑥（DEC-270 ③）：任务全 DONE、测试全 PASS 却挂着 APPROVED → 被 CR_STATUS_OPEN 点名且不拦；已 CLOSED → 不点名。全套 111 例绿。本仓库全量：按该判据收口 41 条既有记录，状态分布由「APPROVED 51 / CLOSED 7 / 其它 1」变为「CLOSED 48 / APPROVED 11（今天这批，尚未提交）」。"
     }
   ],
   "executed_commands": [
@@ -1393,11 +1484,6 @@
       "detail": "CR-20260910-agent-tooling (CP-20, 单向门; R1 架构角色提出): REQ-F-034 read_url lets attacker-controlled web page content enter the model's context. That content can instruct the model to call save_insight(html), placing attacker-authored HTML into the SAME unsandboxed same-origin <iframe srcdoc> covered by skill-html-unsandboxed. DEC-015's accepted-risk premise was 'the user dragged in a poisoned skill folder' — a source the user chose and trusts. This CR widens the source to ANY web page reachable by search, so the premise no longer holds and the trust surface is strictly larger. Attack chain: user question -> web_search -> read_url on attacker page -> prompt injection in page body -> model calls save_insight ->攻击者 HTML renders with same-origin script access (localStorage, DELETE /api/providers/[id]). The user was shown this chain and the three options (A: make 联网 and save_insight mutually exclusive; B: sandbox the iframe first; C: accept) and chose C — explicitly accepting the expanded risk (2026-09-10, R1 人工终裁 item 3). Mitigation remains only the non-dismissible notice bar (REQ-F-025 ②). Detection route is '发现不了' for the injection path itself, which is why CP-20 is registered as a 单向门 per DEC-021 ②. Sandboxing the iframe stays a mandatory exit obligation for a future CR and is now higher priority than before this CR.",
       "check": "manual",
       "reviewed_at": "2026-09-10"
-    },
-    {
-      "text": ".git is baselined as a governed file (committed in a8873a7, from a snapshot taken inside a git worktree where .git is a FILE). In a normal checkout it is a directory, which made `verify` crash on open(). CR-20260911-display-console-ux CP-9 turns that crash into a BASELINE_NOT_A_FILE finding; the entry itself disappears on the next snapshot, since discover_controlled_files already skips non-files.",
-      "check": "manual",
-      "reviewed_at": "2026-09-11"
     },
     {
       "text": "Web reading limits measured on 2026-09-11 and NOT fixed by this CR: opencompute.org, iea.org (Cloudflare cf-mitigated: challenge) and tesla.com (Akamai) stay unreadable. Full browser headers do not change the 403, and driving Chromium — headless AND headed — sits on the interstitial for 25s and stays 403. The tool now reports this honestly and suggests another source or pasting the text into the knowledge base. Fingerprint spoofing is an explicit non-goal (REQ-F-057 ⑤).",
