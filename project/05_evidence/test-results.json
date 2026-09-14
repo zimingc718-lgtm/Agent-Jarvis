@@ -1186,6 +1186,15 @@
       "real_entry": false,
       "date": "2026-09-14",
       "notes": "文档状态登记（DEC-270）。四例全绿：①有变更响应节却没在批准状态里登记 → FAIL APPROVAL_LOG_GAP 并点名该 CR；②登记了 → PASS；③需求输入.md 状态块日期早于最后一条输入 → FAIL APPROVAL_LOG_STALE_INPUT 且输出含那条更晚的日期；④跟上了 → PASS。②④ 断言的是放行——只写判红的用例，一个见谁都判红的实现照样能过。全套 109 例绿。 本仓库全量：check-approval-log 报 158 个变更响应节全部有登记（补齐前只有 39 个，断档三天）；需求输入.md 状态块由 2026-09-08 更正为 2026-09-13（27 条输入）。 另增 ⑤⑥（DEC-270 ③）：任务全 DONE、测试全 PASS 却挂着 APPROVED → 被 CR_STATUS_OPEN 点名且不拦；已 CLOSED → 不点名。全套 111 例绿。本仓库全量：按该判据收口 41 条既有记录，状态分布由「APPROVED 51 / CLOSED 7 / 其它 1」变为「CLOSED 48 / APPROVED 11（今天这批，尚未提交）」。"
+    },
+    {
+      "id": "TEST-360",
+      "result": "PASS",
+      "command": "npx vitest run tests/chat-stream.test.ts",
+      "real_entry": true,
+      "entry": "user",
+      "date": "2026-09-14",
+      "notes": "Provider 下沉（REQ-F-210，DEC-280）。单测四例全绿：①队首被判 no → 打到第二个 Provider 的 baseUrl，sse 含「不支持工具调用，本轮改用」且不再出现 tools-unavailable；②队首零输出失败（usage → error，即 2026-09-14 实测的形状）→ 两次调用分别打到两个 baseUrl，sse 含「未能应答」且不含 event: error；③已吐字后失败 → 只打一次、不换；④显式指定 Provider → 不换。断言的观察点是打到了哪个 baseUrl，不是传了哪个 model 字符串——首次调用本就传 undefined，第一版断言错在这儿，四条全红而产品代码是对的。chat-stream 17 例全绿。 真实入口（2026-09-14，用户自己那台服务器，端口 3000，生产构建）：把队首 DeepSeek 的 baseUrl 临时指向一个没人在听的端口造一次真失败 → 流上回「『DeepSeek』未能应答（Could not reach provider: fetch failed.），本轮改用『OpenAI』。」，OpenAI 4 秒内答出「2」，全程没有 error 事件；验毕立即还原 baseUrl。 另记：当天早些时候 DeepSeek 连续两次 60 秒零字节（上游 200 后不产出），傍晚自行恢复（1 秒回答）——证实那是 Provider 侧的问题而非代码，也正是本需求要救的场面。"
     }
   ],
   "executed_commands": [
