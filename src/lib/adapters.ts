@@ -85,7 +85,17 @@ type SendProviderStreamInput = {
   includeUsage?: boolean;
 };
 
-const DEFAULT_TIMEOUT_MS = 60_000;
+/**
+ * 多久没动静才算超时（DEC-290）。**不是**整条流的总时长。
+ *
+ * 2026-09-14 实测：一份正在流式产出的长讲义写到 13,499 个字时被整条掐断——旧写法
+ * `AbortSignal.timeout(60_000)` 量的是总时长，于是「一直在产出」和「一个字都不出」被
+ * 同一把尺子量。而这个产品做的就是长回答（深研究、长报告、截断后自动续写），它们天生
+ * 活不过一分钟。
+ *
+ * 总量的上限由 `max_tokens` 与本轮累计天花板（REQ-NF-060 ①）负责，不该由秒表负责。
+ */
+const DEFAULT_IDLE_TIMEOUT_MS = 60_000;
 
 export function normalizeOpenAICompatibleChunk(chunk: CompatibleChunk): ChatDelta | null {
   const text = chunk.choices?.[0]?.delta?.content;
@@ -194,8 +204,32 @@ export async function* sendProviderStream(input: SendProviderStreamInput): Async
     headers.set("authorization", `Bearer ${input.provider.secret}`);
   }
 
-  const timeout = AbortSignal.timeout(input.timeoutMs ?? DEFAULT_TIMEOUT_MS);
-  const signal = input.signal ? AbortSignal.any([input.signal, timeout]) : timeout;
+  /**
+   * 沉默看门狗（DEC-290）：每收到一块就重置，停够 `idleMs` 才中止。
+   * `AbortSignal.timeout` 做不到这件事——它从创建那一刻起就在倒计时，不看有没有数据。
+   */
+  const idleMs = input.timeoutMs ?? DEFAULT_IDLE_TIMEOUT_MS;
+  const watchdog = new AbortController();
+  let idleTimer: ReturnType<typeof setTimeout> | null = null;
+  let timedOut = false;
+  const touch = () => {
+    if (idleTimer) {
+      clearTimeout(idleTimer);
+    }
+    idleTimer = setTimeout(() => {
+      timedOut = true;
+      watchdog.abort();
+    }, idleMs);
+  };
+  const stopWatchdog = () => {
+    if (idleTimer) {
+      clearTimeout(idleTimer);
+      idleTimer = null;
+    }
+  };
+  touch();
+
+  const signal = input.signal ? AbortSignal.any([input.signal, watchdog.signal]) : watchdog.signal;
   const abortedByUser = () => Boolean(input.signal?.aborted);
 
   const limitField = outputLimitField(input.provider.kind);
@@ -220,8 +254,9 @@ export async function* sendProviderStream(input: SendProviderStreamInput): Async
       yield { type: "stopped" };
       return;
     }
-    if (isTimeout(error, timeout)) {
-      yield { type: "error", message: "Provider request timed out." };
+    if (timedOut || isTimeout(error)) {
+      stopWatchdog();
+      yield { type: "error", message: `Provider did not respond within ${Math.round(idleMs / 1000)}s.` };
       return;
     }
     yield { type: "error", message: `Could not reach provider: ${errorText(error)}.` };
@@ -275,13 +310,18 @@ export async function* sendProviderStream(input: SendProviderStreamInput): Async
     let chunk: ReadableStreamReadResult<Uint8Array>;
     try {
       chunk = await reader.read();
+      // 还在产出就别停表（DEC-290）。
+      if (!chunk.done) {
+        touch();
+      }
     } catch (error) {
+      stopWatchdog();
       if (abortedByUser()) {
         yield { type: "stopped" };
         return;
       }
-      if (isTimeout(error, timeout)) {
-        yield { type: "error", message: "Provider stream timed out." };
+      if (timedOut || isTimeout(error)) {
+        yield { type: "error", message: `Provider stream went quiet for ${Math.round(idleMs / 1000)}s.` };
         return;
       }
       yield { type: "error", message: `Provider stream interrupted: ${errorText(error)}.` };
@@ -437,7 +477,7 @@ export async function testProviderConnection(
     }
     return { ok: false, message: `Provider responded ${response.status}.` };
   } catch (error) {
-    if (isTimeout(error, timeout)) {
+    if (isTimeout(error)) {
       return { ok: false, message: "Connection timed out." };
     }
     return { ok: false, message: `Could not reach provider: ${errorText(error)}.` };
@@ -469,8 +509,8 @@ function safeJsonParse(value: string): CompatibleChunk | null {
   }
 }
 
-function isTimeout(error: unknown, timeout: AbortSignal): boolean {
-  return timeout.aborted || (error instanceof Error && error.name === "TimeoutError");
+function isTimeout(error: unknown): boolean {
+  return error instanceof Error && error.name === "TimeoutError";
 }
 
 function errorText(error: unknown): string {
