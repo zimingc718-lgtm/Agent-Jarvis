@@ -70,6 +70,24 @@ python tools/governance.py verify           # 合并后立即复验——唯一�
 git push origin main; git branch -d cr/<name>
 ```
 
+### 并行会话：不要碰对方未提交的工作（DEC-210 ④）
+
+同一棵工作树上可能同时有另一个会话在写。`git status` 里那些 ` M` 是**别人正在写的东西**，不是你的历史遗留：`git stash`、`git checkout --`、`git switch`、`git merge` 都会连它一起动，而对方没有任何提交可以找回来。曾经发生过一次整体覆盖。
+
+动手前先看一眼：`git status` 有没有你不认识的修改、`.claude/worktrees/` 下有没有工作树。有，就按下面这套走：
+
+```bash
+git tag backup/peer-$(date +%Y%m%d)          # 先给当前 HEAD 一个可回去的点
+git show HEAD:<path> > /tmp/base             # 以 HEAD 为底，不以工作区为底
+# ...在 /tmp/base 上算出新内容 /tmp/next...
+git hash-object -w --stdin --path <path> < /tmp/next   # 写进对象库，拿到 <sha>
+git update-index --cacheinfo 100644,<sha>,<path>       # 只动索引，不碰磁盘
+```
+
+这样提交出去的是「HEAD + 我的改动」，对方磁盘上未提交的内容一字未动。**然后把同一处改动照样落到磁盘上**——否则对方的编辑器里还是旧内容，下一次保存就把你的提交盖回去。
+
+**快照只在干净克隆里出。** worktree 里 `.git` 是一个普通文件，于是它会被当成受控文件写进基线；回到主仓库 `.git` 是目录，`verify` 从此永远报 `BASELINE_NOT_A_FILE`。这个错误跟着三次快照传了下去，直到有人去数基线里的条目才发现。现在 `snapshot` 见到 `.git` 不是目录会直接拒绝（`SNAPSHOT_REFUSED`），但拒绝只是兜底，正确做法仍是克隆一份再跑。
+
 ### 构建配置与长跑进程
 
 新增或修改 `postcss.config.*`、`next.config.*` 后**必须重启 dev server**。Next 只在启动时读一次这些配置：2026-09-10 一个前一晚启动的 server 带着空 PostCSS 流水线服务已迁移的 UI，`@import "tailwindcss"` 从未被处理，所有工具类为空，页面元素全部退回文档流堆到左上角，而磁盘上的测试全绿——因为测试读文件，浏览器读服务器返回的字节。用 `node scripts/check-dev-server.mjs` 核对真实入口（PASS=0 / FAIL=1 / **SKIP=2，不伪装成通过**）。
@@ -91,6 +109,16 @@ git push origin main; git branch -d cr/<name>
 ```
 
 AI 不得用推测替代证据。无法定位证据的问题必须标记为证据缺口。
+
+**短路径：同一件事用户说到第二次，先复核判据，不要再修一次实现（DEC-210 ⑤）。**
+
+第二次反馈几乎不意味着「第一次没修好」，而意味着**判据本身错了**——我们验的东西和用户看的东西不是同一个。本轮两次都是这样：「看不到大模型接口选择」修了一遍，用户再说一次，真正的原因是服务跑的是九小时前的构建，而所有验证都在另起的一次性服务器上做，从头到尾没碰过用户那台进程。第二次反馈到来时要问的三句话是：
+
+1. 我验的是哪台进程、哪份数据？和用户手上那台是同一个吗？（`entry: user` 还是 `isolated`）
+2. 通过条件里有没有一句是关于**用户看得到什么**的？没有，就是判据漏了人的一侧。
+3. 这条通过条件，是不是我自己写的、又由我自己验的？
+
+三句都答不上来时，回流的终点是产品需求，不是模块任务。
 
 ## 验证命令
 

@@ -25,6 +25,7 @@ playwright/.cache/
 
 # Python tooling
 __pycache__/
+.pytest_cache/
 *.pyc
 
 # OS / editor

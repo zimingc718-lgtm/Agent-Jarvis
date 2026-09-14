@@ -79,6 +79,8 @@ IGNORED_DIR_NAMES = {
     ".vercel",
     ".vscode",
     "__pycache__",
+    # pytest 的缓存目录，与 __pycache__ 同类：跑一次测试就出现，内容不由作者控制。
+    ".pytest_cache",
     "coverage",
     "node_modules",
     "playwright-report",
@@ -173,6 +175,14 @@ def run(argv: list[str] | None = None) -> tuple[int, str]:
         messages = check_warnings(root)
     elif args.command == "check-real-entry":
         messages = check_real_entry(root)
+    elif args.command == "check-human-side":
+        messages = check_human_side(root)
+    elif args.command == "check-tables":
+        messages = check_tables(root)
+    elif args.command == "check-req-status":
+        messages = check_req_status(root, strict=args.strict)
+    elif args.command == "check-approval-log":
+        messages = check_approval_log(root)
     elif args.command == "new-cr":
         messages = new_cr(root, args.name)
     elif args.command == "matrix":
@@ -242,6 +252,33 @@ def build_parser() -> argparse.ArgumentParser:
     )
     real_entry_parser.add_argument("--root", default=".", help="project root")
 
+    human_side_parser = subparsers.add_parser(
+        "check-human-side",
+        help="把能力交给模型的需求，要说清人在哪一侧看得到 (DEC-210 ②)",
+    )
+    human_side_parser.add_argument("--root", default=".", help="project root")
+
+    tables_parser = subparsers.add_parser(
+        "check-tables",
+        help="说明书表格每行列数必须与表头一致 (DEC-220 ①)",
+    )
+    tables_parser.add_argument("--root", default=".", help="project root")
+
+    req_status_parser = subparsers.add_parser(
+        "check-req-status",
+        help="交付完了的需求，状态要说真话 (DEC-220 ②)",
+    )
+    req_status_parser.add_argument("--root", default=".", help="project root")
+    req_status_parser.add_argument(
+        "--strict", action="store_true", help="把「状态未推进」判为 FAIL（release 用）"
+    )
+
+    approval_parser = subparsers.add_parser(
+        "check-approval-log",
+        help="每个变更响应节，批准状态里都要有一行 (DEC-270)",
+    )
+    approval_parser.add_argument("--root", default=".", help="project root")
+
     new_cr_parser = subparsers.add_parser("new-cr", help="scaffold a compliant change record")
     new_cr_parser.add_argument("name", help="change record name, e.g. CR-20260911-my-change")
     new_cr_parser.add_argument("--root", default=".", help="project root")
@@ -301,6 +338,18 @@ def gate(root: Path, gate_name: str, cr: str | None = None) -> list[str]:
 
 
 def snapshot(root: Path, actor: str) -> list[str]:
+    # 护栏（DEC-210 ④）：worktree 里的 `.git` 是一个普通文件，于是它会被当成受控文件写进
+    # 基线；回到主仓库 `.git` 是目录，`verify` 从此永远报 BASELINE_NOT_A_FILE。这个错误真
+    # 的跟着三次快照传了下去，直到有人去数基线里的条目才发现。放在最前面，因为一旦写下
+    # 基线就已经晚了。
+    git_path = root / ".git"
+    if git_path.exists() and not git_path.is_dir():
+        return [
+            "FAIL SNAPSHOT_REFUSED .git is not a directory here, which means this is a git worktree. "
+            "A baseline taken here records `.git` itself as a controlled file, and `verify` then fails "
+            "forever in the real repository. Take the snapshot in a clean clone instead."
+        ]
+
     findings = check_required_structure(root)
     if findings:
         return findings
@@ -658,7 +707,55 @@ def check_changes(root: Path) -> list[str]:
         return findings
     if not records:
         return ["OK CHANGE_RECORDS_PASS no change records to validate"]
-    return [f"OK CHANGE_RECORDS_PASS validated {len(records)} change record(s)"]
+
+    messages = [f"OK CHANGE_RECORDS_PASS validated {len(records)} change record(s)"]
+    finished = _finished_but_open(root, records)
+    if finished:
+        # 只报不拦（DEC-270 ③）：「合并了没有」从记录本身看不出来，判红会误伤刚写完的 CR。
+        messages.append(
+            f"{ADVISORY_PREFIX}CR_STATUS_OPEN {len(finished)} record(s) have every task DONE and every test "
+            "PASS but are not yet CLOSED: " + "、".join(sorted(finished))
+        )
+    return messages
+
+
+def _finished_but_open(root: Path, records: list[Path]) -> list[str]:
+    """任务全 DONE、测试全 PASS，状态却还不是 CLOSED 的记录（DEC-270 ③）。"""
+    modules = root / "project/03_modules/模块任务开发说明书.md"
+    evidence = load_test_results(root)
+    if not modules.exists() or isinstance(evidence, str):
+        return []
+
+    task_state: dict[str, str] = {}
+    for line in read_text(modules).splitlines():
+        if not re.match(r"^\|\s*TASK-\d+\s*\|", line):
+            continue
+        cells = table_cells(line)
+        if len(cells) >= 7:
+            task_state[cells[0]] = cells[3].split("（")[0].strip()
+    test_state = {str(item.get("id")): str(item.get("result", "")).upper() for item in evidence}
+
+    open_records: list[str] = []
+    for path in records:
+        text = read_text(path)
+        status = re.search(r"(?m)^- 状态[：:]\s*(.+)$", text)
+        if not status or status.group(1).startswith("CLOSED"):
+            continue
+
+        def ids(prefix: str, pattern: str) -> set[str]:
+            line = next((l for l in text.splitlines() if l.startswith(prefix)), "")
+            return set(re.findall(pattern, line))
+
+        tasks = ids("- 影响任务", r"TASK-\d+")
+        tests = ids("- 影响测试", r"TEST-\d+")
+        if not tasks and not tests:
+            continue
+        if any(task_state.get(i) != "DONE" for i in tasks):
+            continue
+        if any(test_state.get(i) not in ("PASS", "SUPERSEDED", "DEFERRED") for i in tests):
+            continue
+        open_records.append(path.stem)
+    return open_records
 
 
 # --- Consensus review gates (CR-20260909-consensus-review-gates) -----------------
@@ -1011,7 +1108,241 @@ def _declares_real_entry(row: str) -> bool:
     return "真实入口" in cells[-1]
 
 
-REAL_ENTRY_UNRUN = re.compile(r"^-\s*真实入口:\s*未执行(?:（|\()(?P<why>[^）)]+)(?:）|\))\s*$", re.M)
+# 理由里出现括号是常态（数字、引用、条号），所以取到**行尾最后一个**右括号，而不是第一个。
+# 旧写法 `[^）)]+` 见到第一个右括号就停，后面还有字就整条不被识别——2026-09-14 写一条
+# 含「（6,554/492）」的理由时当场踩中，记录明明写了却被判成漏账。
+REAL_ENTRY_UNRUN = re.compile(r"^-\s*真实入口:\s*未执行(?:（|\()(?P<why>.+)(?:）|\))\s*$", re.M)
+
+
+# 在哪儿验的（DEC-210 ③）。`user` 是用户自己那台正在跑的程序、用户自己的数据；
+# `isolated` 是为验证而起的一次性服务器（e2e、.next-prod、另起的数据目录）。缺省视为
+# 未标注：旧记录不会被追认成任何一种，也不因此被判失败。
+REAL_ENTRY_ENVIRONMENTS = ("user", "isolated")
+
+
+# 一项能力被交给模型的样子：通过条件里点名了某个工具（`snake_case`）。
+HUMAN_SIDE_TOOL = re.compile(r"`[a-z][a-z0-9]*_[a-z0-9_]+`")
+# 人的一侧长什么样。宽松是有意的：这条只报不拦，宁可漏报也别把人训练成无视它。
+HUMAN_SIDE_SURFACE = re.compile(
+    r"看板|界面|页面|菜单|按钮|点击|填写|勾选|配置页|对话框|步骤流|控制台|用户|人工|可见|显示|展示|屏幕"
+)
+# 明说「这条没有人的一侧」的写法——写了就不再点名。
+HUMAN_SIDE_NONE = re.compile(r"人的一侧[:：]")
+
+
+def check_human_side(root: Path) -> list[str]:
+    """给了模型一项能力的需求，要说清人在哪一侧看得到（DEC-210 ②）。
+
+    两个缺陷是同一个形状：能力落到了工具层，通过条件里没有一句是关于用户能看到什么的，
+    于是实现做到 API 就算完，四道门全绿——REQ-F-170 ③ 与 REQ-F-180 ⑥ 都是这样漏出去的。
+
+    只报不拦。写这条时全表 92 行命中 4 行，而那 4 行里多数的「人的一侧」其实写在另一条
+    需求里：这种判据当门会天天误伤，当一句每次都念出来的话才有用。
+    """
+    path = root / "project/01_specification/产品需求说明书.md"
+    if not path.exists():
+        return [f"FAIL HUMAN_SIDE_BLOCKED missing {to_posix(path.relative_to(root))}"]
+
+    unstated: list[str] = []
+    total = 0
+    for line in read_text(path).splitlines():
+        if not re.match(r"^\|\s*REQ-", line):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) < 5:
+            continue
+        total += 1
+        req_id, criteria = cells[0], cells[4]
+        if not HUMAN_SIDE_TOOL.search(criteria):
+            continue
+        if HUMAN_SIDE_SURFACE.search(criteria) or HUMAN_SIDE_NONE.search(criteria):
+            continue
+        unstated.append(req_id)
+
+    if not unstated:
+        return [f"OK HUMAN_SIDE_PASS {total} requirement(s) checked; none hands the model a capability silently"]
+    return [
+        f"OK HUMAN_SIDE_PASS {total} requirement(s) checked",
+        f"{ADVISORY_PREFIX}HUMAN_SIDE_UNSTATED {len(unstated)} requirement(s) hand the model a tool but say "
+        "nothing about what a person sees; add the human path or write `人的一侧：无（原因）`: "
+        + ", ".join(unstated),
+    ]
+
+
+# 表格单元格里的竖线必须转义，否则整行被按列读错（DEC-220 ①）。
+TABLE_SPLIT = re.compile(r"(?<!\\)\|")
+TABLE_DIVIDER = re.compile(r"\|[\s:|-]+\|")
+
+SPEC_DOCS = (
+    "project/01_specification/产品需求说明书.md",
+    "project/02_solution/架构设计说明书.md",
+    "project/03_modules/模块任务开发说明书.md",
+    "project/04_tests/测试说明书.md",
+)
+
+
+def table_cells(line: str) -> list[str]:
+    r"""一行表格的单元格。`\|` 是转义的竖线，不是分隔符。"""
+    return [cell.strip() for cell in TABLE_SPLIT.split(line.strip().strip("|"))]
+
+
+def check_tables(root: Path) -> list[str]:
+    """每一行的列数必须与表头一致（DEC-220 ①）。
+
+    2026-09-13 扫出 12 行不一致，全部是写在反引号里的竖线（`p1|p2|p3`、`user|isolated`）。
+    后果不是难看：TASK-161/190/200 三行被按列读错，于是 REQ-F-102 / F-130 / F-140 在任何
+    按列取值的地方都显示为「没有任何任务实现它」——写状态判据时真的被这三行绊了一次。
+    """
+    findings: list[str] = []
+    checked = 0
+    for rel_path in SPEC_DOCS:
+        path = root / rel_path
+        if not path.exists():
+            findings.append(f"FAIL TABLES_BLOCKED missing {rel_path}")
+            continue
+        width: int | None = None
+        for number, line in enumerate(read_text(path).splitlines(), 1):
+            stripped = line.strip()
+            if not stripped.startswith("|"):
+                width = None
+                continue
+            count = len(table_cells(stripped))
+            if TABLE_DIVIDER.fullmatch(stripped):
+                width = count
+                continue
+            if width is None:
+                continue
+            checked += 1
+            if count != width:
+                findings.append(
+                    f"FAIL TABLE_ROW_MALFORMED {rel_path}:{number} has {count} cell(s), the header has "
+                    f"{width} — escape the `|` inside a cell as `\\|`"
+                )
+    if findings:
+        return findings
+    return [f"OK TABLES_PASS {checked} table row(s) match their header width"]
+
+
+def check_approval_log(root: Path) -> list[str]:
+    r"""每个「变更响应 · CR-x」节，批准状态里都要有一行（DEC-270）。
+
+    批准状态是一份说明书「被谁改过、改成什么」的唯一索引。2026-09-14 清点时，四份说明书
+    共 155 个变更响应节，批准状态里只登记了 39 个——这个习惯自 2026-09-10 起断了三天，
+    而没有任何检查会说话。断了之后想知道某条 DEC 是哪次变更引入的，只能全文搜。
+
+    只查「有没有那一行」，不查那一行写得对不对：写得对不对要人看，有没有写机器能看。
+    """
+    findings: list[str] = []
+    sections = 0
+    for rel_path in SPEC_DOCS:
+        path = root / rel_path
+        if not path.exists():
+            findings.append(f"FAIL APPROVAL_LOG_BLOCKED missing {rel_path}")
+            continue
+        text = read_text(path)
+        responded_here = re.findall(r"(?m)^## 变更响应 · (CR-[\w-]+)", text)
+        if not responded_here:
+            # 一份还没有任何变更响应的说明书没有可登记的东西——要求它先有个空节，
+            # 只会逼出一个为了过检查而存在的空节。
+            continue
+        heads = re.split(r"(?m)^## 批准状态$", text)
+        if len(heads) < 2:
+            findings.append(f"FAIL APPROVAL_LOG_MISSING {rel_path}: 有变更响应节却没有行首的「## 批准状态」节")
+            continue
+        approval = heads[-1]
+        responded = list(dict.fromkeys(re.findall(r"(?m)^## 变更响应 · (CR-[\w-]+)", text)))
+        sections += len(responded)
+        unlogged = [cr for cr in responded if cr not in approval]
+        if unlogged:
+            findings.append(
+                f"FAIL APPROVAL_LOG_GAP {rel_path}: {len(unlogged)} 个变更响应节在批准状态里没有登记："
+                + "、".join(unlogged[:5])
+                + ("…" if len(unlogged) > 5 else "")
+            )
+    # ② 需求输入的状态块要跟上最后一条输入（DEC-270 ②）。
+    #
+    # 2026-09-14 清点时，`需求输入.md` 已记到 INPUT-2026-09-13-027（27 条），而它的状态块
+    # 停在「日期：2026-09-08」——从第一条输入之后就没人动过。照着它判断的人，会以为后面
+    # 那 26 条还没被接受。
+    input_path = root / "project/00_input/需求输入.md"
+    if input_path.exists():
+        text = read_text(input_path)
+        dates = re.findall(r"(?m)^### INPUT-(\d{4}-\d{2}-\d{2})-\d+", text)
+        stated = re.search(r"(?m)^- 日期[：:]\s*(\d{4}-\d{2}-\d{2})", text)
+        if dates and stated and stated.group(1) < max(dates):
+            findings.append(
+                f"FAIL APPROVAL_LOG_STALE_INPUT project/00_input/需求输入.md: 状态块写着 "
+                f"{stated.group(1)}，而最后一条输入是 {max(dates)}"
+            )
+
+    if findings:
+        return findings
+    return [f"OK APPROVAL_LOG_PASS {sections} 个变更响应节都在批准状态里有登记；需求输入的状态块与最后一条输入一致"]
+
+
+def check_req_status(root: Path, strict: bool = False) -> list[str]:
+    """交付完了的需求，状态要说真话（DEC-220 ②）。
+
+    判据是推导出来的，不是自报的：状态为 `REVIEWING`、其 CR 的 R1 已终裁、且实现它的
+    任务全部 DONE —— 这三条同时成立，这条需求就该是 APPROVED。
+
+    分级：p1/p2/p3 只报（半成品是工作中途的常态），`release` 才拦。发布那一刻说明书必须
+    说真话，否则「到底做完没有」只能靠人一条条去翻——2026-09-10 之后就没人翻过，21 条
+    需求因此一直挂在评审中。
+    """
+    spec = root / "project/01_specification/产品需求说明书.md"
+    modules = root / "project/03_modules/模块任务开发说明书.md"
+    if not spec.exists() or not modules.exists():
+        return ["FAIL REQ_STATUS_BLOCKED missing 产品需求说明书 or 模块任务开发说明书"]
+
+    by_req: dict[str, list[str]] = {}
+    for line in read_text(modules).splitlines():
+        if not re.match(r"^\|\s*TASK-\d+\s*\|", line):
+            continue
+        cells = table_cells(line)
+        if len(cells) < 7:
+            continue
+        for req in re.findall(r"REQ-[A-Z]+-\d+", cells[5]):
+            by_req.setdefault(req, []).append(cells[3][:4])
+
+    stale: list[str] = []
+    total = 0
+    for line in read_text(spec).splitlines():
+        if not re.match(r"^\|\s*REQ-", line):
+            continue
+        cells = table_cells(line)
+        if len(cells) < 2:
+            continue
+        total += 1
+        req_id, status = cells[0], cells[-1]
+        if not status.startswith("REVIEWING"):
+            continue
+        states = by_req.get(req_id, [])
+        delivered = bool(states) and all(state == "DONE" for state in states)
+        if delivered and "R1 已终裁" in status:
+            stale.append(req_id)
+
+    if not stale:
+        return [f"OK REQ_STATUS_PASS {total} requirement(s) carry a status consistent with their delivery"]
+    detail = (
+        f"{len(stale)} requirement(s) are still REVIEWING although R1 is signed off and every task "
+        "implementing them is DONE: " + ", ".join(stale)
+    )
+    if strict:
+        return [f"FAIL REQ_STATUS_STALE {detail}"]
+    return [
+        f"OK REQ_STATUS_PASS {total} requirement(s) checked",
+        f"{ADVISORY_PREFIX}REQ_STATUS_STALE {detail}",
+    ]
+
+
+# 声明的是产品判断而非可执行验证（DEC-250 ①）。写了这一行就不再算漏账，也不再混在
+# 「未执行」里——一个永远不可能被执行的条目挂在待办上，会把待办本身变成噪声。
+REAL_ENTRY_RULING = re.compile(r"^-\s*真实入口[:：].*待裁定", re.MULTILINE)
+
+# 一条真实入口路线指明由哪条测试承载证据（DEC-250 ②）。写法固定为「（证据：TEST-xxx）」，
+# 因为「发现方式」这一格是散文，靠猜分不出哪个编号属于机器那一半、哪个属于真实入口那一半。
+REAL_ENTRY_EVIDENCE = re.compile(r"[（(]\s*证据[：:]\s*([^）)]*)[）)]")
 
 
 def check_real_entry(root: Path) -> list[str]:
@@ -1031,6 +1362,27 @@ def check_real_entry(root: Path) -> list[str]:
     findings: list[str] = []
     executed: list[str] = []
     unrun: list[str] = []
+    isolated_only: list[str] = []
+    unlabelled = 0
+
+    for item in evidence:
+        if item.get("real_entry") is not True:
+            continue
+        where = item.get("entry")
+        if where is None:
+            unlabelled += 1
+        elif where not in REAL_ENTRY_ENVIRONMENTS:
+            findings.append(
+                f"FAIL REAL_ENTRY_BAD_ENVIRONMENT {item.get('id')}: entry={where!r} is not one of "
+                + "/".join(REAL_ENTRY_ENVIRONMENTS)
+            )
+
+    unnamed_routes = 0
+    pending_ruling: list[str] = []
+
+    def passed(test_id: str) -> bool:
+        item = by_id.get(test_id, {})
+        return item.get("real_entry") is True and str(item.get("result", "")).upper() == "PASS"
 
     for path in sorted((root / "project/06_changes").glob("CR-*.md")):
         text = read_text(path)
@@ -1039,32 +1391,99 @@ def check_real_entry(root: Path) -> list[str]:
             continue
         name = path.stem
         related = cr_related_tests(root, name) or set()
-        ran = any(
-            by_id.get(test_id, {}).get("real_entry") is True
-            and str(by_id.get(test_id, {}).get("result", "")).upper() == "PASS"
-            for test_id in related
-        )
+
+        # 逐**路线**对账，而不是逐记录（DEC-250 ②）。一条 CP 行若点名了 TEST 编号，就按那
+        # 几条查；查的是「这条路线跑了吗」，不是「这个记录里有没有人跑过什么」。
+        named_routes = []
+        for row in declared:
+            # 只认 `（证据：TEST-xxx）` 这一种明确标注（DEC-250 ②）。
+            #
+            # 第一版在整格里抓编号，当场误伤四条记录——那些编号点的是「机器」那一半
+            # （`机器：TEST-180 ①；真实入口：措辞是否让人知道下一步`）。散文里「哪个编号
+            # 属于哪一半」没有可靠答案，硬猜出来的判据会被人训练成无视。
+            cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
+            ids = set(re.findall(r"TEST-\d+", " ".join(REAL_ENTRY_EVIDENCE.findall(cells[-1]))))
+            if ids:
+                named_routes.append(ids)
+            else:
+                unnamed_routes += 1
+
+        if named_routes:
+            ran = all(any(passed(test_id) for test_id in ids) for ids in named_routes)
+        else:
+            # 没有任何路线点名：退回记录级判定，并已在上面计入迁移账。
+            ran = any(passed(test_id) for test_id in related)
+        if REAL_ENTRY_RULING.search(text):
+            # 独立于 ran 登记：把「等人拍板」的那条藏在「已执行」后面，正是这次要治的毛病。
+            pending_ruling.append(name)
+
         if ran:
             executed.append(name)
+            # 「跑过」与「在用户自己的入口上跑过」是两件事（DEC-210 ③）：一次性服务器上
+            # 的验证证明代码可用，证明不了用户屏幕上的东西变了。只有当这条记录的所有真实
+            # 入口证据都明说是隔离环境时才报——未标注的旧记录不参与。
+            wheres = {
+                by_id.get(test_id, {}).get("entry")
+                for test_id in related
+                if by_id.get(test_id, {}).get("real_entry") is True
+            }
+            if wheres and wheres <= {"isolated"}:
+                isolated_only.append(name)
+        elif REAL_ENTRY_RULING.search(text):
+            pass  # 上面已登记
         elif REAL_ENTRY_UNRUN.search(text):
             unrun.append(name)
         else:
             findings.append(
                 f"FAIL REAL_ENTRY_UNACCOUNTED {name}: declares {len(declared)} real-entry "
-                "detection route(s) but registers no real-entry PASS and carries no "
-                "`- 真实入口: 未执行（原因）` line"
+                "detection route(s) but registers no real-entry PASS and carries neither a "
+                "`- 真实入口: 未执行（原因）` nor a `- 真实入口: 待裁定（原因）` line"
             )
 
     if findings:
         return findings
     messages = [f"OK REAL_ENTRY_ACCOUNTED {len(executed)} record(s) have a registered real-entry PASS"]
+    if isolated_only:
+        # 不拦。隔离环境里验证是正当的；把它说成「用户那侧已经验过」才不是。
+        messages.append(
+            f"{ADVISORY_PREFIX}REAL_ENTRY_ISOLATED_ONLY {len(isolated_only)} record(s) were verified only on a "
+            "throwaway server, never on the user's own running app: " + ", ".join(sorted(isolated_only))
+        )
+    if unlabelled:
+        messages.append(
+            f"{ADVISORY_PREFIX}REAL_ENTRY_UNLABELLED {unlabelled} real-entry evidence record(s) do not say where they "
+            "were run (no `entry` field); they are counted, not judged"
+        )
+    if pending_ruling:
+        # 待裁定不是待办：它在等一个人看一眼然后拍板，不在等谁去执行。分开报，才不会让
+        # 待办列表里永远躺着几条不可能被划掉的东西。
+        messages.append(
+            f"{ADVISORY_PREFIX}REAL_ENTRY_PENDING_RULING {len(pending_ruling)} record(s) declare a real entry "
+            "that is a product judgement, not an executable check — it needs a ruling, not a run: "
+            + ", ".join(sorted(pending_ruling))
+        )
+    if unnamed_routes:
+        messages.append(
+            f"{ADVISORY_PREFIX}REAL_ENTRY_UNNAMED_ROUTE {unnamed_routes} real-entry route(s) name no TEST id, "
+            "so they are judged at record level — a passing sibling test can discharge them (DEC-250 ②)"
+        )
     if unrun:
         # 列名，永远不静默：这条输出就是本次改动的全部目的。
         messages.append(
-            f"OK REAL_ENTRY_DECLARED_UNRUN {len(unrun)} record(s) declare a real entry that has NOT "
+            f"{ADVISORY_PREFIX}REAL_ENTRY_DECLARED_UNRUN {len(unrun)} record(s) declare a real entry that has NOT "
             "been run, and say so: " + ", ".join(sorted(unrun))
         )
     return messages
+
+
+# 告知性输出的前缀（DEC-210 ②）。这类行不改变判定，但必须被念出来：`check_stage` 只收集
+# FAIL，于是「登记了真实入口却没跑」这 7 条在 `check p3` 里一个字都不会出现——一条没人看
+# 得见的告知等于不存在，而那正是本轮几个缺陷的共同形状。
+ADVISORY_PREFIX = "OK ADVISORY "
+
+
+def advisories(messages: list[str]) -> list[str]:
+    return [message for message in messages if message.startswith(ADVISORY_PREFIX)]
 
 
 # --- CR-20260910-process-hardening: scoping, stages, scaffolding, spec contract ---
@@ -1087,13 +1506,13 @@ def cr_related_tests(root: Path, cr: str) -> set[str] | None:
 # Which gates each stage must clear. `release` is deliberately the only one that
 # runs g4, and it refuses --cr so a narrowing view can never relax a release.
 STAGE_GATES: dict[str, list[str]] = {
-    "p1": ["verify", "check-changes", "check-doors", "check-ids", "review r1"],
-    "p2": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "gate g1", "gate g2",
+    "p1": ["verify", "check-changes", "check-doors", "check-ids", "check-human-side", "check-tables", "check-req-status", "review r1"],
+    "p2": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "check-human-side", "check-tables", "check-req-status", "check-approval-log", "gate g1", "gate g2",
            "review r1", "review r2", "review r3", "review r4"],
-    "p3": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "check-warnings", "check-real-entry", "ui",
+    "p3": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "check-human-side", "check-tables", "check-req-status", "check-approval-log", "check-warnings", "check-real-entry", "ui",
            "gate g1", "gate g2", "gate g3", "gate g3.5",
            "review r1", "review r2", "review r3", "review r4"],
-    "release": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "check-warnings", "check-real-entry", "ui",
+    "release": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "check-human-side", "check-tables", "check-req-status", "check-approval-log", "check-warnings", "check-real-entry", "ui",
                 "gate g1", "gate g2", "gate g3", "gate g3.5",
                 "gate g4", "review r1", "review r2", "review r3", "review r4"],
 }
@@ -1105,6 +1524,7 @@ def check_stage(root: Path, stage: str, cr: str | None = None) -> list[str]:
         return ["FAIL STAGE_INVALID release must be judged at full scope; --cr is not accepted"]
 
     findings: list[str] = []
+    notices: list[str] = []
     for step in STAGE_GATES[stage]:
         head, _, arg = step.partition(" ")
         if head == "verify":
@@ -1121,6 +1541,15 @@ def check_stage(root: Path, stage: str, cr: str | None = None) -> list[str]:
             messages = check_warnings(root)
         elif head == "check-real-entry":
             messages = check_real_entry(root)
+        elif head == "check-human-side":
+            messages = check_human_side(root)
+        elif head == "check-tables":
+            messages = check_tables(root)
+        elif head == "check-approval-log":
+            messages = check_approval_log(root)
+        elif head == "check-req-status":
+            # 发布那一刻说明书必须说真话；中途只报不拦。
+            messages = check_req_status(root, strict=(stage == "release"))
         elif head == "ui":
             messages = check_ui_process_control(root)
         elif head == "gate":
@@ -1129,12 +1558,13 @@ def check_stage(root: Path, stage: str, cr: str | None = None) -> list[str]:
             messages = check_review(root, arg, cr=cr)
         else:
             messages = [f"FAIL STAGE_INVALID unknown step: {step}"]
+        notices.extend(f"{m}  [{step}]" for m in advisories(messages))
         if not is_ok(messages):
             findings.extend(f"{m}  [{step}]" for m in messages if not m.startswith("OK "))
     if findings:
-        return findings
+        return findings + notices
     scope = f" for {cr}" if cr else ""
-    return [f"OK STAGE_{stage.upper().replace('.', '_')}_PASS all {len(STAGE_GATES[stage])} gate(s) passed{scope}"]
+    return [f"OK STAGE_{stage.upper().replace('.', '_')}_PASS all {len(STAGE_GATES[stage])} gate(s) passed{scope}"] + notices
 
 
 def new_cr(root: Path, name: str) -> list[str]:
