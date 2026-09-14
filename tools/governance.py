@@ -1340,6 +1340,10 @@ def check_req_status(root: Path, strict: bool = False) -> list[str]:
 # 「未执行」里——一个永远不可能被执行的条目挂在待办上，会把待办本身变成噪声。
 REAL_ENTRY_RULING = re.compile(r"^-\s*真实入口[:：].*待裁定", re.MULTILINE)
 
+# 已经裁过的（DEC-250 ①）。产品判断被人拍过板之后，这条路线就到此为止：既不是「待办」，
+# 也不该记成「已执行」——没人执行过什么，是有人做了决定。
+REAL_ENTRY_RULED = re.compile(r"^-\s*真实入口[:：].*已裁定", re.MULTILINE)
+
 # 一条真实入口路线指明由哪条测试承载证据（DEC-250 ②）。写法固定为「（证据：TEST-xxx）」，
 # 因为「发现方式」这一格是散文，靠猜分不出哪个编号属于机器那一半、哪个属于真实入口那一半。
 REAL_ENTRY_EVIDENCE = re.compile(r"[（(]\s*证据[：:]\s*([^）)]*)[）)]")
@@ -1363,6 +1367,7 @@ def check_real_entry(root: Path) -> list[str]:
     executed: list[str] = []
     unrun: list[str] = []
     isolated_only: list[str] = []
+    ruled: list[str] = []
     unlabelled = 0
 
     for item in evidence:
@@ -1413,9 +1418,11 @@ def check_real_entry(root: Path) -> list[str]:
         else:
             # 没有任何路线点名：退回记录级判定，并已在上面计入迁移账。
             ran = any(passed(test_id) for test_id in related)
-        if REAL_ENTRY_RULING.search(text):
+        if REAL_ENTRY_RULING.search(text) and not REAL_ENTRY_RULED.search(text):
             # 独立于 ran 登记：把「等人拍板」的那条藏在「已执行」后面，正是这次要治的毛病。
             pending_ruling.append(name)
+        elif REAL_ENTRY_RULED.search(text):
+            ruled.append(name)
 
         if ran:
             executed.append(name)
@@ -1429,7 +1436,7 @@ def check_real_entry(root: Path) -> list[str]:
             }
             if wheres and wheres <= {"isolated"}:
                 isolated_only.append(name)
-        elif REAL_ENTRY_RULING.search(text):
+        elif REAL_ENTRY_RULING.search(text) or REAL_ENTRY_RULED.search(text):
             pass  # 上面已登记
         elif REAL_ENTRY_UNRUN.search(text):
             unrun.append(name)
@@ -1461,6 +1468,11 @@ def check_real_entry(root: Path) -> list[str]:
             f"{ADVISORY_PREFIX}REAL_ENTRY_PENDING_RULING {len(pending_ruling)} record(s) declare a real entry "
             "that is a product judgement, not an executable check — it needs a ruling, not a run: "
             + ", ".join(sorted(pending_ruling))
+        )
+    if ruled:
+        messages.append(
+            f"OK REAL_ENTRY_RULED {len(ruled)} record(s) declared a product judgement and it has been ruled on: "
+            + "、".join(sorted(ruled))
         )
     if unnamed_routes:
         messages.append(

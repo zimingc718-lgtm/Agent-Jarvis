@@ -360,6 +360,119 @@ describe("runChatTurn", () => {
     expect(store.getProviderForUser(user.id, providerId)?.toolSupport).toMatchObject({ llama: "yes" });
   });
 
+  /**
+   * TEST-360 — 能力不足与失败时按优先级下沉（REQ-F-210，DEC-280）。
+   *
+   * 用户 2026-09-14：「若有时候 DeepSeek 作为优先级高的模型能力不足的地方，可由优先级
+   * 不高的模型如 openai 执行。」2026-09-14 实测的那次超时正是它要救的场面：队首返回 200
+   * 之后 60 秒零字节，而第二个 Provider 3.6 秒就答完了。
+   */
+  function twoProviders(userId: string): { head: string; next: string } {
+    const head = store.saveProvider(userId, {
+      name: "队首", kind: "local", authMode: "local",
+      baseUrl: "http://127.0.0.1:11434/v1", defaultModel: "head-model", enabled: true,
+    }).id;
+    const next = store.saveProvider(userId, {
+      name: "备用", kind: "local", authMode: "local",
+      baseUrl: "http://127.0.0.1:11435/v1", defaultModel: "next-model", enabled: true,
+    }).id;
+    return { head, next };
+  }
+
+  it("① 队首不支持工具调用时，换给排在后面那个（而不是整轮降级）", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    const { head } = twoProviders(user.id);
+    store.setProviderToolSupport(user.id, head, "head-model", "no");
+
+    const used: string[] = [];
+    const stream = await runChatTurn({
+      store,
+      userId: user.id,
+      message: "hi",
+      providerStream: async function* (input) {
+        used.push(input.provider.baseUrl);
+        yield { type: "delta", text: "ok" };
+      },
+    });
+    const sse = await readSse(stream);
+
+    expect(used).toEqual(["http://127.0.0.1:11435/v1"]); // 备用那台
+    expect(sse).toContain("不支持工具调用，本轮改用");
+    // 换过去的那个没被判过 no，所以工具照常注册——不该再出现降级提示。
+    expect(sse).not.toContain("event: tools-unavailable");
+  });
+
+  it("② 队首零输出就失败时，换下一个重试一次，并说出原因", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    twoProviders(user.id);
+
+    const seen: string[] = [];
+    const stream = await runChatTurn({
+      store,
+      userId: user.id,
+      message: "hi",
+      providerStream: async function* (input) {
+        seen.push(input.provider.baseUrl);
+        if (seen.length === 1) {
+          // 2026-09-14 实测的形状：usage 先到，然后整整 60 秒零 delta。
+          yield { type: "usage", usage: { inputTokens: 10, outputTokens: 0, estimated: true } };
+          yield { type: "error", message: "Provider stream timed out." };
+          return;
+        }
+        yield { type: "delta", text: "备用答完了" };
+      },
+    });
+    const sse = await readSse(stream);
+
+    expect(seen).toEqual(["http://127.0.0.1:11434/v1", "http://127.0.0.1:11435/v1"]);
+    expect(sse).toContain("备用答完了");
+    expect(sse).toContain("未能应答");
+    expect(sse).not.toContain("event: error");
+  });
+
+  it("③ 已经吐字之后再失败就不换——半句话被另一个模型接着写，比失败更糟", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    twoProviders(user.id);
+
+    const seen: string[] = [];
+    const stream = await runChatTurn({
+      store,
+      userId: user.id,
+      message: "hi",
+      providerStream: async function* (input) {
+        seen.push(input.provider.baseUrl);
+        yield { type: "delta", text: "说了一半" };
+        yield { type: "error", message: "断了" };
+      },
+    });
+    const sse = await readSse(stream);
+
+    expect(seen).toEqual(["http://127.0.0.1:11434/v1"]);
+    expect(sse).toContain("event: error");
+    expect(sse).not.toContain("未能应答");
+  });
+
+  it("④ 用户显式指定 Provider 时不下沉——那是他自己的选择", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    const { head } = twoProviders(user.id);
+
+    const seen: string[] = [];
+    const stream = await runChatTurn({
+      store,
+      userId: user.id,
+      providerId: head,
+      message: "hi",
+      providerStream: async function* (input) {
+        seen.push(input.provider.baseUrl);
+        yield { type: "error", message: "挂了" };
+      },
+    });
+    const sse = await readSse(stream);
+
+    expect(seen).toEqual(["http://127.0.0.1:11434/v1"]);
+    expect(sse).toContain("event: error");
+  });
+
   it("REQ-F-040 ③: 明确探测为 no 的 Provider 降级为纯对话并提醒", async () => {
     const user = store.upsertUser({ email: "user@example.com", name: "User" });
     const providerId = localProvider(store, user.id);

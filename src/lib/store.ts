@@ -142,6 +142,12 @@ export type Store = {
    * the highest-priority provider that is both enabled and connected, or null.
    */
   resolveActiveProvider(userId: string): ProviderRuntimeConfig | null;
+  /**
+   * 按优先级排好的**全部**可用 Provider（REQ-F-210）。
+   *
+   * `resolveActiveProvider` 只回队首，于是「队首不行就换下一个」这件事在上层根本无从做起。
+   */
+  resolveProviderChain(userId: string): ProviderRuntimeConfig[];
   getProviderForUser(userId: string, providerId: string): ProviderRuntimeConfig | null;
   revealProviderSecret(userId: string, providerId: string): string | null;
   dumpProviderSecretsForTest(): Array<{ id: string; encryptedSecret: string | null }>;
@@ -410,18 +416,23 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
     },
 
     resolveActiveProvider(userId) {
+      return this.resolveProviderChain(userId)[0] ?? null;
+    },
+
+    resolveProviderChain(userId) {
       // Same "connected" notion as listProviders (secret decryptable / local),
       // walked in priority order so a broken top provider falls through.
+      const chain: ProviderRuntimeConfig[] = [];
       for (const summary of this.listProviders(userId)) {
         if (!summary.enabled || !summary.connected) {
           continue;
         }
         const runtime = this.getProviderForUser(userId, summary.id);
         if (runtime) {
-          return runtime;
+          chain.push(runtime);
         }
       }
-      return null;
+      return chain;
     },
 
     getProviderForUser(userId, providerId) {

@@ -140,10 +140,19 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
   }
 
   let provider: ProviderRuntimeConfig | null;
+  /**
+   * 队首之后还排着谁（REQ-F-210）。
+   *
+   * 用户显式指定了 Provider 就不下沉——那是他自己的选择，替他换掉比失败更糟。
+   */
+  let chain: ProviderRuntimeConfig[] = [];
   try {
-    provider = input.providerId
-      ? input.store.getProviderForUser(input.userId, input.providerId)
-      : input.store.resolveActiveProvider(input.userId);
+    if (input.providerId) {
+      provider = input.store.getProviderForUser(input.userId, input.providerId);
+    } else {
+      chain = input.store.resolveProviderChain(input.userId);
+      provider = chain[0] ?? null;
+    }
   } catch (error) {
     if (error instanceof ProviderSecretError) {
       throw new ChatServiceError(400, "无法读取该 Provider 的凭据，请在模型设置中重新输入 API Key。");
@@ -167,9 +176,30 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     conversationId = input.store.createConversation(input.userId, titleFromMessage(message)).id;
   }
 
-  const model = input.model?.trim() || provider.defaultModel;
   const skills = input.store.listSkills(input.userId);
   const web = readWebSettings(input.store);
+
+  /**
+   * ① 能力下沉（REQ-F-210 ①）：队首已知不支持工具调用时，换给排在后面、没被判过
+   * "no" 的那个。全都不支持才走 REQ-F-040 ③ 的降级——那一条没变，只是往后挪了一步。
+   *
+   * 只认 `"no"`（探测得到的真结论）。`unknown` 仍按「先试试看」处理（DEC-260）。
+   */
+  let capabilitySwitch: { from: string; to: string } | null = null;
+  if (!input.providerId && chain.length > 1) {
+    const head = provider;
+    if (toolSupportFor(head, input.model?.trim() || head.defaultModel) === "no") {
+      const abler = chain.find(
+        (candidate) => toolSupportFor(candidate, candidate.defaultModel) !== "no"
+      );
+      if (abler && abler.id !== head.id) {
+        capabilitySwitch = { from: head.name, to: abler.name };
+        provider = abler;
+      }
+    }
+  }
+
+  const model = input.model?.trim() || provider.defaultModel;
   const support = toolSupportFor(provider, model);
   /**
    * REQ-F-040 ③ as corrected by CR-20260911-tool-availability.
@@ -297,12 +327,64 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
   const streamFactory = input.providerStream ?? sendProviderStream;
   const providerConfig = toStreamProviderConfig(provider);
 
+  /**
+   * ② 失败下沉（REQ-F-210 ②）：第一次模型调用在**尚未产出任何可见内容**时失败，
+   * 就换链上的下一个再试一次。
+   *
+   * 三条边界都写在这里，不靠调用方记得：
+   *   - 只有第一次调用下沉。第二步及以后已经跑过工具，换模型等于重复副作用。
+   *   - 只有零可见输出时下沉。已经吐字再换，用户会看到半句话被另一个模型接着写。
+   *   - 每轮最多换一次。
+   *
+   * `usage` 不算可见输出：它在第一个字之前就到（2026-09-14 那次超时的实测序列正是
+   * `start → usage → error`，整整 60 秒零 delta）。
+   */
+  const fallbacks = chain.filter((candidate) => candidate.id !== provider.id);
+  let firstCallDone = false;
+  let failoverUsed = false;
+  let failoverNote: { from: string; to: string; why: string } | null = null;
+
+  async function* withFailover(
+    make: (config: ProviderRuntimeConfig, model?: string) => AsyncIterable<ChatDelta>
+  ): AsyncIterable<ChatDelta> {
+    const attempts: ProviderRuntimeConfig[] =
+      firstCallDone || failoverUsed || fallbacks.length === 0 ? [provider!] : [provider!, fallbacks[0]!];
+    firstCallDone = true;
+
+    for (let index = 0; index < attempts.length; index += 1) {
+      const candidate = attempts[index]!;
+      const isLast = index === attempts.length - 1;
+      let produced = false;
+      for await (const delta of make(candidate, index === 0 ? input.model : candidate.defaultModel)) {
+        if (delta.type === "error" && !produced && !isLast) {
+          failoverUsed = true;
+          failoverNote = { from: candidate.name, to: attempts[index + 1]!.name, why: delta.message };
+          break;
+        }
+        if (delta.type !== "usage") {
+          produced = true;
+        }
+        yield delta;
+      }
+      if (produced || isLast) {
+        return;
+      }
+    }
+  }
+
   return createStreamingResponse({
     conversationId,
     messageId,
     signal: input.signal,
     preamble,
     toolsUsable,
+    // ③ 换了模型必须说出来（REQ-F-210 ③）：静默换模型比换错模型更坏——用户会拿着
+    // 一份不知道出自谁的答案去做判断。
+    providerNotice: capabilitySwitch
+      ? `「${capabilitySwitch.from}」不支持工具调用，本轮改用「${capabilitySwitch.to}」执行。`
+      : "",
+    readFailoverNote: () =>
+      failoverNote ? `「${failoverNote.from}」未能应答（${failoverNote.why}），本轮改用「${failoverNote.to}」。` : "",
     toolsUnavailableReason:
       support === "unknown"
         ? "当前模型尚未探测工具调用能力，本轮按普通对话进行。可在「模型」中点「测试」完成探测。"
@@ -329,14 +411,16 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
         signal: input.signal,
         persist,
         providerTurn: ({ messages, tools }) =>
-          streamFactory({
-            provider: providerConfig,
-            messages,
-            model: input.model,
-            signal: input.signal,
-            tools: toolsUsable ? tools : undefined,
-            includeUsage: provider.kind !== "local",
-          }),
+          withFailover((candidate, model) =>
+            streamFactory({
+              provider: candidate.id === provider.id ? providerConfig : toStreamProviderConfig(candidate),
+              messages,
+              model,
+              signal: input.signal,
+              tools: toolsUsable ? tools : undefined,
+              includeUsage: candidate.kind !== "local",
+            })
+          ),
       }),
     store: input.store,
     estimateFallback: () => estimateMessagesTokens(assembled),
@@ -521,6 +605,10 @@ function createStreamingResponse(input: {
   toolsUsable: boolean;
   /** Called once per turn with what the provider actually demonstrated. */
   recordToolSupport?: (result: "yes" | "no") => void;
+  /** 开场就说清的换模型原因（能力不足），空串表示没换。 */
+  providerNotice: string;
+  /** 流结束时回看有没有发生过失败下沉——它在第一次调用之中才知道。 */
+  readFailoverNote: () => string;
   toolsUnavailableReason: string;
   store: Store;
   estimateFallback: () => number;
@@ -568,6 +656,10 @@ function createStreamingResponse(input: {
       };
 
       send({ type: "start", conversationId: input.conversationId, messageId: input.messageId });
+
+      if (input.providerNotice) {
+        send({ type: "notice", text: input.providerNotice });
+      }
       for (const delta of input.preamble ?? []) {
         send(delta);
       }
@@ -602,6 +694,13 @@ function createStreamingResponse(input: {
           };
           input.store.addUsage(input.conversationId, usage);
           send({ type: "usage", usage: input.store.getUsage(input.conversationId) });
+        }
+
+        // 失败下沉是在流里发生的，只有跑完才知道有没有换过——所以这句话在这里说，
+        // 而不是开场（REQ-F-210 ③）。
+        const failover = input.readFailoverNote();
+        if (failover) {
+          send({ type: "notice", text: failover });
         }
 
         for (const delta of input.onFinal?.(result.text, result.status, input.conversationId, result.toolsUsed) ?? []) {
