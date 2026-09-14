@@ -2,7 +2,7 @@
 
 - 级别：L2
 - 提出人：用户
-- 状态：APPROVED
+- 状态：CLOSED（闭环完成：2 个任务 DONE、2 条测试 PASS；2026-09-14 按 DEC-270 ③ 收口。原记：APPROVED）
 - 占用 ID: TASK-001..008, TEST-001..013 （由 CR-20260910-risk-scaled-gates 回填，只登记本 CR **创建**的 ID，不含其引用或修订的既有 ID；DEC-001..014 的创建归属无法从现有记录复原，故未登记。）
 - 评审模型：pre-R1234（旧 G0/G1/G2/G3/G3.5/G4；CR-20260909-consensus-review-gates 起改为 R1–R4 + G3/G3.5/G4，不追溯本 CR）
 - 影响需求：REQ-F-001 至 REQ-F-014，REQ-NF-001 至 REQ-NF-004

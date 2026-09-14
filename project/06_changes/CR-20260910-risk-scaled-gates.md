@@ -2,7 +2,7 @@
 
 - 级别: L3（改治理模型本身：变更分档判据、CP 表结构、门禁集合。与 CR-20260909-consensus-review-gates、CR-20260910-process-hardening 同级）
 - 提出人: user（INPUT-2026-09-10-007）
-- 状态: APPROVED（R1 人工终裁完成；R2/R3/R4 四角色全 APPROVED）；**P3/P4 完成**
+- 状态: CLOSED（闭环完成：1 个任务 DONE、2 条测试 PASS；2026-09-14 按 DEC-270 ③ 收口。原记：APPROVED（R1 人工终裁完成；R2/R3/R4 四角色全 APPROVED）；**P3/P4 完成**）
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 占用 ID: DEC-021, TASK-053..058, TEST-055..060
 - 影响需求: 无产品需求变更（本 CR 不触碰 REQ-*）；治理约束记入 `docs/AI_STANDARD.md` 与 `docs/CONTROLS.md`

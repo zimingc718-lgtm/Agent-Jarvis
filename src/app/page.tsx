@@ -61,7 +61,13 @@ export default async function HomePage() {
     <main className="home relative min-h-screen bg-background text-foreground">
       {/* CR-20260909-display-screen: the home page IS a full-screen display screen;
           the chat and ☰ menu float above it (z-index: base / 20 / 30). */}
-      {storeReady ? <DisplayScreen initial={resolveDisplayView()} /> : null}
+      {storeReady ? (
+        <DisplayScreen
+          initial={resolveDisplayView()}
+          providerTemplates={templates}
+          savedProviders={savedProviders}
+        />
+      ) : null}
 
       {/* REQ-F-053 ③: the drawer is a list of same-shaped groups — untitled chrome gets a
           MenuSection; the self-titled entries below already render the same card. */}

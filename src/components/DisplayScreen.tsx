@@ -2,14 +2,22 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { KnowledgeDashboard } from "@/components/KnowledgeDashboard";
-import { ShieldAlert } from "lucide-react";
+import { Archive, ArrowLeft, ShieldAlert } from "lucide-react";
+import { ModelSettings } from "@/components/ModelSettings";
+import type { ProviderTemplate } from "@/lib/providers";
+import type { ProviderSummary } from "@/lib/types";
+import { SkillList } from "@/components/SkillList";
+import { ToolPanel } from "@/components/ToolPanel";
 import { buildInsightDocument, readDocumentTheme, type InsightTheme } from "@/lib/display-document";
 import {
   ASK_JARVIS_EVENT,
   DISPLAY_CHANGED_EVENT,
   DISPLAY_STAGE_EVENT,
+  SETTINGS_PANEL_EVENT,
+  SETTINGS_PANEL_LABEL,
   type DisplayStage,
   type DisplayView,
+  type SettingsPanel,
 } from "@/lib/ui-events";
 
 const NOTICE_TEXT =
@@ -76,6 +84,11 @@ type DisplayScreenProps = {
   initial: DisplayView;
   /** Test seam. */
   fetchView?: () => Promise<DisplayView>;
+  /** 测试缝：归档一份报告（REQ-F-190 ⑦）。 */
+  archiveInsight?: (insightId: string) => Promise<{ ok: boolean; id?: string; message?: string }>;
+  /** 「模型」面板要的两份服务端数据；缺省时该面板提示去 ☰ 配置（REQ-F-200 ②）。 */
+  providerTemplates?: ProviderTemplate[];
+  savedProviders?: ProviderSummary[];
 };
 
 async function fetchViewFromApi(): Promise<DisplayView> {
@@ -86,7 +99,28 @@ async function fetchViewFromApi(): Promise<DisplayView> {
   return (await response.json()) as DisplayView;
 }
 
-export function DisplayScreen({ initial, fetchView = fetchViewFromApi }: DisplayScreenProps) {
+async function archiveViaApi(insightId: string) {
+  const response = await fetch("/api/insights/archive", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ insightId }),
+  });
+  const body = (await response.json().catch(() => ({}))) as { id?: string; message?: string };
+  return response.ok ? { ok: true, id: body.id } : { ok: false, message: body.message ?? `归档失败（${response.status}）。` };
+}
+
+export function DisplayScreen({
+  initial,
+  fetchView = fetchViewFromApi,
+  archiveInsight = archiveViaApi,
+  providerTemplates,
+  savedProviders,
+}: DisplayScreenProps) {
+  /** 屏上当前打开的设置面板；null 表示没开（REQ-F-200 ②）。 */
+  const [panel, setPanel] = useState<SettingsPanel | null>(null);
+  // 归档结果就地回话：写到哪儿了、或者为什么没写成。不弹窗——报告是主角。
+  const [archiveNote, setArchiveNote] = useState<string | null>(null);
+  const [archiving, setArchiving] = useState(false);
   const [view, setView] = useState<DisplayView>(initial);
   /** `opening` is the title screen; `board` is the knowledge board (出口义务 1). */
   const [stage, setStage] = useState<"opening" | "board">("opening");
@@ -159,6 +193,21 @@ export function DisplayScreen({ initial, fetchView = fetchViewFromApi }: Display
     };
   }, [enterBoard]);
 
+  /**
+   * 对话框唤起设置面板（REQ-F-200 ①②）。
+   *
+   * 与 `DISPLAY_STAGE_EVENT` 一样是**瞬时事件**、不落库：设置面板是「此刻在看什么」，
+   * 不是「这台机器该显示什么」。落库会让它跨会话粘住，下次打开还停在设置页上。
+   */
+  useEffect(() => {
+    const onPanel = (event: Event) => {
+      const detail = (event as CustomEvent<{ panel?: SettingsPanel | null }>).detail;
+      setPanel(detail?.panel ?? null);
+    };
+    window.addEventListener(SETTINGS_PANEL_EVENT, onPanel);
+    return () => window.removeEventListener(SETTINGS_PANEL_EVENT, onPanel);
+  }, []);
+
   // CR-20260909-display-screen CP-9: refetch on the custom event only — no polling, no SSE.
   useEffect(() => {
     let cancelled = false;
@@ -180,10 +229,47 @@ export function DisplayScreen({ initial, fetchView = fetchViewFromApi }: Display
     };
   }, [fetchView]);
 
+  if (panel) {
+    return (
+      <section
+        className="display-screen display-screen--settings fixed inset-x-0 top-0 z-0 flex flex-col overflow-y-auto bg-background"
+        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
+        aria-label={`${SETTINGS_PANEL_LABEL[panel]}设置`}
+      >
+        <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2">
+          <button
+            className="display-screen__settings-back rounded border border-border px-2 py-1 text-xs text-muted-foreground"
+            onClick={() => setPanel(null)}
+            type="button"
+          >
+            <ArrowLeft aria-hidden="true" className="mr-1 inline size-3.5" />
+            返回
+          </button>
+          <h2 className="text-sm font-medium">{SETTINGS_PANEL_LABEL[panel]}</h2>
+        </div>
+        <div className="mx-auto w-full max-w-3xl px-4 py-4">
+          {panel === "tools" ? <ToolPanel /> : null}
+          {panel === "skills" ? <SkillList /> : null}
+          {panel === "models" ? (
+            providerTemplates && providerTemplates.length > 0 ? (
+              <ModelSettings providers={savedProviders ?? []} templates={providerTemplates} />
+            ) : (
+              // 没拿到模板就明说，而不是画一个空表单让人填了保存不了。
+              <p className="text-sm text-muted-foreground">
+                这台服务尚未就绪（存储未配置或未登录），模型设置暂时打不开。配置好后刷新页面即可。
+              </p>
+            )
+          ) : null}
+        </div>
+      </section>
+    );
+  }
+
   if (view.kind === "insight" && view.html != null) {
     return (
       <section
-        className="display-screen display-screen--insight fixed inset-0 z-0 flex flex-col bg-background"
+        className="display-screen display-screen--insight fixed inset-x-0 top-0 z-0 flex flex-col bg-background"
+        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
         aria-label="技能洞察"
       >
         {/* CP-7: non-dismissible — no close control, no Escape handler. */}
@@ -194,14 +280,33 @@ export function DisplayScreen({ initial, fetchView = fetchViewFromApi }: Display
           <ShieldAlert aria-hidden="true" className="size-4 shrink-0" />
           <span>{NOTICE_TEXT}</span>
         </div>
-        {/* Sandboxed with `allow-scripts` and deliberately WITHOUT `allow-same-origin`
-            (DEC-080 ①, closing the exit obligation carried by DEC-015 / CP-11).
-            The two tokens together would be no sandbox at all; `allow-scripts` alone puts
-            the document in an opaque origin, so a report can still draw a chart but cannot
-            read this app's localStorage or call its API with the user's session — which is
-            the last link of the injection chain recorded as skill-html-unsandboxed-web-source.
-            REQ-F-052 ①③: the stored HTML is wrapped in a base-styled, theme-aware document;
-            an insight that brings its own <style> or a full document keeps it (DEC-032 ④). */}
+        {/* 归档动作单独一行，不放进提示条：那条提示「不可关闭」是一条 UI 契约（LB-09），
+            它的断言方式是「提示条里没有任何按钮」。把动作塞进去会把那条守卫一起拆掉——
+            守卫的价值恰恰在于没人能往里偷加一个关闭。 */}
+        {view.refId ? (
+          <div className="display-screen__actions flex shrink-0 items-center gap-2 border-b border-border px-4 py-1.5">
+            <button
+              className="display-screen__archive rounded border border-border px-2 py-1 text-xs text-muted-foreground disabled:opacity-60"
+              disabled={archiving}
+              onClick={async () => {
+                setArchiving(true);
+                setArchiveNote(null);
+                const result = await archiveInsight(view.refId as string);
+                setArchiving(false);
+                setArchiveNote(result.ok ? `已归档为 ${result.id}` : result.message ?? "归档失败。");
+              }}
+              type="button"
+            >
+              <Archive aria-hidden="true" className="mr-1 inline size-3.5" />
+              {archiving ? "归档中…" : "归档到本地文档库"}
+            </button>
+            {archiveNote ? (
+              <span className="display-screen__archive-note min-w-0 truncate text-xs text-muted-foreground" aria-live="polite">
+                {archiveNote}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
         <iframe
           className="display-screen__frame min-h-0 w-full flex-1 border-0 bg-background"
           sandbox="allow-scripts"
@@ -217,9 +322,11 @@ export function DisplayScreen({ initial, fetchView = fetchViewFromApi }: Display
     // A plain container, not a landmark: the board inside already IS the 「知识看板」
     // region, and two landmarks sharing one name is worse than none.
     return (
-      <div className="display-screen display-screen--board fixed inset-0 z-0 overflow-y-auto bg-background">
-        {/* pb-36 keeps the last row clear of the fixed bottom console. */}
-        <div className="pb-36">
+      <div
+        className="display-screen display-screen--board fixed inset-x-0 top-0 z-0 overflow-y-auto bg-background"
+        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
+      >
+        <div className="pb-6">
           <KnowledgeDashboard
             onAsk={(question) => window.dispatchEvent(new CustomEvent(ASK_JARVIS_EVENT, { detail: { text: question } }))}
           />

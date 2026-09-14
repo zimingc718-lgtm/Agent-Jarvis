@@ -559,20 +559,21 @@ class GovernanceCliTests(unittest.TestCase):
             "| CP-1 | 产品 | demo | TEST-999 | 新增 | 双向 | 真实入口：开着用一天看看 |\n\n"
         )
 
-    def _with_evidence(self, root: Path, real_entry: bool) -> None:
+    def _with_evidence(self, root: Path, real_entry: bool, entry: str | None = None) -> None:
+        record: dict[str, object] = {
+            "id": "TEST-999",
+            "result": "PASS",
+            "real_entry": real_entry,
+            "command": "demo",
+            "date": "2026-09-13",
+        }
+        if entry is not None:
+            record["entry"] = entry
         payload = {
             "schema_version": 1,
             "generated_at": "2026-09-13",
             "source_documents": [],
-            "tests": [
-                {
-                    "id": "TEST-999",
-                    "result": "PASS",
-                    "real_entry": real_entry,
-                    "command": "demo",
-                    "date": "2026-09-13",
-                }
-            ],
+            "tests": [record],
         }
         (root / "project/05_evidence/test-results.json").write_text(
             json.dumps(payload, ensure_ascii=False), encoding="utf-8"
@@ -629,6 +630,486 @@ class GovernanceCliTests(unittest.TestCase):
 
         self.assertEqual(code, 0, output)
         self.assertNotIn("CR-2099-demo", output)
+
+    def test_an_unrun_reason_may_contain_parentheses(self) -> None:
+        """理由里出现括号是常态（数字、引用、条号），不能因此把整条判成漏账。
+
+        旧正则 `[^）)]+` 见到第一个右括号就停，后面还有字就不匹配——2026-09-14 写一条含
+        「（6,554/492）」的理由时当场踩中：记录明明写了未执行，却被判成没写。
+        """
+        reason = "- 真实入口: 未执行（CP-4 逼到 91%（39,402 / 43,200）未过线，需要更长的一轮）\n"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_declaring_a_real_entry(reason))
+            self._with_evidence(root, real_entry=False)
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("REAL_ENTRY_DECLARED_UNRUN", output)
+
+    # DEC-270 — 批准状态登记与输入状态块
+    def _doc_with_response(self, root: Path, approval_body: str) -> None:
+        """一份说明书：有一个变更响应节，批准状态内容由调用方给。"""
+        for rel_path in (
+            "project/01_specification/产品需求说明书.md",
+            "project/02_solution/架构设计说明书.md",
+            "project/03_modules/模块任务开发说明书.md",
+            "project/04_tests/测试说明书.md",
+        ):
+            path = root / rel_path
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                "# 文档\n\n## 变更响应 · CR-2099-demo\n\n正文。\n\n## 批准状态\n\n" + approval_body + "\n",
+                encoding="utf-8",
+            )
+
+    def test_a_change_response_without_an_approval_line_is_a_failure(self) -> None:
+        """批准状态是一份说明书「被谁改过」的唯一索引，断了就只能全文搜。
+
+        2026-09-14 清点：四份说明书共 155 个变更响应节，批准状态里只登记了 39 个——
+        这个习惯自 2026-09-10 起断了三天，而没有任何检查会说话。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._doc_with_response(root, "- 当前状态：APPROVED")
+            code, output = governance.run(["check-approval-log", "--root", directory])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("APPROVAL_LOG_GAP", output)
+        self.assertIn("CR-2099-demo", output)
+
+    def test_an_approval_line_satisfies_the_check(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._doc_with_response(root, "- CR-2099-demo（R2）：新增 **DEC-999**。\n- 当前状态：APPROVED")
+            code, output = governance.run(["check-approval-log", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("APPROVAL_LOG_PASS", output)
+
+    def test_the_input_status_block_must_keep_up_with_the_last_entry(self) -> None:
+        """输入文档的状态块停在旧日期，等于说后面那些输入还没被接受。
+
+        实测：`需求输入.md` 已记到 INPUT-2026-09-13-027，而状态块写着「日期：2026-09-08」
+        ——从第一条输入之后就没人动过它。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._doc_with_response(root, "- CR-2099-demo（R2）：demo。\n- 当前状态：APPROVED")
+            path = root / "project/00_input/需求输入.md"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                "# 需求输入\n\n### INPUT-2026-09-08-001\n\n甲\n\n### INPUT-2026-09-13-027\n\n乙\n\n"
+                "## 状态\n\n- 当前状态：ACCEPTED\n- 日期：2026-09-08\n",
+                encoding="utf-8",
+            )
+            code, output = governance.run(["check-approval-log", "--root", directory])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("APPROVAL_LOG_STALE_INPUT", output)
+        self.assertIn("2026-09-13", output)
+
+    def test_an_input_status_block_that_kept_up_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._doc_with_response(root, "- CR-2099-demo（R2）：demo。\n- 当前状态：APPROVED")
+            path = root / "project/00_input/需求输入.md"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                "# 需求输入\n\n### INPUT-2026-09-13-027\n\n乙\n\n"
+                "## 状态\n\n- 当前状态：ACCEPTED\n- 日期：2026-09-13（最后一条输入）\n",
+                encoding="utf-8",
+            )
+            code, output = governance.run(["check-approval-log", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+
+    def _finished_record(self, root: Path, status: str) -> None:
+        """一条任务全 DONE、测试全 PASS 的记录，状态由调用方给。"""
+        write_project(root)
+        (root / "project/03_modules/模块任务开发说明书.md").write_text(
+            "# 模块任务开发说明书\n\n"
+            "| 任务 | 模块 | 描述 | 状态 | 依赖 | 关联需求 | 关联测试 |\n"
+            "|---|---|---|---|---|---|---|\n"
+            "| TASK-999 | MOD-X | demo | DONE | 无 | 无 | TEST-999 |\n",
+            encoding="utf-8",
+        )
+        (root / "project/05_evidence/test-results.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "generated_at": "2026-09-14",
+                    "source_documents": [],
+                    "tests": [{"id": "TEST-999", "result": "PASS", "command": "demo", "date": "2026-09-14"}],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        record = root / "project/06_changes/CR-2099-demo.md"
+        record.parent.mkdir(parents=True, exist_ok=True)
+        record.write_text(
+            "# CR-2099-demo\n\n"
+            "- 级别: L2\n- 提出人: 用户\n"
+            f"- 状态: {status}\n"
+            "- 占用 ID: 无\n- 评审模型: 快车道\n- 影响需求: 无\n- 影响模块: 无\n"
+            "- 影响任务: TASK-999\n- 影响测试: TEST-999\n- 当前证据: 无\n"
+            "- 方案选项: A\n- 选择理由: demo\n- 回滚方式: revert\n- 验收条件: demo\n"
+            "- 评审记录: demo\n- R1 终裁: 已完成 | 用户 | 2026-09-14\n",
+            encoding="utf-8",
+        )
+
+    def test_a_finished_record_that_is_not_closed_is_named(self) -> None:
+        """完事了却还挂着 APPROVED——「还在推进」和「已经完事」在状态栏里长得一模一样。
+
+        2026-09-14 清点：51 条 APPROVED 里有 40 条早已合并、任务全 DONE、测试全 PASS，
+        而 `CLOSED` 这个状态自 2026-09-09 之后就没人再用过。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._finished_record(root, "APPROVED（R1 已终裁）")
+            code, output = governance.run(["check-changes", "--root", directory])
+
+        self.assertEqual(code, 0, output)  # 只报不拦：合并了没有，从记录本身看不出来
+        self.assertIn("CR_STATUS_OPEN", output)
+        self.assertIn("CR-2099-demo", output)
+
+    def test_a_closed_record_is_not_named(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._finished_record(root, "CLOSED（闭环完成）")
+            code, output = governance.run(["check-changes", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertNotIn("CR_STATUS_OPEN", output)
+
+    # DEC-250 — 逐路线对账与待裁定
+    def _cr_with_two_routes(self, evidence_marker: str, extra: str = "") -> str:
+        """一条记录，两条真实入口路线：一条点名 TEST-999，一条只是机器检查顺带提了别的编号。"""
+        return (
+            "# CR-2099-demo\n\n"
+            "- 影响测试: TEST-999, TEST-998\n"
+            "- R1 终裁: 已完成 | 用户 | 2026-09-14\n"
+            + extra
+            + "\n## 变化点登记\n\n"
+            "| CP | 来源角色 | 一句话 | 关联 ID | 类型 | 门 | 发现方式 |\n"
+            "|---|---|---|---|---|---|---|\n"
+            f"| CP-1 | 产品 | demo | TEST-999 | 新增 | 双向 | 真实入口：开着用一天看看{evidence_marker} |\n\n"
+        )
+
+    def _evidence_pair(self, root: Path, named_ran: bool, sibling_ran: bool) -> None:
+        payload = {
+            "schema_version": 1,
+            "generated_at": "2026-09-14",
+            "source_documents": [],
+            "tests": [
+                {"id": "TEST-999", "result": "PASS", "real_entry": named_ran, "command": "demo", "date": "2026-09-14"},
+                {"id": "TEST-998", "result": "PASS", "real_entry": sibling_ran, "command": "demo", "date": "2026-09-14"},
+            ],
+        }
+        (root / "project/05_evidence/test-results.json").write_text(
+            json.dumps(payload, ensure_ascii=False), encoding="utf-8"
+        )
+
+    def test_a_named_route_is_not_discharged_by_a_sibling_test(self) -> None:
+        """点了名的路线，不能靠另一条测试的证据过门。
+
+        2026-09-14 真的发生过：看板测试 TEST-123 被标成真实入口 PASS 之后，
+        `CR-20260912-technical-spine` 当场从「未执行」名单里消失——它与看板共用那条测试，
+        而它自己声明的（三态够不够用）一次都没跑过。DEC-200 杀的是记录之间靠别人过门，
+        这一条杀的是**路线之间**。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_with_two_routes("（证据：TEST-999）"))
+            self._evidence_pair(root, named_ran=False, sibling_ran=True)
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("REAL_ENTRY_UNACCOUNTED", output)
+
+    def test_a_named_route_passes_on_its_own_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_with_two_routes("（证据：TEST-999）"))
+            self._evidence_pair(root, named_ran=True, sibling_ran=False)
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("REAL_ENTRY_ACCOUNTED", output)
+
+    def test_an_id_outside_the_evidence_marker_is_not_a_named_route(self) -> None:
+        """散文里的编号不算点名——第一版在整格里抓编号，当场误伤四条记录。
+
+        那些编号点的是「机器」那一半（`机器：TEST-180 ①；真实入口：措辞是否让人知道下一步`）。
+        硬猜出来的判据会被人训练成无视，所以只认 `（证据：TEST-xxx）` 这一种写法。
+        """
+        prose = "；机器只能守住结构（TEST-999 断言摘要非空）"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_with_two_routes(prose))
+            # 点名的那条没跑，但兄弟测试跑了：未点名 ⇒ 退回记录级判定 ⇒ 不该判红。
+            self._evidence_pair(root, named_ran=False, sibling_ran=True)
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("REAL_ENTRY_UNNAMED_ROUTE", output)
+
+    def test_pending_ruling_is_named_and_kept_out_of_the_todo(self) -> None:
+        """「待裁定」不是「待办」：它在等人拍板，不在等谁去执行。"""
+        ruling = "- 真实入口: 待裁定（观感是否可接受，没有判据也没有通过线）\n"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_with_two_routes("", ruling))
+            self._evidence_pair(root, named_ran=False, sibling_ran=False)
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("REAL_ENTRY_PENDING_RULING", output)
+        self.assertNotIn("REAL_ENTRY_DECLARED_UNRUN", output)
+
+    def test_pending_ruling_is_reported_even_when_another_route_ran(self) -> None:
+        """跑过的路线不该把「等人拍板」的那条藏起来——藏起来正是这次要治的毛病。"""
+        ruling = "- 真实入口: 待裁定（三态够不够用）\n"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_with_two_routes("", ruling))
+            self._evidence_pair(root, named_ran=True, sibling_ran=True)
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("REAL_ENTRY_ACCOUNTED", output)
+        self.assertIn("REAL_ENTRY_PENDING_RULING", output)
+
+    # DEC-220 — 表格列数与需求状态
+    def _spec_pair(self, root: Path, req_row: str, task_row: str) -> None:
+        # 四份说明书都要在：check-tables 扫的是四份，缺一份它报的是缺文件，
+        # 而那会让「表格坏了」和「文件没了」两种结论糊在一起。
+        write_project(root)
+        spec = root / "project/01_specification/产品需求说明书.md"
+        spec.parent.mkdir(parents=True, exist_ok=True)
+        spec.write_text(
+            "# 产品需求说明书\n\n"
+            "| ID | 名称 | 优先级 | 价值 | 通过条件 | 状态 |\n"
+            "|---|---|---|---|---|---|\n" + req_row + "\n",
+            encoding="utf-8",
+        )
+        modules = root / "project/03_modules/模块任务开发说明书.md"
+        modules.parent.mkdir(parents=True, exist_ok=True)
+        modules.write_text(
+            "# 模块任务开发说明书\n\n"
+            "| 任务 | 模块 | 描述 | 状态 | 依赖 | 关联需求 | 关联测试 |\n"
+            "|---|---|---|---|---|---|---|\n" + task_row + "\n",
+            encoding="utf-8",
+        )
+
+    DONE_TASK = "| TASK-999 | MOD-X | demo | DONE | 无 | REQ-F-999 | TEST-999 |"
+
+    def test_delivered_requirement_still_reviewing_is_named(self) -> None:
+        """R1 已终裁 + 实现任务全 DONE，状态却还挂在评审中——2026-09-13 有 26 条是这样。
+
+        根子是「什么时候该转 APPROVED」从来没被写成规则，于是 2026-09-10 之后没人转过，
+        而「到底做完没有」只能靠人一条条翻。
+        """
+        row = "| REQ-F-999 | demo | MUST | demo | demo | REVIEWING（CR-2099-demo，R1 已终裁） |"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._spec_pair(root, row, self.DONE_TASK)
+            code, output = governance.run(["check-req-status", "--root", directory])
+
+        self.assertEqual(code, 0, output)  # 中途只报
+        self.assertIn("REQ_STATUS_STALE", output)
+        self.assertIn("REQ-F-999", output)
+
+    def test_delivered_requirement_still_reviewing_blocks_a_release(self) -> None:
+        """发布那一刻说明书必须说真话——这是这条判据唯一会拦人的地方。"""
+        row = "| REQ-F-999 | demo | MUST | demo | demo | REVIEWING（CR-2099-demo，R1 已终裁） |"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._spec_pair(root, row, self.DONE_TASK)
+            code, output = governance.run(["check-req-status", "--root", directory, "--strict"])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("FAIL REQ_STATUS_STALE", output)
+
+    def test_unfinished_work_keeps_reviewing(self) -> None:
+        """任务还没做完就该挂在评审中——判据不能把「在做」也催成「已批准」。"""
+        row = "| REQ-F-999 | demo | MUST | demo | demo | REVIEWING（CR-2099-demo，R1 已终裁） |"
+        doing = "| TASK-999 | MOD-X | demo | DOING | 无 | REQ-F-999 | TEST-999 |"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._spec_pair(root, row, doing)
+            code, output = governance.run(["check-req-status", "--root", directory, "--strict"])
+
+        self.assertEqual(code, 0, output)
+        self.assertNotIn("REQ_STATUS_STALE", output)
+
+    def test_unsigned_requirement_keeps_reviewing(self) -> None:
+        """R1 没终裁更不能推进：那是用户的同意，不是工具的推论。"""
+        row = "| REQ-F-999 | demo | MUST | demo | demo | REVIEWING（CR-2099-demo，R1 待终裁） |"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._spec_pair(root, row, self.DONE_TASK)
+            code, output = governance.run(["check-req-status", "--root", directory, "--strict"])
+
+        self.assertEqual(code, 0, output)
+        self.assertNotIn("REQ_STATUS_STALE", output)
+
+    def test_a_row_with_an_unescaped_pipe_is_a_failure(self) -> None:
+        """单元格里未转义的竖线会让整行被按列读错。
+
+        2026-09-13 扫出 12 行，TASK-161/190/200 三行因此被读错列，REQ-F-102 / F-130 / F-140
+        在任何按列取值的地方都显示为「没有任何任务实现它」——写状态判据时真的被绊了一次。
+        """
+        broken = "| REQ-F-999 | demo | MUST | demo | 取值 `user|isolated` | APPROVED |"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._spec_pair(root, broken, self.DONE_TASK)
+            code, output = governance.run(["check-tables", "--root", directory])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("TABLE_ROW_MALFORMED", output)
+
+    def test_an_escaped_pipe_is_accepted(self) -> None:
+        ok = "| REQ-F-999 | demo | MUST | demo | 取值 `user\\|isolated` | APPROVED |"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._spec_pair(root, ok, self.DONE_TASK)
+            code, output = governance.run(["check-tables", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("TABLES_PASS", output)
+
+    # DEC-210 ② — 人的一侧
+    def _with_requirements(self, root: Path, criteria: str) -> None:
+        path = root / "project/01_specification/产品需求说明书.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "# 产品需求说明书\n\n"
+            "| ID | 名称 | 优先级 | 价值 | 通过条件 | 状态 |\n"
+            "|---|---|---|---|---|---|\n"
+            f"| REQ-F-999 | demo | MUST | demo | {criteria} | APPROVED |\n",
+            encoding="utf-8",
+        )
+
+    def test_a_capability_with_no_human_side_is_named(self) -> None:
+        """把能力交给模型、却一句不提人看得到什么——REQ-F-170 ③ 与 REQ-F-180 ⑥ 都是这样漏出去的。
+
+        这两次都不是实现偷懒：通过条件写到 `save_knowledge` 落盘就结束了，实现照着写完，
+        四道门全绿，而用户界面上什么都没变。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._with_requirements(root, "①`save_knowledge` 增 entity 参数并透传至存储层。")
+            code, output = governance.run(["check-human-side", "--root", directory])
+
+        self.assertEqual(code, 0, output)  # 只报不拦
+        self.assertIn("HUMAN_SIDE_UNSTATED", output)
+        self.assertIn("REQ-F-999", output)
+
+    def test_a_stated_human_side_is_not_named(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._with_requirements(
+                root, "①`save_knowledge` 增 entity 参数；②该归属在知识看板中显示为具名分组。"
+            )
+            code, output = governance.run(["check-human-side", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertNotIn("HUMAN_SIDE_UNSTATED", output)
+
+    def test_explicitly_no_human_side_is_accepted(self) -> None:
+        """有些能力确实只在机器一侧（预算、路径守卫）。明说了就不再点名——但必须明说。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._with_requirements(
+                root, "①`read_skill` 按预算截断。人的一侧：无（纯内部预算，用户不感知）。"
+            )
+            code, output = governance.run(["check-human-side", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertNotIn("HUMAN_SIDE_UNSTATED", output)
+
+    def test_advisories_survive_a_stage_run(self) -> None:
+        """告知行必须被阶段检查带出来。
+
+        改前 `check_stage` 只收集 FAIL，OK 行一律丢弃：`check p3` 跑完，「登记了真实入口却
+        没跑」那 7 条一个字都不会出现。一条没人看得见的告知等于不存在——这跟它要治的毛病
+        是同一个形状。
+        """
+        passing = ["OK SOMETHING_PASS fine", "OK ADVISORY THING 1 record(s) worth saying out loud"]
+        self.assertEqual(governance.advisories(passing), [passing[1]])
+        self.assertEqual(governance.advisories(["OK SOMETHING_PASS fine"]), [])
+
+    # DEC-210 ③ — 在哪儿验的
+    def test_isolated_only_evidence_is_named(self) -> None:
+        """只在一次性服务器上验过的记录，要被点名——它证明代码可用，证明不了用户那侧变了。
+
+        写这条检查时，本仓库 9 个 CR 落在这一格：每一句证据都是真的，每一句都与用户屏幕
+        上的东西无关，而在此之前记录里看不出这个区别。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_declaring_a_real_entry())
+            self._with_evidence(root, real_entry=True, entry="isolated")
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 0, output)  # 不拦：隔离环境里验证是正当的
+        self.assertIn("REAL_ENTRY_ISOLATED_ONLY", output)
+        self.assertIn("CR-2099-demo", output)
+
+    def test_user_entry_evidence_is_not_named(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_declaring_a_real_entry())
+            self._with_evidence(root, real_entry=True, entry="user")
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertNotIn("REAL_ENTRY_ISOLATED_ONLY", output)
+
+    def test_unlabelled_evidence_is_counted_not_guessed(self) -> None:
+        """没写在哪儿验的，就既不算隔离也不算用户那侧——旧记录不被追认成任何一种。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_declaring_a_real_entry())
+            self._with_evidence(root, real_entry=True)
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("REAL_ENTRY_UNLABELLED", output)
+        self.assertNotIn("REAL_ENTRY_ISOLATED_ONLY", output)
+
+    def test_unknown_environment_is_rejected(self) -> None:
+        """拼错的环境名必须报错。不然「在哪儿验的」会退化成一个谁都能随手填的字段。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_declaring_a_real_entry())
+            self._with_evidence(root, real_entry=True, entry="staging")
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("REAL_ENTRY_BAD_ENVIRONMENT", output)
+        self.assertIn("TEST-999", output)
+
+    # DEC-210 ④ — worktree 里不许出快照
+    def test_snapshot_refuses_inside_a_worktree(self) -> None:
+        """`.git` 是文件而非目录时拒绝出快照。
+
+        worktree 里 `.git` 是一个指向主仓库的普通文件，于是它被当成受控文件写进基线；
+        回到主仓库 `.git` 是目录，`verify` 从此永远报 BASELINE_NOT_A_FILE。这个错误真的
+        跟着三次快照传了下去。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            (root / ".git").write_text("gitdir: /elsewhere/.git/worktrees/demo\n", encoding="utf-8")
+            code, output = governance.run(["snapshot", "--root", directory, "--actor", "tester"])
+            wrote_baseline = (root / "project/.governance/baseline.json").exists()
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("SNAPSHOT_REFUSED", output)
+        self.assertFalse(wrote_baseline, "拒绝必须发生在写基线之前，否则拦了也来不及")
 
     def test_review_passes_vacuously_without_the_cp_model(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

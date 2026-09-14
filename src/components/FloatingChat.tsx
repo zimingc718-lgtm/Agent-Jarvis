@@ -4,6 +4,9 @@ import { ChangeEvent, DragEvent, FormEvent, KeyboardEvent, useEffect, useRef, us
 import {
   DISPLAY_CHANGED_EVENT,
   ASK_JARVIS_EVENT,
+  SETTINGS_PANEL_EVENT,
+  SETTINGS_PANEL_LABEL,
+  type SettingsPanel,
   KNOWLEDGE_CHANGED_EVENT,
   DISPLAY_STAGE_EVENT,
   SKILLS_CHANGED_EVENT,
@@ -391,6 +394,8 @@ export function FloatingChat({
 }: FloatingChatProps) {
   const restored = !sessionEnded() && initialMessages.length > 0;
 
+  /** 本轮累计用量，随流结束落定；新对话清空（REQ-NF-060 ④）。 */
+  const [turnUsage, setTurnUsage] = useState<{ inputTokens: number; outputTokens: number } | null>(null);
   const [input, setInput] = useState("");
   const [userCollapsed, setUserCollapsed] = useState(() => chatCollapsed());
   const [isStreaming, setIsStreaming] = useState(false);
@@ -412,6 +417,7 @@ export function FloatingChat({
 
   const abortRef = useRef<AbortController | null>(null);
   const transcriptRef = useRef<HTMLDivElement | null>(null);
+  const rootRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const finishTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const folderInputRef = useRef<HTMLInputElement | null>(null);
@@ -515,12 +521,19 @@ export function FloatingChat({
     };
   }, [probeProviders]);
 
+  /**
+   * 回到对话面板时停在最新一条（REQ-F-054 ⑩，用户 2026-09-13）。
+   *
+   * `showTranscript` 为假时整段记录**从 DOM 里移除**（REQ-F-019 ②），再展开是一次重新挂载，
+   * 滚动位置从 0 开始——于是用户每次展开看到的是最早的一条，要自己往下滚到头。消息没有变化，
+   * 所以只依赖 `messages` 的那版效果不会再跑。把可见性一并列入依赖：节点挂上之后再滚一次。
+   */
   useEffect(() => {
     const el = transcriptRef.current;
     if (el && typeof el.scrollTo === "function") {
       el.scrollTo({ top: el.scrollHeight });
     }
-  }, [messages]);
+  }, [messages, showTranscript, transcriptVisible]);
 
   // REQ-F-060 ④: the schedule comes from the server and follows the ☰ controls live.
   useEffect(() => {
@@ -788,6 +801,8 @@ export function FloatingChat({
   }
 
   function handleNewConversation() {
+    // 上一轮的数字留在屏幕上，会被当成这一轮的。
+    setTurnUsage(null);
     // Clearing the messages collapses the panel on its own (hasTranscript -> false).
     setMessages([]);
     setErrorLine(null);
@@ -917,6 +932,8 @@ export function FloatingChat({
         } else if (chunk.type === "usage") {
           window.dispatchEvent(new CustomEvent(USAGE_CHANGED_EVENT, { detail: chunk.usage }));
         } else if (chunk.type === "turn_usage") {
+          // 两处都要：抽屉里那份是明细，控制台这份是随时瞥得见的那一眼（REQ-NF-060 ④）。
+          setTurnUsage(chunk.usage);
           window.dispatchEvent(new CustomEvent(TURN_USAGE_EVENT, { detail: chunk.usage }));
         } else if (chunk.type === "truncated") {
           appendSystemMessage(`已达 ${chunk.steps} 步上限，已停止。已完成的部分保留，可继续追问。`);
@@ -1022,10 +1039,35 @@ export function FloatingChat({
     }
   }
 
+  /**
+   * 把控制台的实测高度发布给展示屏（REQ-F-200 ④，DEC-240）。
+   *
+   * 展示屏据此让出底部，于是报告不再有任何一块被压在控制台下面。用实测高度而不是常量：
+   * 高度随记录区展开、悬停收缩、步骤流条数变化，写死一个数就总有一种状态对不上。
+   */
+  useEffect(() => {
+    const node = rootRef.current;
+    if (!node || typeof ResizeObserver === "undefined") {
+      return;
+    }
+    const publish = () => {
+      document.documentElement.style.setProperty("--jarvis-console-h", `${Math.ceil(node.getBoundingClientRect().height)}px`);
+    };
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+      // 卸载后不留一个不再更新的旧值：展示屏会一直照着它让出空白。
+      document.documentElement.style.removeProperty("--jarvis-console-h");
+    };
+  }, []);
+
   const hasInput = input.trim().length > 0;
 
   return (
     <section
+      ref={rootRef}
       className={cn(
         // pb clears the iOS home indicator (env(safe-area-inset-bottom)).
         "floating-chat fixed inset-x-0 bottom-0 z-20 mx-auto flex w-full max-w-3xl flex-col gap-2 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:p-4 sm:pb-[calc(1rem+env(safe-area-inset-bottom,0px))]",
@@ -1220,6 +1262,32 @@ export function FloatingChat({
             {errorLine}
           </p>
         ) : null}
+
+        {/* 设置入口（REQ-F-200 ①）：从对话框唤起，面板呈现在动态屏上，不弹窗盖住正在看的东西。 */}
+        <div className="floating-chat__panels flex items-center gap-1.5 px-1">
+          <span className="text-xs text-muted-foreground">在屏上打开：</span>
+          {(["models", "skills", "tools"] as SettingsPanel[]).map((panel) => (
+            <button
+              className="floating-chat__panel rounded border border-border px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground"
+              key={panel}
+              onClick={() => window.dispatchEvent(new CustomEvent(SETTINGS_PANEL_EVENT, { detail: { panel } }))}
+              type="button"
+            >
+              {SETTINGS_PANEL_LABEL[panel]}
+            </button>
+          ))}
+          {/* 本轮用量常驻（REQ-NF-060 ④）。此前只在 ☰ →「搜索设置」弹窗里有——需求写的是
+              「显示」，而它要治的事故是「用户无从看见」，藏两层菜单之后这两者就分岔了。 */}
+          {turnUsage ? (
+            <span
+              className="floating-chat__turn-usage ml-auto text-xs tabular-nums text-muted-foreground"
+              aria-live="polite"
+              title="本轮累计（输入 / 输出 tokens）"
+            >
+              本轮 ↑{turnUsage.inputTokens.toLocaleString()} ↓{turnUsage.outputTokens.toLocaleString()}
+            </span>
+          ) : null}
+        </div>
 
         <form className="floating-chat__form flex items-end gap-2" ref={formRef} onSubmit={handleSubmit}>
           <Textarea

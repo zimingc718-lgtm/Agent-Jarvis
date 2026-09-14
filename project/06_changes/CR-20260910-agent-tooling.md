@@ -2,7 +2,7 @@
 
 - 级别: L3（改核心目标——对话从「注入式单轮管线」变为「工具循环 agent」；改技术路线——内核按 DeepSeek Harness 插件化思想重构；打开新信任面——联网搜索与网页读取出网、`read_url` 任意 URL 抓取；新增环境依赖——SearXNG 自托管服务（**零新增 npm 依赖**）。按 `docs/CONTROLS.md` 分档判据含单向门 CP，走**重型**：完整 R1–R4 + 回滚方案 + 事前验尸。）
 - 提出人: user（INPUT-2026-09-10-008；起因：「哪怕上传了 skill，Jarvis 也没有管理 skill 的能力，也没有联网搜索的能力」+「openclaw 的 token 消耗有点大，怎么借鉴轻量化」）
-- 状态: APPROVED（R1）——P0 原文已存；CP-1..CP-43 登记表已填；`产品需求说明书.md` 基线表与变更响应节已写入；**R1 四角色评审完成（全 CONDITIONAL、零 REJECTED）+ 人工终裁 7 项已拍板**（见「## R1 人工终裁」）。**P2 完成**：三层说明书各含 `变更响应 · CR-20260910-agent-tooling` 节，三张 43×4 矩阵全 APPROVED。**P3/P4 完成**：TASK-059..076 全部 DONE、TEST-061..078 全部 PASS、7 条出口义务清零；277 单测 / 50 ui-contract / 10 e2e / smoke / build:verify 全绿，typecheck 0，治理单测 69 全过，`gate g3|g3.5` PASS，**零新增运行依赖**。`verify` 的基线漂移待合并前 `snapshot`（WORKFLOW 规定全流程只跑一次）
+- 状态: CLOSED（闭环完成：14 个任务 DONE、5 条测试 PASS；2026-09-14 按 DEC-270 ③ 收口。原记：APPROVED（R1）——P0 原文已存；CP-1..CP-43 登记表已填；`产品需求说明书.md` 基线表与变更响应节已写入；**R1 四角色评审完成（全 CONDITIONAL、零 REJECTED）+ 人工终裁 7 项已拍板**（见「## R1 人工终裁」）。**P2 完成**：三层说明书各含 `变更响应 · CR-20260910-agent-tooling` 节，三张 43×4 矩阵全 APPROVED。**P3/P4 完成**：TASK-059..076 全部 DONE、TEST-061..078 全部 PASS、7 条出口义务清零；277 单测 / 50 ui-contract / 10 e2e / smoke / build:verify 全绿，typecheck 0，治理单测 69 全过，`gate g3|g3.5` PASS，**零新增运行依赖**。`verify` 的基线漂移待合并前 `snapshot`（WORKFLOW 规定全流程只跑一次））
 - 占用 ID: DEC-022..029, TASK-059..076, TEST-061..078 （另创建 REQ-F-029..041、REQ-NF-007..011，见附录 A；REQ-* 不在 `check-ids` 登记范围）
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: **新增** REQ-F-029..041（13 条）、REQ-NF-007..011（5 条）；**重写** REQ-F-003、F-004、F-005、F-006、F-013、F-014、F-018、F-019、F-023、F-024、F-028、NF-006（12 条）；**作废并由新条款取代** REQ-F-021、F-022、F-027（3 条）；**澄清** REQ-NF-001、NF-003、NF-004、F-016、F-020（5 条）；非目标作废 4 行、改写 1 行、新增 7 行。全文见附录 A / B。

@@ -110,6 +110,16 @@ export class ToolRegistry {
   }
 
   /**
+   * 每一个**登记过**的工具，不论此刻是否可用（REQ-F-200 ③）。
+   *
+   * `availableFor` 回答「这一轮模型能调哪些」；这一个回答「这套系统一共有哪些」。工具面板
+   * 要同时说出两者，因为「没注册」和「不存在」对用户是两件完全不同的事。
+   */
+  all(): ToolDescriptor[] {
+    return [...this.tools.values()];
+  }
+
+  /**
    * Tools that exist for this context. The set is computed **once per send** and must
    * not change mid-turn — a tool that stops registering halfway would rewrite the
    * stable prefix and throw away the cached prefix (DEC-026 ②). Runtime give-up, such
