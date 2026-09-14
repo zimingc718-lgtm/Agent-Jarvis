@@ -5,6 +5,7 @@ import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
 import { getStore } from "@/lib/store-singleton";
 import {
+  DocumentPathError,
   labelFor,
   listDocuments,
   parseRoots,
@@ -13,6 +14,7 @@ import {
   validateRoot,
   clearDocumentCache,
 } from "@/lib/documents";
+import { resolveArchiveDir, SETTING_ARCHIVE_DIR } from "@/lib/insight-export";
 
 /**
  * Local document folders (REQ-F-110 ①, TASK-170 ④).
@@ -31,6 +33,8 @@ async function payload() {
   return {
     roots,
     counts: { documents: documents.length },
+    // 归档目录（REQ-F-190 ③）。与文档目录同屏，因为它必须落在其中之一之内。
+    archive: store.getSetting(SETTING_ARCHIVE_DIR) ?? "",
   };
 }
 
@@ -74,6 +78,42 @@ export async function POST(request: Request) {
   const next = [...roots, { label: labelFor(checked.path, roots.map((root) => root.label)), path: checked.path }];
   store.setSetting(SETTING_DOCUMENT_ROOTS, serializeRoots(next));
   clearDocumentCache();
+  return NextResponse.json({ ok: true, ...(await payload()) });
+}
+
+/**
+ * 设置归档目录（REQ-F-190 ③）。
+ *
+ * 校验在写入之前：一个不在任何文档目录之内的路径若被存下来，会在每次归档时失败，而错误
+ * 出现的地方离设置它的地方很远。空串表示清除。
+ */
+export async function PATCH(request: Request) {
+  const auth = requireUserId(await getServerSession(authOptions));
+  if (!auth.ok) {
+    return NextResponse.json({ message: auth.message }, { status: auth.status });
+  }
+  const unavailable = storageUnavailable();
+  if (unavailable) {
+    return unavailable;
+  }
+
+  const body = (await request.json().catch(() => ({}))) as { archive?: unknown };
+  if (typeof body.archive !== "string") {
+    return NextResponse.json({ message: "缺少 archive。" }, { status: 400 });
+  }
+  const store = getStore();
+  const wanted = body.archive.trim();
+  if (!wanted) {
+    store.setSetting(SETTING_ARCHIVE_DIR, null);
+    return NextResponse.json({ ok: true, ...(await payload()) });
+  }
+  try {
+    const target = await resolveArchiveDir(wanted, store.getSetting(SETTING_DOCUMENT_ROOTS));
+    store.setSetting(SETTING_ARCHIVE_DIR, target.dir);
+  } catch (error) {
+    const message = error instanceof DocumentPathError ? error.message : "归档目录无法使用。";
+    return NextResponse.json({ message }, { status: 400 });
+  }
   return NextResponse.json({ ok: true, ...(await payload()) });
 }
 

@@ -211,6 +211,79 @@ describe("/api/providers/test", () => {
     vi.unstubAllGlobals();
   });
 
+  it("探测被拒时回 unknown 而不是 no，且不落库（DEC-260）", async () => {
+    // 2026-09-14 实测：两个 Provider 的「测试连接」都 OK，工具探测却都回 no，库里于是存下
+    // {"deepseek-chat":"no"}——而它们都支持工具调用。`no` 会在此后每一轮生效
+    // （toolsUsable = support !== "no"），一次网络抖动就能把工具能力永久关掉。
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.endsWith("/models")) {
+        return new Response("{}", { status: 200 });
+      }
+      // 限流：这说明不了这个模型会不会调工具。
+      return new Response("rate limited", { status: 429 });
+    });
+    vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
+
+    const res = await providerTestRoute.POST(
+      post("http://test/api/providers/test", {
+        baseUrl: "https://api.deepseek.com/v1",
+        secret: "k",
+        id: "missing-provider",
+        defaultModel: "deepseek-chat",
+      })
+    );
+    const body = await res.json();
+
+    expect(body.ok).toBe(true);
+    expect(body.toolSupport).toBe("unknown");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("探测超时同样回 unknown——超时是没问出来，不是问出了「不支持」", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.endsWith("/models")) {
+        return new Response("{}", { status: 200 });
+      }
+      throw new DOMException("The operation was aborted.", "TimeoutError");
+    });
+    vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
+
+    const res = await providerTestRoute.POST(
+      post("http://test/api/providers/test", {
+        baseUrl: "https://api.deepseek.com/v1",
+        secret: "k",
+        id: "missing-provider",
+        defaultModel: "deepseek-chat",
+      })
+    );
+    expect((await res.json()).toolSupport).toBe("unknown");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("对方正常应答但没发 tool_calls → 才是 no（真结论仍要落地）", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.endsWith("/models")) {
+        return new Response("{}", { status: 200 });
+      }
+      return new Response(JSON.stringify({ choices: [{ message: { content: "ok" } }] }), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
+
+    const res = await providerTestRoute.POST(
+      post("http://test/api/providers/test", {
+        baseUrl: "https://api.deepseek.com/v1",
+        secret: "k",
+        id: "missing-provider",
+        defaultModel: "deepseek-chat",
+      })
+    );
+    expect((await res.json()).toolSupport).toBe("no");
+
+    vi.unstubAllGlobals();
+  });
+
   it("requires a base URL", async () => {
     const res = await providerTestRoute.POST(post("http://test/api/providers/test", { secret: "x" }));
     expect(res.status).toBe(400);

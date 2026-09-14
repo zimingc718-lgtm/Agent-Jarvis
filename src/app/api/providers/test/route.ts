@@ -53,13 +53,17 @@ export async function POST(request: Request) {
   // (provider, model) actually calls tools. `/models` cannot answer that, and plenty of
   // local servers accept a `tools` array with a 200 and ignore it — so the probe is a
   // real completion. Only runs for a saved provider, and never fails the test action.
-  let toolSupport: "yes" | "no" | null = null;
+  let toolSupport: "yes" | "no" | "unknown" | null = null;
   const providerId = typeof body.id === "string" && body.id.trim() ? body.id.trim() : null;
   const model = typeof body.defaultModel === "string" && body.defaultModel.trim() ? body.defaultModel.trim() : null;
   if (result.ok && providerId && model) {
     try {
       toolSupport = await probeToolSupport({ baseUrl, secret }, model);
-      getStore().setProviderToolSupport(auth.userId, providerId, model, toolSupport);
+      // 只有真结论才落库（DEC-260）。把 `unknown` 存下来等于把一次失败变成永久事实，
+      // 而 `runChatTurn` 对「没存过」的处置本来就是「先按支持来试」。
+      if (toolSupport !== "unknown") {
+        getStore().setProviderToolSupport(auth.userId, providerId, model, toolSupport);
+      }
     } catch {
       toolSupport = null;
     }

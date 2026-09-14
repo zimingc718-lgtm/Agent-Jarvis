@@ -18,13 +18,19 @@ import { Button } from "@/components/ui/button";
  */
 
 export type DocumentRootView = { label: string; path: string };
-export type DocumentSettingsValue = { roots: DocumentRootView[]; counts: { documents: number } };
+export type DocumentSettingsValue = {
+  roots: DocumentRootView[];
+  counts: { documents: number };
+  /** 归档目录的绝对路径，空串表示未设置（REQ-F-190 ③）。 */
+  archive: string;
+};
 
 type DocumentSettingsProps = {
   /** Test seams. */
   load?: () => Promise<DocumentSettingsValue>;
   add?: (path: string) => Promise<{ ok: boolean; message?: string; data?: DocumentSettingsValue }>;
   remove?: (label: string) => Promise<{ ok: boolean; message?: string; data?: DocumentSettingsValue }>;
+  setArchive?: (path: string) => Promise<{ ok: boolean; message?: string; data?: DocumentSettingsValue }>;
 };
 
 async function loadFromApi(): Promise<DocumentSettingsValue> {
@@ -55,17 +61,38 @@ async function removeViaApi(label: string) {
     : { ok: false, message: body.message ?? `移除失败（${response.status}）。` };
 }
 
-export function DocumentSettings({ load = loadFromApi, add = addViaApi, remove = removeViaApi }: DocumentSettingsProps) {
+async function setArchiveViaApi(path: string) {
+  const response = await fetch("/api/settings/documents", {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ archive: path }),
+  });
+  const body = (await response.json().catch(() => ({}))) as { message?: string } & Partial<DocumentSettingsValue>;
+  return response.ok
+    ? { ok: true, data: body as DocumentSettingsValue }
+    : { ok: false, message: body.message ?? `设置失败（${response.status}）。` };
+}
+
+export function DocumentSettings({
+  load = loadFromApi,
+  add = addViaApi,
+  remove = removeViaApi,
+  setArchive = setArchiveViaApi,
+}: DocumentSettingsProps) {
   const [open, setOpen] = useState(false);
   const [roots, setRoots] = useState<DocumentRootView[]>([]);
   const [count, setCount] = useState(0);
   const [draft, setDraft] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [archive, setArchiveState] = useState("");
+  const [archiveDraft, setArchiveDraft] = useState("");
 
   const apply = useCallback((value: DocumentSettingsValue) => {
     setRoots(value.roots);
     setCount(value.counts.documents);
+    setArchiveState(value.archive ?? "");
+    setArchiveDraft(value.archive ?? "");
   }, []);
 
   useEffect(() => {
@@ -113,10 +140,22 @@ export function DocumentSettings({ load = loadFromApi, add = addViaApi, remove =
     }
   };
 
+  const onArchive = async () => {
+    setBusy(true);
+    const result = await setArchive(archiveDraft.trim());
+    setBusy(false);
+    if (result.ok && result.data) {
+      apply(result.data);
+      setStatus(result.data.archive ? `报告将归档到 ${result.data.archive}。` : "已清除归档目录，报告不再写入磁盘。");
+    } else {
+      setStatus(result.message ?? "设置失败。");
+    }
+  };
+
   const summary =
     roots.length === 0
       ? "本地文档：未配置目录"
-      : `本地文档：${roots.length} 个目录 · ${count} 份可读文件`;
+      : `本地文档：${roots.length} 个目录 · ${count} 份可读文件${archive ? " · 已设归档目录" : ""}`;
 
   return (
     <section className="document-settings flex flex-col gap-1.5 rounded-md border border-border p-2" aria-label="本地文档">
@@ -189,6 +228,29 @@ export function DocumentSettings({ load = loadFromApi, add = addViaApi, remove =
             </div>
             <p className="text-xs text-muted-foreground">
               支持 PDF、.docx、Markdown、纯文本、CSV、JSON。旧的 .doc 二进制格式与扫描件 PDF（无文字层）读不了，会如实说明。
+            </p>
+          </div>
+
+          <div className="document-settings__archive flex flex-col gap-1.5 border-t border-border pt-3">
+            <label className="text-xs font-medium" htmlFor="document-archive-path">
+              报告归档目录（绝对路径，须位于上面某个目录之内）
+            </label>
+            <div className="flex gap-2">
+              <input
+                className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
+                id="document-archive-path"
+                onChange={(event) => setArchiveDraft(event.target.value)}
+                placeholder="D:\\资料\\Jarvis 报告"
+                value={archiveDraft}
+              />
+              <Button disabled={busy || archiveDraft.trim() === archive.trim()} onClick={onArchive} type="button">
+                保存
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {/* 写入是这一层唯一的写动作，边界写在明处（REQ-F-190 ③④）。 */}
+              展示屏上的报告可归档为 Markdown 存到这里，随后能被检索和阅读。
+              写入只发生在这个目录里、只新建文件，**永不覆盖**已有文件；留空即不写磁盘。
             </p>
           </div>
 

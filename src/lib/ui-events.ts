@@ -66,6 +66,27 @@ export const DISPLAY_STAGE_EVENT = "jarvis:display-stage";
 export type DisplayStage = "opening" | "board";
 
 /**
+ * 把设置类界面唤到动态屏上（REQ-F-200，用户 2026-09-13 决策 3）。`detail` 是 `{ panel }`；
+ * `panel` 为 null 表示退回看板。
+ *
+ * 为什么不是弹窗：弹窗盖住正在看的东西，而这些面板恰恰是要对着屏幕上的东西改的（换 Provider
+ * 之后看报告还在不在、开了技能之后工具表变不变）。动态屏本来就是「现在该看什么」的那块地方。
+ *
+ * 为什么入口在对话框而不在 ☰：抽屉是收纳，对话框是正在用的地方。☰ 里的入口一并保留——
+ * 同一个面板两个入口，不是两套实现。
+ */
+export const SETTINGS_PANEL_EVENT = "jarvis:settings-panel";
+
+/** 动态屏上可以呈现的设置面板。 */
+export type SettingsPanel = "models" | "skills" | "tools";
+
+export const SETTINGS_PANEL_LABEL: Record<SettingsPanel, string> = {
+  models: "模型",
+  skills: "技能",
+  tools: "工具",
+};
+
+/**
  * Proactive wake-up (CR-20260911-proactive-wake). `WAKE_CHANGED_EVENT` tells the chat
  * that the schedule changed in the ☰ menu; `WAKE_NOTICE_EVENT` carries a reminder the
  * menu's 「现在唤醒」 produced, so the chat can show it — `detail` is `{ text, messageId }`.

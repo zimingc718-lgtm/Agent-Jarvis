@@ -304,6 +304,71 @@ describe("FloatingChat", () => {
       expect(screen.getByRole("button", { name: "收起对话" })).toBeInTheDocument();
     });
 
+    it("⑥ 本轮用量常驻控制台，新对话清零（REQ-NF-060 ④）", async () => {
+      // 需求写的是「界面显示本轮累计」，实现此前只在 ☰ →「搜索设置」弹窗里。那条需求是从
+      // 一次事故长出来的——「累计 1,028,825 input（约 1.6 美元）而用户无从看见」——藏两层
+      // 菜单之后，「显示」与「看得见」就分岔了。
+      async function* withUsage(): AsyncIterable<ChatStreamEvent> {
+        yield { type: "start", conversationId: "conv-u", messageId: "m" };
+        yield { type: "delta", text: "done" };
+        yield { type: "turn_usage", usage: { inputTokens: 12345, outputTokens: 678 } };
+        yield { type: "done", messageId: "m" };
+      }
+      render(<FloatingChat hasEnabledProvider probeProviders={readyProbe} onStream={withUsage} />);
+
+      const input = screen.getByPlaceholderText("Ask Agent-Jarvis");
+      fireEvent.change(input, { target: { value: "q" } });
+      fireEvent.submit(input.closest("form")!);
+      await screen.findByText("done");
+
+      // 千分位是有意的：六位数字不分组，一眼读不出量级。
+      await waitFor(() => expect(screen.getByText(/本轮 ↑12,345 ↓678/)).toBeInTheDocument());
+
+      // 新对话之后不能还挂着上一轮的数字——那会被当成这一轮的。
+      fireEvent.click(screen.getByRole("button", { name: "新对话" }));
+      await waitFor(() => expect(screen.queryByText(/本轮 ↑/)).not.toBeInTheDocument());
+    });
+
+    it("再次展开时停在最新一条，不是最早那条（TEST-031 ⑤ / REQ-F-054 ⑩）", async () => {
+      // 收起时整段记录从 DOM 移除（REQ-F-019 ②），再展开是一次重新挂载，滚动位置从 0 起算。
+      // 用户 2026-09-13：「每次回到对话框，要滑到最新的那消息，也就是最底，而不是最初。」
+      const scrolls: number[] = [];
+      const { container } = render(
+        <FloatingChat hasEnabledProvider probeProviders={readyProbe} onStream={answer} />
+      );
+      const input = screen.getByPlaceholderText("Ask Agent-Jarvis");
+      fireEvent.change(input, { target: { value: "q" } });
+      fireEvent.submit(input.closest("form")!);
+      await screen.findByText("the answer");
+
+      fireEvent.click(screen.getByRole("button", { name: "收起对话" }));
+      expect(container.querySelector(".floating-chat__messages")).toBeNull();
+
+      // jsdom 不实现滚动，所以记录调用本身：断言的是「展开之后又滚了一次到底」。
+      const proto = window.HTMLElement.prototype as unknown as {
+        scrollTo?: (options: { top: number }) => void;
+        scrollHeight: number;
+      };
+      const originalScrollTo = proto.scrollTo;
+      const heightDescriptor = Object.getOwnPropertyDescriptor(proto, "scrollHeight");
+      Object.defineProperty(proto, "scrollHeight", { configurable: true, value: 4321 });
+      proto.scrollTo = (options: { top: number }) => void scrolls.push(options.top);
+      try {
+        fireEvent.click(screen.getByRole("button", { name: "展开对话" }));
+        expect(screen.getByText("the answer")).toBeInTheDocument();
+      } finally {
+        proto.scrollTo = originalScrollTo;
+        if (heightDescriptor) {
+          Object.defineProperty(proto, "scrollHeight", heightDescriptor);
+        } else {
+          delete (proto as { scrollHeight?: number }).scrollHeight;
+        }
+      }
+
+      // 改前：消息没变，只依赖 messages 的效果不会再跑，展开后停在最早一条。
+      expect(scrolls).toContain(4321);
+    });
+
     it("collapsing hides the transcript but keeps the conversation (TEST-031 ②③)", async () => {
       const requests: ChatStreamRequest[] = [];
       async function* onStream(r: ChatStreamRequest) {

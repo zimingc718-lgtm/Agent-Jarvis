@@ -1,4 +1,6 @@
 import type { Store } from "../store";
+import { DocumentPathError, SETTING_DOCUMENT_ROOTS } from "../documents";
+import { archiveInsight, SETTING_ARCHIVE_DIR, type ArchiveFormat } from "../insight-export";
 import { describeArgsProblem, TOOL_PRIORITY, type ToolDescriptor } from "./registry";
 
 /** Hard cap on one insight's body (REQ-F-050 ②). Appending past it is refused, not clipped. */
@@ -240,5 +242,63 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
     },
   };
 
-  return [home, board, insight, save];
+  const archive: ToolDescriptor = {
+    name: "archive_insight",
+    priority: TOOL_PRIORITY.normal,
+    description:
+      "把一份洞察报告归档进本地文档库。参数 insightId 为报告 id，format 可选 md（默认，正文转 Markdown 并带元数据头）或 html（原样）。" +
+      "归档后的文件立刻可被 search_documents / read_document 读到。",
+    parameters: {
+      type: "object",
+      properties: {
+        insightId: { type: "string", description: "洞察 id" },
+        format: { type: "string", enum: ["md", "html"], description: "归档格式，默认 md" },
+      },
+      required: ["insightId"],
+    },
+    // 归档目录没配就不注册：一个注册了却每次都失败的工具，比不注册更浪费一轮（REQ-NF-008 ④）。
+    available: () => Boolean((store.getSetting(SETTING_ARCHIVE_DIR) ?? "").trim()),
+    async execute(args, context, raw) {
+      const insightId = typeof args.insightId === "string" ? args.insightId.trim() : "";
+      if (!insightId) {
+        const problem = describeArgsProblem(raw ?? "", args, ["insightId"]) ?? "缺少参数 insightId。";
+        return { ok: false, content: problem, summary: "参数缺失" };
+      }
+      const format: ArchiveFormat = args.format === "html" ? "html" : "md";
+      const record = store.getInsight(insightId);
+      // 与 show_insight 同一条归属判定：insights 表没有 user_id，所有权来自它挂的会话。
+      const owner = record ? store.getConversationForUser(context.userId, record.conversationId) : null;
+      if (!record || !owner) {
+        return {
+          ok: false,
+          content: `找不到 id 为 ${insightId} 的洞察，或它不属于当前用户。`,
+          summary: `洞察不可用：${insightId}`,
+        };
+      }
+      try {
+        const result = await archiveInsight({
+          insightId: record.id,
+          conversationId: record.conversationId,
+          html: record.html,
+          createdAt: record.createdAt,
+          format,
+          archiveSetting: store.getSetting(SETTING_ARCHIVE_DIR),
+          rootsSetting: store.getSetting(SETTING_DOCUMENT_ROOTS),
+        });
+        return {
+          ok: true,
+          content: `已归档为 ${result.id}（${Math.max(1, Math.round(result.bytes / 1024))} KB，${result.format}）。` +
+            `它现在是本地文档库里的一份文件，可用 read_document 以该标识读回。`,
+          summary: `已归档：${result.id}`,
+        };
+      } catch (error) {
+        // 失败必须说清下一步怎么做（REQ-F-180 ③）：归档失败几乎总是「目录没配好」，
+        // 而「未写入」三个字帮不了任何人。
+        const message = error instanceof DocumentPathError ? error.message : "归档失败。";
+        return { ok: false, content: message, summary: "归档失败" };
+      }
+    },
+  };
+
+  return [home, board, insight, save, archive];
 }

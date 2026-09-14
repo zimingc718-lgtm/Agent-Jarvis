@@ -13,7 +13,7 @@
  * So this checks the bytes the server actually returns (原则 12, real entry).
  *
  * Exit codes — a skip must never look like a pass (TEST-058 ③):
- *   0  PASS  the served CSS carries compiled utilities
+ *   0  PASS  the served CSS carries compiled utilities AND the served build is current
  *   1  FAIL  it does not — the server predates the build config, restart it
  *   2  SKIP  nothing is listening; stated explicitly, not silently green
  *
@@ -36,6 +36,44 @@ export function analyseCss(css) {
   const missing = REQUIRED.filter((marker) => !marker.re.test(css)).map((m) => m.name);
   const unprocessed = UNPROCESSED.test(css);
   return { ok: missing.length === 0, missing, unprocessed, bytes: css.length };
+}
+
+/**
+ * 服务器供的提交与磁盘上的 HEAD 是否一致（DEC-210 ①）。
+ *
+ * 样式检查守的是「构建配置没生效」；这一条守的是「构建本身是旧的」。后者在 2026-09-13
+ * 真的发生过：编译 worker 崩掉后服务器继续供旧构建，样式一切正常，只是新写的东西一个
+ * 都不在——而当时没有任何一处检查会说话。
+ */
+export function analyseBuild(html, headSha) {
+  const served = /<meta[^>]+name="jarvis-build"[^>]+content="([^"]*)"/.exec(html)?.[1]
+    ?? /<meta[^>]+content="([^"]*)"[^>]+name="jarvis-build"/.exec(html)?.[1]
+    ?? null;
+  if (served === null) return { state: "absent" };
+  if (!served) return { state: "unknown" };
+  if (!headSha) return { state: "no-head", served };
+  return { state: served === headSha ? "current" : "stale", served, head: headSha };
+}
+
+export function describeBuild(result) {
+  switch (result.state) {
+    case "current":
+      return `PASS served build matches HEAD (${result.served.slice(0, 8)})`;
+    case "stale":
+      return (
+        `FAIL the server is serving an older build: it was built from ${result.served.slice(0, 8)}, ` +
+        `HEAD is ${result.head.slice(0, 8)}.\n` +
+        "  Everything you are looking at in the browser predates your recent commits.\n" +
+        "  Production mode has no hot reload: stop the process, `npm run build:local`, then `npm run serve:local`.\n" +
+        "  In dev mode, stopping the process and `npm run dev` is enough."
+      );
+    case "absent":
+      return "FAIL the page carries no jarvis-build meta — this server predates the build stamp itself; restart it.";
+    case "unknown":
+      return "SKIP the build stamp is empty (no git available where the server started); nothing to compare.";
+    default:
+      return "SKIP cannot read HEAD here; nothing to compare the served build against.";
+  }
 }
 
 export function describe(result) {
@@ -102,7 +140,21 @@ async function main() {
 
   const result = analyseCss(combined);
   console.log(`${describe(result)}\n  source: ${url} (${hrefs.length} stylesheet(s))`);
-  return result.ok ? 0 : 1;
+
+  // 版本戳（DEC-210 ①）。样式对了不代表构建是新的——这两件事分开报。
+  let head = "";
+  try {
+    const { execSync } = await import("node:child_process");
+    head = execSync("git rev-parse HEAD", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  } catch {
+    head = "";
+  }
+  const build = analyseBuild(html, head);
+  console.log(`  ${describeBuild(build)}`);
+
+  if (!result.ok) return 1;
+  if (build.state === "stale" || build.state === "absent") return 1;
+  return 0;
 }
 
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith("check-dev-server.mjs")) {

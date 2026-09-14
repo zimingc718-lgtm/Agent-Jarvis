@@ -354,11 +354,19 @@ export async function* sendProviderStream(input: SendProviderStreamInput): Async
  * plenty of local OpenAI-compatible servers accept a `tools` array with a 200 and quietly
  * ignore it. The only honest probe is a real completion that should force a call.
  */
+/**
+ * 这个 (Provider, 模型) 会不会真的调工具（REQ-F-040 ②）。
+ *
+ * **失败不是结论**（DEC-260）：超时、非 2xx、抛异常一律回 `unknown`，只有在对方正常应答、
+ * 而模型没有发出 tool_calls 时才回 `no`。原因是 `no` 会被写进库并在此后每一轮生效
+ * （`toolsUsable = support !== "no"`），于是一次网络抖动就能把工具能力永久关掉——
+ * 2026-09-14 实测两个 Provider 都被这样关掉了，而它们都支持工具调用。
+ */
 export async function probeToolSupport(
   config: { baseUrl: string; secret: string | null },
   model: string,
   fetcher: typeof fetch = fetch
-): Promise<"yes" | "no"> {
+): Promise<"yes" | "no" | "unknown"> {
   const url = `${config.baseUrl.replace(/\/$/, "")}/chat/completions`;
   const headers = new Headers({ "content-type": "application/json" });
   if (config.secret) {
@@ -389,15 +397,18 @@ export async function probeToolSupport(
       }),
     });
     if (!response.ok) {
-      return "no";
+      // 对方拒绝了这次请求（限流、参数不被接受、余额不足……），这说明不了它会不会调工具。
+      return "unknown";
     }
     const body = (await response.json()) as {
       choices?: Array<{ message?: { tool_calls?: unknown[] } }>;
     };
     const calls = body.choices?.[0]?.message?.tool_calls;
+    // 只有走到这里才是真结论：对方正常应答了，而模型没有发出 tool_calls。
     return Array.isArray(calls) && calls.length > 0 ? "yes" : "no";
   } catch {
-    return "no";
+    // 超时或网络异常。同上：不知道，不是不支持。
+    return "unknown";
   }
 }
 
