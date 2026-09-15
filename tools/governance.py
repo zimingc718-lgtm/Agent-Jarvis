@@ -97,11 +97,13 @@ IGNORED_DIR_PREFIXES = (".next-",)
 # `verify` went red on a tree that was otherwise clean. Matching the full prefix rather
 # than the bare name keeps a directory that merely happens to be called `worktrees`
 # elsewhere in the project under control. Mirrors the `.gitignore` entry.
-# 用户的本地资料库。它是**产品的数据**，不是产品的源码：应用把归档写进去、OneDrive
-# 往里同步，一分钟就能多出几十个文件。2026-09-15 一次 snapshot 把它 256 个文件（253 MB）
-# 扫进基线，随后 `verify` 立刻又因为同步续写的两个文件报 UNBASELINED——受控清单不能
-# 跟着一个活的数据目录跑。与 `.gitignore` 的那条一一对应；同样只匹配仓库根下的这一个，
-# 别处若真有一个叫「资料库」的目录仍然受控。
+# 用户的本地资料库。它是**产品的数据**，不是产品的源码。2026-09-15 一次 snapshot 把它
+# 256 个文件（253 MB）扫进基线，随后 `verify` 立刻又因为续写的两个文件报 UNBASELINED——
+# 受控清单不能跟着一个内容目录跑：往里加一份资料是内容动作，不该要求走一次快照仪式。
+#
+# 注意它**进版本库**（用户 2026-09-15 裁定，INPUT-028）：版本库范围与受控范围是两件事，
+# 前者由 git 管、后者由这份清单管。只匹配仓库根下的这一个，别处若真有一个叫「资料库」
+# 的目录仍然受控。
 IGNORED_REL_PREFIXES = ((".claude", "worktrees"), ("资料库",))
 
 IGNORED_FILE_NAMES = {

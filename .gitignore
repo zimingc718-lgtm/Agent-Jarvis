@@ -34,6 +34,3 @@ Thumbs.db
 
 # 会话工作区：另一个会话在这里开 worktree，不该进版本库
 .claude/worktrees/
-
-# 用户的本地资料库（应用归档 + OneDrive 同步，不进版本库）
-资料库/
