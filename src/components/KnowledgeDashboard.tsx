@@ -211,17 +211,31 @@ function SignalIcon({ className }: { className: string }) {
   );
 }
 
+/**
+ * 缺省的取数与可见性判定，**提到模块层**以保住函数身份（CR-20260915-board-tick-burst）。
+ *
+ * 此前这四个写成参数默认值 `loadBoard = () => …`——参数默认值在每次渲染都是一个新函数，
+ * 而它们全在 effect 的依赖里。于是每次渲染都重跑三个 effect：看板与总览各重取一次、
+ * 巡检 tick 立刻再发一次。2026-09-15 用真浏览器打开看板，一挂载就连发十几个
+ * `POST /api/entities/sweep`——那正是注释里说「不该从隐藏标签页去打别人服务器」时
+ * 想避免的形状，只是这次打的是自己的服务器。
+ */
+const defaultLoadBoard = () => getJson<DashboardData>("/api/entities", EMPTY_BOARD);
+const defaultLoadOverview = () => getJson<OverviewData>("/api/knowledge/overview", EMPTY_OVERVIEW);
+const defaultLoadSweep = () => getJson<SweepState>("/api/entities/sweep", EMPTY_SWEEP);
+const defaultIsVisible = () => typeof document === "undefined" || document.visibilityState === "visible";
+
 export function KnowledgeDashboard({
   initialData = EMPTY_BOARD,
   initialOverview = EMPTY_OVERVIEW,
-  loadBoard = () => getJson<DashboardData>("/api/entities", EMPTY_BOARD),
-  loadOverview = () => getJson<OverviewData>("/api/knowledge/overview", EMPTY_OVERVIEW),
+  loadBoard = defaultLoadBoard,
+  loadOverview = defaultLoadOverview,
   act = actViaApi,
   onAsk,
-  loadSweep = () => getJson<SweepState>("/api/entities/sweep", EMPTY_SWEEP),
+  loadSweep = defaultLoadSweep,
   saveSweep = saveSweepViaApi,
   runSweepRound = runSweepViaApi,
-  isVisible = () => typeof document === "undefined" || document.visibilityState === "visible",
+  isVisible = defaultIsVisible,
 }: Props) {
   const [board, setBoard] = useState<DashboardData>(initialData);
   const [overview, setOverview] = useState<OverviewData>(initialOverview);
