@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-13",
+  "generated_at": "2026-09-15",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
@@ -58,7 +58,9 @@
     "CR-20260912-runtime-visibility",
     "CR-20260912-context-degrade",
     "CR-20260912-skill-report-bridge",
-    "CR-20260912-skill-paging"
+    "CR-20260912-skill-paging",
+    "CR-20260915-library-adoption",
+    "CR-20260915-library-ignore"
   ],
   "tests": [
     {
@@ -1215,6 +1217,40 @@
       "real_entry": false,
       "date": "2026-09-14",
       "notes": "路线级未执行记账（DEC-300）。三例全绿：①记录里有别的证据时，自陈未执行的那条路线仍被点名——今天三次盲区都是被 if ran 吞掉的，这是本次唯一有鉴别力的断言；②每条路线都自陈未执行 → 不再要求记录级那一行且不判红；③没写路线声明的仍按老规矩 → 无证据且无记录级交代时 FAIL。全套 114 例绿。本仓库全量迁移三条：scheduled-sweep CP-4/CP-5、turn-budget CP-4；账面剩余项由「1 条记录」变成「3 条路线」——数字变大了，看见的东西才是真的。"
+    },
+    {
+      "id": "TEST-390",
+      "result": "PASS",
+      "command": "npx vitest run tests/library.test.ts",
+      "real_entry": false,
+      "date": "2026-09-15",
+      "notes": "资料库采纳登记（REQ-F-220、DEC-310）。8 条：清单 BOM + 引号内逗号、默认全部待采纳、采纳写卡 / 撤回删卡、拒绝不写卡、重复裁定落 unchanged、未知 id 抛 404、登记文件坏掉退回全部待采纳、.gitattributes 有 `资料库/** -text`。"
+    },
+    {
+      "id": "TEST-400",
+      "result": "PASS",
+      "command": "npx vitest run tests/library-routes.test.ts",
+      "real_entry": false,
+      "date": "2026-09-15",
+      "notes": "资料库两条路由。4 条：GET 计数不随筛选变、POST 逐条裁定与 unchanged、400/404、未登录 401。环境坑：夹具目录若取名「资料库」，beforeEach 里反复 rmSync(recursive) 会让 vitest worker 直接死掉（ERR_IPC_CHANNEL_CLOSED，无结果无堆栈）；夹具改 ASCII 名即全绿。"
+    },
+    {
+      "id": "TEST-410",
+      "result": "PASS",
+      "command": "npx vitest run tests/library-panel.test.tsx  +  node scripts/probe-library-panel.mjs",
+      "real_entry": true,
+      "entry": "user",
+      "date": "2026-09-15",
+      "notes": "审批面板（REQ-F-220 ③⑤）。单测 5 条：默认只看待采纳、逐条通过带一个 id、「本组全部通过」带的是每一条的具体 id、已采纳视图给撤回入口且不给批量、失败显示服务端原话。 **真实入口**：用户自己那台（build:local + serve:local，端口 3000），真实可见 Chromium——对话框入口唤起面板 → 通过一条、拒绝一条 → 刷新后仍在（258 → 待采纳 254 / 已采纳 2 / 已拒绝 2）。验毕已把探针改过的 5 条全部还原为待采纳。"
+    },
+    {
+      "id": "TEST-420",
+      "result": "PASS",
+      "command": "npx vitest run tests/library-gate.test.ts  +  node scripts/probe-library-chat.mjs",
+      "real_entry": true,
+      "entry": "user",
+      "date": "2026-09-15",
+      "notes": "采纳闸与网页存档（REQ-F-230）。单测 5 条：待采纳一份不露出**且报数**、采纳后可见可检索、未采纳读不了但说清去处、网页存档读得出正文、撤回后立刻又读不到。 **真实入口**（用户自己那台 + 真实 Provider）：同一个问题，采纳前模型答「待采纳……在动态屏的『资料库』面板里把它采纳」，采纳后读出原文头两行（`_辅助_bulletin.txt`）；同一对照在 165 KB 的网页存档 `aidc-grid.html` 上再跑一遍，采纳后读出「AI 数据中心与电网 / 七项核心判断」——CP-6 同此验毕。"
     }
   ],
   "executed_commands": [
@@ -1459,7 +1495,10 @@
     "npx vitest run  (80 files / 687 tests passed)",
     "npx tsc --noEmit  (0)",
     "npm run test:ui-contract  (53 passed / 0 failed)",
-    "npm run build:local  →  npm run serve:local  (生产构建重启，按需编译路由 /api/knowledge 与 /api/entities 均 200)"
+    "npm run build:local  →  npm run serve:local  (生产构建重启，按需编译路由 /api/knowledge 与 /api/entities 均 200)",
+    "npm run verify:all  (87 files / 764 tests passed)",
+    "node scripts/probe-library-panel.mjs  (PASS 审批在真实入口上生效，且刷新后仍在)",
+    "node scripts/probe-library-chat.mjs  (PASS 采纳前后对话里的答案确实不同；文本层与网页存档各跑一遍)"
   ],
   "known_warnings": [
     {
