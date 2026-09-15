@@ -647,6 +647,66 @@ class GovernanceCliTests(unittest.TestCase):
         self.assertEqual(code, 0, output)
         self.assertIn("REAL_ENTRY_DECLARED_UNRUN", output)
 
+    # DEC-300 — 逐路线的未执行声明
+    def _cr_with_routes(self, second_detect: str) -> str:
+        """两条真实入口路线：CP-1 有证据，CP-2 的说法由调用方给。"""
+        return (
+            "# CR-2099-demo\n\n"
+            "- 影响测试: TEST-999\n"
+            "- R1 终裁: 已完成 | 用户 | 2026-09-14\n"
+            "\n## 变化点登记\n\n"
+            "| CP | 来源角色 | 一句话 | 关联 ID | 类型 | 门 | 发现方式 |\n"
+            "|---|---|---|---|---|---|---|\n"
+            "| CP-1 | 产品 | demo | TEST-999 | 新增 | 双向 | 真实入口：跑一次就知道 |\n"
+            f"| CP-2 | 产品 | demo | TEST-999 | 新增 | 双向 | {second_detect} |\n\n"
+        )
+
+    def test_a_route_that_says_it_did_not_run_is_named_even_when_the_record_has_evidence(self) -> None:
+        """记录里有别的证据，也要点名自陈未执行的那条路线。
+
+        2026-09-14 撞到三次：`if ran` 一成立，记录里写的「仅剩 CP-4」就再也没人看——
+        于是想让它可见，只能不给已有的证据打勾，用瞒报一件事换另一件事可见。
+        """
+        detect = "真实入口：要连续用几天（未执行：观察窗刚打开，一轮看不出来）"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_with_routes(detect))
+            self._with_evidence(root, real_entry=True)   # CP-1 的证据
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("REAL_ENTRY_ACCOUNTED", output)     # 记录确实有证据
+        self.assertIn("REAL_ENTRY_ROUTE_UNRUN", output)   # 而那条路线照样被点名
+        self.assertIn("CP-2", output)
+
+    def test_routes_that_all_say_they_did_not_run_need_no_record_level_line(self) -> None:
+        """每条路线都自陈未执行时，记录不必再写一遍——账已经逐条记过了。"""
+        detect = "真实入口：要连续用几天（未执行：观察窗刚打开）"
+        cr = self._cr_with_routes(detect).replace(
+            "| CP-1 | 产品 | demo | TEST-999 | 新增 | 双向 | 真实入口：跑一次就知道 |",
+            "| CP-1 | 产品 | demo | TEST-999 | 新增 | 双向 | 真实入口：另一条（未执行：同上） |",
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, cr)
+            self._with_evidence(root, real_entry=False)
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 0, output)
+        self.assertIn("REAL_ENTRY_ROUTE_UNRUN", output)
+        self.assertNotIn("REAL_ENTRY_UNACCOUNTED", output)
+
+    def test_a_route_without_the_marker_still_needs_the_record_level_account(self) -> None:
+        """没写路线级声明的，仍按老规矩：要么有证据，要么记录级明说没跑。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._project_with_cp_cr(root, self._cr_with_routes("真实入口：没人说它跑没跑"))
+            self._with_evidence(root, real_entry=False)
+            code, output = governance.run(["check-real-entry", "--root", directory])
+
+        self.assertEqual(code, 1, output)
+        self.assertIn("REAL_ENTRY_UNACCOUNTED", output)
+
     # DEC-270 — 批准状态登记与输入状态块
     def _doc_with_response(self, root: Path, approval_body: str) -> None:
         """一份说明书：有一个变更响应节，批准状态内容由调用方给。"""
