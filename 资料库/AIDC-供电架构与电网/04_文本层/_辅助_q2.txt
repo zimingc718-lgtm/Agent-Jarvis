@@ -1,0 +1,91 @@
+--- PAGE 1 ---
+Large Loads Action Plan Q2 2026 Update 
+Past, Current, and Future Actions to Address an Emerging Risk 
+July 2026 
+LLAP
+Second Quarter Actions
+Level 3 Essential Action Alert Issued 
+On May 4, NERC released a Level 3 Essential Action Alert, Computational Load Modeling, Studies, Instrumentation, 
+Commissioning, Operations, Protection, and Control, which outlined seven  actions registered  entities  must 
+implement to address immediate risks posed by computational loads interfacing with the BPS. The Level 3 alert was 
+issued as NERC observed customer-initiated large load reductions and signiﬁcant oscillations that occur in seconds, 
+leaving little or no room for real-time responses and posing a threat to BPS reliabilit y. The deadline for registered 
+entities to submit their responses is August 3, 2026.   
+An informational webinar is scheduled on July 8 to share frequently asked questions and answer inquiries. 
+Reliability Guideline Published 
+On May 1, NERC published a Reliability Guideline: Risk Mitigation for Emerging Large Loads , recommend ing 
+actions for traditional utilities and grid operators, and the companies behind these emerging large loads 
+including equipment manufacturers. The goal is to ensure that as more industrial-scale consumers connect to the 
+grid, they actively participate in practices that protect grid stability. These steps highlight that proactive 
+planning and participation can enable even more of these facilities to come online reliably and quickly. Although 
+non-binding, NERC strongly urges all relevant entities to adopt the recommended risk mitigation strategies 
+outlined in the Reliability Guideline.   
+Watch the Video on 
+NERC's Large Loads Action Plan
+--- PAGE 2 ---
+Registration Criteria for Computational Loads  
+NERC will deﬁne which entities, based on speciﬁc physical and electrical criteria, would be required to register with 
+NERC and comply with its Reliability Standards to address risks associated with large computational loads. To 
+achieve this, NERC is revising its Rules of Procedure, Appendix 5B Statement of Compliance Registry Criteria, to 
+account for Computational Load Entities. An initial draft was posted for a stakeholder 45-day comment period on 
+April 1, 2026, on the Proposed Changes to Rules of Procedure  web page. The initial comments on the proposed 
+revisions included meaningful insights that NERC will review and incorporate into the next comment period, 
+anticipated in August 2026.  
+An informational webinar is scheduled on July 13 to provide updates on the progress of this development eﬀort 
+and share information about the registration process for entities that may fall under these new criteria.   
+Reliability Standards 
+NERC will revise and adopt new Reliability Standards to deﬁne computational loads and establish measurable 
+requirements for newly registered entities. NERC posted a Standard Authorization Request (SAR) for comment in 
+April that included new deﬁnitions for use in standards for computational loads and a foundational standard. Initial 
+comments were reviewed, and the Standards Committee approved a ﬁnal SAR and authorized the drafting of a 
+Reliability Standard in May. The proposed Reliability Standards will be issued in August for a 45-day comment 
+period, with an additional comment period to follow in the fourth quarter. The Reliability Standard is targeted for 
+ﬁnal Board approval and adoption in December.  
+Actions Taken by NERC to Address Large Loads on the Grid 
+Q2 2026
+Q1 2026
+• Posted a draft registry criteria for comments (April)  
+• Posted a Standards Authorization Request for comments (April) 
+• Published a Reliability Guideline: Risk Mitigation for Large Loads (May) 
+• Issued a Level 3 Alert for Essential Actions (May) 
+• Initiated a standards drafting (May) 
+• Published Incident Review: Voltage-Sensitive Crypto Load Reductions (January) 
+• Hosted Emerging Large Loads Technical Conference (February) 
+• Published Assessment of Gaps in Existing Practices, Requirements, and Reliability 
+Standards for Emerging Large Loads (March) 
+• Published Aggregated Report on NERC Level 2 Alert (March)
+• Appointed Standards Drafting Team (March) 
+• Hosted a webinar on the Large Load Action Plan (March) 
+• Submitted a supplemental letter to FERC detailing an accelerated action plan (March)
+--- PAGE 3 ---
+Upcoming Engagement Opportunities 
+Large Loads Working Group 
+The Large Loads Working Group (LLWG) focuses on understanding the reliability impacts associated with emerging 
+large loads. This includes identifying gaps in existing processes and recommending enhancements to planning 
+and operations. The group will meet on July 16 and October 1. To join the LLWG, please contact Evan Mickelson.  
+Load Modeling Working Group  
+The Load Modeling Working Group (LMWG) actively engages stakeholders through technical presentations and 
+discussions focused on modeling loads. The next LMWG meeting is scheduled for July 14 and the agenda includes 
+approval for the Data Center Load Modeling Technical Reference, and the endorsement of the PERC2 model 
+speciﬁcation. Additionally, a two-day workshop  is scheduled for September 15–16. To join the working group, 
+please ﬁll this form.
+Background: Addressing Large Loads on the Grid 
+An increasing number of large commercial and industrial loads are rapidly connecting to the BPS. Computational 
+loads, such as data centers (including cryptocurrency and artiﬁcial intelligence), present unique challenges in 
+forecasting and planning for increased demand. To begin understanding large loads and identifying eﬀective 
+pathways for their integration, NERC established the Large Loads Task Force in August 2024, now the Large Loads 
+Working Group (LLWG) , and developed a work plan . Through extensive analysis, report development, and 
+engagement conducted to date, NERC has determined that it must act now to mitigate the risks associated with 
+large computational loads.  
+Large Loads
+Resources
+2025
+• Published an Incident Review: Considering Simultaneous Voltage-Sensitive Load Reductions (January)
+• Hosted two workshops on mitigating risks from emerging large loads (June/July)
+• Published Characteristics and Risks of Emerging Loads (July)
+• Hosted a Large Loads panel at NERC’s Technical Session (August)
+• Published a Level 2 NERC Alert urging industry participants to take speciﬁc actions. (September)
+• Hosted a Load Modeling Workshop (October)
+• Published a draft Reliability Guideline for comments (November)
+• Submitted comments to the Federal Energy Regulatory Commission’s Advance Notice of Proposed
+Rulemaking (ANOPR) addressing the reliable interconnection of large loads (November).

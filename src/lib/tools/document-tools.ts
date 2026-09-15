@@ -9,6 +9,7 @@ import {
   SETTING_DOCUMENT_ROOTS,
   type DocumentRoot,
 } from "../documents";
+import { libraryRoot, LIBRARY_LABEL, readLedger } from "../library";
 import { BUDGET_SHARES, budgetTokens, truncateToTokens } from "./budget";
 import { describeArgsProblem, TOOL_PRIORITY, type ToolContext, type ToolDescriptor } from "./registry";
 
@@ -26,8 +27,54 @@ import { describeArgsProblem, TOOL_PRIORITY, type ToolContext, type ToolDescript
 const NOT_CONFIGURED =
   "尚未配置本地文档目录，所以我读不到你机器上的原文档。请在 ☰ 菜单「本地文档」中添加一个文件夹（例如放规格书、标准、论文的那个目录），之后我就能检索和阅读其中的原件。";
 
+/**
+ * 用户配置的文档根，**外加**资料库（CR-20260915-library-adoption CP-5）。
+ *
+ * 资料库在仓库里、随版本走，不该要求用户再去「本地文档」里手工添加一遍——那是一步只会
+ * 被忘掉的配置。它与用户自己配的目录有一处不同：里面的文件默认**不可见**，见下面的闸。
+ */
 function rootsOf(store: Store): DocumentRoot[] {
-  return parseRoots(store.getSetting(SETTING_DOCUMENT_ROOTS));
+  const configured = parseRoots(store.getSetting(SETTING_DOCUMENT_ROOTS));
+  const library = libraryRoot();
+  if (!library || configured.some((root) => root.label === library.label || root.path === library.path)) {
+    return configured;
+  }
+  return [...configured, library];
+}
+
+/**
+ * 采纳闸（CP-4）：资料库里只有**已采纳**的文件能被对话看见。
+ *
+ * 被挡住的**要报数**，不能静默过滤——「没有结果」和「有 12 条但还没审」对用户是两件完全
+ * 不同的事，而只有后者是他动动手就能解决的。这与知识库 `pending/` 的口径一致
+ * （REQ-F-046 ③），也是本项目对「看不见的能力等于不存在」的一贯处理。
+ */
+async function adoptionGate(): Promise<{
+  visible: <T extends { root: string; relPath: string }>(items: T[]) => { kept: T[]; blocked: number };
+  blockedNote: (blocked: number) => string;
+}> {
+  const ledger = await readLedger();
+  return {
+    visible(items) {
+      let blocked = 0;
+      const kept = items.filter((item) => {
+        if (item.root !== LIBRARY_LABEL) {
+          return true;
+        }
+        if (ledger[item.relPath]?.status === "adopted") {
+          return true;
+        }
+        blocked += 1;
+        return false;
+      });
+      return { kept, blocked };
+    },
+    blockedNote(blocked) {
+      return blocked > 0
+        ? `\n\n（资料库里另有 ${blocked} 份相关资料还没审批，未展示。要用的话，在动态屏的「资料库」面板里通过它们。）`
+        : "";
+    },
+  };
 }
 
 function capFor(context: ToolContext): number {
@@ -61,7 +108,12 @@ export function createDocumentTools(store: Store): ToolDescriptor[] {
         return { ok: false, content: problem, summary: "参数缺失" };
       }
       const limit = typeof args.limit === "number" ? args.limit : 5;
-      const { hits, scanned, pending } = await searchDocuments(roots, query, limit);
+      const gate = await adoptionGate();
+      // 多要一些再过闸，否则闸挡掉几条就只剩零星结果。
+      const raw_ = await searchDocuments(roots, query, Math.min(limit * 4, 80));
+      const { kept, blocked } = gate.visible(raw_.hits);
+      const { scanned, pending } = raw_;
+      const hits = kept.slice(0, limit);
       if (scanned === 0) {
         return {
           ok: true,
@@ -72,7 +124,7 @@ export function createDocumentTools(store: Store): ToolDescriptor[] {
       if (hits.length === 0) {
         return {
           ok: true,
-          content: `在 ${scanned} 份本地文档里没有检索到「${query}」。可以换个说法，或用 list_documents 看看都有哪些文件。`,
+          content: `在 ${scanned} 份本地文档里没有检索到「${query}」。可以换个说法，或用 list_documents 看看都有哪些文件。${gate.blockedNote(blocked)}`,
           summary: `本地文档无结果：${query}`,
         };
       }
@@ -80,7 +132,9 @@ export function createDocumentTools(store: Store): ToolDescriptor[] {
         (hit, index) =>
           `${index + 1}. ${hit.id}\n   ${hit.name}（${hit.ext.slice(1).toUpperCase()}，${Math.round(hit.bytes / 1024)} KB，改于 ${hit.modifiedAt.slice(0, 10)}，命中：${hit.matched === "content" ? "正文" : "文件名"}）\n   ${hit.snippet}`
       );
-      const note = pending > 0 ? `\n\n（本次只索引了一部分，还有 ${pending} 份较大的文件未读入；再检索一次会继续补上。）` : "";
+      const note =
+        (pending > 0 ? `\n\n（本次只索引了一部分，还有 ${pending} 份较大的文件未读入；再检索一次会继续补上。）` : "") +
+        gate.blockedNote(blocked);
       const { text } = truncateToTokens(
         `在 ${scanned} 份本地文档中命中 ${hits.length} 份：\n${lines.join("\n")}${note}`,
         capFor(context)
@@ -115,6 +169,17 @@ export function createDocumentTools(store: Store): ToolDescriptor[] {
       }
       try {
         const { absPath, relPath, root } = await resolveWithinRoots(id, roots);
+        if (root.label === LIBRARY_LABEL) {
+          const ledger = await readLedger();
+          if (ledger[relPath]?.status !== "adopted") {
+            const state = ledger[relPath]?.status === "rejected" ? "已被拒绝" : "还在待采纳区";
+            return {
+              ok: false,
+              content: `「${relPath}」${state}，按约定审批通过后才能查阅。你可以在动态屏的「资料库」面板里处理它。`,
+              summary: "资料库：未采纳",
+            };
+          }
+        }
         const { stat } = await import("node:fs/promises");
         const info = await stat(absPath);
         const extracted = await extractDocumentText(absPath, info.size);
@@ -155,11 +220,13 @@ export function createDocumentTools(store: Store): ToolDescriptor[] {
         return { ok: false, content: NOT_CONFIGURED, summary: "未配置文档目录" };
       }
       const limit = Math.max(1, Math.min(typeof args.limit === "number" ? args.limit : 30, 100));
-      const metas = await listDocuments(roots);
+      const gate = await adoptionGate();
+      const listed = gate.visible(await listDocuments(roots));
+      const metas = listed.kept;
       if (metas.length === 0) {
         return {
           ok: true,
-          content: "已配置的文档目录里没有可读的文件。支持 PDF、.docx、Markdown、纯文本、CSV、JSON。",
+          content: `已配置的文档目录里没有可读的文件。支持 PDF、.docx、网页存档、Markdown、纯文本、CSV、JSON。${gate.blockedNote(listed.blocked)}`,
           summary: "文档目录为空",
         };
       }
@@ -167,7 +234,9 @@ export function createDocumentTools(store: Store): ToolDescriptor[] {
       const lines = shown.map(
         (meta) => `- ${meta.id}（${Math.round(meta.bytes / 1024)} KB，改于 ${meta.modifiedAt.slice(0, 10)}）`
       );
-      const more = metas.length > shown.length ? `\n（另有 ${metas.length - shown.length} 份未列出，用 search_documents 按关键词找。）` : "";
+      const more =
+        (metas.length > shown.length ? `\n（另有 ${metas.length - shown.length} 份未列出，用 search_documents 按关键词找。）` : "") +
+        gate.blockedNote(listed.blocked);
       const { text } = truncateToTokens(`本机共 ${metas.length} 份可读文档：\n${lines.join("\n")}${more}`, capFor(context));
       return { ok: true, content: text, summary: `列出 ${shown.length}/${metas.length} 份本地文档` };
     },

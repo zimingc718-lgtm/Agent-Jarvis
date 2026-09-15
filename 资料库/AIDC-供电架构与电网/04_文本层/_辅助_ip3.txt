@@ -1,0 +1,194 @@
+----- PAGE 1 -----
+RELIABILITY | RESILIENCE | SECURITY  
+POWERING TODAY.  PROTECTING TOMORROW.  
+Implementation Plan 
+Project 2026-02 Computational Loads 
+Computational Load Protection Coordination and Disturbance Monitoring 
+CLO-003-1 
+ 
+Applicable Standard(s)  
+• CLO-003-1 Computational Load Protection Coordination and Disturbance Monitoring 
+ 
+Requested Retirement(s) 
+• None 
+ 
+Prerequisite Standard(s) 
+These standard(s) or definitions must be approved before the Applicable Standard becomes effective:  
+• Computational Load Site (Definition) 
+• Computational Load Owner (Definition) 
+ 
+Applicable Entities  
+• Computational Load Owner 
+• Transmission Owner 
+• Distribution Provider 
+• Generator Owner 
+ 
+New Terms in the NERC Glossary of Terms  
+This section includes all newly defined, revised, or retired terms used or eliminated in the NERC Reliability 
+Standard. New or revised definitions listed below become approved when the proposed standard is approved. 
+When the standard becomes effective, these defined terms will be removed from the individual standard and 
+added to the Glossary.  
+ 
+Proposed New Definition(s): 
+Computational Load Owner (CLO): The entity that owns and maintains a Computational Load Site. 
+ 
+Computational Load Site: One or more buildings, structures, or installations at a single location that: 
+1. primarily contains information technology infrastructure used for: 
+• creating, executing, and delivering software applications and services; 
+• artiﬁcial intelligences training, deployment, and delivery; 
+• cryptocurrency mining; or
+----- PAGE 2 -----
+Implementation Plan | Project 2026-02 | August 2026 2 
+• other computational activities at a data center; and 
+2. is supplied through electrical equipment that is connected to the Bulk-Power System. 
+ 
+Background  
+An increasing number of large commercial and industrial loads are rapidly connecting to the bulk power system. 
+Computational Load Sites, such as data centers (including cryptocurrency and artificial intelligence), present 
+unique challenges in forecasting and planning for increased demand. Specifically Computational Load Sites can 
+be large and have unique operating characteristics, growth patterns, controls, and disturbance response 
+behaviors. These characteristics can pose unique risks to the bulk power system  as detailed in the NERC 
+“Characteristics and Risks of Emerging Large Loads” whitepaper in July of 2025. 
+ 
+Existing Reliability Standards provide important precedents and framework for maintaining the reliability of the 
+bulk power system , but they were not developed specifically for this type of large load with its unique 
+characteristics. The NERC Large Loads Working Group identified gaps in existing  Reliability Standards in 
+“Assessment of Gaps in Existing Practices, Requirements, and Reliability Standards for Emerging Large Loads ” 
+white paper and recommended development of new and/or updated  Reliability Standards to address the 
+unmitigated risks to the bulk power system. This need was also underscored in NERC’s “Aggregated Report on 
+NERC Level 2 Industry Recommendation: Large Load Interconnection, Study, Commissioning, and Operations”. 
+Therefore, Project 2026-02 is establishing Reliability Standard requirements to address the near-term essential 
+actions needed to support the reliable integration of large Computational Load Sites onto the bulk power 
+system. This project serves as a foundation to support C omputational Load Site integration in a manner  that 
+supports a resilient and reliable bulk power system. 
+ 
+Reliability Standard  CLO-003-1, in particular, focuses on Reliability Standard requirements associated with 
+protection coordination and the establishment of disturbance monitoring equipment at Computational Load 
+Sites.  
+ 
+General Considerations 
+Reliability Standard CLO -003-1 is expected to have wide ranging impact on Computational Load Owners, as 
+existing and new Computational Load Sites would be required to have Disturbance Monitoring Equipment and 
+supporting processes for protection coordination. In cases where the Computational Load Owner does not own 
+the main power transformer(s) that supplies a Computational Load Site , the Transmission Owner, Distribution 
+Provider, or Generator Owner would be required to have Disturbance Monitoring Equipment to support fault 
+recording and dynamic disturbance recording data.  A graduated approach to implementation recognizes that 
+progress will be made while attempting to minimize any potential signiﬁcant impact to the entities. The 
+implementation plan takes into account scheduling outages needed to implement fault recording and dynamic 
+disturbance recording capability, as well as the time needed to establish and implement processes for protection 
+coordination. The implementation plan accounts for any increase in requests to vendors to acquire  this 
+technology or capability that could impact implementation timelines for the respective entities. 
+ 
+The ERO enterprise acknowledges that Computational Load Owners are expected to be registered beginning in 
+2027 based on the planned Rules of Procedure modiﬁcations and imminent FERC ﬁling. To ensure an orderly 
+registration and compliance process for these entities, as well as fairness and consistency in the standard’s
+----- PAGE 3 -----
+Implementation Plan | Project 2026-02 | August 2026 3 
+application among similar asset types, this implementation plan provides additional time for new and existing 
+registered entities to come into compliance with Reliability Standard CLO-003-1 under certain circumstances.  
+ 
+This implementation plan provides that Reliability Standard CLO-003-1 would become eﬀective the ﬁrst day of 
+the ﬁrst calendar quarter after regulatory approval, with a phased -in compliance timeline spanning up to 36 
+months following the eﬀective date, depending on the date the Computational Load Site was placed into service. 
+ 
+Below is a demonstration of the phased-in compliance dates for Reliability Standard CLO-003-1: 
+ 
+ 
+Figure 1: Simplified Phased-In Compliance Dates for CLO-003-1 
+ 
+Entities will be required to comply with Requirements R1 through R8 36 months following the eﬀective date of 
+Reliability Standard CLO-003-1 if the Computational Load Sites were in service before the eﬀective date of the 
+standard. If the Computational Load Sites entered service after the eﬀective date of the standard, entities will 
+be required to comply with Requirements R1 through R8 15 months following the eﬀective date of the standard, 
+or the in service date, whichever is later. 
+ 
+As an example, assume the eﬀective date of the CLE-003-1 is April 1, 2027: 
+• For Computational Load Sites in service before April 1, 2027, entities shall comply with Requirements 
+R1 through R8 by April 1, 2030.  
+• For Computational Load Sites in service after April 1, 2027, but on or before July 1, 2028, entities shall 
+comply with Requirements R1 through R8 by July 1, 2028.  
+• For Computational Load Sites in service after July 1, 2028, entities shall comply with Requirements R1 
+through R8 on the in-service date. 
+ 
+If an entity has a n existing Computational Load Site or a Computational Load Site in the advanced stages of 
+development and is unable to comply with the Requirements within the provided timeframe due to 
+circumstances beyond its control, it may request an extension in accordance with the process set forth in this 
+implementation plan.
+----- PAGE 4 -----
+Implementation Plan | Project 2026-02 | August 2026 4 
+Entities shall not be required to comply with Requirements R9 and R10 until nine (9) months after the eﬀective 
+date of Reliability Standard CLO -003-1. These requirements depend on new Registered Entities (i.e., 
+Computational Load Owners) and coordination with existing Registered Entities (Generator Owner, Transmission 
+Owner, Distribution Provider).   
+ 
+ 
+ 
+Effective Date and Phased-In Compliance Dates  
+The effective date[s] for the proposed Reliability Standard  CLO-003-1 is provided below. Where the drafting 
+team identified the need for a longer implementation period for compliance with a particular section of a 
+proposed Reliability Standard (i.e., an entire Requirement or a portion thereof), the additional time for 
+compliance with that section is specified below. The phased- in compliance date for those particular sections 
+represents the date that entities must begin to comply with that particular section of the Reliability Standard, 
+even where the Reliability Standard goes into effect at an earlier date. 
+ 
+Reliability Standard CLO-003-1  
+Where approval by an applicable governmental authority is required, Reliability Standard CLO -003-1 and 
+deﬁnitions of Computational Load Site and Computational Load Owner shall become eﬀective on the ﬁrst day 
+of the ﬁrst calendar quarter after the eﬀective date of the applicable governmental authority’s order approving 
+the standard, or as otherwise provided for by the applicable governmental authority.  
+ 
+Where approval by an applicable governmental authority is not required, the standard shall become eﬀective 
+on the ﬁrst day of the ﬁrst calendar quarter after the date the standard is adopted by the NERC Board of Trustees, 
+or as otherwise provided for in that jurisdiction. 
+ 
+Compliance Date for Reliability Standard CLO-003-1 Requirements R1 – R8 
+For Computational Load Sites in service1 on or before the eﬀective date: 
+Entities shall not be required to comply with Requirements R1 through R8 until 36 months following the eﬀective 
+date of CLO-003-1.  
+ 
+For Computational Load Sites in service after the eﬀective date: 
+Entities shall not be required to comply with Requirements R1 through R8 until 15 months following the eﬀective 
+date of the standard or the in-service date, whichever is later.  
+ 
+Compliance Date for Reliability Standard CLO-003-1 Requirements R9 and R10 
+Entities shall not be required to comply with Requirements R9 and R10 until nine (9) months after the eﬀective 
+date of Reliability Standard CLO -003-1. These requirements depend on new Registered Entities (i.e., 
+Computational Load Owners) and coordination with existing Registered Entities (Generator Owner, Transmission 
+Owner, Distribution Provider).   
+ 
+ 
+1 Consistent with common usage, in -service date means the Computational Load Site is fully ready and available for its intended specific use, 
+including, but not limited to completion of its interconnection.
+----- PAGE 5 -----
+Implementation Plan | Project 2026-02 | August 2026 5 
+Process for Requesting an Extension from  Requirement R1 - R8 Compliance 
+Dates  
+Each Entity with one or more applicable Computational Load Site s in service no later than twelve (12) months 
+after governmental approval of this standard may request an extension from the above-listed compliance dates 
+for Requirements R1-R8 if circumstances beyond its control prevent the installation of Disturbance Monitoring 
+Equipment on one or more of the Computational Load Sites. 
+  
+To request an extension, the entity shall develop and submit to its Compliance Enforcement Authority2 a request 
+for an extension that contains at a minimum the following information:  
+1.1 Identiﬁcation of the Computational Load Site(s) for which the entity requests the extension; 
+1.2 A plan for installing the Disturbance Monitoring Equipment and a timetable for completion;  
+1.3 A description of the circumstances precluding the timely installation of Disturbance Monitoring 
+Equipment and how those circumstances are beyond the control of the entity; and  
+1.4 Any other information the entity deems relevant to the Compliance Enforcement Authority’s 
+consideration of its request.  
+ 
+Circumstances beyond the entity’s control may include supply chain delays associated with the procurement, 
+engineering, installation, or commissioning of disturbance monitoring equipment, inability to secure scheduled 
+outages, or other exceptional circumst ances outside the entity’s control. The entity shall provide any 
+information requested by the Compliance Enforcement Authority to validate the information provided above, 
+including any information speciﬁed by the Compliance Enforcement Authority in a supp orting process 
+document. If the extension request is granted, the entity shall implement the plan in accordance with the 
+provided timetable. Should additional time be required, the entity shall submit an updated request to its 
+Compliance Enforcement Authority.  
+ 
+Requests should be submitted as soon as the entity identiﬁes circumstances impeding the timely 
+implementation of Reliability Standard CLO-003-1, but no later than three (3) months prior to the compliance 
+date for which the entity requests an extension.  
+ 
+2 The extension requests for a non-US Registered Entity should be implemented in a manner that is consistent with, or under the direction of, the 
+applicable governmental authority or its agency in the non-US jurisdiction.

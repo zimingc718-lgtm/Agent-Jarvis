@@ -1,0 +1,951 @@
+----- PAGE 1 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 1 of 19 
+Standard Development Timeline 
+This section is maintained by the drafting team during the development of the standard and will 
+be removed when the standard becomes effective. 
+ 
+Description of Current Draft 
+This is the first draft of proposed standard for the initial formal 30-day comment period.  
+ 
+Completed Actions Date 
+Standards Committee approved Standard Authorization Request 
+(SAR) for posting 
+March 18, 2026 
+SAR posted for comment April 1 - 30, 2026 
+Standards Committee approved Standard Authorization Request 
+(SAR) for formal development 
+May 20, 2026 
+ 
+Anticipated Actions Date 
+30-day formal comment period with 10-day ballot August 19 - September 18, 2026 
+20-day formal comment period with additional ballot October 2026 
+5-day final ballot November 2026 
+Board adoption December 2026
+----- PAGE 2 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 2 of 19 
+New or Modified Term(s) Used in NERC Reliability Standards 
+This section includes all new or modified terms used in the proposed standard that will be 
+included in the Glossary of Terms Used in NERC Reliability Standards upon applicable regulatory 
+approval. Terms used in the proposed standard that are already defined and are not being 
+modified can be found in the Glossary of Terms Used in NERC Reliability Standards. The new or 
+revised terms listed below will be presented for approval with the proposed standard. Upon 
+Board adoption, this section will be removed. 
+ 
+Term(s): 
+Computational Load Operator (CLOP) 
+The entity that operates a Computational Load Site. 
+ 
+Computational Load Owner (CLO) 
+The entity that owns and maintains a Computational Load Site. 
+ 
+Computational Load Site  
+One or more buildings, structures, or installations at a single location that: 
+1. primarily contains information technology infrastructure used for: 
+• creating, executing, and delivering software applications and services; 
+• artificial intelligences training, deployment, and delivery; 
+• cryptocurrency mining; or 
+• other computational activities at a data center; and 
+2. is supplied through electrical equipment that is connected to the Bulk-Power System. 
+ 
+(Modified) Operating Instruction:  
+A command by operating personnel responsible for the Real-time operation of the 
+interconnected Bulk Electric System to change or preserve the state, status, output, or input 
+of an Element of the Bulk Electric System or Facility of the Bulk Electric System or a 
+Computational Load Site. (A discussion of general information and of potential options or 
+alternatives to resolve Bulk Electric System operating concerns is not a command and is not 
+considered an Operating Instruction.)
+----- PAGE 3 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 3 of 19 
+A. Introduction 
+1. Title: Computational Load Operational Data and Communications 
+2. Number: CLO-002-1 
+3. Purpose:  To ensure that each Transmission Operator, Balancing Authority, and 
+Reliability Coordinator has the Computational Load Site data and 
+information it needs to plan, monitor, and assess the reliable operation 
+of the bulk power system; and to establish Interpersonal Communication 
+capabilities at Computational Load Sites with predefined communications 
+protocols to ensure prompt action to prevent or mitigate occurrences 
+that adversely impact the reliability of the bulk power system. 
+4. Applicability: 
+4.1. Functional Entities: 
+4.1.1 Computational Load Owner 
+4.1.2 Computational Load Operator 
+4.1.3 Balancing Authority 
+4.1.4 Transmission Operator 
+4.1.5 Reliability Coordinator 
+4.2. Facilities: 
+4.2.1 Computational Load Sites with a total connected Load greater than or 
+equal to 50 MW that is supplied through electrical equipment connected 
+at a voltage level greater than or equal to 100 kV.  
+5. Effective Date: See Implementation Plan for CLO-002-1.
+----- PAGE 4 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 4 of 19 
+B. Requirements and Measures 
+R1. Each Transmission Operator shall maintain documented specification(s) for the data 
+and information for Computational Load Sites necessary for it to perform its 
+Operational Planning Analyses, Real-time monitoring, and Real-time Assessments. The 
+specification shall include, but not be limited to: [Violation Risk Factor: Lower] [Time 
+Horizon: Operations Planning] 
+1.1. A list of Computational Load Site data and information needed by the 
+Transmission Operator to support its Operational Planning Analyses, Real-time 
+monitoring, and Real-time Assessments, as deemed necessary by the 
+Transmission Operator, and identification of the entities responsible for 
+responding to the specification.  
+1.2. Identification of a mutually agreeable process for resolving conflicts.  
+1.3. Method(s) for the entity identified in Requirement R1, Part 1.1 to provide the 
+data and information that includes, but is not limited to: 
+1.3.1. Specified deadlines or periodicity in which data and information is to be 
+provided; 
+1.3.2. Performance criteria for the availability and accuracy of data and 
+information as applicable; 
+1.3.3. Requirements for necessary model submissions to be consistent with the 
+model submitted for planning purposes, subject to modifications for 
+operations purposes, as applicable; 
+1.3.4. Provisions to update or correct data and information, as applicable or 
+necessary; 
+1.3.5. A mutually agreeable format; and 
+1.3.6. Mutually agreeable method(s) for securely transferring data and 
+information. 
+M1. Each Transmission Operator shall make available its dated, current, in force 
+documented specification(s) for data and information. 
+R2. Each Balancing Authority shall maintain documented specification(s) for the data and 
+information for Computational Load Sites necessary for it to perform its analysis 
+functions, Real-time monitoring, and Near-Term Energy Reliability Assessments. The 
+specification shall include, but not be limited to: [Violation Risk Factor: Lower] [Time 
+Horizon: Operations Planning] 
+2.1. A list of Computational Load Site data and information needed by the Balancing 
+Authority to support its analysis functions, Real-time monitoring, and Near-Term 
+Energy Reliability Assessments, as deemed necessary by the Balancing Authority, 
+and identification of the entities responsible for responding to the specification.  
+2.2. Identification of a mutually agreeable process for resolving conflicts.
+----- PAGE 5 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 5 of 19 
+2.3. Method(s) for the entity identified in Requirement R2, Part 2.1 to provide the 
+data and information that includes, but is not limited to: 
+2.3.1. Specified deadlines or periodicity in which data and information is to be 
+provided; 
+2.3.2. Performance criteria for the availability and accuracy of data and 
+information as applicable; 
+2.3.3. Requirements for necessary model submissions to be consistent with the 
+model submitted for planning purposes, subject to modifications for 
+operations purposes, as applicable; 
+2.3.4. Provisions to update or correct data and information, as applicable or 
+necessary; 
+2.3.5. A mutually agreeable format; and 
+2.3.6. Mutually agreeable method(s) for securely transferring data and 
+information. 
+M2. Each Balancing Authority shall make available its dated, current, in force documented 
+specification(s) for data and information. 
+R3. The Reliability Coordinator shall maintain documented specification(s) for the data 
+and information for Computational Load Sites necessary for it to perform its 
+Operational Planning Analyses, Real-time monitoring, and Real-time Assessments. The 
+specification shall include, but not be limited to: [Violation Risk Factor: Lower] [Time 
+Horizon: Operations Planning] 
+3.1. A list of Computational Load Site data and information needed by the Reliability 
+Coordinator to support its Operational Planning Analyses, Real-time monitoring, 
+and Real-time Assessments, as deemed necessary by the Reliability Coordinator, 
+and identification of the entities responsible for responding to the specification. 
+3.2. Identification of a mutually agreeable process for resolving conflicts.  
+3.3. Method(s) for the entity identified in Requirement R3, Part 3.1 to provide the 
+data and information that includes, but is not limited to: 
+3.3.1. Specified deadlines or periodicity in which data and information is to be 
+provided; 
+3.3.2. Performance criteria for the availability and accuracy of data and 
+information as applicable; 
+3.3.3. Requirements for necessary model submissions to be consistent with the 
+model submitted for planning purposes, subject to modifications for 
+operations purposes, as applicable; 
+3.3.4. Provisions to update or correct data and information, as applicable or 
+necessary;
+----- PAGE 6 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 6 of 19 
+3.3.5. A mutually agreeable format; and 
+3.3.6. Mutually agreeable method(s) for securely transferring data and 
+information. 
+M3. The Reliability Coordinator shall make available its dated, current, in force 
+documented specification(s) for data and information. 
+R4. Each Transmission Operator shall distribute its data and information specification(s) 
+for Computational Load Sites to entities that have data and information required by 
+the Transmission Operator’s Operational Planning Analyses, Real-time monitoring, 
+and Real-time Assessments. [Violation Risk Factor: Lower] [Time Horizon: Operations 
+Planning] 
+M4. Each Transmission Operator shall make available evidence that it has distributed its 
+data specification(s) for Computational Load Sites to entities that have data and 
+information required by the Transmission Operator’s Operational Planning Analyses, 
+Real-time monitoring, and Real-time Assessments. Such evidence could include, but is 
+not limited to, web postings with an electronic notice of the posting, dated operator 
+logs, voice recordings, postal receipts showing the recipient, date and contents, or 
+email records. 
+R5. Each Balancing Authority shall distribute its data and information specification(s) for 
+Computational Load Sites to entities that have data and information required by the 
+Balancing Authority’s analysis functions, Real-time monitoring, and Near-Term Energy 
+Reliability Assessments. [Violation Risk Factor: Lower] [Time Horizon: Operations 
+Planning] 
+M5. Each Balancing Authority shall make available evidence that it has distributed its data 
+specification(s) for Computational Load Sites to entities that have data and 
+information required by the Balancing Authority’s analysis functions, Real-time 
+monitoring, and Near-Term Energy Reliability Assessments. Such evidence could 
+include, but is not limited to, web postings with an electronic notice of the posting, 
+dated operator logs, voice recordings, postal receipts showing the recipient, or email 
+records. 
+R6. The Reliability Coordinator shall distribute its data and information specification(s) for 
+Computational Load Sites to entities that have data and information required by the 
+Reliability Coordinator’s Operational Planning Analyses, Real-time monitoring, and 
+Real-time Assessments. [Violation Risk Factor: Lower] [Time Horizon: Operations 
+Planning] 
+M6. The Reliability Coordinator shall make available evidence that it has distributed its 
+specification(s) for Computational Load Sites to entities that have data and 
+information required by the Reliability Coordinator’s Operational Planning Analyses, 
+Real-time monitoring, and Real-time Assessments. Such evidence could include, but is 
+not limited to, web postings with an electronic notice of the posting, dated operator
+----- PAGE 7 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 7 of 19 
+logs, voice recordings, postal receipts showing the recipient, date and contents, or 
+email records. 
+R7. Each Computational Load Owner and Computational Load Operator receiving a data 
+and information specification(s) in Requirement R4, Requirement R5, or Requirement 
+R6 shall satisfy the obligations of the documented specifications. [Violation Risk 
+Factor: Medium] [Time Horizon: Operations Planning, Same-Day Operations, Real-time 
+Operations]  
+M7. Each Computational Load Owner and Computational Load Operator receiving a 
+specification(s) in Requirement R4, Requirement R5, or Requirement R6 shall make 
+available evidence that it has satisfied the obligations of the documented 
+specification. Such evidence could include, but is not limited to, electronic or hard 
+copies of data transmittals or attestations of receiving entities. 
+R8. Each Computational Load Operator shall comply with each Operating Instruction 
+issued by its Transmission Operator(s), Balancing Authority, and Reliability 
+Coordinator unless such action cannot be physically implemented or it would violate 
+safety, equipment, regulatory, or statutory requirements. [Violation Risk Factor: High] 
+[Time Horizon: Same-Day Operations, Real-Time Operations] 
+M8. Each Computational Load Operator shall make available upon request, evidence that 
+it complied with each Operating Instruction issued by its Transmission Operator(s), 
+Balancing Authority, and Reliability Coordinator unless such action could not be 
+physically implemented or it would have violated safety, equipment, regulatory, or 
+statutory requirements. Such evidence could include, but is not limited to, dated 
+operator logs, voice recordings or transcripts of voice recordings, electronic 
+communications, or other equivalent evidence in electronic or hard copy format. In 
+such cases, the Computational Load Operator shall have and provide copies of the 
+safety, equipment, regulatory, or statutory requirements as evidence for not 
+complying with the Operating Instruction issued by the Transmission Operator(s), 
+Balancing Authority, or Reliability Coordinator. If such a situation has not occurred, 
+the Computational Load Operator may provide an attestation. 
+R9. Each Computational Load Operator shall inform the Transmission Operator(s), 
+Balancing Authority, or Reliability Coordinator that issued an Operating Instruction of 
+its inability to comply with the Operating Instruction issued. [Violation Risk Factor: 
+High] [Time Horizon: Same-Day Operations, Real-Time Operations]  
+M9. Each Computational Load Operator shall make available upon request, evidence 
+which may include but is not limited to dated operator logs, voice recordings or 
+transcripts of voice recordings, electronic communications, or equivalent evidence in 
+electronic or hard copy format, that it informed the applicable Transmission 
+Operator(s), Balancing Authority, or Reliability Coordinator that issued an Operating 
+of its inability to comply with the Operating Instruction issued. If such a situation has 
+not occurred, the Computational Load Operator may provide an attestation.
+----- PAGE 8 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 8 of 19 
+R10. Each Transmission Operator and Balancing Authority shall have Interpersonal 
+Communication capability with Computational Load Operators within its Transmission 
+Operator Area or Balancing Authority Area (unless the Transmission Operator or 
+Balancing Authority detects a failure of its Interpersonal Communication capability in 
+which case Requirement R12 shall apply) [Violation Risk Factor: High] [Time Horizon: 
+Real-time Operations] 
+M10. Each Transmission Operator and Balancing Authority shall have and provide upon 
+request evidence that it has Interpersonal Communication capability with each 
+Computational Load Operator within its Transmission Operator Area or Balancing 
+Authority Area, which could include, but is not limited to: 
+• Physical assets, or  
+• Dated evidence, such as equipment specifications and installation documentation, 
+test records, operator logs, voice recordings, transcripts of voice recordings, or 
+electronic communication. 
+R11. Each Computational Load Operator shall have Interpersonal Communication 
+capability with the following entities (unless the Computational Load Operator detects 
+a failure of its Interpersonal Communication capability in which case Requirement R13 
+shall apply): [Violation Risk Factor: High] [Time Horizon: Real-time Operations]  
+11.1.  Its Balancing Authority.  
+11.2.  Its Transmission Operator.  
+M11. Each Computational Load Operator shall have and provide upon request evidence 
+that it has Interpersonal Communication capability with its Balancing Authority and its 
+Transmission Operator, which could include, but is not limited to: 
+• Physical assets, or  
+• Dated evidence, such as equipment specifications and installation documentation, 
+test records, operator logs, voice recordings, transcripts of voice recordings, or 
+electronic communication. 
+R12. Each Transmission Operator and Balancing Authority shall notify entities as identified 
+in Requirement R10 within 60 minutes of the detection of a failure of its Interpersonal 
+Communication capability that lasts 30 minutes or longer. [Violation Risk Factor: 
+Medium] [Time Horizon: Real-time Operations] 
+M12. Each Transmission Operator and Balancing Authority shall have and provide upon 
+request evidence that it notified entities, as identified in Requirement R10 
+respectively, within 60 minutes of the detection of a failure of its Interpersonal 
+Communication capability that lasted 30 minutes or longer. Evidence could include, 
+but is not limited to: dated and time-stamped test records, operator logs, voice 
+recordings, transcripts of voice recordings, or electronic communications. 
+R13. Each Computational Load Operator that detects a failure of its Interpersonal 
+Communication capability shall consult each entity affected by the failure, as
+----- PAGE 9 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 9 of 19 
+identified in Requirement R11 to determine a mutually agreeable action for the 
+restoration of its Interpersonal Communication capability. [Violation Risk Factor: 
+Medium] [Time Horizon: Real-time Operations] 
+M13. Each Computational Load Operator that detected a failure of its Interpersonal 
+Communication capability shall have and provide upon request evidence that it 
+consulted with each entity affected by the failure, as identified in Requirement R11, 
+to determine mutually agreeable action to restore the Interpersonal Communication 
+capability. Evidence could include, but is not limited to: dated operator logs, voice 
+recordings, transcripts of voice recordings, or electronic communications. 
+R14. Each Computational Load Operator shall conduct initial training for each of its 
+operating personnel who can receive an oral two-party, person-to-person Operating 
+Instruction prior to that individual operator receiving an oral two-party, person-to-
+person Operating Instruction to either: [Violation Risk Factor: Lower] [Time Horizon: 
+Long-term Planning]  
+• Repeat, not necessarily verbatim, the Operating Instruction and receive 
+confirmation from the issuer that the response was correct, or  
+• Request that the issuer reissue the Operating Instruction. 
+M14. Each Computational Load Operator shall provide its initial training records for its 
+operating personnel such as attendance logs, agendas, learning objectives, or course 
+materials in fulfillment of Requirement R14. 
+R15. Each Computational Load Operator that receives an oral two-party, person-to-person 
+Operating Instruction during an Emergency, excluding written or oral single-party to 
+multiple party burst Operating Instructions, shall either: [Violation Risk Factor: High] 
+[Time Horizon: Real-time Operations]  
+• Repeat, not necessarily verbatim, the Operating Instruction and receive 
+confirmation from the issuer that the response was correct, or 
+• Request that the issuer reissue the Operating Instruction. 
+M15. Each Computational Load Operator that was the recipient of an oral two-party, 
+person-to-person Operating Instruction during an Emergency, excluding oral single-
+party to multiple party burst Operating Instructions, shall have evidence to show that 
+the recipient either repeated, not necessarily verbatim, the Operating Instruction and 
+received confirmation from the issuer that the response was correct, or requested 
+that the issuer reissue the Operating Instruction in fulfillment of Requirement R15. 
+Such evidence may include, but is not limited to, dated and time-stamped voice 
+recordings (if the entity has such recordings), dated operator logs, an attestation from 
+the issuer of the Operating Instruction, memos or transcripts.
+----- PAGE 10 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 10 of 19 
+C. Compliance 
+1. Compliance Monitoring Process 
+1.1. Compliance Enforcement Authority: “Compliance Enforcement Authority” 
+means NERC or the Regional Entity, or any entity otherwise designated by an 
+Applicable Governmental Authority, in their respective roles of monitoring and 
+enforcing compliance with mandatory and enforceable NERC Reliability 
+Standards. 
+1.2. Evidence Retention: The following evidence retention period(s) identify the 
+period of time an entity is required to retain specific evidence to demonstrate 
+compliance. For instances where the evidence retention period specified below 
+is shorter than the time since the last audit, the Compliance Enforcement 
+Authority may ask an entity to provide other evidence to show that it was 
+compliant for the full-time period since the last audit. 
+ 
+The applicable entity shall keep data or evidence to show compliance as 
+identified below unless directed by its Compliance Enforcement Authority to 
+retain specific evidence for a longer period of time as part of an investigation. 
+• Requirements R1 through R15, and Measures M1 through M15, since the last 
+audit, unless directed by its Compliance Enforcement Authority to retain 
+specific evidence for a longer period of time as part of an investigation. 
+ 
+1.3. Compliance Monitoring and Enforcement Program: “Compliance Monitoring 
+Enforcement Program” or “CMEP” means, depending on the context (1) the 
+NERC Compliance Monitoring and Enforcement Program (Appendix 4C to the 
+NERC Rules of Procedure), or (2) the program, department or organization within 
+NERC, a Regional Entity,  or any entity as otherwise designated by an Applicable 
+Government Authority, that is responsible for performing compliance monitoring 
+and enforcement activities with respect to Registered Entities’ compliance with 
+Reliability Standards.
+----- PAGE 11 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 11 of 19 
+Violation Severity Levels 
+R # 
+Violation Severity Levels 
+Lower VSL Moderate VSL High VSL Severe VSL 
+R1. 
+ 
+N/A The Transmission Operator did 
+not include one of the Parts 
+(Requirement R1, Parts 1.1 
+through 1.3) of the 
+documented specification(s) 
+for the Computational Load 
+Site data and information 
+necessary for it to perform its 
+Operational Planning Analyses, 
+Real-time monitoring, and 
+Real-time Assessments. 
+The Transmission Operator did 
+not include two of the Parts 
+(Requirement R1, Parts 1.1 
+through 1.3) of the 
+documented specification(s) 
+for the Computational Load 
+Site data and information 
+necessary for it to perform its 
+Operational Planning Analyses, 
+Real-time monitoring, and 
+Real-time Assessments. 
+The Transmission Operator did 
+not include any of the Parts 
+(Requirement R1, Parts 1.1 
+through 1.3) of the 
+documented specification(s) 
+for the Computational Load 
+Site data and information 
+necessary for it to perform its 
+Operational Planning Analyses, 
+Real-time monitoring, and 
+Real-time Assessments.  
+OR  
+The Transmission Operator did 
+not have a documented 
+specification(s) for the 
+Computational Load Site data 
+and information necessary for 
+it to perform its Operational 
+Planning Analyses, Real-time 
+monitoring, and Real-time 
+Assessments. 
+R2. 
+ 
+N/A The Balancing Authority did 
+not include one of the Parts 
+(Requirement R2, Parts 2.1 
+through 2.3) of the 
+documented specification(s) 
+for the Computational Load 
+The Balancing Authority did 
+not include two of the Parts 
+(Requirement R2, Parts 2.1 
+through 2.3) of the 
+documented specification(s) 
+for the Computational Load 
+The Balancing Authority did 
+not include any of the Parts 
+(Requirement R2, Parts 2.1 
+through 2.3) of the 
+documented specification(s) 
+for the Computational Load
+----- PAGE 12 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 12 of 19 
+R # 
+Violation Severity Levels 
+Lower VSL Moderate VSL High VSL Severe VSL 
+Site data and information 
+necessary for it to perform its 
+analysis functions, Real-time 
+monitoring, and Near-Term 
+Energy Reliability 
+Assessments. 
+Site data and information 
+necessary for it to perform its 
+analysis functions, Real-time 
+monitoring, and Near-Term 
+Energy Reliability 
+Assessments. 
+Site data and information 
+necessary for it to perform its 
+analysis functions, Real- time 
+monitoring, and Near-Term 
+Energy Reliability 
+Assessments.  
+OR  
+The Balancing Authority did 
+not have a documented 
+specification(s) for the 
+Computational Load Site data 
+and information necessary for 
+it to perform its analysis 
+functions, Real-time 
+monitoring, and Near-Term 
+Energy Reliability 
+Assessments. 
+R3. 
+ 
+N/A The Reliability Coordinator did 
+not include one of the Parts 
+(Requirement R3, Parts 3.1 
+through 3.3) of the 
+documented specification(s) 
+for the Computational Load 
+Site data and information 
+necessary for it to perform its 
+Operational Planning Analyses, 
+Real-time monitoring, and 
+Real-time Assessments. 
+The Reliability Coordinator did 
+not include two of the Parts 
+(Requirement R3, Parts 3.1 
+through 3.3) of the 
+documented specification(s) 
+for the Computational Load 
+Site data and information 
+necessary for it to perform its 
+Operational Planning Analyses, 
+Real-time monitoring, and 
+Real-time Assessments. 
+The Reliability Coordinator did 
+not include any of the Parts 
+(Requirement R3, Parts 3.1 
+through 3.3) of the 
+documented specification(s) 
+for the Computational Load 
+Site data and information 
+necessary for it to perform its 
+Operational Planning Analyses, 
+Real-time monitoring, and 
+Real-time Assessments.
+----- PAGE 13 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 13 of 19 
+R # 
+Violation Severity Levels 
+Lower VSL Moderate VSL High VSL Severe VSL 
+OR 
+The Reliability Coordinator did 
+not have a documented 
+specification(s) for the 
+Computational Load Site data 
+and information necessary for 
+it to perform its Operational 
+Planning Analyses, Real-time 
+monitoring, and Real-time 
+Assessments. 
+R4. 
+ 
+The Transmission Operator did 
+not distribute its 
+specification(s) for 
+Computational Load Sites to 
+one entity, or 5% or less of the 
+entities, whichever is greater, 
+that have Computational Load 
+Site data and information 
+required by the Transmission 
+Operator’s Operational 
+Planning Analyses, Real-time 
+monitoring, and Real-time 
+Assessments. 
+The Transmission Operator did 
+not distribute its 
+specification(s) for 
+Computational Load Sites to 
+two entities, or more than 5% 
+and less than or equal to 10% 
+of the reliability entities, 
+whichever is greater, that have 
+Computational Load Site data 
+and information required by 
+the Transmission Operator’s 
+Operational Planning Analyses, 
+Real-time monitoring, and 
+Real-time Assessments. 
+The Transmission Operator did 
+not distribute its 
+specification(s) for 
+Computational Load Sites to 
+three entities, or more than 
+10% and less than or equal to 
+15% of the reliability entities, 
+whichever is greater, that have 
+Computational Load Site data 
+and information required by 
+the Transmission Operator’s 
+Operational Planning Analyses, 
+Real-time monitoring, and 
+Real-time Assessments. 
+The Transmission Operator did 
+not distribute its 
+specification(s) for 
+Computational Load Sites to 
+four or more entities, or more 
+than 15% of the entities that 
+have Computational Load Site 
+data and information required 
+by the Transmission 
+Operator’s Operational 
+Planning Analyses, Real-time 
+monitoring, and Real-time 
+Assessments. 
+R5. 
+ 
+The Balancing Authority did 
+not distribute its 
+specification(s) for 
+Computational Load Sites to 
+The Balancing Authority did 
+not distribute its 
+specification(s) for 
+Computational Load Sites to 
+The Balancing Authority did 
+not distribute its 
+specification(s) for 
+Computational Load Sites to 
+The Balancing Authority did 
+not distribute its 
+specification(s) for 
+Computational Load Sites to
+----- PAGE 14 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 14 of 19 
+R # 
+Violation Severity Levels 
+Lower VSL Moderate VSL High VSL Severe VSL 
+one entity, or 5% or less of the 
+entities, whichever is greater, 
+that have Computational Load 
+Site data and information 
+required by the Balancing 
+Authority’s analysis functions, 
+Real-time monitoring, and 
+Near-Term Energy Reliability 
+Assessments. 
+two entities, or more than 5% 
+and less than or equal to 10% 
+of the reliability entities, 
+whichever is greater, that have 
+Computational Load Site data 
+and information required by 
+the Balancing Authority’s 
+analysis functions, Real-time 
+monitoring, and Near-Term 
+Energy Reliability 
+Assessments. 
+three entities, or more than 
+10% and less than or equal to 
+15% of the reliability entities, 
+whichever is greater, that have 
+Computational Load Site data 
+and information required by 
+the Balancing Authority’s 
+analysis functions, Real-time 
+monitoring, and Near-Term 
+Energy Reliability 
+Assessments. 
+four or more entities, or more 
+than 15% of the entities that 
+have Computational Load Site 
+data and information required 
+by the Balancing Authority’s 
+analysis functions, Real-time 
+monitoring, and Near-Term 
+Energy Reliability 
+Assessments. 
+R6.  
+ 
+The Reliability Coordinator did 
+not distribute its 
+specification(s) for 
+Computational Load Sites to 
+one entity, or 5% or less of the 
+entities, whichever is greater, 
+that have Computational Load 
+Site data and information 
+required by the Reliability 
+Coordinator’s Operational 
+Planning Analyses, Real-time 
+monitoring, and Real-time 
+Assessments. 
+The Reliability Coordinator did 
+not distribute its 
+specification(s) for 
+Computational Load Sites to 
+two entities, or more than 5% 
+and less than or equal to 10% 
+of the reliability entities, 
+whichever is greater, that have 
+Computational Load Site data 
+and information required by 
+the Reliability Coordinator’s 
+Operational Planning Analyses, 
+Real-time monitoring, and 
+Real-time Assessments. 
+The Reliability Coordinator did 
+not distribute its 
+specification(s) for 
+Computational Load Sites to 
+three entities, or more than 
+10% and less than or equal to 
+15% of the reliability entities, 
+whichever is greater, that have 
+Computational Load Site data 
+and information required by 
+the Reliability Coordinator’s 
+Operational Planning Analyses, 
+Real-time monitoring, and 
+Real-time Assessments. 
+The Reliability Coordinator did 
+not distribute its 
+specification(s) for 
+Computational Load Sites to 
+four or more entities, or more 
+than 15% of the entities that 
+have Computational Load Site 
+data and information required 
+by the Reliability Coordinator’s 
+Operational Planning Analyses, 
+Real-time monitoring, and 
+Real-time Assessments. 
+R7.  
+ 
+The responsible entity 
+receiving a specification(s) for 
+Computational Load Sites in 
+Requirement R4, Requirement 
+The responsible entity 
+receiving a specification(s) for 
+Computational Load Sites in 
+Requirement R4, Requirement 
+The responsible entity 
+receiving a specification(s) for 
+Computational Load Sites in 
+Requirement R4, Requirement 
+The responsible entity 
+receiving a specification(s) for 
+Computational Load Sites in 
+Requirement R4, Requirement
+----- PAGE 15 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 15 of 19 
+R # 
+Violation Severity Levels 
+Lower VSL Moderate VSL High VSL Severe VSL 
+R5, or Requirement R6 
+satisfied the obligations in the 
+specification, but failed to 
+meet one of the parts in 
+Requirement R1, Part 1.3, 
+Requirement R2, Part 2.3, or 
+Requirement R3, Part 3.3. 
+R5, or Requirement R6 
+satisfied the obligations in the 
+specification, but failed to 
+meet two of the parts in 
+Requirement R1, Part 1.3, 
+Requirement R2, Part 2.3, or 
+Requirement R3, Part 3.3. 
+R5, or Requirement R6 
+satisfied the obligations in the 
+specification, but failed to 
+meet three or more of the 
+parts in Requirement R1, Part 
+1.3, Requirement R2, Part 2.3, 
+or Requirement R3, Part 3.3. 
+R5, or Requirement R6 did not 
+satisfy the obligations of the 
+documented specifications. 
+R8. 
+ 
+N/A N/A N/A The Computational Load 
+Operator did not comply with 
+an Operating Instruction 
+issued by the Transmission 
+Operator, Balancing Authority, 
+or Reliability Coordinator and 
+such action could have been 
+physically implemented and 
+would not have violated 
+safety, equipment, regulatory, 
+or statutory requirements. 
+R9. 
+ 
+N/A N/A N/A The Computational Load 
+Operator did not inform its 
+Transmission Operator, 
+Balancing Authority, or 
+Reliability Coordinator that 
+issued an Operating 
+Instruction of its inability to 
+comply with the Operating 
+Instruction issued.
+----- PAGE 16 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 16 of 19 
+R # 
+Violation Severity Levels 
+Lower VSL Moderate VSL High VSL Severe VSL 
+R10. 
+ 
+N/A N/A N/A The Balancing Authority or 
+Transmission Operator failed 
+to have Interpersonal 
+Communication capability with 
+the Computational Load 
+Operators identified in 
+Requirement R10, except 
+when the Balancing Authority 
+or Transmission Operator 
+detected a failure of its 
+Interpersonal Communication 
+capability in accordance with 
+Requirement R12. 
+R11. 
+ 
+N/A N/A The Computational Load 
+Operator failed to have 
+Interpersonal Communication 
+capability with one of the 
+entities listed in Requirement 
+R11, Parts 11.1 or 11.2, except 
+when a Computational Load 
+Operator detected a failure of 
+its Interpersonal 
+Communication capability in 
+accordance with Requirement 
+R13. 
+The Computational Load 
+Operator failed to have 
+Interpersonal Communication 
+capability with two of the 
+entities listed in Requirement 
+R11, Parts 11.1 or 11.2, except 
+when a Computational Load 
+Operator detected a failure of 
+its Interpersonal 
+Communication capability in 
+accordance with Requirement 
+R13. 
+R12. 
+ 
+The Transmission Operator or 
+Balancing Authority failed to 
+notify the Computational Load 
+The Transmission Operator or 
+Balancing Authority failed to 
+notify the Computational Load 
+The Transmission Operator or 
+Balancing Authority failed to 
+notify the Computational Load 
+The Transmission Operator or 
+Balancing Authority failed to 
+notify the Computational Load
+----- PAGE 17 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 17 of 19 
+R # 
+Violation Severity Levels 
+Lower VSL Moderate VSL High VSL Severe VSL 
+Operators identified in 
+Requirement R10 upon the 
+detection of a failure of its 
+Interpersonal Communication 
+capability in more than 60 
+minutes but less than or equal 
+to 70 minutes. 
+Operators identified in 
+Requirement R10 upon the 
+detection of a failure of its 
+Interpersonal Communication 
+capability in more than 70 
+minutes but less than or equal 
+to 80 minutes. 
+Operators identified in 
+Requirement R10 upon the 
+detection of a failure of its 
+Interpersonal Communication 
+capability in more than 80 
+minutes but less than or equal 
+to 90 minutes. 
+Operators identified in 
+Requirement R10 upon the 
+detection of a failure of its 
+Interpersonal Communication 
+capability in more than 90 
+minutes. 
+R13.  
+ 
+N/A N/A N/A The Computational Load 
+Operator that detected a 
+failure of its Interpersonal 
+Communication capability 
+failed to consult with each 
+entity affected by the failure, 
+as identified in Requirement 
+R11, to determine a mutually 
+agreeable action for the 
+restoration of the 
+Interpersonal Communication 
+capability. 
+R14.  
+ 
+N/A N/A An individual operator at the 
+Computational Load Operator 
+received an Operating 
+Instruction prior to being 
+trained. 
+An individual operator at the 
+Computational Load Operator 
+received an Operating 
+Instruction during an 
+Emergency prior to being 
+trained. 
+R15. 
+ 
+N/A The Computational Load 
+Operator did not repeat, not 
+necessarily verbatim, the 
+N/A The Computational Load 
+Operator did not repeat, not 
+necessarily verbatim, the
+----- PAGE 18 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 18 of 19 
+R # 
+Violation Severity Levels 
+Lower VSL Moderate VSL High VSL Severe VSL 
+Operating Instruction during 
+an Emergency and receive 
+confirmation from the issuer 
+that the response was correct, 
+or request that the issuer 
+reissue the Operating 
+Instruction when receiving an 
+Operating Instruction. 
+Operating Instruction during 
+an Emergency and receive 
+confirmation from the issuer 
+that the response was correct, 
+or request that the issuer 
+reissue the Operating 
+Instruction when receiving an 
+Operating Instruction  
+AND  
+Instability, uncontrolled 
+separation, or cascading 
+failures occurred as a result.
+----- PAGE 19 -----
+CLO-002-1 – Computational Load Operational Data and Communications 
+Draft 1 of CLO-002-1 
+August 2026 Page 19 of 19 
+D. Regional Variances 
+None. 
+E. Associated Documents 
+• Project 2026-02 Computational Load Operational Data & Communications 
+Implementation Plan 
+• Project 2026-02 Computational Load Operational Data & Communications Technical 
+Rationale

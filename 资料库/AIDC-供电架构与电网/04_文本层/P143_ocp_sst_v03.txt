@@ -1,0 +1,613 @@
+
+===== PAGE 1 =====
+Solid State Transformer 
+Solid State Transformer (SST) Specification
+Revision 0.3.0 
+Specification Eﬀective 
+6/22/2026 
+Author: Google, Microsoft, Nvidia 
+Medium Voltage to 800 VDC Power Conversion Platform
+===== PAGE 2 =====
+Open Compute Project • Solid State Transformer 
+Version History 
+Date Version # Author Description 
+5/20/26 0.3 - Google: Jing Wang, Sangyoun “SY”
+Kim, Satarupa Bal, Kei Hao, Dragan
+Ristanovic, Ashish Upreti, Jason
+Adrian, Christina Peabody
+- Microsoft: Ehsan Nasr, Pritesh Patel,
+Xianyong Feng
+- Nvidia: Mike Tu
+first draft of SST product for 
+OCP community 
+Date:  6/22/2026 Page 2 
+===== PAGE 3 =====
+Open Compute Project • Solid State Transformer 
+Table of Contents 
+Version History 2 
+1. License 5 
+1.1. Open Web Foundation (OWF) CLA 5 
+2. Compliance with OCP Tenets 6 
+2.1. Openness 6 
+2.2. Eﬀiciency 6 
+2.3. Impact 6 
+2.4. Scale 6 
+2.5. Sustainability 7 
+3. Scope 7 
+4. Base product specifications 8 
+4.1. Product internal compositions 8 
+4.2. SST product configurations - MVAC and power rating 9 
+4.3. SST product configurations - LVDC definitions 9 
+5. Electrical 10 
+5.1. Upstream MVAC interface 10 
+5.1.1. Upstream grounding and wiring configurations 10 
+5.1.2. Voltage Ride Through (VRT) 11 
+5.1.3. Frequency Ride Through (FRT) 13 
+5.2. Downstream LVDC interface 14 
+5.2.1. Voltage and power quality 14 
+5.2.2. Verification 14 
+5.3. MVAC Load Acceptance and Rejection 14 
+5.4. Grounding 15 
+5.4.1. Grounding impedance 15 
+5.4.2. Insulation monitoring and protection 15 
+6. Environmental and structural 15 
+7. System behavior 16 
+7.1. State machine and transitions 16 
+17 
+18 
+20 
+21 
+7.2. Startup/ramp-up scenarios 
+8. Compliance
+References
+Appendix A - Example DCH distribution 
+architecture
+Date:  06/22/2026 
+Page 3 
+===== PAGE 4 =====
+Open Compute Project • Solid State Transformer 
+List of Figures
+Figure 1. Main compositions of SST product 8 
+Figure 2. Upstream grounding mechanism  11 
+Figure 3. Voltage Ride-through requirements for SST 12 
+Figure 4. State machine descriptions for SST  17 
+Figure 5. SST startup and shutdown sequence  17 
+Figure 6. SST state machine transition scenarios  18 
+Figure 7. Example of distribution redundancy system 21 
+Figure 8. Example of SST Integration Busway (distributed redundant)          22 
+Figure 9. Example of SST Integration Busway (N+C block redundant)          23 
+Figure 10. Example of SST Integration-Switchboard (N+C block redundant)  23 
+Figure 11. Example of SST integration-Busway (N-redundant)  24 
+Date:  06/22/2026 Page 4 
+===== PAGE 5 =====
+Open Compute Project • Solid State Transformer 
+1. License
+THE UPDATED DEFAUL T CONTRIBUTOR LICENSE AGREEMENT (CLA) IS OWFa 0.9. PLEASE VERIFY THE 
+CORRECT CLA/FSA IS USED AND EXECUTED FOR THIS CONTRIBUTION. 
+1.1. Open Web Foundation (OWF) CLA 
+Contributions to this Specification are made under the terms and conditions set forth in Modified 
+Open Web Foundation Agreement 0.9 (OWFa 0.9). (As of October 16, 2024)  (“Contribution License”) 
+by:   Google, Nvidia, Microsoft 
+Usage of this Specification is governed by the terms and conditions set forth in Modified OWFa 0.9 
+Final Specification Agreement (FSA) (As of October 16, 2024) (“Specification License”).    
+You can review the applicable Specification License(s) referenced above by the contributors to this 
+Specification on the OCP website at 
+https://www.opencompute.org/contributions/templates-agreements.  
+ Notes: 
+The above license does not apply to the Appendix or Appendices. The information in the 
+Appendix or Appendices is for reference only and non-normative in nature.  
+NOTWITHSTANDING THE FOREGOING LICENSES, THIS SPECIFICATION IS PROVIDED BY OCP "AS IS" 
+AND OCP EXPRESSLY DISCLAIMS ANY WARRANTIES (EXPRESS, IMPLIED, OR OTHERWISE), INCLUDING 
+IMPLIED WARRANTIES OF MERCHANTABILITY, NON-INFRINGEMENT , FITNESS FOR A PARTICULAR 
+PURPOSE, OR TITLE, RELATED TO THE SPECIFICATION. NOTICE IS HEREBY GIVEN, THAT OTHER RIGHTS 
+NOT GRANTED AS SET FORTH ABOVE, INCLUDING WITHOUT LIMITATION, RIGHTS OF THIRD PARTIES 
+WHO DID NOT EXECUTE THE ABOVE LICENSES, MAY BE IMPLICATED BY THE IMPLEMENTATION OF OR 
+COMPLIANCE WITH THIS SPECIFICATION. OCP IS NOT RESPONSIBLE FOR IDENTIFYING RIGHTS FOR 
+WHICH A LICENSE MAY BE REQUIRED IN ORDER TO IMPLEMENT THIS SPECIFICATION.  THE ENTIRE 
+RISK AS TO IMPLEMENTING OR OTHERWISE USING THE SPECIFICATION IS ASSUMED BY YOU. IN NO 
+EVENT WILL OCP BE LIABLE TO YOU FOR ANY MONETARY DAMAGES WITH RESPECT TO ANY CLAIMS 
+RELATED TO, OR ARISING OUT OF YOUR USE OF THIS SPECIFICATION, INCLUDING BUT NOT LIMITED TO 
+ANY LIABILITY FOR LOST PROFITS OR ANY CONSEQUENTIAL, INCIDENTAL, INDIRECT , SPECIAL OR 
+PUNITIVE DAMAGES OF ANY CHARACTER FROM ANY CAUSES OF ACTION OF ANY KIND WITH RESPECT 
+TO THIS SPECIFICATION, WHETHER BASED ON BREACH OF CONTRACT , TORT (INCLUDING 
+NEGLIGENCE), OR OTHERWISE, AND EVEN IF OCP HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
+DAMAGE. 
+Date:  06/22/2026 Page 5 
+===== PAGE 6 =====
+Solid State Transformer
+2. Compliance with OCP Tenets
+2.1. Openness 
+This specification aims to establish a common, open framework for Solid State Transformers 
+(SSTs) as a power conversion element enabling future LVDC distribution architectures in data 
+centers. By defining clear electrical, functional, and interface expectations at the medium 
+voltage to DC conversion layer, this work supports interoperability between SSTs, downstream 
+OCP aligned power racks, and IT infrastructure. The intent is to encourage multivendor 
+innovation while reducing integration friction through transparent requirements, well defined 
+boundaries, and alignment with open standards and OCP design principles. 
+2.2. Eﬀiciency 
+As the focus of this specification, Solid State Transformers, enable higher eﬀiciency power 
+delivery by combining medium voltage power conversion and direct DC output. By integrating 
+advanced power electronics, modular architectures, and optimized control, SSTs support high 
+conversion e
+ﬀiciency across a wide operating range, contributing to reduced electrical losses 
+and improved overall data center power eﬀiciency. 
+2.3. Impact 
+Besides introducing breakthroughs in technology, standardizing SST functional and 
+performance expectations has a significant impact on data center power architectures by 
+enabling new levels of density, and integration. A common SST specification, formed through 
+iterative e
+ﬀorts among key authors, starts from concept, matures over multiple revisions, 
+enables a broader supplier ecosystem and encourages feedback for improvements. It 
+accelerates adoption of DC centric architectures, and creates a clearer pathway for coupling 
+energy with server racks that enable the next generation of intelligence infrastructure. This 
+alignment can reduce bespoke designs, improve supply chain scalability, and enable the reuse 
+of power infrastructure across multiple data center generations in a long term vision. 
+2.4. Scale 
+This specification supports scaling across multiple power levels and deployment sizes, from 
+distributed or block redundant systems supporting multi-megawatts loads with predictable 
+reliability and availability metrics.  
+Date:  06/22/2026 Page 6 
+===== PAGE 7 =====
+Solid State Transformer
+2.5. Sustainability 
+This specification serves as the foundation for enabling higher density data center power 
+distribution architectures through the integration of silicon power electronics semiconductors 
+based products called Solid State Transformer. By transitioning away from traditional copper 
+and iron transformer technologies, it removes long-standing material and design constraints, 
+fostering a more agile and e
+ﬀicient power ecosystem. Furthermore, these advancements 
+directly contribute to the evolution of the renewable energy industry, facilitating the 
+integration of sustainable power sources and supporting the long-term vision of green data 
+center infrastructure. 
+3. Scope
+This document serves as the technical design specification for the Solid State Transformer (SST), 
+which is one of the building blocks for the Direct Current power distribution system in the Data Center 
+industry.  
+Within the scope of this specification, a Medium Voltage Solid-State Transformer (MVSST) is defined as 
+a megawatt-scale power electronic converter, which when coupled with energy storage could 
+function as a Medium Voltage Uninterruptible Power Supply (MV-UPS). The MVSST itself replaces 
+conventional 50/60Hz line-frequency Medium Voltage transformer, rectifier units and energy storage 
+(as required by architecture). Among all engineering solutions to fulfill high-e
+ﬀiciency AC-to-DC 
+conversion, SST is the most strategically innovative approach to enable downstream Low-Voltage 
+Direct Current (LVDC) distribution to the IT rack interface. Beyond basic transformation, the SST 
+provides advanced grid-interactive capabilities such as programmable MVAC response compliant with 
+evolving grid codes, controlled LVDC voltage regulation for power distribution and IT rack 
+requirements, and high-density data center design to enable power-dense racks (hundreds KW to MW). 
+By utilizing medium-to-high-frequency magnetic components/transformers (MFT/HFT) and 
+Wide-Bandgap (WBG) semiconductors such as Silicon Carbide (SiC) or emerging Gallium Nitride (GaN) 
+potential, SST targets to achieve superior power density and o
+ﬀers a platform for future innovations in 
+power distribution system design. 
+This document defines the product using a "black-box" approach, with the focus on interfaces as 
+application level guidance (e.g. electrical, mechanical, thermal, environmental, control, 
+communications, and behavior expectation etc). Vendors shall take the specification as a product 
+framework to fill with engineering solutions to hit the design target. 
+A few examples for  application architectures for SST are illustrated in Appendix A. The current scope of 
+this specification is defined according to the dotted frame in the architecture graph referenced.  
+Date:  06/22/2026 Page 7 
+===== PAGE 8 =====
+Solid State Transformer
+4. Base product specifications 
+4.1. Product internal compositions 
+Figure 1. Main compositions of SST product (not proportional for physical size) 
+Component #1: Power conversion. Serving as the core engine of the solid state transformer, this 
+component shall be responsible for delivering below key MVAC-LVDC power conversion functions to 
+meet the performance specification described in this document. It combines power electronic 
+semiconductors, magnetic components, capacitors, PCBA, etc, all integrated within supporting 
+thermal and mechanical envelopes. 
+Component #2: MVAC input. Serving as the energy gateway of the solid state transformer, this portion 
+shall be responsible for o
+ﬀering protections to SST from unexpected MVAC transient event and internal 
+fault, supporting MVAC power quality requirements for filtering, as well as enabling operational 
+sequence for SST state machine transitions. 
+Component #3: LVDC output. Serving as the LVDC power distribution entrance and switchboard from 
+the solid state transformer, this portion shall be responsible for output port configurations, 
+terminations and switchgears for distribution design and installation / servicing requirements.  
+Component #4: Firmware, control and communications. Serving as the “neuron” layer of the solid 
+state transformer, this portion shall be responsible for component coordinations, system behavior 
+control, and the management of both internal and external operational data exchange.  
+Date:  06/22/2026 Page 8 
+Component #2:
+MVAC input
+SWGRs
+&
+line filters
+&
+surge suppressor
+…
+Component #1:
+power conversion
+electrical & thermal & mechanical
+Component #3:
+LVDC output
+SWGRs
+&
+terminations
+…
+Component #5: auxiliary power
+Component #4: firmware, control and communications
+===== PAGE 9 =====
+Solid State Transformer
+Component #5: Auxiliary power. Serving as the housekeeping function of the solid state transformer, 
+this portion shall be the first step during power on, and operate with the highest level of availability, 
+independent of the gear’s operating status. It shall be allowed with multiple sources of power - 
+externally and internally. 
+4.2. SST product configurations - MVAC and power rating 
+Parameter MV 13.8kV  
+SKU A  
+MV 34.5kV  
+SKU B 
+Input Voltage 13.8kVac +/-10%,  
+3 phase 3 wire + PE 
+34.5 kVac +/-10%,  
+3 phase 3 wire + PE 
+Input Frequency 57 - 63Hz (50/60Hz),  
+up to 5Hz/s as ROCOF 
+57 - 63Hz (50/60Hz),  
+up to 5Hz/s as ROCOF 
+Power Rating (DC output)  5 MW 5MW, 10 MW 
+Input Power Factor > 0.99 at full loading 
+> 0.98 @ load ≥20% 
+> 0.95 @ load < 20% 
+MVAC Harmonics IEEE519, IEC 61800-3 (Category C4), IEC 61000-6-2 & -6-4 
+MVAC Grounding System Low resistance grounded system 
+or Solid grounding (Utility design based)  
+Short-Circuit Fault Current 
+Capability (kA) 
+18-40kA symmetrical RMS for TBD 
+seconds (driven by appropriate 
+industrial standard practice); 
+~104kA for asymmetrical value
+25-50kA symmetrical RMS for 
+TBD seconds (driven by 
+appropriate industrial standard 
+practice); 
+~130kA for asymmetrical value 
+Basic Impulse Level (BIL) >= 110 kV BIL @ 13.8kV >= 150-200 kV BIL @ 34.5 kV 
+Recommended MVAC Load 
+Acceptance and Rejection 
+Approx. 20~50MW/min for utility; 
+TBD MW/s for gensets (fossil fuel 
+based) 
+Approx. 20~50MW/min for utility; 
+Other energy sources TBD 
+(renewables) 
+4.3.  SST product configurations - LVDC definitions 
+Output ports 
+1, as illustrated in example reference LVDC architectures here 
+(future product specification shall finetune based on  
+application use case scenarios) 
+Date:  06/22/2026 Page 9 
+===== PAGE 10 =====
+Solid State Transformer
+Output Voltage 
+(nominal) 
+800Vdc unipolar system 
++/- 0.5% (switching frequency ripples) 
++/- 1% (static tolerance, 0-100% loading) 
++/- 3% (dynamic regulation, load step TBD) 
+DC grounding 
+IT ground - floating or high resistance ground (HRG) 
+with detection and protection coordination  throughout the LVDC 
+distribution architecture, detailed design TBD 
+Overload Rating 
+(recommended setting) 
+- Fault protection coordination: 150% under constant current 
+mode for 150 milliseconds, SST allowed to trip after the 150ms 
+- Overload capacity: constant voltage mode - 120% for 5 seconds 
+Output DC link cap size  
+(recommended setting) 
+Maximum 10mF per 4 MW output  
+(TBD, to be finetuned after full LVDC system simulation and testing) 
+Eﬀiciency >= 98% between 50-100% utilization 
+(power train loss only) 
+Dimensions 
+(all inclusive) 
+Physical envelope range: 10-20’ L x 8’ D x 8.5’ H  
+Note: the restrictions on height requirement comes from  
+a. transportation; b. serviceability at installation site 
+Auxiliary power - 1 
+(for control and telemetry) 
+Source #1: External 480Vac  
+(backed up by data center system UPS) 
+Source #2: internally generated 
+Auxiliary power - 2 
+(for converter 
+semiconductor actuation 
+and cooling) 
+System internally generated 
+Use Option #1: indoor, grey space, environmentally conditioned 
+Option #2: outdoor 
+Communications Modbus TCP/IP 
+5. Electrical
+5.1. Upstream MVAC interface 
+5.1.1. Upstream grounding and wiring configurations 
+In typical data center application environments, the upstream transformer medium-voltage 
+interface utilizes a Wye (Y) secondary winding with a low-resistance grounded (LRG) 
+neutral or solid grounding. 
+Date:  06/22/2026 Page 10 
+===== PAGE 11 =====
+Solid State Transformer
+ Figure 2. Upstream grounding mechanism - LRG (left) and solid grounding (right) 
+5.1.2. Voltage Ride Through (VRT) 
+Voltage ride through requirement in this section applies to conversion and energy storage systems 
+between MVAC to LVDC - example structures such as: 
+- SST and ESS operating in conjunction, with ESS size dependent upon upstream energy system 
+continuity, to a joint LVDC bus with coordinated secondary layer of control, and deliberate 
+power sharing performance design target.
+- integrated SST and ESS as a single product SKU, functioning as an “MVUPS” application. 
+There has not been a unified standard on the LVRT design criteria. This part of the design specification 
+is not intended to drive a consensus, but provide guidance on the coordination between SST and ESS 
+converter for power electronics design and control; when it comes to amount of energy required to 
+“ride-through” the curves defined by di
+ﬀerent local utility authorities, ESS capacity can be sized 
+diﬀerently and integrated as part of the product SKU at times of deployment (aka. product 
+specification). 
+After surveying relative utility study authorities on the grid-code definitions, ERCOT [1],  Fingrid, ITIC 
+(classic PSU ride-through), IEEE1547 [2] (DER reference), IEEE2800 [3] (DER reference at transmission 
+level), MISO, and other utility authorities, are pictured in the section below as reference. Early versions 
+of the SST specification prioritize most recognized utility operator authorities defined LVRT definitions. 
+Zoom in on the definition of SST’s behavior, with ERCOT graph as illustration -  grey zones in the figure 
+below translate to SST’s behavior expectations at times of transient and permanent voltage quality 
+conditions.  
+- In the OVRT range (1.1pu < x < 1.2pu), SST shall be fully functional and supply 100% of the 
+rated output load.
+- In the acceptable power quality range (0.9pu < x < 1.1pu for ∞), SST shall be fully functional 
+and supply 100% of the rated output load.
+Date:  06/22/2026 Page 11 
+===== PAGE 12 =====
+Solid State Transformer
+- In the LVRT ranges:
+- In the LVRT range #1, SST shall be controlled to source no more than nominal input 
+current, while supplying 100% of the rated output load. SST coupled energy storage and 
+inherent power sharing control shall be designed accordingly to meet these performance 
+requirements.
+- In the LVRT range #2, SST shall be controlled to source no input current. SST coupled 
+energy storage shall provide 100% of the rated output load.
+- When system voltage and frequency return back to acceptable power quality immediately 
+following any LVRT event, SST shall restore operations immediately without any state
+machine transitions.
+Figure 3. Voltage Ride-through requirements for SST 
+Date:  06/22/2026 Page 12 
+LVRT range #2: SST internal energy storage ride-through,
+no derating to output load
+SST functional with full capacity, no derating to output load
+0.8pu
+@500ms
+~30c
+0.9pu@2s ~120c
+0.5pu
+@250ms
+~15c
+1.2pu@2s ~120c
+Not required for SST to ride through, data center
+architecture to take actions
+Not required for SST to ride
+through, data center architecture
+to take actions
+SST functional with full capacity
+LVRT range #1: SST not allowed to draw more current from MVAC,
+no derating to output load
+0.2pu
+@150ms
+~9c
+===== PAGE 13 =====
+Solid State Transformer
+[MISO  Example] 
+5.1.3. Frequency Ride Through (FRT) 
+Frequency (f) (Hz) Minimum Ride-Through Time (seconds) 
+f > 61.8 May ride-through or trip 
+61.2 < f ≤ 61.8 299 
+Date:  06/22/2026 Page 13 
+
+===== PAGE 14 =====
+Solid State Transformer
+58.8 ≤ f ≤ 61.2 continuous 
+57.0 ≤ f < 58.8 299 
+f < 57.0 May ride-through or trip 
+5.2. Downstream LVDC interface 
+5.2.1. Voltage and power quality 
+a. SST output voltage range
+- Converter’s static range : 0.5% (ripples) + 1% (static regulation/static droop) = 1.5% 
+- Converter’s dynamic regulation range : 3% (control loop response)
+b. (TBD, pending on busway conveyance parameter) SST output to rack level DC/DC input 
+- LVDC conveyance parasitics : 4% (Ldi/dt)
+c. (TBD, pending future definitions) voltage levels for seamless redundancy design 
+- Block redundancy design: voltage delta between primary and catcher
+- Distributed redundancy design (finer granularity, power sharing design/dynamic 
+droop)
+d. (TBD, pending future definitions) power and energy management coordinations 
+5.2.2.  Verification 
+SST shall be tested with the load. Detailed profiles will be provided in future versions. SST output 
+terminal voltage shall maintain within the voltage tolerance band described in the above section. Test 
+cases covering emulated data center load profiles summarized in basic characterization terms. 
+5.3.  MVAC Load Acceptance and Rejection 
+Multiple types of energy sources exist in the MVAC energy plane as below categories. They oﬀer 
+diﬀerent ramp rates when it comes to load acceptance and rejection. 
+- utility
+- fossil fuel based on-site generation
+- renewable energy
+Current data center infrastructure has ramp rates defined as approx. 20~50MW/min for utility, TBD 
+MW/s for gensets (fossil fuel based) and TBD MW/s for renewable energy. These data are selected 
+based on knowledge of existing data center energy infrastructure, which are subject to updates when 
+new results become available. Coordination between SST and ESS shall be designed with the utility 
+ramp rate as reference for system control design target. 
+Date:  06/22/2026 Page 14 
+===== PAGE 15 =====
+Solid State Transformer
+5.4. Grounding 
+See high level spec for functional description. Details will be provided in later revisions of the 
+specification. 
+5.4.1. Grounding impedance 
+5.4.2. Insulation monitoring and protection 
+6. Environmental and structural
+Parameter Requirement 
+Equipment Rating NEMA 3R Outdoor rated  
+Design Life 15+ Years 
+Environmental 
+conditions 
+-30°C ~ 40°C 
+The Supplier to provide a derating factor above 40°C 
+Corrosion Class C5 
+Relative Humidity 95%, no condensing 
+Site Elevation ≤ 1000 m 
+The Supplier to provide a derating factor above 1000m  
+US Land Transportation 
+Design 
+per DOT FMCSA 
+Forward Deceleration 0.8g 
+Rearward Acceleration 0.5g 
+Lateral Acceleration 0.5g 
+Risk Category II 
+Seismic Design Category D 
+SDS 1.193g 
+Uniform Ground Snow 
+Load 
+48 psf 
+Ultimate Wind Speed 120 mph (3-Second Gust) 
+Exposure Class C 
+Date:  06/22/2026 Page 15 
+===== PAGE 16 =====
+Solid State Transformer
+7. System behavior
+7.1. State machine and transitions 
+Abbr. Status Description 
+S0 OFF SST shall be in this state when “freshly getting oﬀ the dock” . 
+Sb Standby 
+Auxiliary power on, and control system alive with visibilities into the status for 
+the gear. The system shall park in this state, when:  
+a) SST provisioning process is done and no fault discovered. 
+b) SST getting ready to be powered down. 
+Whichever scenario, SST is ready to proceed to the next state. 
+Sp Precharged 
+This is an interim status for SST . It means internal energy storage is charged, and 
+ready to convert power with little to none turnaround time. The source of 
+precharge can come from either MVAC precharge circuit or ESS for self start. 
+S1 ON SST is healthy. It is in steady state operations and converting power. SST’s energy 
+source is MVAC. 
+S2 FAUL T 
+SST is not healthy. It stops converting power, with aux control power staying on. 
+Compared with a similar state of Sb, the system is parked with fault messages. 
+System control logic shall prevent it from powering back on.  
+S3 WARNING 
+SST is outputting power, but operating under one of the below states: 
+A. Running on ESS - SST transitions back to S1 when MVAC recovers. 
+B. It loses redundancy, or operates in a marginal/derated state. It still converts 
+power, but with warning messages. 
+a) If the failure category is permanent (such as module hardware failure, or 
+key component approaching degradation threshold but not yet failed), 
+system control logic shall prevent the state machine from transitioning 
+back to S1. Such failure shall be manually validated, serviced on, and 
+issued with reset with data center operator’s intervention, and SST shall 
+go through a new round of provisioning before putting back to 
+operations. 
+b) If the failure category is temporary (such as overtemperature warning 
+OTW, or overcurrent warning OCW), system control logic shall allow state 
+machine transition back to S1, when such conditions and system 
+recovered back to acceptable operating conditions. SST control system 
+shall record the warning condition log, ready for data center operations 
+automation hub to scrutinize. 
+c) SST can stay in this state for a brief period of time during overcurrent 
+protection, operating with constant power characteristics for transient 
+response. SST shall transition back to S1 when the downstream fault gets 
+cleared. 
+Date:  06/22/2026 Page 16 
+===== PAGE 17 =====
+Solid State Transformer
+Figure 4. State machine descriptions for SST 
+7.2. Startup/ramp-up scenarios 
+Figure 5. SST startup and shutdown sequence with corresponding state machine transitions 
+Date:  05/20/2026 Page 17 
+
+===== PAGE 18 =====
+Solid State Transformer
+Figure 6. SST state machine transition scenarios of startup (left) and shutdown (right) without failures 
+8. Compliance
+Additional related evolving compliance standard source 
+Applicable Standards & Code 
+NFPA 70 National Electrical Code 
+NFPA 70E Standard for Electrical Safety in the Workplace 
+NFPA 72 National Fire Alarm and Signaling Codes 
+UL 347A Medium Voltage Power Conversion Equipment 
+UL 508C Power Conversion Equipment 
+UL 840 Insulation Coordination Including Clearances and Creepage 
+Distances for Electrical Equipment 
+UL 1741 Inverters, Converters, Controllers and Interconnection System 
+Equipment for Use With Distributed Energy Resources 
+Date:  06/22/2026 Page 18 
+
+===== PAGE 19 =====
+Solid State Transformer
+Applicable Standards & Code 
+UL 2877 UL LLC Outline for Investigation for Power Supplies, Medium 
+Voltage 
+UL 60730 Automatic Electrical Controls 
+UL 1699 Standard for Arc-Fault Circuit-Interrupters 
+IEEE 693 IEEE Recommended Practice for Seismic Design of Substations 
+IEEE 1584 IEEE Guide for Performing Arc-Flash Hazard Calculations 
+IEEE 1547 Series Standard for Interconnection and Interoperability of 
+Distributed Energy Resources with Associated Power System 
+Interfaces 
+IEEE 2030.2 Guide for the Interoperability of Energy Storage Systems 
+Integrated with the Electric Power Infrastructure 
+IEEE 519 IEEE Recommended Practices and Requirements for Harmonic 
+Control in Electric Power Systems 
+IEEE 1662 IEEE Recommended Practice for Design and Application of 
+Power Electronics in Electrical Power Systems 
+IEEE 1676 IEEE Guide for Control Architecture for High Power Electronics 
+(1MW and Greater) Used in Electric Power Transmission and 
+Distribution Systems 
+IEEE 1100 IEEE Recommended Practices for Powering and Grounding 
+Electronic Equipment 
+IEEE 1653.6 IEEE Recommended Practices for Grounding of DC Equipment 
+Enclosure in Traction Power Distribution Facilities 
+IEEE 3007.3 IEEE Recommended Practices for Electrical Safety in Industrial 
+and Commercial Power Systems 
+Date:  06/22/2026 Page 19 
+===== PAGE 20 =====
+Solid State Transformer
+References 
+[1] ERCOT NOGRR282, latest update Jan 7th, 2026.
+[2] "IEEE Application Guide for IEEE Std 1547™-2018, IEEE Standard for Interconnection and
+Interoperability of Distributed Energy Resources with Associated Electric Power Systems Interfaces, " in 
+IEEE Std 1547.2-2023 (Revision of IEEE Std 1547.2-2008) , vol., no., pp.1-291, 20 May 2024, doi:
+10.1109/IEEESTD.2024.10534228.
+[3] "IEEE Standard for Interconnection and Interoperability of Inverter-Based Resources (IBRs) 
+Interconnecting with Associated Transmission Electric Power Systems, " in IEEE Std 2800-2022 , vol., no., 
+pp.1-180, 22 April 2022, doi: 10.1109/IEEESTD.2022.9762253.
+[4] Additional relevant reference on codes and standards from Open Compute Project Data Center 
+Facilities LVDC Power Distribution compliance workstream:
+OCP LVDC Power Distribution_Codes & Standards Master Inventory
+Date:  06/22/2026 Page 20 
+===== PAGE 21 =====
+Solid State Transformer
+Appendix A - Example DCH distribution architecture 
+Below is the illustration of a block redundancy based LVDC architecture, in which the converter 
+product described in this specification could be applied towards. The one in the dotted frame is 
+covered by the scope for the specification. 
+Figure 7. Example of distribution redundancy system scheme of block redundancy (catcher) 
+Below are other examples of SST integration for reference. 
+Date:  06/22/2026 Page 21 
+Block Redundancy (Catcher)
+Catcher
+Catcher
+Bus A Bus C
+Bus E Bus G
+Bus I
+Bus K
+===== PAGE 22 =====
+Solid State Transformer
+Figure 8. Example of SST Integration Busway (distributed redundant) 
+Date:  06/22/2026 Page 22 
+
+===== PAGE 23 =====
+Solid State Transformer
+Figure 9. Example of SST Integration-Busway (N+C block redundant) 
+Figure 10. Example of SST Integration-Switchboard (N+C block redundant) 
+Date:  06/22/2026 Page 23 
+
+===== PAGE 24 =====
+Solid State Transformer
+Figure 11. Example of SST Integration-Busway (N redundant) 
+Date:  06/22/2026 Page 24 

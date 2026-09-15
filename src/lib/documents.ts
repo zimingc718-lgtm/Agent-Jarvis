@@ -3,6 +3,7 @@ import { basename, extname, isAbsolute, join, relative, resolve, sep } from "nod
 import { extractPdfText, looksLikePdf } from "./pdf-text";
 import { rankBm25, snippetFor, tokenize, type IndexedDoc } from "./knowledge";
 import { readZipEntries } from "./zip";
+import { htmlToMarkdown } from "./html-text";
 
 /**
  * The local original-document layer (REQ-F-110, DEC-090, TASK-170).
@@ -24,7 +25,15 @@ export const SETTING_DOCUMENT_ROOTS = "documents.roots";
 export const TEXT_EXTENSIONS = [".txt", ".md", ".markdown", ".csv", ".json", ".log", ".xml", ".yaml", ".yml"];
 export const PDF_EXTENSIONS = [".pdf"];
 export const OFFICE_EXTENSIONS = [".docx"];
-export const READABLE_EXTENSIONS = [...TEXT_EXTENSIONS, ...PDF_EXTENSIONS, ...OFFICE_EXTENSIONS];
+/**
+ * 网页存档（CR-20260915-library-adoption CP-6）。
+ *
+ * 此前 .html 不在可读之列，于是资料库 258 个文件里的 139 份网页存档在「对话查阅」里
+ * 根本不存在——用户会以为审过的东西模型读得到，其实半个资料库是哑的。标签由
+ * `html-text.ts` 剥掉，取正文而不是取源码。
+ */
+export const HTML_EXTENSIONS = [".html", ".htm"];
+export const READABLE_EXTENSIONS = [...TEXT_EXTENSIONS, ...HTML_EXTENSIONS, ...PDF_EXTENSIONS, ...OFFICE_EXTENSIONS];
 
 /** Per-file ceilings. A PDF is routinely larger than a page, so it gets its own. */
 export const MAX_TEXT_BYTES = 4 * 1024 * 1024;
@@ -291,6 +300,18 @@ export function docxXmlToText(xml: string): string {
 
 export async function extractDocumentText(absPath: string, bytes: number): Promise<DocumentText> {
   const ext = extname(absPath).toLowerCase();
+
+  if (HTML_EXTENSIONS.includes(ext)) {
+    if (bytes > MAX_TEXT_BYTES) {
+      throw new DocumentPathError(`网页存档超过 ${MAX_TEXT_BYTES / 1024 / 1024} MiB 上限，未读取。`);
+    }
+    const raw = await readFile(absPath, "utf8");
+    const text = htmlToMarkdown(raw).trim();
+    if (!text) {
+      throw new DocumentPathError("这份网页存档里没有可读的正文（可能整页是脚本或图片）。");
+    }
+    return { text, truncated: false, kind: "text" };
+  }
 
   if (PDF_EXTENSIONS.includes(ext)) {
     if (bytes > MAX_PDF_BYTES) {

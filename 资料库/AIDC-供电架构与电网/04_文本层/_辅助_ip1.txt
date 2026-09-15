@@ -1,0 +1,203 @@
+----- PAGE 1 -----
+RELIABILITY | RESILIENCE | SECURITY  
+POWERING TODAY.  PROTECTING TOMORROW.  
+Implementation Plan 
+Project 2026-02 Computational Loads 
+Computational Load Interconnection, Studies, and Modeling CLO-001-1 
+ 
+Applicable Standard(s)  
+• CLO-001-1 Computational Load Interconnection, Studies, and Modeling 
+• FAC-001-5 Facility Interconnection Requirements 
+• FAC-002-5 Facility Interconnection Studies1 
+ 
+Requested Retirement(s) 
+• FAC-001-4 Facility Interconnection Requirements 
+• FAC-002-4 Facility Interconnection Studies 
+ 
+Prerequisite Standard(s) 
+• None 
+ 
+Applicable Entities  
+• Computational Load Owner 
+• Planning Coordinator 
+• Transmission Planner 
+• Transmission Owner that has a Computational Load Site interconnection or has a fully executed 
+Agreement to conduct a study on the reliability impact of interconnecting a Computational Load Site 
+• Distribution Provider that has a Computational Load Site interconnection or has a fully executed 
+Agreement to conduct a study on the reliability impact of interconnecting a Computational Load Site 
+• Generator Owner that has a Computational Load Site interconnection or has a fully executed 
+Agreement to conduct a study on the reliability impact of interconnecting a Computational Load Site 
+• Transmission Owner 
+• Generator Owner with a fully executed Agreement to conduct a study on the reliability impact of 
+interconnecting a third -party Facility to the Generator Owner’s existing Facility that is used to 
+interconnect to the Transmission system. 
+• Distribution Provider 
+• Generator Owner 
+ 
+1 The updates for FAC-001 and FAC-002 are intended as conforming clarifying edits.
+----- PAGE 2 -----
+Implementation Plan | Project 2026-02 | August 2026 2 
+New Terms in the NERC Glossary of Terms  
+This section includes all newly defined, revised, or retired terms used or eliminated in the NERC Reliability 
+Standard. New or revised definitions listed below become approved when the proposed standard is approved. 
+When the standard becomes effective, these defined terms will be removed from the individual standard and 
+added to the Glossary.  
+ 
+Proposed New Definition(s): 
+Computational Load Owner (CLO): The entity that owns and maintains a Computational Load Site. 
+ 
+Computational Load Site: One or more buildings, structures, or installations at a single location that: 
+1) primarily contains information technology infrastructure used for: 
+• creating, executing, and delivering software applications and services; 
+• artificial intelligences training, deployment, and delivery; 
+• cryptocurrency mining; or 
+• other computational activities at a data center; and 
+2) is supplied through electrical equipment that is connected to the Bulk-Power System. 
+ 
+Background  
+An increasing number of large commercial and industrial loads are rapidly connecting to the Bulk-Power System 
+(BPS). Computational Load Sites, such as data centers (including cryptocurrency and artificial intelligence), 
+present unique challenges in forecasting and planning for increased demand. Specifically, Computational Load 
+Sites can be large and have unique operating characteristics, growth patterns, controls, and disturbance 
+response behaviors. These characteristics can pose unique risks to the Bulk Power System as detailed in the 
+NERC Large Load Task Force whitepaper “Characteristics and Risks of Emerging Large Loads” in July of 2025. 
+ 
+Existing Reliability Standards provide important precedents and framework for maintaining the reliability of the 
+BPS, but they were not developed specifically for this type of large load with its unique characteristics. The 
+NERC Large Loads Working Group identified gaps in existing Reliability Standards in “Assessment of Gaps in 
+Existing Practices, Requirements, and Reliability Standards for Emerging Large Loads ” and recommended 
+development of new and/or updated Reliability Standards to address the unmitigated risks to the Bulk Power 
+System. This need was also underscored in NERC’s “Aggregated Report on NERC Level 2 Industry 
+Recommendation: Large Load Interconnection, Study, Commissioning, and Operations”. 
+ 
+Therefore, Project 2026- 02 is establishing Reliability Standard CLO-001-1 to address the near-term essential 
+actions needed to support the reliable integration of large Computational Load Sites onto the BPS. This project 
+serves as a foundation to support Computational Load Site integration in a manner that supports a resilient and 
+reliable BPS. 
+ 
+Reliability Standard CLO-001-1 focuses on Reliability Standard requirements associated with interconnection 
+requirements, including commissioning, interconnection studies and coordination, and transmission planning 
+modeling data.
+----- PAGE 3 -----
+Implementation Plan | Project 2026-02 | August 2026 3 
+ 
+General Considerations  
+Reliability Standard CLO-001-1 is expected to have wide ranging impact on Computational Load Owners (CLOs); 
+Transmission Owners ( TOs), Generation Owners ( GOs), Distribution Providers ( DPs) with interconnecting 
+Computational Load Sites; and Transmission Providers ( TPs)/Planning Coordinators ( PCs) as interconnection 
+requirements, study processes, and modeling data coordination would be required to be implemented for new 
+Computational Load Sites and existing Computational Load Sites undergoing a qualiﬁed change. The 
+implementation plan takes into account the criticality of interconnection requirements, study processes, and 
+modeling data for Computational Loads to support the reliability of the BPS.  
+ 
+Revisions to the FAC -001 and FAC -002 Reliability Standards are modest in nature and intended to avoid 
+duplicative requirements for entities as it relates to the interconnection of Computational Load Sites.  
+ 
+The Electric Reliability Organization ( ERO) enterprise acknowledges that CLOs are expected to be registered 
+beginning in Year 2027 based on the planned Rules of Procedure (ROP) modiﬁcations and imminent FERC ﬁling. 
+To ensure an orderly registration and compliance process for these entities, as well as fairness and consistency 
+in the Reliability Standard’s application among similar asset types, this implementation plan provides additional 
+time for new and existing registered entities to come into compliance with Reliability Standard CLO-001-1.  
+ 
+This implementation plan provides that Reliability Standard CLO-001-1 and the deﬁnitions of Computational 
+Load Site and Computational Load Owner would become eﬀective the ﬁrst day of the ﬁrst calendar quarter after 
+regulatory approval, with a phased-in compliance timeline spanning nine (9) months following the eﬀective 
+date.  
+ 
+Entities will be required to comply with Requirements R1-R3 six (6) months after the effective date of Reliability 
+Standard CLO-001-1. Requirements R1-R3 apply to existing Registered Entities (GO, TO, DP) and are an essential 
+prerequisite to establishing interconnection requirements upon which other requirements are dependent. 
+Therefore, these requirements have a nearer-term implementation than other requirements applicable to new 
+Registered Entities (i.e., CLOs) or those that are dependent on the establishment of interconnection 
+requirements. The compliance date for Requirements R1-R3 considers the time necessary to establish 
+procedures to coordinate with other applicable functional entities in the creation of interconnection 
+requirements for Computational Load Sites.  
+ 
+Entities will be required to comply with Requirements R7  and R8 three (3) months after the effective date of 
+Reliability Standard CLO-001. Requirements R7 and R8 apply to existing Registered Entities (TP, PC) and are an 
+essential prerequisite to establishing the definition of qualified change and the development of modeling data 
+specifications upon which other requirements are dependent. Therefore, these requireme nts have a nearer -
+term implementation than other requirements applicable to new Registered Entities (i.e., CLOs) or those that 
+are dependent on the establishment of a qualified change definition or modeling data specifications for 
+Computational Load Sites.  The compliance date for Requirements R7 -R8 recognizes the criticality of these 
+requirements to be in effect to initiate the development and provision of modeling data for Computational 
+Load Sites that is fully aligned with the specified needs of the TP and PC. It also considers that these 
+requirements have already been identified as essential actions to be performed by TPs and PCs in the NERC
+----- PAGE 4 -----
+Implementation Plan | Project 2026-02 | August 2026 4 
+Level 3 Alert on “ Computational Load Modeling, Studies, Instrumentation, Commissioning, Operations, 
+Protection, and Control” in May of 2026. 
+ 
+Entities shall be required to comply with Requirements R4, R5, R6, R9, R10, and R11 nine (9) months after the 
+effective date of Reliability Standard CLO -001-1. These requirements depend on new Registered Entities (i.e., 
+CLOs) and the implementation of other requirements with earlier implementation contained within Reliability 
+Standard CLO-001-1. The compliance date for these requirements recognizes the criticality of the provision of 
+modeling data and coordination on interconnection studies , but also acknowledges that it may take up to six 
+(6) months from the effective date of Requirements R7 and R8 to develop and provide modeling data for 
+Computational Load Sites that is fully aligned with the specified needs of the TP and PC. 
+ 
+Below is a demonstration of the phased-in compliance dates for Reliability Standard CLO-001-1: 
+ 
+ 
+ 
+Figure 1: Simplified Phased-In Compliance Dates for Reliability Standard CLO-001-1 
+ 
+ 
+Effective Dates and Phased-In Compliance Dates  
+The effective date[s] for proposed Reliability Standard CLO-001-1 is provided below. Where the drafting team 
+identified the need for a longer implementation period for compliance with a particular section of a proposed 
+Reliability Standard (i.e., an entire Requirement or a portion thereof), the additional time for compliance with 
+that section is specified below. The phased-in compliance date for those particular sections represents the date 
+that entities must begin to comply with that particular section of the Reliability Standard, even where the 
+Reliability Standard goes into effect at an earlier date. 
+ 
+Reliability Standard CLO-001-1 and Definitions of Computational Load Site, Computational Load 
+Owner 
+Where approval by an applicable governmental authority is required, Reliability Standard CLO -001-1 and the 
+deﬁnitions of Computational Load Site and Computational Load Owner shall become eﬀective on the ﬁrst day 
+of the ﬁrst calendar quarter after the eﬀective date of the applicable governmental authority’s order approving 
+the Reliability Standard, or as otherwise provided for by the applicable governmental authority.  
+ 
+Where approval by an applicable governmental authority is not required, Reliability Standard CLO-001-1 and 
+the deﬁnitions of Computational Load Site and Computational Load Owner shall become eﬀective on the ﬁrst
+----- PAGE 5 -----
+Implementation Plan | Project 2026-02 | August 2026 5 
+day of the ﬁrst calendar quarter after the date the standard is adopted by the NERC Board of Trustees, or as 
+otherwise provided for in that jurisdiction. 
+ 
+Compliance Date for Reliability Standard CLO-001-1 Requirements R1 - R3 
+Entities shall not be required to comply with Requirements R1, R2, and R3 until six (6) months after the eﬀective 
+date of Reliability Standard CLO-001-1.  
+ 
+Compliance Date for Reliability Standard CLO-001-1 Requirements R7 and R8 
+Entities shall not be required to comply with Requirements R7 and R8 until three (3) months after the eﬀective 
+date of Reliability Standard CLO-001-1.  
+ 
+Compliance Date for Reliability Standard CLO-001-1 Requirements R4, R5, R6, R9, R10, and R11 
+Entities shall not be required to comply with Requirements R4, R5, R6, R9, R10, and R11 until nine (9) months 
+after the eﬀective date of Reliability Standard CLO-001-1.  
+ 
+Reliability Standard FAC-001-5 
+Where approval by an applicable governmental authority is required, the standard shall become eﬀective on 
+the ﬁrst day of the ﬁrst calendar quarter after the eﬀective date of the applicable governmental authority’s 
+order approving the standard, or as otherwise provided for by the applicable governmental authority.  
+ 
+Where approval by an applicable governmental authority is not required, the standard shall become eﬀective 
+on the ﬁrst day of the ﬁrst calendar quarter after the date the standard is adopted by the NERC Board of Trustees, 
+or as otherwise provided for in that jurisdiction. 
+ 
+Reliability Standard FAC-002-5 
+Where approval by an applicable governmental authority is required, the standard shall become eﬀective on 
+the ﬁrst day of the ﬁrst calendar quarter after the eﬀective date of the applicable governmental authority’s 
+order approving the standard, or as otherwise provided for by the applicable governmental authority.  
+ 
+Where approval by an applicable governmental authority is not required, the standard shall become eﬀective 
+on the ﬁrst day of the ﬁrst calendar quarter after the date the standard is adopted by the NERC Board of Trustees, 
+or as otherwise provided for in that jurisdiction. 
+ 
+Retirement Dates  
+ 
+Reliability Standards FAC-001-4 and FAC-002-4 
+Reliability Standard s FAC -001-4 and FAC -002-4 shall be retired immediately prior to the effective date of 
+Reliability Standards FAC-001-5 and FAC-002-5 in the particular jurisdiction in which the revised standards are 
+becoming effective.

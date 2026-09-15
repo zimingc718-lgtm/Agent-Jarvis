@@ -1,0 +1,939 @@
+--- PAGE 1 ---
+Large Load Technical Requirements  
+Straw Proposal 
+ 
+Large Load Technical Requirements Working Group 
+California ISO 
+Gridliance West LLC 
+Pacific Gas and Electric Company 
+San Diego Gas and Electric Company 
+Silicon Valley Power 
+Southern California Edison 
+Valley Electric Association, Inc 
+ 
+Revision: R0 
+June 15, 2026
+--- PAGE 2 ---
+Large Load Technical Requirements  Page 2 of 38 
+ 
+ 
+Table of Contents  
+1. Introduction ................................ ................................ ................................ .....................  3 
+2. Proposed Technical Requirements ................................ ................................ ....................  6 
+2.1. Frequency Ride-Through ................................ ................................ .......................  6 
+2.2. Voltage Ride-Through ................................ ................................ ...........................  8 
+2.3. Post Fault Active Power Recovery (PFAPR)................................ ............................ 11 
+2.4. Ramp Rate Limit ................................ ................................ ................................ ..13 
+2.5. Monitoring and Telemetry ................................ ................................ ................... 15 
+2.6. Modeling Data ................................ ................................ ................................ .....17 
+2.7. Commissioning ................................ ................................ ................................ ....19 
+3. Technical Requirements Under Development................................ ................................ ...22 
+3.1 Low Frequency Cycling................................ ................................ ......................... 22 
+3.2 High Frequency Cycling ................................ ................................ ........................ 24 
+3.3 Limits on operating in constant power mode ................................ ........................ 26 
+3.4 Power Quality (harmonic, flicker, Rapid Voltage Change, ...) ................................ .27 
+3.5 Power Factor and Dynamic reactive support................................ ......................... 29 
+3.6 Phase Angle Jump Ride Through................................ ................................ ........... 31 
+3.7 Protection Requirements ................................ ................................ ..................... 32 
+3.8 Other Emerging Technical Requirements ................................ .............................. 34 
+4. References ................................ ................................ ................................ ...................... 36 
+5. Acronym Definitions ................................ ................................ ................................ ........ 38
+--- PAGE 3 ---
+Large Load Technical Requirements  Page 3 of 38 
+ 
+1. Introduction 
+The ISO’s role with load interconnections being processed by utilities is primarily to ensure that 
+proposed load interconnections are consistent with the ISO’s transmission planning and do not 
+create reliability issues on the grid. The ISO coordinates on planning for large loads with local, 
+state, and federal regulators, and is exploring these issues with utility and industry partners in a 
+broader stakeholder initiative. This Large Load Technical Requirements Straw Proposal is one 
+track of a broader set of ISO-led stakeholder discussions around large loads and demand 
+flexibility and is directionally consistent with North American Electric Reliability Corporation 
+(NERC) and industry discussions. The ISO continues to consider large load planning, 
+interconnection, transmission service, operational, and market issues in both the Large Load 
+stakeholder initiative and the Demand and Distributed Energy Market Integration (DDEMI) 
+stakeholder initiative.  
+The Large Load Technical Requirements Working Group (LLTRWG) was established in October 
+2025 by the ISO and the utilities interconnecting large data center loads within the ISO 
+footprint, including Pacific Gas & Electric (PG&E), San Diego Gas & Electric (SDG&E), Southern 
+California (SCE), Valley Energy Authority (VEA), and Silicon Valley Power (SVP). The purpose of 
+the working group is to develop technical requirements for the reliable interconnection and 
+operation of large loads connected to the ISO-controlled grid.  This document is focused 
+specifically on technical requirements associated with interconnection and reliable grid 
+operation. It does not establish or address broader planning, market participation, scheduling, 
+or operational requirements applicable within the ISO Balancing Authority Area (BAA), the 
+Extended Day-Ahead Market (EDAM), or the Western Energy Imbalance Market (WEIM), nor 
+does it include forecasting obligations or other market-related requirements. Those aspects are 
+addressed through separate tariff provisions, business practice manuals, and market rules. 
+As part of this effort, the LLTRWG reviewed technical requirements, operating experience, 
+reliability assessments, and industry guidance developed by other utilities, system operators, 
+and industry organizations, including the NERC, the Energy Systems Integration Group (ESIG), 
+the Electric Power Research Institute (EPRI), and others. In addition, the working group 
+performed parametric dynamic studies on the ISO system to evaluate the potential reliability 
+impacts associated with large loads, including AI-training data centers. 
+To the extent possible, LLTRWG adopted requirements consistent with existing reliability 
+standards and other entities’ requirements. Such consistency helps facilitate a more uniform 
+approach to large load interconnection requirements across different jurisdictions. Specifically, 
+while the ride-through capability requirements are generally aligned with the ride-through 
+requirements specified in NERC PRC-029 for IBRs, they are not intended to exactly replicate the 
+requirements specified in that standard.
+--- PAGE 4 ---
+Large Load Technical Requirements  Page 4 of 38 
+ 
+Based on these evaluations, LLTRWG developed proposed technical requirements in the 
+following areas: 
+• Frequency ride-through  
+• Voltage ride-through  
+• Post-Fault Active Power Recovery (PFAPR)  
+• Ramp-rate limitations  
+• Monitoring and telemetry requirements  
+• Modeling data requirements  
+• Commissioning, including data verification and model validation  
+In parallel, the LLTRWG continues to evaluate additional technical areas that may impact 
+reliable system operation, including: 
+• Low-frequency cycling limits (to prevent amplification of inter-area oscillations)  
+• High-frequency cycling limits (to prevent triggering of Subsynchronous Resonance (SSR) , 
+Subsynchronous Torsional Interaction (SSTI), and Subsynchronous Control Interaction 
+(SSCI))  
+• Restrictions on operating in constant-power mode  
+• Power quality requirements, including harmonics, flicker, and Rapid Voltage Change 
+(RVC)  
+• Dynamic reactive power support  
+• Phase-angle jump ride-through capability  
+• Protection requirements  
+• Other emerging technical considerations  
+The LLTRWG recognizes that NERC Project 2026-02 is currently developing reliability standards 
+for computational loads, with completion of phase 1 targeted for the end of 2026. The LLTRWG 
+will continue to monitor the progress of that effort and will work to ensure alignment between 
+the requirements developed through this initiative and applicable NERC reliability standards. 
+The term “large load” has not yet been formally defined across the industry. The requirements 
+presented in this document are intended to apply to large computational loads, including 
+conventional, AI-training, and crypto mining data centers interconnected to the ISO 
+transmission system.
+--- PAGE 5 ---
+Large Load Technical Requirements  Page 5 of 38 
+ 
+The requirements presented in this document establish baseline technical expectations for 
+large loads interconnected to the ISO-controlled grid. Depending on project characteristics, 
+electrical location, system strength, concentration of nearby large loads or inverter-based 
+resources (IBRs), and local transmission system conditions including proximity to series-
+compensated lines, additional or more stringent requirements may be identified through the 
+load interconnection study process.1  
+The LLTRWG also recognizes that industry practices, technologies, and reliability standards 
+related to large loads continue to evolve, and the requirements presented in this document 
+may be revised or expanded as additional operating experience, technical studies, and 
+reliability standards become available.  
+A decision regarding where these requirements will ultimately be documented and enforced —
+whether through a tariff, ISO Business Practice Manual, utility interconnection handbooks, or 
+another mechanism, as well as whether and to what extent existing customers would be 
+required to comply with these technical requirements, will be made at a later stage. 
+Each section of this document focuses on a specific technical requirement and generally 
+includes the following subsections: 
+• Requirement – Defines the technical requirement that the large load is expected to 
+meet.  
+• Notes – Provides additional clarification, assumptions, or implementation 
+considerations related to the requirement.  
+• Technical Rationale – Describes the methodology, system studies, engineering 
+considerations, and technical basis used by the LLTRWG in developing the requirement. 
+Where applicable, this section also explains differences between the proposed 
+requirements and those adopted by other entities.  
+• Industry Practice – Summarizes relevant requirements, guidelines, or practices adopted 
+or proposed by other utilities, balancing authorities, reliability organizations, or industry 
+groups. The information provided is not intended to be exhaustive, and industry 
+requirements are continuously evolving. The referenced requirements reflect the 
+information available to LLTRWG at the time this document was prepared. 
+  
+ 
+1 The current assignment of responsibilities for the system under the  ISO’s operating control gives lead 
+responsibilities for generation interconnection and transmission planning to the ISO, and load interconnections to 
+the utilities. Given the utilities’ lead role in load interconnections , utility federal and state tariffs and state 
+regulations govern the study, interconnection, rates, and cost recovery for serving new loads.
+--- PAGE 6 ---
+Large Load Technical Requirements  Page 6 of 38 
+ 
+2. Proposed Technical Requirements  
+2.1. Frequency Ride-Through 
+Requirement 
+The frequency ride-through capability requirements are provided in Table 1.  
+Table 1: Frequency Ride-through Capability Requirements 
+Frequency (Hz) Minimum Ride-through 
+Requirement (sec)  
+>61.8 May trip 
+>61.2 299 
+≤ 61.2 and ≥ 58.8 Continuous operation 
+<58.8 299 
+<57.0 May trip 
+Notes 
+• Frequency measurements shall be taken at the high side of the main power transformer 
+(MPT). 
+• Frequency calculations shall be based on measurements obtained over an appropriate 
+time window, typically ranging from 3 to 6 cycles. 
+• Instantaneous or single-point frequency measurements shall not be used for 
+determining protection or control actions. 
+• Ride-through does not apply when the load trips in response to an ISO/TO-directed 
+underfrequency load shedding program or RAS action. The UFLS and RAS obligation 
+supersedes.  
+• The working group is continuing to evaluate appropriate Rate of Change of Frequency 
+(RoCoF)-related ride-through requirements for large loads based on system studies, load 
+characteristics, and industry practices. 
+Technical Rationale 
+The frequency ride-through requirements are intended to prevent unnecessary tripping of large  
+loads during credible system disturbances and to support overall Bulk Electric System (BES) 
+reliability. The ISO’s annual frequency response studies, along with additional studies 
+performed by the LLTRWG as part of this initiative, indicate that system frequency across the 
+Western Interconnection is generally robust and experiences relatively limited deviations from 
+nominal frequency, even following severe conting ency events. For example, the ISO’s annual 
+frequency response assessment includes scenarios involving the simultaneous trip of two Palo 
+Verde generating units, which represent among the most significant generation-loss events in 
+the Western Interconnection.
+--- PAGE 7 ---
+Large Load Technical Requirements  Page 7 of 38 
+ 
+The study results indicate that adopting frequency ride-through requirements generally 
+consistent with NERC PRC-029 is technically appropriate for the ISO system and provides 
+alignment with emerging industry practices across North America.  
+Industry Practice 
+• ERCOT, SPP, MISO, and LIPA have adopted or proposed frequency ride -through 
+requirements that are generally similar to those presented in this document.
+--- PAGE 8 ---
+Large Load Technical Requirements  Page 8 of 38 
+ 
+2.2. Voltage Ride-Through 
+Requirement 
+The voltage ride-through capability requirements are provided in Table 2.  
+Table 2: Voltage Ride-through Capability Requirements 
+Voltage  
+(per unit) 
+Minimum Ride-through 
+Requirement (sec)  
+>1.2 May trip 
+>1.1 2.0 
+≤ 1.1 and ≥ 0.9 Continuous operation 
+<0.9 6.0 
+<0.7 3.0 
+<0.5 1.2 
+<0.25 0.15 
+Notes 
+• The voltage base used for per-unit calculations shall be the nominal phase-to-phase or 
+phase-to-ground transmission system voltage, as applicable. 
+• The applicable voltage for evaluating compliance with Table 2 shall be the maximum or 
+minimum fundamental-frequency root mean square (RMS) voltage, measured phase-to-
+phase or phase-to-neutral at the high side of the main power transformer (MPT). 
+• Instantaneous trip settings based on voltage measurements with filtering durations 
+shorter than one cycle (16.6 milliseconds) are not permissible. 
+• At any given voltage value, the large load shall Ride-through unless the time duration at 
+that voltage has exceeded the specified minimum Ride-through duration. If the voltage 
+is continuously varying over time, it is necessary to add the duration within each band of 
+Tables 2 over any 10 second time period. 
+• The specified duration in Tables 2 is cumulative over one or more disturbances within 
+any 10 second time period. 
+• Temporary reductions in active power consumption during and after voltage 
+disturbances could occur due to UPS operation, or transitions to backup generation. The 
+LLTRWG is continuing to evaluate and define acceptable levels of temporary power 
+reduction and current increase while operating within the ride-through zones. 
+• Ride-through does not apply when the load trips in response to an ISO/TO-directed 
+undervoltage load shedding scheme or RAS action. The UVLS and RAS obligation 
+supersedes.
+--- PAGE 9 ---
+Large Load Technical Requirements  Page 9 of 38 
+ 
+Technical Rationale 
+The voltage ride-through requirements are intended to minimize unnecessary disconnection of 
+large loads during transmission disturbances and to support reliable BES performance during 
+and following system faults and disturbances. 
+The ride-through requirement of 6 seconds for the voltage range 0.7 ≤ V < 0.9 pu is generally 
+consistent with the requirements specified in NERC PRC-029 for IBRs and is based on 
+parametric dynamic studies performed on the ISO system. The study results demonstrated that, 
+due to the dynamic characteristics of the load response in certain areas of the ISO footprint, 
+voltage recovery following certain three-phase faults may take 6 seconds or longer to recover 
+above 0.9 pu under specific operating conditions and contingency scenarios. 
+Although some utilities and balancing authorities have adopted shorter ride-through durations 
+for this voltage range, the LLTRWG concluded that adopting a 6-second ride-through 
+requirement is appropriate for the ISO system to avoid unnecessary tripping of large loads 
+during severe but credible system disturbances. 
+The ride-through requirement of 2 seconds for the overvoltage range 1.1 < V ≤ 1.2 pu is more 
+conservative than the corresponding 1-second requirement specified in PRC-029 for IBRs. This 
+requirement reflects the fact that, under the ISO Planning Standards, steady-state transmission 
+voltages may approach 1.1 pu under certain operating conditions. In addition, dynamic studies 
+performed by the LLTRWG indicated that temporary overvoltage conditions above 1.1 pu may 
+persist for durations exceeding 1 second following major disturbances or switching events. As a 
+result, a 2-second ride-through capability was determined to be appropriate for large loads 
+interconnected to the ISO-controlled grid. 
+Industry Practice 
+• Voltage ride-through requirements vary significantly across utilities, balancing 
+authorities, and system operators due to differences in system characteristics, operating 
+practices, and reliability considerations. 
+• Figure 1 summarizes voltage ride-through requirements adopted or proposed by several 
+entities as of early 2026. These requirements continue to evolve as utilities and 
+reliability organizations gain additional operating experience with large loads.
+--- PAGE 10 ---
+Large Load Technical Requirements  Page 10 of 38 
+ 
+Figure 1: Low Voltage Ride-Through Requirements 
+(Source ESIG Presentation, February 11, 2026)
+--- PAGE 11 ---
+Large Load Technical Requirements  Page 11 of 38 
+ 
+2.3. Post Fault Active Power Recovery (PFAPR) 
+Requirement 
+Large loads shall recover to at least 90% of their pre-disturbance active power level within 
+3 seconds after the post-fault voltage at the Point of Interconnection (POI) recovers to 0.9 pu or 
+greater. 
+Notes 
+• Sustained or repeated reductions in active power after initial recovery are not allowed.  
+• Additional project-specific requirements may be established where studies identify 
+potential reliability concerns associated with delayed or coordinated load recovery 
+behavior. 
+• The PFAPR requirement applies to the aggregate active power consumed from the 
+transmission system at the POI. 
+• If all or part of the large load is required to trip due to RAS action following the fault, the 
+large load will be required to recover to at least 90% of, their pre-disturbance active 
+power level minus the load required to trip due to RAS action, within 3 seconds.  
+• If all or a portion of the large load is required to trip due to RAS operation following a 
+fault, the required PFAPR level shall be at least 90% of the remaining pre-disturbance 
+load after the RAS-related load reduction, within 3 seconds after the post-fault voltage 
+at the POI recovers to 0.9 pu or greater. 
+Technical Rationale 
+To maintain continuity of computational processes during transmission disturbances, many 
+large load facilities, particularly AI-training data centers, incorporate UPS systems and onsite 
+backup generation. These systems are typically designed to maintain uninterrupted service to 
+sensitive computing equipment during voltage disturbances or other grid events. 
+As part of their control strategy, the facility energy management or site control system may 
+interpret a transient voltage disturbance as a sustained voltage drop and transfer all or a 
+portion of the facility load from the grid to UPS systems or onsite backup generation. While this 
+approach improves the reliability and resiliency of the computational load from the customer 
+perspective, it can create reliability concerns for the BES. From the grid perspective, such 
+actions appear as a sudden and potentially significant loss of load. 
+The reliability impact becomes more significant when multiple large load facilities are 
+electrically concentrated within the same geographic area or transmission corridor and respond 
+similarly to system disturbances. Simultaneous or coordinated reductions in grid-supplied load 
+following a disturbance can result in undesirable system voltage and frequency response.  
+The PFAPR requirement is intended to minimize these risks by ensuring that large loads restore 
+their active power consumption following fault clearing and system voltage recovery, within a
+--- PAGE 12 ---
+Large Load Technical Requirements  Page 12 of 38 
+ 
+defined time. Establishing a minimum active power recovery performance helps maintain 
+predictable system behavior during disturbances and reduces the risk of adverse interactions 
+between large loads and the transmission system. 
+Industry Practice 
+• ERCOT: Requires restoration of at least 90% of pre-disturbance active power within 
+2 seconds. 
+• AESO: Specifies a default active power recovery time of 1 second, with the capability to 
+adjust the requirement up to 10 seconds depending on system strength and local 
+reliability considerations.
+--- PAGE 13 ---
+Large Load Technical Requirements  Page 13 of 38 
+ 
+2.4. Ramp Rate Limit  
+Requirement 
+The average active power ramp rate of the large load, measured over a rolling 10-minute 
+interval, shall not exceed 20 MW/min. 
+Notes 
+• One objective of this requirement is to limit the collective impact of large loads on: 
+o Real-time regulation reserve procurement requirements  
+o Interconnection frequency variations within the ±0.036 Hz deadband, beyond 
+which PFR from generators across the Western Interconnection may be 
+triggered. 
+• Separate requirements may be established to limit faster load variations associated with 
+short-duration cycling, pulsating load behavior, or oscillatory characteristics of the load. 
+• The ramp-rate requirement applies to normal operating conditions, including routine 
+operational changes and restoration following outages, but does not apply to automatic 
+responses to faults or disturbances required for equipment protection or fault ride-
+through performance. 
+Technical Rationale 
+Each Balancing Authority (BA) is responsible for maintaining its Area Control Error (ACE) below 
+a limit by continuously balancing generation and load within its system. This balancing function 
+is primarily achieved through the procurement and dispatch of regulation reserves capable of 
+responding rapidly to short-term changes in system conditions. 
+Large loads, particularly AI-training data centers, can exhibit substantial variations in power 
+consumption over relatively short timeframes. Without appropriate ramp-rate limitations, the 
+aggregate behavior of these loads could significantly increase the amount of regulation reserve 
+capacity required to maintain reliable system operation. Such impacts could exceed the 
+regulation requirements traditionally associated with managing variability from conventional 
+load behavior and intermittent generation resources. 
+In addition, rapid changes in load directly affect Interconnection frequency. Gradual changes 
+can typically be managed through normal regulation service response; however, sufficiently 
+rapid load changes may exceed the response capability of regulation reserves and frequently 
+trigger PFR from generators throughout the Western Interconnection. Frequent activation of 
+PFR can increase mechanical wear on generating equipment and reduce operational flexibility. 
+The proposed ramp-rate limitation is therefore intended to reduce unnecessary triggering of 
+PFR, limit excessive regulation reserve requirements, and support predictable system operation 
+during normal load variations. The requirement applies to day-to-day operation of large loads, 
+including ramping associated with startup, shutdown, restoration following outages.
+--- PAGE 14 ---
+Large Load Technical Requirements  Page 14 of 38 
+ 
+The LLTRWG also recognizes that certain large loads may exhibit significant power fluctuations 
+over shorter timeframes, including second-to-second variations and oscillatory behavior. As a 
+result, industry practice is evolving toward establishing additional requirements addressing 
+short-duration load cycling and high-frequency power variations to ensure reliable operation of 
+the BES. 
+Industry Practice 
+• ERCOT: 20 MW/min 
+• ATC: Any active power change greater than 50 MW must be limited to a ramp rate of 
+less than 0.5 MW/s (30 MW/min) 
+• AESO: 10 MW/min 
+• Southern Company: 20 MW/min. In addition, the top quartile (P75) of active power 
+ramp rate, as averaged across consecutive 1-minute periods, should also not exceed 
+20 MW/min.
+--- PAGE 15 ---
+Large Load Technical Requirements  Page 15 of 38 
+ 
+2.5. Monitoring and Telemetry  
+Requirement 
+High-resolution monitoring and telemetry equipment, including Phasor Measurement Units 
+(PMUs), Digital Fault Recorders (DFRs), and SCADA systems shall be installed at each Main 
+Power Transformer (MPT) associated with the large load interconnection.  
+Notes 
+• Interconnection studies may identify the need for additional monitoring capabilities 
+depending on reliability risks. 
+• PMU and SCADA measurements shall be streamed in real time to the interconnecting 
+Transmission Owner (TO). 
+• DFR measurements shall be retained for a minimum of 30 days and provided to the TO 
+upon request within 10 days. 
+• Depending on the results of the interconnection studies, the interconnecting TO may 
+require additional monitoring, control, or protective systems to maintain BES reliability. 
+Such systems may include automated schemes designed to reduce or disconnect 
+portions of the large load during abnormal system conditions. 
+ 
+Technical Rationale 
+The rapid pace of large load interconnections within the ISO footprint, combined with the 
+limited industry operating experience with such facilities, particularly AI-training data centers, 
+creates a need for enhanced system visibility and high-resolution monitoring capabilities. 
+Large loads may exhibit fast-changing power consumption characteristics, complex interactions 
+with power electronic equipment, and coordinated responses to transmission disturbances that 
+may contribute to unexpected dynamic performance, oscillatory behavior, or other reliability 
+concerns that may not be fully observable through conventional SCADA measurements alone. 
+The installation of high-resolution monitoring equipment, including PMUs, and DFRs, provides 
+the ability to capture dynamic system behavior during both normal operation and disturbance 
+conditions. Real-time streaming of monitoring data supports operational awareness, event 
+analysis, oscillation detection, model validation, and identification of abnormal system 
+interactions. These measurements also support post-event engineering analysis and facilitate 
+the development of mitigation measures when reliability concerns are identified. 
+The LLTRWG believes that enhanced monitoring and telemetry capabilities are important to 
+ensure that any unexpected interactions between large loads and the transmission system can 
+be identified and addressed promptly through automated protection systems, operational 
+actions, or future design improvements.
+--- PAGE 16 ---
+Large Load Technical Requirements  Page 16 of 38 
+ 
+Industry Practice 
+• ERCOT: Requires installation of PMUs, Sequence of Events (SOE) recording equipment, 
+and Digital Fault Recorders (DFRs). 
+• ATC: Requires monitoring of the aggregate large load facility at sufficient resolution and 
+to retain at least 90 days of operational data. 
+• AESO: Requires installation of PMUs and real-time streaming of specified synchrophasor 
+measurements.  
+• Southern Company: Requires monitoring equipment, including PMUs, Advanced Digital 
+Fault Recorders (ADFRs), and Continuous Wave Streaming devices, to support wide-area 
+oscillation detection at the Point of Connection unless determined otherwise by 
+Southern Company Transmission.
+--- PAGE 17 ---
+Large Load Technical Requirements  Page 17 of 38 
+ 
+2.6. Modeling Data  
+Requirement 
+Attachment A identifies the modeling and technical data that large load interconnection 
+customers are required to provide to the interconnecting Transmission Owner (TO) to support 
+system impact studies and reliability assessments. Depending on the project characteristics and 
+study phase, the TO may require submission of power flow, dynamic, short-circuit, and/or EMT 
+models and associated technical data. 
+Notes 
+• The modeling data requirements are generally aligned with the NERC large load 
+modeling data questionnaire and related industry guidance documents. 
+• Additional load profile information, control system details, operational characteristics, 
+or model data may be required by the interconnecting TO based on the characteristics 
+of the load, system conditions, or study results. 
+• The TO may require updated or revised models during different phases of the 
+interconnection process, including planning, commissioning, and post-commercial 
+operation model validation activities. 
+• Submitted models and technical data shall accurately represent the expected steady -
+state and dynamic performance of the facility, including any load management systems, 
+UPS systems, onsite generation, or other control systems that may impact system 
+behavior during normal or disturbance conditions. 
+• Where applicable, EMT models shall include sufficient detail to support evaluation of 
+fast dynamic interactions, converter and UPS behavior, control system performance, 
+harmonic impacts, and other sub-cycle phenomena relevant to system reliability. 
+Technical Rationale 
+Accurate modeling data is essential to enable the interconnecting TO and the ISO to perform 
+reliable system impact studies and evaluate the potential effects of large loads on the BES. 
+Depending on the size, location, and operating characteristics of the project, large loads may 
+significantly influence steady-state power flows, system dynamics, voltage performance, 
+frequency response, fault behavior, oscillatory performance, and electromagnetic transient 
+interactions. 
+The requested modeling information and supporting technical data enable the TO to perform 
+detailed planning, operational, protection, and reliability studies across multiple simulation 
+domains, including power flow, transient stability, short-circuit, and EMT analysis. Accurate 
+models are particularly important for evaluating facilities with rapidly varying load behavior, 
+complex power electronic equipment, UPS systems, onsite generation, or advanced control 
+systems.
+--- PAGE 18 ---
+Large Load Technical Requirements  Page 18 of 38 
+ 
+ 
+In addition, validated and up-to-date models support ongoing planning assessments, 
+operational studies, disturbance analysis, and future reliability evaluations as system conditions 
+evolve over time.  
+Industry Practice 
+Other entities have established similar load modeling and technical data submission 
+requirements for large load interconnections.
+--- PAGE 19 ---
+Large Load Technical Requirements  Page 19 of 38 
+ 
+2.7. Commissioning 
+Requirement 
+Large load interconnection customers shall provide written commissioning and testing 
+procedures to the interconnecting Transmission Owner (TO) prior to energization and 
+commercial operation for TO’s review and approval. The commissioning process shall include 
+verification of load characteristics, validation of applicable models, and demonstration of 
+compliance with the technical requirements specified in this document. 
+Notes 
+At a minimum, the commissioning and testing process shall include the following: 
+• Validation of load profiles and operational behavior to demonstrate compliance with 
+applicable ramp-rate and load variability requirements. 
+• Validation of power flow, dynamic, and, where applicable, EMT models used in the 
+interconnection studies. 
+• Verification that any protection, control, or remedial action systems designed to reduce 
+or disconnect portions of the large load operate as intended. 
+• Verification of monitoring and telemetry systems, including PMU, SCADA, DFR, as 
+applicable. 
+• Submission of commissioning test results, disturbance recordings, and model validation 
+data to the interconnecting TO and ISO upon request. 
+• Additional commissioning or performance verification requirements may be established 
+based on project-specific reliability considerations identified during the interconnection 
+study process. If the interconnection study identifies stability risk, the commissioning 
+process shall include an EMT model validation exercise using approved simulation tools. 
+• If certain validations or performance verifications cannot be completed during the initial 
+commissioning phase, the commissioning and testing procedure document shall identify 
+which tests are deferred, the schedule for completing those tests, and the basis  for 
+concluding that the deferred testing will not adversely impact system reliability or the 
+validity of the interconnection study assumptions. 
+• If the large load facility does not satisfy the applicable commissioning or technical 
+requirements, the interconnecting TO may require corrective actions, operational 
+limitations, additional studies, mitigation measures, or re-validation activities prior to or 
+following commercial operation. 
+Technical Rationale 
+Large loads may have a significant impact on the reliable operation of the system. As a result, it 
+is important to ensure that the actual operating characteristics of the facility are consistent 
+with the assumptions, models, and performance characteristics used during the 
+interconnection studies.
+--- PAGE 20 ---
+Large Load Technical Requirements  Page 20 of 38 
+ 
+A coordinated and comprehensive commissioning process provides the opportunity to validate 
+facility performance under actual operating conditions, verify the accuracy of submitted models 
+and load data, and confirm that protection, control, and monitoring systems operate as 
+intended. This process also helps identify potential discrepancies between expected and actual 
+facility behavior before the project enters normal operation. 
+Validation of load profiles, ramp-rate behavior, disturbance response, telemetry systems, and 
+applicable power system models improves the accuracy of future planning and operational 
+studies and supports reliable system operation following commercial energization. 
+The commissioning process is also intended to establish sufficient operational visibility to 
+support ongoing monitoring, event analysis, and future model validation activities. 
+Industry Practice 
+• Southern Company: The “Integration Process for Transmission-Connected Large Loads” 
+includes detailed commissioning, testing, monitoring, and performance verification 
+requirements for large load interconnections.
+--- PAGE 21 ---
+Large Load Technical Requirements  Page 21 of 38
+--- PAGE 22 ---
+Large Load Technical Requirements  Page 22 of 38 
+ 
+3. Technical Requirements Under Development  
+The LLTRWG continues to evaluate additional technical requirements associated with large 
+loads and their potential impact on reliable operation of the system. The following sections 
+summarize technical areas currently under development.  
+3.1 Low Frequency Cycling  
+Requirement 
+To be determined.  
+Notes 
+The objective of this requirement is to prevent amplification of inter-area oscillations, avoid 
+adverse interactions with generator controls and system damping characteristics, and minimize 
+unnecessary activation of balancing and frequency response resourc es. 
+The following topics are being considered for this requirement: 
+• Magnitude and duration of low-frequency active power variations 
+• Frequency-domain characteristics of load oscillations  
+• Aggregate behavior of geographically concentrated large loads  
+• Potential interactions with weak-grid conditions, IBRs, and existing system oscillatory 
+modes. 
+Technical Rationale 
+Large loads, particularly AI-training data centers, may exhibit periodic or oscillatory active 
+power behavior over timeframes ranging from several seconds to multiple minutes. If not 
+properly managed, coordinated or sustained low-frequency load cycling could interact with 
+existing electromechanical oscillation modes within the transmission system and potentially 
+reduce system damping or amplify inter-area oscillations. 
+Traditional load models and operating practices have historically assumed relatively smooth 
+aggregate load behavior. Additional technical requirements may be necessary to ensure that 
+large loads do not introduce undesirable oscillatory characteristics into the power system.  
+Industry Practice 
+• ATC and SPP: Require active power variations to remain below 25 MW over a 5-second 
+interval. 
+• Southern Company: Requires active power variations to remain below 10 MW over a 4–
+6 second interval.
+--- PAGE 23 ---
+Large Load Technical Requirements  Page 23 of 38 
+ 
+• ERCOT: Have proposed limiting active power variations to less than 10 MW over a 5-
+second interval. 
+• LIPA: Requires frequency-domain content in the 0.1–5 Hz range to remain below 10 MW 
+and content in the 5–55 Hz range to remain below 3.5 MW.
+--- PAGE 24 ---
+Large Load Technical Requirements  Page 24 of 38 
+ 
+3.2 High Frequency Cycling  
+Requirement 
+To be determined.  
+Notes 
+The objective of this requirement is to prevent adverse interactions between large loads and 
+transmission system, IBRs, synchronous generator shaft systems, and power electronic 
+controls. 
+The following topics are being considered for this requirement: 
+• Frequency-domain characteristics of load variations and oscillatory behavior  
+• Potential excitation of SSR, SSTI, SSCI, or other oscillatory phenomena  
+• Interactions between large loads and IBRs, FACTS devices, HVDC systems, or series-
+compensated transmission facilities  
+• Appropriate Fast Fourier Transform (FFT)-based methodologies, filtering techniques, 
+averaging windows, and performance metrics  
+• The aggregate impact of geographically concentrated large loads operating with similar 
+control characteristics. 
+Technical Rationale 
+Large loads, particularly AI-training data centers and facilities utilizing high-speed power 
+electronic equipment, may exhibit active power fluctuations across a wide range of 
+frequencies. Such variations may interact with existing oscillatory modes of the transmission 
+system or excite resonant conditions that could negatively impact system reliability. 
+Of particular concern are interactions involving IBRs, series-compensated transmission lines, 
+FACTS, HVDC converter controls, and generator shaft torsional modes. Under certain 
+conditions, repetitive or sustained high-frequency cycling behavior may contribute to adverse 
+dynamic interactions, reduced system damping, equipment stress, or unintended operation of 
+protection and control systems. 
+The reliability risk associated with high-frequency cycling behavior is expected to be system -
+dependent and may vary significantly based on system configuration and operating conditions. 
+Industry Practice 
+• ATC, SPP, and MISO: Require system impact studies to demonstrate that large loads do 
+not create adverse reliability impacts on the system.
+--- PAGE 25 ---
+Large Load Technical Requirements  Page 25 of 38 
+ 
+• Southern Company: Requires the frequency -domain content of the load profile, 
+calculated using FFT analysis, to remain below specified limits across multiple frequency 
+bands, including 0.1–0.5 Hz, 0.5–0.8 Hz, 0.8–2 Hz, and 5–55 Hz. 
+• LIPA: Requires frequency-domain content in the 0.1–5 Hz range to remain below 10 MW 
+and content in the 5–55 Hz range to remain below 3.5 MW.
+--- PAGE 26 ---
+Large Load Technical Requirements  Page 26 of 38 
+ 
+3.3 Limits on operating in constant power mode 
+Requirement 
+To be determined.  
+Notes 
+The following topics are being considered for this requirement: 
+• The dynamic behavior of power electronic load controls during voltage disturbance  
+• Potential impacts on transmission system voltage recovery and system stability  
+• Interactions with IBRs and weak-grid conditions 
+• The aggregate effect of multiple large loads operating with similar control 
+characteristics 
+• Appropriate operational limitations or control requirements during transient voltage 
+events.  
+Technical Rationale 
+Many large loads utilize power electronic interfaces and control systems designed to maintain 
+relatively constant active power consumption over a wide range of operating conditions. During 
+voltage depressions, constant power operation may cause the load to draw increased current 
+from the transmission system to maintain its active power consumption. 
+Under certain system conditions, this behavior may negatively impact voltage recovery 
+following disturbances, increase reactive power demand, reduce system damping, or contribute 
+to voltage instability. The aggregate response of multiple large loads operating in constant 
+power mode may further amplify these effects.  
+The potential reliability impacts are expected to depend on several factors, including system 
+strength, load composition, control system design, disturbance severity, and the dynamic 
+interactions between large loads and nearby generation resources. 
+Industry Practice 
+• ATC and SPP: Do not permit operation in constant power mode during voltage sag 
+conditions due to concerns regarding adverse impacts on transmission system reliability 
+and voltage recovery performance.
+--- PAGE 27 ---
+Large Load Technical Requirements  Page 27 of 38 
+ 
+3.4 Power Quality (harmonic, flicker, Rapid Voltage Change, ...)  
+Requirement 
+To be determined.  
+Notes 
+The following topics are being considered for this requirement: 
+• Harmonic current and voltage distortion  
+• Voltage flicker and Rapid Voltage Change (RVC)  
+• Subharmonic and interharmonic emissions  
+• Power quality impacts associated with rapidly varying loads 
+• Continuous power quality monitoring and reporting requirements  
+• Potential cumulative impacts resulting from geographically concentrated large loads.  
+The LLTRWG is also evaluating appropriate measurement methodologies, compliance criteria, 
+monitoring requirements, and applicable industry standards for power quality performance. 
+Technical Rationale 
+Large loads, particularly AI-training data centers, may contribute to harmonic distortion, flicker, 
+rapid voltage fluctuations, interharmonics, and other waveform abnormalities that may 
+adversely affect transmission equipment, customer loads, IBRs, and overall system reliability. 
+The potential impact of power quality disturbances depends on several factors, including facility 
+size, load composition, converter technologies, local system strength, network impedance 
+characteristics, and the aggregate behavior of nearby large loads and IBRs. 
+As the penetration of large loads increases, the cumulative impact of harmonics and rapidly 
+varying load behavior may become more significant, particularly in electrically weak areas of 
+the system. Continuous monitoring and appropriate technical limits may therefore be necessary 
+to ensure acceptable system performance and compliance with applicable reliability and power 
+quality standards. 
+Industry Practice 
+• ATC, Dominion, AEP, and AESO: Require compliance with IEEE 519-2022 harmonic limits 
+at the Point of Common Coupling (PCC), IEEE 1453 flicker and Rapid Voltage Change 
+(RVC) limits, and continuous power quality monitoring at the POI. 
+• ERCOT and SPP: Are expected to propose similar power quality requirements for large 
+loads.
+--- PAGE 28 ---
+Large Load Technical Requirements  Page 28 of 38
+--- PAGE 29 ---
+Large Load Technical Requirements  Page 29 of 38 
+ 
+3.5 Power Factor and Dynamic reactive support  
+Requirement 
+To be determined.  
+Notes 
+The following topics are being considered for this requirement: 
+• Steady-state power factor requirements at the POI  
+• Dynamic reactive power performance during normal and system disturbance conditions  
+• Voltage support capabilities during transmission contingencies and voltage disturbance 
+events  
+• Coordination with IBRs and nearby reactive support devices 
+• Reactive power impacts associated with rapidly varying loads  
+• The aggregate impact of geographically concentrated large loads on local and system-
+wide voltage performance.  
+Technical Rationale 
+Large loads may have a significant impact on transmission system voltage performance and 
+reactive power requirements. Depending on their operating characteristics, large loads may 
+contribute to increased reactive power demand, voltage fluctuations, reduced voltage stability 
+margins, and degraded post-disturbance voltage recovery performance. 
+Many large loads utilize power electronic equipment, UPS systems, and advanced control 
+systems that may dynamically influence reactive power consumption and voltage behavior 
+during both normal operation and system disturbances. As the penetration of these facilities 
+increases, maintaining acceptable voltage performance and reactive power balance across the 
+transmission system may require additional technical requirements related to steady-state 
+power factor operation and dynamic reactive support capabilities. 
+ Industry Practice 
+• Based on section 8.2.3.3 (Voltage Support) of the ISO Tariff: 
+“… All Loads directly connected to the CAISO Controlled Grid shall maintain reactive flow at 
+grid interface points within a specified power factor band of 0.97 lag to 0.99 lead. Loads 
+shall not be compensated for the service of maintaining the power factor at required levels 
+within the bandwidth. A UDC interconnecting with the CAISO Controlled Grid at any point 
+other than a Scheduling Point shall be subject to the same power factor requirement...”
+--- PAGE 30 ---
+Large Load Technical Requirements  Page 30 of 38 
+ 
+• SPP, ATC, LIPA, and AESO: Require operation within a ±0.95 power factor range at the 
+POI. 
+• MISO: Has proposed a ±0.95 power factor requirement at the POI. 
+• Southern Company: Requires operation within a ±0.90 power factor range at the POI.
+--- PAGE 31 ---
+Large Load Technical Requirements  Page 31 of 38 
+ 
+3.6 Phase Angle Jump Ride Through  
+Requirement 
+To be determined.  
+Notes 
+The following topics are being considered for this requirement: 
+• The ability of large loads to remain connected during transient phase angle shifts 
+resulting from system disturbances, switching events, or fault clearing  
+• Potential interactions between load control systems, UPS systems, IBRs, and protection 
+systems during phase angle disturbances  
+• Appropriate ride-through limits, measurement methodologies, and performance criteria  
+• The aggregate impact of load responses to phase angle disturbances in electrically weak 
+areas or regions with high concentrations of large loads. 
+• Utilizing IEEE-2800 requirement on phase angle jump ride-through as a reference.  
+ 
+Technical Rationale 
+Transmission system disturbances, fault clearing events, switching operations, and network 
+reconfigurations may result in temporary phase angle shifts across the transmission system. 
+Depending on the magnitude and rate of the phase angle change, sensitive load control 
+systems, UPS equipment, synchronization controls, or protection systems may respond by 
+reducing load, transferring to backup systems, or disconnecting from the grid. 
+Large loads may be particularly sensitive to such disturbances. Coordinated or widespread 
+responses to phase angle jumps could potentially result in sudden changes in active or reactive 
+power consumption, undesirable dynamic interactions, or reduced system stability margins. 
+Industry Practice 
+Industry practices and technical requirements related to phase angle jump ride-through for 
+large loads are currently evolving. The LLTRWG continues to monitor industry developments, 
+utility requirements, and emerging reliability standards in this area.
+--- PAGE 32 ---
+Large Load Technical Requirements  Page 32 of 38 
+ 
+3.7 Protection Requirements  
+Requirement 
+To be determined.  
+Notes 
+The following topics are being considered for this requirement: 
+• Protection system coordination between large loads and the transmission system  
+• Voltage, frequency, and Rate of Change of Frequency (RoCoF) -based protection settings  
+• Coordination of load protection systems with ride-through requirements and system 
+reliability objectives  
+• Protection system behavior during transmission faults, switching events, oscillatory 
+conditions, and abnormal system conditions  
+• The use of remedial action schemes, load-shedding schemes, or special protection 
+systems to maintain system reliability  
+• The aggregate impact of coordinated or simultaneous operation of protection systems 
+associated with multiple large loads.  
+• For any customer back up generation including UPS that will only operate when the 
+large load is isolated from the interconnecting TO System (e.g., in island-mode), the 
+large load will be required to install interlocks acceptable to the TO to prevent the 
+customer-owned generation from coming on-line or generating when the large load is 
+synchronized to the TO system. 
+Technical Rationale 
+Protection systems associated with large loads can significantly influence transmission system 
+performance during disturbances and abnormal operating conditions. Improperly coordinated 
+or overly sensitive protection settings may result in unnecessary or widespread disconnection 
+of large loads following transmission faults, voltage depressions, frequency excursions, 
+oscillatory events, or other system disturbances. 
+Because large loads may represent concentrated demand as an aggregate, simultaneous or 
+coordinated tripping of these facilities could result in sudden load loss, excessive frequency and 
+voltage excursions, and other adverse impacts on reliability. 
+In addition, many large loads utilize advanced control architectures that may introduce complex 
+interactions between facility-level protection systems and transmission system dynamics. 
+Protection system coordination is therefore important to ensure that the facility appropriately
+--- PAGE 33 ---
+Large Load Technical Requirements  Page 33 of 38 
+ 
+distinguishes between disturbances that require equipment protection and those for which 
+continued ride-through operation is necessary to support reliable system performance. 
+Industry Practice 
+Industry practices and technical requirements related to protection systems for large loads 
+continue to evolve. Utilities, balancing authorities, and reliability organizations are actively 
+evaluating appropriate protection coordination requirements, ride-through expectations, and 
+remedial action approaches for large load interconnections.
+--- PAGE 34 ---
+Large Load Technical Requirements  Page 34 of 38 
+ 
+3.8 Other Emerging Technical Requirements  
+Requirement 
+To be determined.  
+Notes 
+Potential future areas of evaluation may include, but are not limited to: 
+• Emerging dynamic performance characteristics associated with large loads 
+• Interactions between large loads and IBRs, HVDC systems, FACTS devices, and advanced 
+transmission technologies  
+• Advanced monitoring, telemetry, and real-time performance assessment requirements  
+• Cybersecurity and operational coordination considerations associated with large load 
+facilities  
+• Aggregated impacts of geographically concentrated large loads on system reliability and 
+operational flexibility 
+• Additional reliability requirements identified through NERC standards and guideline 
+development activities, disturbance investigations, or industry operating experience. 
+• Coordinated or simultaneous loss of large loads across multiple facilities resulting from 
+common-mode IT, communication network, cloud-service, control system, or 
+cybersecurity events, rather than transmission system disturbances, may present unique 
+reliability risks to the BES. The LLTRWG may evaluate whether additional operational, 
+coordination, monitoring, or performance requirements are necessary to address such 
+scenarios.  
+• The interconnecting TO may require updated studies, revised modeling data, or 
+additional operational coordination requirements when significant changes occur to 
+facility configuration, operating characteristics, control systems, or load behavior 
+following commercial operation. 
+Technical Rationale 
+As industry practices, technologies, and system conditions continue to evolve, new reliability 
+considerations may emerge that are not fully addressed by existing planning criteria, operating 
+practices, or technical requirements. 
+The large scale, rapid growth, and increasingly dynamic behavior of these facilities may create 
+new operational and planning challenges for the grid.
+--- PAGE 35 ---
+Large Load Technical Requirements  Page 35 of 38 
+ 
+Given the evolving nature of these technologies and the limited long-term operating experience 
+currently available, the LLTRWG believes it is important to maintain flexibility to develop 
+additional technical requirements as necessary to support reliable system operation.   
+Industry Practice 
+Many entities are actively evaluating additional reliability requirements beyond those currently 
+established, particularly in areas related to dynamic performance, oscillatory behavior, power 
+quality, monitoring, protection coordination, and advanced control system interactions.
+--- PAGE 36 ---
+Large Load Technical Requirements  Page 36 of 38 
+ 
+4. References  
+[1]  NERC Level 3 Computational Load Alert – Essential Action to Industry; Computational 
+Load Modeling, Studies, Instrumentation, Commissioning, Operations, Protection, and 
+Control, May 2026 
+https://www.nerc.com/globalassets/programs/bpsa/alerts/level -3-computational-load-alert.pdf  
+[2]  NERC Level 2 Large Load Alert –Industry Recommendation; Large Load Interconnection, 
+Study, Commissioning, and Operations, September 2025 
+https://www.nerc.com/globalassets/programs/bpsa/alerts/2025/nerc -alert-level-2--large-loads.pdf  
+[3]  NERC Reliability Guideline – Large Loads Reliability Impacts and Recommended 
+Modeling Practices, May 2026 
+https://www.nerc.com/globalassets/who-we-are/standing-
+committees/rstc/draft_reliabilityguideline_riskmitigationforemerginglargeloads.pdf   
+[4]  NERC Project 2026-02 – Computational Load Reliability Standards Development 
+https://www.nerc.com/standards/reliability-standards-under-development/2026-02-computational-loads  
+[5]  NERC White Paper – Assessment of Gaps in Existing Practices, Requirements, and 
+Reliability Standards for Emerging Large Loads, March 2026 
+https://www.nerc.com/globalassets/our-work/guidelines/reliability/white -paper---assessment-of-
+gaps.pdf  
+[6]  NERC – Large Load Modeling Data Questionnaire, March 2026 
+https://www.nerc.com/globalassets/who-we-are/standing-committees/rstc/lmwg/data-center -
+information-collection -questionnaire.pdf   
+[7] NERC – Large Load Working Group 
+https://www.nerc.com/who-we-are/committees/reliability -and-security-technical-committee-
+rstc/subcommittees-working-groups-and-task-forces/large -loads-working-group-llwg  
+[8] ESIG – Large Load Working Group 
+https://www.esig.energy/working-groups/large -loads/  
+[9]  ERCOT – Large Load Working Group 
+https://www.ercot.com/committees/tac/llwg  
+[10]  Southern Company – Technical Requirements for Transmission Connected Large Loads, 
+effective May 1st, 2026 
+https://www.oasis.oati.com/woa/docs/SOCO/SOCOdocs/SOCO_Technical_Requirements_for_TCLLs_-
+_v1.4_2026 -05-01.pdf  
+[11] American Transmission Company (ATC) –  Transmission System Planning Criteria 
+https://cdn.misoenergy.org/ATC TO Planning Criteria108210.pdf   
+[12]  NERC Reliability Standards PRC-024-04 – Frequency and Voltage Protection Settings for 
+Synchronous Generators, Type 1 and Type 2 Wind Resources, and Synchronous
+--- PAGE 37 ---
+Large Load Technical Requirements  Page 37 of 38 
+ 
+Condensers 
+https://www.nerc.com/globalassets/standards/reliability-standards/prc/prc -024-4.pdf  
+[13]  NERC Reliability Standards PRC-029-1 – Frequency and Voltage Ride-through 
+Requirements for Inverter-based Resources 
+https://www.nerc.com/globalassets/standards/approved -standards/prc/prc -029-1.pdf  
+[14]  California ISO Planning Standards, Effective February 2nd, 2023 
+https://www.caiso.com/documents/iso-planning-standards-effective -feb22023.pdf   
+[15]  Alberta Electric System Operator (AESO) – Connection Requirements for Transmission 
+Connected Data Centers – Draft for Stakeholder Review, August 22nd, 2025 (Link) 
+ 
+[16]  Long Island Power Authority (LIPA) – Performance Requirements for Large Loads 
+Connected to the LIPA System – February 18, 2026 
+file://T:\\ERahimi\PerformanceRequirementsLargeLoadsConnectedLIPASystem.pdf
+--- PAGE 38 ---
+Large Load Technical Requirements  Page 38 of 38 
+ 
+5. Acronym Definitions 
+  
+Acronym Definition 
+ACE Area Control Error 
+ADFR Advanced Digital Fault Recorder  
+BA Balancing Authority 
+BES Bulk Electric System 
+CAISO California Independent System Operator 
+DFR Dynamic Fault Recorder  
+EMT Electromagnetic Transient 
+ESIG Energy Systems Integration Group 
+FACTS Flexible AC Transmission Systems 
+FFT Fast Fourier Transform 
+HVDC High-Voltage Direct Current 
+IBR Inverter-Based Resource 
+LLTRWG Large Load Technical Requirements Working Group 
+MPT Main Power Transformer 
+PCC Point of Common Coupling 
+PFAPR Post-Fault Active Power Recovery  
+PFR Primary Frequency Response 
+PMU Phasor Measurement Unit 
+POI Point of Interconnection 
+RMS Root Mean Square 
+RoCoF Rate of Change of Frequency  
+RVC Rapid Voltage Change 
+SCADA Supervisory Control and Data Acquisition 
+SOE Sequence of Events 
+SSR Subsynchronous Resonance 
+SSCI Subsynchronous Control Interaction 
+SSTI Subsynchronous Torsional Interaction 
+TO Transmission Owner 
+UPS Uninterruptible Power Supply

@@ -6,11 +6,13 @@ import { DocumentPathError } from "@/lib/documents";
 import {
   archiveInsight,
   freePath,
-  htmlToMarkdown,
   resolveArchiveDir,
   slugify,
   titleOf,
 } from "@/lib/insight-export";
+// htmlToMarkdown 搬去了 html-text.ts（CR-20260915-library-adoption CP-6：documents.ts 也要用它，
+// 而 insight-export.ts 自己 import documents.ts，留在原处会成环）。
+import { htmlToMarkdown } from "@/lib/html-text";
 
 /**
  * TEST-320 — 洞察双产物与归档（REQ-F-190，DEC-230）。

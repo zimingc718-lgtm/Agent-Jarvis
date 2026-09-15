@@ -1,0 +1,1308 @@
+
+===== PAGE 1 =====
+.
+ 
+ 
+ 
+Diablo 400 Project: Rack and Power 
+0.7.0 
+ 
+Base Specification 
+Effective March 1st , 2026 
+ 
+Authors: Microsoft, Meta, Google 
+ 
+
+===== PAGE 2 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 2 
+Version history 
+ 
+Date Version # Authors Description 
+5 May 2025 0.5.0 Microsoft: Laurentiu Olariu, 
+Samir Kala, Joel Jaramillo, 
+Kelsey Wildstone, Brandon 
+DeVaul, Harsha Bojja, Andy 
+Regimbal, Jason Adrian. 
+ 
+Meta: David Sun, Dmitriy 
+Shapiro, Ben Kim, John 
+Fernandes, Drazena Brocilo, 
+Mingchun Xu. 
+ 
+Google: Jorge Rodriguez, 
+Xiong Li, Christina Peabody, 
+Vijay Boovaragavan, Matt 
+Tamashiro, Bill Barry, Maziar 
+Mobarrez, Adrian Shanov, 
+Scott McCauley, Tamar 
+Makharashvili, Vivek Khaire 
+Initial Release 
+ May 2025 0.5.1  Updated Authors  
+May 2025 0.5.2 Same as above Updated Interface 
+Section and 
+Compliance Section. 
+Updated PSU power 
+for 400Vac input. 
+Released to OCP 
+February 
+2026 
+0.7 Microsoft: Laurentiu Olariu, 
+Samir Kala, Joel Jaramillo, 
+Brandon DeVaul, Andy 
+Regimbal, Mingchun Xu, Jamie 
+Chen 
+ 
+Meta: David Sun, Dmitriy 
+Shapiro, Ben Kim, John 
+Fernandes, Zuhir Sras, 
+Xianyong Feng 
+ 
+Google: Jorge Rodriguez, 
+Xiong Li, Christina Peabody, 
+Vijay Boovaragavan, Matt 
+Tamashiro, Bill Barry, Maziar 
+Mobarrez, Adrian Shanov, 
+Renamed 0.53 to 0.7. 
+Updated Telemetry 
+section, updated 
+doors section. Added 
+Appendix C for DC 
+output connector and 
+appendix D for AC 
+input connectors. 
+Renamed version 
+0.5.3 to 0.7. Updated 
+PSU ride through with 
+energy storage 
+option. Corrected 
+tables, minor edits, 
+added references. 
+===== PAGE 3 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 3 
+Scott McCauley, Tamar 
+Makharashvili, Jason Adrian, 
+Tanya Liu 
+March 2026 0.7.0 Laurentiu Olariu, David Sun Corrected version 
+number per OCP 
+standard. Removed 
+section heading from 
+version history and 
+TOC, correction on 
+intentionally blank 
+pages, License 
+section, removed 
+HVDC and rectifier 
+term, included 
+tolerance statement 
+in section 6, added 
+intro to Appendix 
+sections, corrected 
+references. 
+    
+    
+ 
+===== PAGE 4 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 4 
+This page intentionally blank.  
+===== PAGE 5 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 5 
+Table of Contents  
+1 License ................................................................................................................................................................................ 8 
+2 Open Web Foundation (OWF) CLA ......................................................................................................................... 8 
+3 Acknowledgements ....................................................................................................................................................... 9 
+4 Compliance with OCP Tenets .................................................................................................................................... 9 
+4.1 Openness .................................................................................................................................................................. 9 
+4.2 Efficiency.................................................................................................................................................................. 9 
+4.3 Impact ..................................................................................................................................................................... 10 
+4.4 Scale ......................................................................................................................................................................... 10 
+4.5 Sustainability ....................................................................................................................................................... 10 
+5 Scope ................................................................................................................................................................................. 11 
+6 Rack Physical Dimensions ........................................................................................................................................ 12 
+6.1 Mechanical Features.......................................................................................................................................... 12 
+7 Voltage Distributions .................................................................................................................................................. 13 
+7.1 Rack AC Power Requirements ....................................................................................................................... 13 
+7.1.1 AC Input Voltage .......................................................................................................................................... 13 
+7.1.2 AC Input PF and THD ................................................................................................................................. 13 
+7.1.3 AC Loss (Holdup and ride-trough) ....................................................................................................... 14 
+7.1.3.1 PSU ride-through without energy storage ................................ .......................14 
+7.1.3.2 PSU ride-through with energy storage................................ ............................14 
+7.2 Energy Storage Solutions ................................................................................................................................ 14 
+7.2.1 BBU Option .................................................................................................................................................... 14 
+7.2.1.1 Battery Backup Time ................................ ................................ ......................15 
+7.2.2 Capacitor Bank Option CBU .................................................................................................................... 15 
+7.3 Rack DC Power Requirements ...................................................................................................................... 15 
+7.3.1 DC Output Voltage for Nominal ±400VDC ......................................................................................... 15 
+7.3.2 DC Output Power for Nominal ±400VDC ........................................................................................... 15 
+7.3.3 DC Output – Dynamic loading ................................................................................................................ 16 
+7.3.4 End to End Output Power Conversion Efficiency ........................................................................... 18 
+7.4 Multi Rack Parallel Option .............................................................................................................................. 18 
+8 Power Rack Building Blocks .................................................................................................................................... 18 
+8.1 AC & DC PDU......................................................................................................................................................... 18 
+8.1.1 AC PDU Configuration ............................................................................................................................... 18 
+===== PAGE 6 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 6 
+8.1.2 ±400VDC Power Distribution ................................................................................................................. 19 
+8.1.3 ±400VDC PDU Output Protection and Control Module ............................................................... 19 
+8.1.4 ±400VDC PE Grounding ............................................................................................................................ 19 
+8.1.4.1 High resistance mid-point grounding PE ................................ ........................19 
+8.1.4.1.1 Ground Fault Detector ................................ ................................ ...............20 
+8.1.4.2 Solid contact mid-point grounding PE ................................ ............................21 
+8.2 AC/DC PSU Shelf ................................................................................................................................................. 21 
+8.2.1 AC/DC PSU ..................................................................................................................................................... 22 
+Size to be updated in future revision. .................................................................................................................. 23 
+8.2.2 AC/DC Power Shelf Control Module .................................................................................................... 23 
+8.3 ±400VDC Distribution Busbar ...................................................................................................................... 23 
+8.4 ±400VDC to IT rack Distribution Cable ..................................................................................................... 23 
+9 Management, telemetry and communication interface with the sidecar ............................................. 24 
+9.1 Management ......................................................................................................................................................... 24 
+9.2 Telemetry ............................................................................................................................................................... 24 
+9.3 Communication ................................................................................................................................................... 25 
+10 Operating Environmental Conditions ............................................................................................................. 25 
+10.1 Subsystem Thermal Design Requirements .............................................................................................. 25 
+10.2 L11/Rack-level Operational Requirements ............................................................................................. 25 
+11 Regulatory and Compliance Requirements .................................................................................................. 26 
+11.1 Safety Requirements ......................................................................................................................................... 26 
+11.2 Electromagnetic Compatibility (EMC) Requirements ......................................................................... 27 
+11.3 Environmental, Eco-Design, and Sustainability Requirements ....................................................... 28 
+12 Appendix A ................................................................................................................................................................. 29 
+12.1 High Resistance Grounding (HRG) .............................................................................................................. 29 
+12.2 Solid Grounding (SG) ........................................................................................................................................ 29 
+13 Appendix B ................................................................................................................................................................. 31 
+13.1 Average current vs RMS current thermal impact .................................................................................. 31 
+14 Appendix C ................................................................................................................................................................. 32 
+14.1 DC Output Interconnect Options .................................................................................................................. 32 
+15 Appendix D ................................................................................................................................................................ 33 
+15.1 AC Input Interconnect Options ..................................................................................................................... 34 
+16 Reference section .................................................................................................................................................... 35 
+===== PAGE 7 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 7 
+ 
+ 
+ 
+===== PAGE 8 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 8 
+1 License 
+OWFa 0.9.  
+ 
+2 Open Web Foundation (OWF) CLA 
+Contributions to this Specification are made under the terms and conditions set forth in 
+Modified Open Web Foundation Agreement 0.9 (OWFa 0.9). (As of October 16, 2024) 
+(“Contribution License”) by:  
+ 
+Microsoft 
+Google  
+Meta 
+ 
+Usage of this Specification is governed by the terms and conditions set forth in Modified OWFa 
+0.9 Final Specification Agreement (FSA) (As of October 16, 2024) (“Specification 
+License”).    
+ 
+You can review the applicable Specification License(s) referenced above by the contributors to 
+this Specification on the OCP website at https://www.opencompute.org/contributions/templates-
+agreements.  
+ 
+For actual executed copies of either agreement, please contact OCP directly. 
+ 
+ Notes:  
+ 
+The above license does not apply to the Appendix or Appendices. The information in the 
+Appendix or Appendices is for reference only and non-normative in nature.  
+ 
+NOTWITHSTANDING THE FOREGOING LICENSES, THIS SPECIFICATION IS PROVIDED 
+BY OCP "AS IS" AND OCP EXPRESSLY DISCLAIMS ANY WARRANTIES (EXPRESS, 
+IMPLIED, OR OTHERWISE), INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY, 
+NON-INFRINGEMENT, FITNESS FOR A PARTICULAR PURPOSE, OR TITLE, RELATED TO 
+THE SPECIFICATION. NOTICE IS HEREBY GIVEN, THAT OTHER RIGHTS NOT GRANTED 
+AS SET FORTH ABOVE, INCLUDING WITHOUT LIMITATION, RIGHTS OF THIRD PARTIES 
+WHO DID NOT EXECUTE THE ABOVE LICENSES, MAY BE IMPLICATED BY THE 
+IMPLEMENTATION OF OR COMPLIANCE WITH THIS SPECIFICATION. OCP IS NOT 
+RESPONSIBLE FOR IDENTIFYING RIGHTS FOR WHICH A LICENSE MAY BE REQUIRED 
+IN ORDER TO IMPLEMENT THIS SPECIFICATION.  THE ENTIRE RISK AS TO 
+IMPLEMENTING OR OTHERWISE USING THE SPECIFICATION IS ASSUMED BY YOU. IN 
+NO EVENT WILL OCP BE LIABLE TO YOU FOR ANY MONETARY DAMAGES WITH 
+===== PAGE 9 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 9 
+RESPECT TO ANY CLAIMS RELATED TO, OR ARISING OUT OF YOUR USE OF THIS 
+SPECIFICATION, INCLUDING BUT NOT LIMITED TO ANY LIABILITY FOR LOST PROFITS 
+OR ANY CONSEQUENTIAL, INCIDENTAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES 
+OF ANY CHARACTER FROM ANY CAUSES OF ACTION OF ANY KIND WITH RESPECT TO 
+THIS SPECIFICATION, WHETHER BASED ON BREACH OF CONTRACT, TORT 
+(INCLUDING NEGLIGENCE), OR OTHERWISE, AND EVEN IF OCP HAS BEEN ADVISED OF 
+THE POSSIBILITY OF SUCH DAMAGE. 
+ 
+ 
+3 Acknowledgements 
+The Contributors of this Specification would like to acknowledge the following for their 
+feedback: 
+ 
+ 
+Microsoft: Laurentiu Olariu, Samir Kala, Joel Jaramillo, Kelsey Wildstone, Brandon DeVaul, 
+Harsha Bojja, Jason Adrian, Andy Regimbal 
+ 
+Meta: David Sun, Dmitriy Shapiro, Ben Kim, John Fernandes, Drazena Brocilo, Mingchun Xu. 
+ 
+Google: Jorge Rodriguez, Xiong Li, Christina Peabody, Vijay Boovaragavan, Matt Tamashiro, 
+Bill Barry, Maziar Mobarrez, Adrian Shanov, Scott McCauley, Tamar Makharashvili. 
+ 
+ 
+ 
+4 Compliance with OCP Tenets  
+4.1 Openness 
+This specification will hopefully serve as the future fundamental base for a 
+disaggregated power rack to deliver ±400VDC to a nearby IT rack. The base of the 
+mechanical rack follows the Open Rack standard. Currently three companies have 
+worked together to provide a high-level overview of the Diablo 400V architecture. The 
+goal is to standardize items such as, high voltage connectors and mating interfaces.  
+4.2 Efficiency  
+Transferring power at a higher voltage is more efficient, reduces I2R losses. This 
+disaggregated power rack can be used with multiple generations and SKUs of IT racks; 
+a disaggregated power rack can remain in the same location in the datacenter while IT 
+===== PAGE 10 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 10 
+racks can be swapped as required. This will ultimately reduce the overall infrastructure 
+costs. One objective is to use learnings from this architecture to distribute increased 
+direct current voltage in the datacenter directly to the IT racks to improve overall end to 
+end power distribution efficiency. 
+4.3 Impact 
+This is the first disaggregated power rack specification. Standardizing the high voltage 
+rack architecture will hopefully lead to a common supply chain, provide end to end power 
+efficiency gains, and leverage mainstream EV industry technologies of increased direct 
+current voltage as ±400VDC or 800Vdc from charging/battery infrastructure.    
+4.4 Scale 
+The fundamental advantage of a disaggregated power rack is scalability in terms of 
+rated power, redundancy schemes and backup power.  
+4.5 Sustainability 
+Disaggregated power rack has the ability to be scaled for various power ratings allowing 
+it to be re-used for multiple generations of an IT rack. The IT rack can be updated while 
+maintaining the same hardware in the disaggregated power rack, therefore reducing the 
+need to scrap power building blocks.  
+ 
+===== PAGE 11 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 11 
+5 Scope 
+With increased rack power (from 33kW to 100’s of kW), size and power of AI 
+accelerators, and rack/POD size growth, there are significant challenges with 
+interconnect density, power delivery and overall system integration.  To solve this, the 
+disaggregated power rack (also known as sidecar) provides a flexible and evolving 
+infrastructure solution.    
+The disaggregated power rack can be scalable and updated to meet various power 
+requirements from 800kW to 1MW+ (with the option to parallelize power racks together) 
+while keeping the disaggregated IT rack the same. 
+The rack shall support different power distribution configuration options. A few examples 
+are provided in Figure 1, for illustration purposes, not as a final design solution. 
+ 
+    
+Figure 1: Three examples of power rack configurations. 
+ 
+ 
+
+===== PAGE 12 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 12 
+6 Rack Physical Dimensions 
+Table 1 included below illustrates the Diablo 400 power rack dimensions. The height of 
+the rack with casters is not included in the table below. The target loading capacity of the 
+rack is 6000 lbs.  
+ 
+Table 1: Various rack dimensions 
+ Height (mm) Width (mm) Depth (mm) 
+Microsoft 2329 ±3 600 ±2 1200 ±2 
+Meta 2329 600 1219 
+Google 2329* 711 1219.2 
+*Option for height up to 2410mm. 
+Tolerances to be defined in future revision. 
+ 
+6.1 Mechanical Features 
+• Sliding shelves to facilitate push in/out of big building blocks such as a 4OU BBU, etc.  
+o Blind mate connector with static rail/sliding rails for PSU/BBU/CBU  
+o Center justified busbar placement  
+• Safety doors per compliance section 11 
+o Option to add a locking door on both the front and back of the rack, full or partial 
+doors 
+o Option for a switch for intrusion detection or/and emergency shutoff 
+• Reserved space for structural support  
+• Connection for AC Cables (Lug vs Connector)  
+o Option for connectors instead of lugs 
+o Example - Quick Connect (Amphenol Surelock) connector  
+• Cable routing  
+o Options to support AC whips routing   
+o Option for AC inlet in the back of the top of the rack, DC output on the top of the 
+front of the rack 
+• Accessibility defined per safety hazard in section 11 
+ 
+ 
+===== PAGE 13 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 13 
+7 Voltage Distributions 
+This section describes AC input voltage and DC output voltage requirements as well as 
+various energy storage options. 
+7.1 Rack AC Power Requirements  
+7.1.1 AC Input Voltage  
+The rack is designed to accept 3-phase AC input (3P+E) voltage into an AC PDU, which 
+then distributes the AC power as input to the AC/DC PSU modules.   
+The rack is configurable to support both single 3-phase AC input feed or dual AC input 
+for N+N redundancy feed, and a wide range of input voltage, as listed in Table2. 
+ 
+Table 2: Various AC input option configurations. 
+Parameter Nominal1 Nominal2 Nominal3 Min/Max 
+WYE 5Wire 
+3L+N+PE  
+480 Vrms 415 Vrms 400 Vrms ±10% 
+Line to 
+Neutral L+N 
+277 Vrms 240 Vrms 230 Vrms ±10% 
+Delta 4 Wire 
+3L+PE 
+480 Vrms 415 Vrms 400 Vrms ± 10% 
+Frequency  50/60 Hz 50/60 Hz 50/60 Hz ±3Hz 
+ 
+7.1.2 AC Input PF and THD 
+The power quality metrics, such as power factor (PF) and current harmonic distortion are 
+listed in Table 3 below.  
+ 
+Table 3: Power quality requirements. 
+Parameter @480VACVin @415VAC Vin @400VAC Vin 
+PF load <20% >0.95 >0.95 >0.95 
+PF load ≥20% >0.99 >0.99 >0.99 
+THD 5%< load <15% <15% <15% <15% 
+THD 15% ≤ load <30% <10% <10% <10% 
+THD load ≥30% <5% <5% <5% 
+ 
+===== PAGE 14 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 14 
+7.1.3 AC Loss (Holdup and ride-trough) 
+Holdup notion applies to built-in PSU bulk storage that allows time until other form of 
+energy support is engaged and activated to support the rack functions in case of AC 
+loss. Separate from holdup, the ride-through capability of the PSU defines running 
+without interruptions during voltage dropouts and sags/swells. 
+7.1.3.1 PSU ride-through without energy storage 
+Line Overvoltage: Follow ITIC curve for overvoltage and requires PSU to ride-through 
+and not latch-off. 
+Line Sag: Follow both ITIC and IEC 61000-4-34 and requires PSU to ride-through and 
+not latch-off. 
+Minimum holdup without energy storage requirement is up to 20msec at 100% loading. 
+Addition of system distributed holdup is acceptable, between the AC/DC PSU in the 
+Diablo 400 rack and with the downstream DC/DC converter, located outside the rack. 
+ 
+7.1.3.2 PSU ride-through with energy storage 
+Shall ride-through any duration within the energy storage  hold up time range. 
+The PSU/Shelf hold-up energy/time shall be enough covering the smooth transition from 
+AC drop out to energy storage ramp up at the worst-case condition, which can be the AC 
+drop at the lowest point of bulk voltage during peak load as defined in 9.3.2.    
+Holdup with energy storage requirement shall be decided per solution specific 
+requirements, sufficient to cover transition time. 
+ 
+7.2 Energy Storage Solutions 
+The rack is designed to support various storage solutions such as battery backup unit 
+(BBU) and capacitor bank energy storage units (CBU). Depending on the user’s 
+requirement the number of BBUs and CBUs can be adjusted. 
+7.2.1 BBU Option 
+Rack shall support BBU options. Design shall support power ranges per electrical 
+specification. 
+• Optional active management via microcontroller for secure access  
+• Optional module interface with a Rack Management Unit -interface standard 
+defined in section 9 
+===== PAGE 15 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 15 
+7.2.1.1 Battery Backup Time 
+If BBU option is utilized, battery backup time shall support a range of 45 to 90 seconds 
+holdup at 100% loading. 
+7.2.2 Capacitor Bank Option CBU 
+The rack design shall support capacitive bank energy storage, although power and 
+duration may be specific to each application, and selection may differ per platform. 
+Design shall support power ranges per electrical specification. 
+• Optional active management via microcontroller for secure access 
+• Optional module interface with a Rack Management Unit -interface standard 
+defined in section 9  
+ 
+7.3 Rack DC Power Requirements  
+7.3.1 DC Output Voltage for Nominal ±400VDC 
+DC output regulation parameters are listed in Table 4. COM means common wire 
+(neutral polarity between the +400DC and -400VDC output. Voltages are measured at the 
+output connector of the AC/DC PSU module or/and power shelf. 
+ 
+Table 4: DC output voltage parameters 
+ 
+ 
+7.3.2 DC Output Power for Nominal ±400VDC 
+The rack shall be capable of delivering the following power at the various AC input 
+voltages. The AC/DC PSU module shall be able to support short peak power 
+requirements, as stated in the Table 5 below.  
+BBU backup should not be triggered during the peak power loading condition.  
+Parameter Nominal at no 
+load 
+Nominal at 
+full load Min/Max 
++400 to COM 410VDC 400VDC ±0.5% 
+-400 to COM -410VDC -400VDC ±0.5% 
+Ripple and noise   ±1% or ±2% pk_pk 
+(maybe) 
+V_droop dc   
+built in the Nominal 
+setpoint 
+(10V ±0.5V) 
+Output voltage transient 
+overshoot/undershoot   ±3% from typical set 
+point 
+===== PAGE 16 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 16 
+The PSU input current waveform shall not be clamped during pulse loading operation. 
+Table 5: Rack power capabilities 
+Parameter (min) @480VAC Vin 
+Option1  
+@415VAC Vin 
+Option 2 
+@400VAC Vin 
+Option 3 Vendors 
+Rack average power 
+DC load 800kW to 1.1MW Up to 1.1MW Up to 718kW  
+<2 msec load step 175% of TDP  MSFT 
+Meta 
+<0.5 msec load step 180% of TDP 
+ MSFT 
+Meta 
+Google  <50 msec load step 150% of TDP 
+ 
+1 sec moving average 100% 
+ 
+7.3.3 DC Output – Dynamic loading 
+The DC output voltage shall not vary by more than specified for undershoot and 
+overshoot with 3ms settling time (with and without capacitive loading on a single unit of 
+10mF). The measurement shall be from the new steady state value (due to droop) to the 
+voltage spike/dip peaks during a transient load. Voltages are measured at the output of 
+the AC/DC PSU module or/and power shelf. 
+BBU backup should not be triggered during the dynamic loading operation. AC input 
+current shall be regulated by PFC.  
+Dynamic load parameters are listed in Table 6, and load profiles in Table7. 
+  
+  Table 6. Dynamic load requirements.  
+Step load increase or 
+decrease Frequency Slew rate 
+per PSU 
+Max undershoot 
+and overshoot 
+50% step load (10% min. load) Up to 10kHz 1A/us  
+±3% 90% step load (10% min. load) Up to 10kHz 1A/us 
+140% step load (10% min. load) Up to 10KHz 1A/us 
+ 
+Dynamic load profiles under test include but not limited to the ones shown in Table 7.  
+ 
+ Table 7. Example dynamic load profiles.  
+No. Low load High load Duty cycle Frequency 
+1 10% 60% 50% 20Hz, 100Hz, 
+500Hz, 1kHz  
+2 50% 100% 50% 
+3 10% 100% 50% 
+===== PAGE 17 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 17 
+4 10% 150% 50% 
+5 10% 60% 50% 10kHz 
+6 50% 100% 50% 10kHz 
+7 10% 100% 50% 6.5kHz 
+8 10% 150% 50% 4kHz 
+ 
+ 
+ 
+Pulse load profiles under test include but are not limited to the ones shown in 
+Table 8. 
+ 
+Table 8: Example pulse load profiles. 
+No. Low load High load T_low T_high Average 
+load Frequency PSU 
+slew rate 
+1 70% 130% 0.05ms 0.05ms 100% 10kHz 1A/us 
+2 20% 140% 0.1ms 0.1ms 80% 5kHz 1A/us 
+3 40% 175% 2.5ms 2ms 100% 222Hz 1A/us 
+4 0% 80% 1ms 1ms 40% 500Hz 0.1A/us 
+5 20% 140% 50ms 50ms 80% 10Hz 1A/us 
+6 60% 140% 50ms 50ms 100% 10Hz 1A/us 
+7 30% 140% 28.6ms 50ms 100% 12.7Hz 1A/us 
+8 30% 175% 0.43ms 0.4ms 100% 1.2kHz 1A/us 
+ 
+The designer shall translate this test performance to system integrator conditions. 
+ 
+
+===== PAGE 18 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 18 
+7.3.4 End to End Output Power Conversion Efficiency 
+End to end output power conversion refers to full conversion chain from AC input to DC 
+output, including cooling, distribution, control and energy/backup power losses. Minimum 
+efficiency values are shown in the Table 9 below. AC input is measured at the input to 
+the AC PDU and DC Output is measured at the output of the DCPDU. 
+ 
+Table 9: Total Rack Efficiency  
+Parameter @480VAC Vin @415VAC Vin @400VAC Vin 
+@20% load >95% > 95% > 95% 
+@50% load > 98% >97% >97% 
+@100% load >97% >96.5 >96.5 
+7.4 Multi Rack Parallel Option 
+Power rack shall have optional design features that enable paralleling multiple racks to 
+increase power delivery. 
+Current sharing between racks including droop and active sharing shall be implemented 
+at AC/DC power shelf level or/and rack level. 
+Synchronization and control features shall be implemented to ensure synchronized 
+power up and power down for the case of multi-rack parallel option. 
+8 Power Rack Building Blocks 
+8.1 AC & DC PDU 
+The 3 phase AC input and DC ±400VDC Output Protection and Control Modules are 
+estimated to take up to 15OU of space and described below. 
+8.1.1 AC PDU Configuration 
+The AC PDU takes in the AC power from the overhead busway and outputs power to 
+each of 3 phase power shelves inputs.  
+The AC PDU shall be designed to: 
+• Accept input connection to quantity up to 12x200A cords 
+• Include protection fuses 
+• Accept either input connection with two-hole compression lugs or connectorized 
+• Include an optional AC Panel/Cabinet  
+The output of the AC PDU 3-phase power is split into smaller rated cables (ex. 200A to 
+4x50A) cables to be routed to various power shelves to power the 3-phase PSUs.  
+===== PAGE 19 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 19 
+ 
+8.1.2  ±400VDC Power Distribution 
+The output of the ±400VDC from the power shelves is collected and distributed via a 
+vertical busbar spanning the full height of the rack.  The source of the ±400V is 
+generated by the power shelf or energy storage devices and is transferred via the rack 
+busbar which also is connected to the Output Protection and Control Modules.   
+8.1.3  ±400VDC PDU Output Protection and Control Module 
+The DC PDU Module shall be designed to support up to 400kW output, with built in 
+manageability, output On/Off, protection and telemetry, and no voltage contact on the 
+output cables.  
+• The Output Protection and Control Module shall attach to the ±400Vdc or 800Vdc 
+busbar and contain several output connectors that will transfer the power to the IT 
+rack via cables 
+• Multiple output cables per output module, based on two options: 
+o Option 1: 50kW per cable, qty as needed to support output power range 
+o Option 2: 100kW per cable, qty as needed to support output power range 
+• The front of the Output Protection and Control Module shall contain physical on/off 
+switches to turn on/off the corresponding output connector. 
+• The Output Protection and Control Module shall contain LED indicators, fuses and 
+relays to protect each output connection in case of over current.  
+• Output voltage disconnect-each output shall disconnect the voltage on the connector 
+before the cable is unplugged from either source or load side and when no output 
+cable is installed. 
+• Optional active management via microcontroller, for secure access 
+• Optional module interface with a Rack Management Unit-interface standard defined 
+in section 9  
+8.1.4 ±400VDC PE Grounding 
+There are two options to connect the ±400Vdc midpoint to PE (Protective Earth) Ground: 
+• High resistance mid-point grounding PE 
+• Solid contact mid-point grounding PE 
+The pros and cons between the two options are addressed in Appendix 1. 
+Mid-point grounding shall be concealed/covered for no-touch safety 
+8.1.4.1 High resistance mid-point grounding PE 
+±400Vdc routing in the power rack and to IT rack implemented as 3wires+PE as 
++400Vdc, Midpoint, -400Vdc, and PE. 
+===== PAGE 20 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 20 
+All outputs are floating voltage design, reference Figure 2 and 3 where mid-point is 
+connected to PE through a High Resistive Midpoint Grounding Scheme. Resistor values 
+are design dependent. 
+ 
+ 
+Figure 2: 2-wire output 
+ 
+ 
+ 
+Figure 3: 3 wire output connection 
+ 
+8.1.4.1.1 Ground Fault Detector 
+ 
+Ground Fault Detector shall be implemented for either solid midpoint grounding or High 
+Resistive Midpoint Grounding implementation. 
+This building block shall be implemented per each output cable/connection to the IT 
+rack. 
+For the case of Midpoint High Resistance Grounding the GFD shall include voltage 
+balance detection circuit. 
+• Optional active management via microcontroller, for secure access 
+• Optional module interface with a Rack Management Unit-interface standard 
+defined in section 9  
+
+===== PAGE 21 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 21 
+8.1.4.2 Solid contact mid-point grounding PE 
+This option applies to 3 wire interface where mid-point is connected as a solid 
+connection, or “zero-ohm contact” to PE. All outputs are floating voltage design, 
+reference Figure 4 and 5. 
+ 
+Figure 4: 2-wire output  
+ 
+ 
+ 
+Figure 5: 3-wire output 
+ 
+ 
+Ground Fault Detector as described in paragraph above is optional in this case. 
+ 
+8.2 AC/DC PSU Shelf 
+• Multiple solutions are presented for the AC/DC PSU shelf up to a 2OU height, min 21” to 
+24” wide compatible with rack mechanical specification. 
+• The power shelf can host various numbers of PSUs up to 2OU shelf based on form 
+factor and output power requirements.  
+• The power shelf shall be designed as 3-phase AC input and ± 400VDC output. 
+Connectors selected based on PSU requirements. 
+
+===== PAGE 22 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 22 
+• Design shall have droop and active current sharing between PSUs and Power shelves 
+Multiple parallel rack operation defined in section 7.4 
+• Design shall support power ranges per electrical spec 
+• Bus clip connector shall have a thermal sensor attached for thermal shutdown 
+• Optional active management via microcontroller, for secure access 
+• Optional module interface with a Rack Management Unit -interface standard defined in 
+section 9  
+ 
+8.2.1  AC/DC PSU 
+Currently there are two versions of the AC/DC PSU modules available in 1OU height 
+form factor. Size information is provided in the table below.  
+• The quantity of PSUs in a power shelf shall match the number of available output ports 
+on the AC PDU. 
+• PSU modules are front of rack accessible, hot-swappable, and hot pluggable. 
+• Complies with electrical requirements in this specification document. 
+• Galvanic isolated output from AC input and earth/chassis. 
+• PSU module outputs 400Vdc and is connected at power shelf output as floating output 
+with 3 wires, +400Vdc, -400Vdc and Common/Midpoint/Return 
+• Design option connected at power shelf output as 2 wires for 800VDC . where 800VDC  
+and Return shall be safety isolated from PE ground. Downstream converters shall have 
+safety isolated inputs from PE ground. 
+• Power range per Table 10 below 
+ 
+Table 10: AC/DC PSU rating and mechanical dimensions 
+Parameter @480VAC Vin @415VAC Vin @400VAC Vin 
+AC/DC PSU 
+Avg DC load, 
+no 
+redundancy 
+(up to) 
+Solution 1: 30kW 
+Solution 2: 27kW 
+Solution 1: 26kW 
+Solution 2: 27kW 
+Solution 1: 25 kW 
+Solution 2: 27 kW 
+Size XYZ 
+(mm) 
+Solution 1: 
+L810mm*H40mm*W165mm 
+-TBD 
+Solution 2: 
+L954mm*43mm*W134mm 
+L930mm (w/o handle) 
+Solution 1: 
+L810mm*H40mm*W165mm 
+- TBD 
+Solution 2: 
+L954mm*43mm*W134mm 
+L930mm (w/o handle) 
+Solution 1: 
+L810mm*H40mm*W165mm 
+- TBD 
+Solution 2: 
+L954mm*43mm*W134mm 
+L930mm (w/o handle) 
+===== PAGE 23 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 23 
+Size to be updated in future revision. 
+8.2.2 AC/DC Power Shelf Control Module 
+AC/DC power shelf may incorporate a secure control unit, compliant with company 
+specific requirements.  
+• Optional active management via microcontroller, 
+• Optional module interface with a Rack Management Unit -interface standard defined 
+in section 9  
+ 
+Allocated space required per power shelf to fit a control module is listed below in Table 
+11. 
+ 
+Table 11: Mechanical dimensions for the control module 
+Parameter X (width) (mm) Y (height) (mm) Z (depth) (mm) 
+Meta control unit N/A N/A N/A 
+Microsoft RSCM 81.2 30 340.9 
+Google module 42 39.7 885 
+8.3 ±400VDC Distribution Busbar 
+• There shall be a single zone vertical 3 conductor busbar in the rack that distributes +400, 
+-400 and Common. The busbar shall be designed to support up to 1.1MW average load 
+power. 
+• This vertical busbar interconnects with various building blocks such as the AC/DC power 
+shelf, energy storage shelves, Output Control and Protection modules. 
+• The busbar is designed such that it shall be concealed/covered for no-touch safety. 
+• The busbar will be air-cooled and shall meet thermal requirements as described in 
+section 10.1 
+ 
+8.4 ±400VDC to IT rack Distribution Cable 
+The ±400VDC power is brought out of the Diablo 400 rack via multiple output cables. 
+• Cabled cross links to IT rack DC/DC converter shelf can be a minimum of 63A/50kW up 
+to 125A/100kW each cable. 
+• ±400Vdc cable connectors on both ends shall have LMFB short pins to prevent arcing  
+• Each output connector contains at least three power contacts: +400V, Common, -400V; 
+one earth contact and two sense contacts (LMFB). ±400V and common are all rated 
+from 63A to 125A. 
+===== PAGE 24 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 24 
+• Connectors shall have a latching mechanism with an integrated physical switch on the 
+output connector, so the cable cannot be disengaged until the switch has turned off the 
+power of the load and the source at the time of disengagement. 
+• Each output of the ±400V rail shall be individually current limited according to its 
+maximum current rating. 
+• Voltage drop budget shall be 0.1% at 5m length for output cables. 
+• The respective output port shall be de-energized when the output cable is unplugged 
+from either source side or load side. The load side input voltage shall drop below SELV 
+within the safety specified time period. 
+ 
+• Output Protection and Control Module outputs may have the option to be turned off or on 
+through a panel mounted switch located on the  DCPDU. 
+• To minimize the number of wires in each output cable set and mitigate concerns about 
+current sharing between cables, a single cable is preferred. However, if more than one 
+cable is used, they should be sized appropriately to accommodate the current sharing 
+tolerance. 
+ 
+9 Management, telemetry and communication interface with the sidecar 
+9.1 Management 
+Sidecar/cabinet control module is a dedicated building block that may be used to interface with 
+all Diablo 400 building blocks.  
+Standard management interface based on Redfish is recommended or may use proprietary 
+interface as desired. 
+ 
+A. Hyperscaler specific per solution provider 
+May incorporate a secure control unit, compliant with company specific requirements.  
+a. External interface option like Ethernet, etc.  
+b. Internal interface option like CANbus, etc. 
+ 
+B. Other 
+Use communication ports “as-is”, like building blocks/manufacturer provided interface. 
+ 
+9.2 Telemetry 
+May use standard interface like Ethernet, I2C, PMBUS, Modbus, CANbus etc. 
+Power management may be implemented at the choice of each solution provider. 
+ 
+===== PAGE 25 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 25 
+9.3 Communication 
+Interfaces may be selected based on the management approach specified above. 
+• Sidecar to Datacenter network 
+• Sidecar to sidecar 
+• Sidecar to IT rack 
+In-rack communication (building block to sidecar control module) shall be implemented. 
+ 
+10 Operating Environmental Conditions 
+• The Diablo 400 power rack and all of its building blocks placed inside the rack is 
+designed to be fully air-cooled.  
+• Ambient temperature range: -5°C to 45°C (preferred), -5°C to 35°C (required) 
+• Lower range above, specified as ‘required’, may be influenced by component 
+temperature ratings and lifetime requirements in sub-systems 
+• Relative humidity: 10% to 90% (non-condensing) 
+• Altitude without de-ratings: up to 3050m (10,000 ft) 
+10.1 Subsystem Thermal Design Requirements 
+• This section covers sub-systems such as PSU, BBU, CBU, etc. 
+• Air inlet and outlet temperature difference: Building blocks should be designed to meet a 
+minimum value under a specified load profile/range and environmental conditions which 
+may be specific to each customer. 
+• Thermal margin: Adequate margins should be reserved to de-rated values on all critical 
+components. In general, a margin of ≥ 4% of derated temperature rating or ≥ 3°C must 
+be met under rated load and elevated or worst-case environmental conditions. If this 
+requirement cannot be met, failure conditions should be reviewed with the customer. 
+Thermal monitoring: Building blocks shall provide the following parameters via the 
+defined communication protocol. These include (but are not limited to) inlet air 
+temperature, exhaust air temperature, critical component temperatures, fan speed 
+reading(s), fan failure signal(s), etc. 
+10.2 L11/Rack-level Operational Requirements 
+• Airflow direction: Front-to-back 
+• Airflow containment: Appropriate containment features such as side panels, etc. should 
+be added to the L11 assembly to ensure all sub-components fit well while mitigating 
+airflow or hot air recirculation from the exhaust side to the cold aisle. 
+• Optional: Rack (safety) doors: Must be designed or selected to minimize back pressure 
+on sub-systems and this pressure drop must be accounted for as part of the sub-system 
+fan sizing/selection. 
+===== PAGE 26 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 26 
+11 Regulatory and Compliance Requirements 
+11.1 Safety Requirements  
+Both the fully integrated power rack system and associated subcomponents/ assemblies 
+shall be designed to comply with the safety requirements outlined in the applicable safety 
+standards (e.g. IEC/UL 62368-1, etc.) including all national deviations in addition to the 
+following requirements: 
+• SSCR Rating: AC Mains connected assemblies shall be designed to withstand an 
+available short circuit fault current of 10kA to 40kA, dependent of specific of each 
+application. 
+• Cable assemblies and power cables: Cables rated above 60Vdc or 42.4Vac shall be 
+UL certified with minimum temperature rating of 90˚C and of a type suitable for oil-
+resistant, damp locations, and hard usage conditions per the NEC (e.g. SJO, SJTOO, 
+SO, SOO, SOOW, STO, W, etc.). 
+• Accessibility: Components and circuits, including electrical connections intended to be 
+connected/disconnected during either normal or servicing operations while the power 
+rack system is energized, exceeding PS2 limits shall not be accessible while electrically 
+live or energized. If access to components and circuits exceeding PS2 limits is required 
+for either normal or servicing operations, an interlock, power off switch, or similar 
+mechanism shall be provided for de-energization prior to gaining access. 
+• Creepage and Clearance: Design of Sidecar modules and connectors must comply 
+with applicable safety standards for spacing requirements, e.g., IEC 62368.  The 
+designer/implementer may use discretion to exceed the standard requirements when 
+appropriate for their use case. Use cases shall include AC input and DC output 
+parameters, across thermal and environmental conditions, including peak potential, 
+transient or test conditions. 
+ 
+• Overcurrent Protection: outputs shall be provided with overcurrent protection. 
+• Protective earthing and bonding: output cables shall be provided with dedicated 
+protective grounding for connections between both the Power and IT Racks to ensure a 
+safe and reliable ground for fault currents. All protective grounding terminals shall be 
+securely bonded and marked in compliance with IEC 60417 (ref. no. 5019). 
+• Leakage current: The power rack system shall not have a leakage current exceeding 
+3.5mA (AC) and 10mA (DC). 
+• Fault Detection: Ground Fault Detection features shall be provided for effective 
+protection against fault conditions. 
+• Stability: The power rack system shall remain stable and not tip over when tilted up to 
+10˚ in any direction.  
+• Energy Storage Systems (ESS): Energy Storage Systems (ESS), including battery 
+modules and cells, shall be designed to comply with the safety requirements outlined in 
+===== PAGE 27 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 27 
+all the applicable safety standards (e.g. UL 9540, UL 9540A, UL 1973, IEC 62133, etc.), 
+NFPA 855, and transportation requirements (e.g. UN 38.3, IATA DGR, IMO International 
+Maritime Dangerous Goods Code, etc.). 
+Fire propagation tests per UL 9540A shall be performed at the cell, module, and rack 
+levels. No external flames are permitted during rack-level testing and shall comply with 
+the criteria not to trigger the installation base fire tests. 
+ 
+ 
+11.2  Electromagnetic Compatibility (EMC) Requirements  
+ 
+The fully integrated power rack system and associated subcomponents/assemblies shall be 
+designed when integrated together to comply with requirements for Class A devices when 
+tested according to CISPR 32 and CISPR 35 standards, and applicable national regulations 
+(i.e. FCC CFR 47, part 15 in the USA, ICES-003 in Canada, EN 55032 and EN 55035 in 
+Europe, etc.) across the full range of supported operations and configurations (i.e. idle, 
+normal, minimum/maximum workloads, etc.) in addition to the following requirements, listed 
+in Table12. 
+ 
+Table 12: Additional EMC requirements. 
+Test Test Method Requirement 
+Radiated and 
+Conducted Emissions 
+ANSI C63.4/CISPR 
+32 Min -6 dB margin 
+Electrostatic 
+Discharge (ESD) - 
+Contact Discharge 
+EN 61000-4-2  Preferred ±5.6 kV, Criteria A,/min ±4 kV, 
+Criteria A, 
+Electrostatic 
+Discharge (ESD) - Air 
+Discharge 
+EN 61000-4-2 Preferred ±11.2 kV, Criteria A /min ±8 kV, 
+Criteria A  
+Surge EN 61000-4-5 
+Differential Mode: Preferred ±2 kV, Criteria A/ 
+min ±1 kV, Criteria A 
+Common Mode: Preferred ±4 kV, Criteria A/ 
+min ±2 kV, Criteria A 
+Radiated Immunity EN 61000-4-3 Min 10V/m Criteria A 
+ 
+===== PAGE 28 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 28 
+11.3 Environmental, Eco-Design, and Sustainability Requirements 
+The fully integrated power rack system, associated subcomponents/assemblies, and any 
+packaging shall be designed to comply with worldwide environmental, eco-design, and 
+energy efficiency laws and regulations (e.g. RoHS Directive 2015/863/EU, REACH 
+Regulation (EC) No 1907/2206, WEEE Directive 2012/19/EU, SCIP and EPA 40 CFR751, 
+Commission Regulation (EU) 2021/341, etc.).   
+ 
+ 
+ 
+ 
+===== PAGE 29 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 29 
+12 Appendix A 
+This section presents a simple list of pros and cons related to two types of PE grounding 
+methods. 
+12.1 High Resistance Grounding (HRG) 
+ No arcing or fire risk when +/-400V short to PE 
+ No serious injury to human body if touching +/-400V due to limited leakage current 
+🟡Increased spacing requirements of downstream DCDC -to be confirmed by DCDC 
+Designer/safety. 
+🟡Complex design and maintenance 
+Pro1: No electric shock risk if touching +400 V or - 400 V with reference to ground.  
+Electric shock risk still exists between +400 to -400. 
+Pro2: Mitigates arcs due to a line to ground fault.  Note: does not protect against line-to-
+line faults 
+Con1: Electric shock risk if touching  +400 V or - 400 V under single fault condition 
+where the other leg faults to ground 
+Con2: Fault detection is required to effectively resolve a fault to ground before a second 
+fault occurs.  
+Con3: Putting fault detection at payload rack tray level may be expensive. Having fault 
+detection on per rack level (or even Sidecar level) will be difficult to troubleshoot. 
+Con4: First fault to ground will not disrupt operation and therefore is at risk of being a 
+lower priority to resolve. Second fault to ground can create a fire/electric shock risk. 
+Con5: Sensors must be calibrated and tested on a recurring basis.  A defective sensor 
+must be replaced immediately.  If the sensors are not operating properly this could give 
+you a false sense of security. 
+Con6: Multiple sources in parallel would reduce the impedance to ground and increase 
+the touch current 
+Con7: A component in a payload rack that was designed for high impedance grounding 
+scheme may not be suitable for use in a low impedance grounding scheme.  If the 
+component is deployed in a Data Center with DC bus but it does not employ a high 
+impedance grounding scheme, careful review of the component must be done to ensure 
+compatibility.  For example, a component designed for use in a high impedance 
+grounding system may not have input fuses or functional insulation may have been used 
+between the 400V to chassis. 
+ 
+12.2 Solid Grounding (SG) 
+ Simple design and DC maintenance 
+ Safety distance based on 400Vdc. 
+===== PAGE 30 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 30 
+🟡Blown fuse or burnt component when +/-400V short to PE 
+🟡In certain configurations, grounding current may need to be mitigated to prevent 
+potential issues. 
+Pro1: Widely used solution for AC power distribution. 
+Pro2: Fuse instead of sensors-based circuit protection to cut power on a fault condition  
+Pro3: Easier to identify the problem circuit 
+Pro4: Safety standards have clear requirements for products used on a system with low 
+impedance grounding 
+Con1: HV parts shall not be accessible, as high body current discharge possibility exists  
+Con2: Arcing may occur until fuse operates  
+Con3: The bond between the accessible conductive part and ground must be able to 
+carry fault current until overcurrent protection opens. 
+Con4: multiple power racks with solid grounding generate multiple ground loops 
+ 
+ 
+ 
+ 
+ 
+===== PAGE 31 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 31 
+13 Appendix B 
+This section describes estimating average and RMS values to determine impact on 
+thermal power estimate. 
+13.1 Average current vs RMS current thermal impact 
+Let Icc(u) and Vcc(u) be Random Variables, able to take any value from a universe of 
+values (u).  
+Let function E{ } be Expected Value, i.e., average, of a given Random Variable being 
+operated on. 
+ 
+A = E{Icc(u) at GF} = Iavg 
+A+x = I_Pk = E{Icc(u) Worst Case Max}  
+  
+ 
+ 
+ 
+Implementations of GPUs CPUs Average (Thermal) Power algorithms could measure 
+and average the processor power.  Within the processor, the dominant power is the 
+Dynamic Power which is linear with Current, i.e., Pdyn = Idyn * Vcc, where Idyn = C * 
+Vcc * Freq., the controlled and measured Processor Average Power will render a 
+resultant Average Current proportional to Average Power.  
+  
+On the other hand, power losses in hardware circuitry (such as VRs) are result of current 
+over Real Resistance.  This VR average power calculation requires use of I_rms (see 
+below).   
+  
+
+===== PAGE 32 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 32 
+I_RMS to I_AVG ratio is the VR steady state thermal "gain" or how much thermally 
+bigger the VR needs to be when compared to one just designed to I_AVG rendered by 
+processor at TDP. 
+  
+VR thermal gain is dependent on the magnitude of I_Pk, i.e.,k!!… the higher the I_Pk, 
+the higher the impact on the VR. 
+ 
+You need Average Power to determine thermal power (you get joules out of Pavg) 
+You need RMS current to determine Average Power at the VR ckts.  
+ 
+ 
+ 
+ 
+ 
+ 
+14 Appendix C 
+This section lists options for DC output interconnect cables. 
+14.1 DC Output Interconnect Options 
+ 
+DCPDU electrical interconnect to IT rack has multiple options, one based on 50kW 
+cables, and one based on 100kW cables. 
+In both options, output is wired as “3 wire output”, +/-400Vdc and Common, plus 
+additional pins for PE and 2 signal wires, used for voltage disconnect feature. 
+Wire gauge is specific per average power or RMS current decided per application. For 
+North America, the parameters are below. Recommending considering design margin of 
+15%, as needed per application. 
+• 50kW (63A)  -  4x 4AWG, in compliance per NEC derating for 65C ambient, table 
+310.60(C)(4). 
+• 100kW (125A)- 4x 1AWG, in compliance per NEC derating for 65C ambient, 
+table 310.60(C)(4). 
+• 400kW (500A) 
+• 800kW (1000A) 
+Cables are W type, single conductors, 4 conductors bundle. 
+Also, impedance targets-inductance characterization are specific per application. 
+Optional: 
+• EMI shielding or ferrite cores 
+
+===== PAGE 33 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 33 
+• IPX4 rated connectors (given liquid cooling environment in IT rack) 
+Details of options and connectors are listed in Table 13 below. 
+Connector part numbers are preliminary. 
+ 
+ 
+ 
+Table 13: DC interconnect options 
+Assembly Electrical 
+interconnect 
+source 
+Source 
+connector 
+DC PDU-> 
+Source 
+cable plug 
+DC PDU-> 
+Load cable 
+receptacle 
+IT DC/DC 
+shelf-> 
+Load 
+connector 
+IT DC/DC 
+shelf 
+Electrical 
+interconnect 
+load 
+50kW output 
+cable 3W to 
+3W 
+3W+PE+2S 
+“3 wire 
+output”: +/-
+400, 
+Common, 
+PE+2 signal 
+Amphenol 
+FCI TBD 
+Amphenol 
+FCI TBD 
+Amphenol 
+FCI TBD 
+Amphenol 
+FCI TBD 
+“3 wire Input”: 
++/-400, 
+Common, 
+PE+2 signal 
+100kW output 
+cable 3W to 
+3W  
+3W+PE+2S  
+“3 wire 
+output”: +/-
+400, 
+Common, 
+PE+2 signal 
+Amphenol 
+FCI 
+10183400-
+009LF 
+Amphenol 
+FCI 
+10183401-
+009LF 
+Amphenol 
+FCI 
+10183401-
+013LF 
+Amphenol 
+FCI 
+10183400-
+015LF 
+“3 wire input”: 
++/-400, 
+Common, 
+PE+2 signal 
+96/100kW 
+output cable 
+3W to 2W  
+2W+PE+2S 
+“2 wire 
+output”: +/-
+400, PE+2 
+signal 
+Bizlink TBD Bizlink TBD Bizlink TBD Bizlink TBD “2 wire input”: 
+800, 0, PE+2 
+signal 
+400kW output 
+cable 
+3/2W+PE+2S 
+3/2 wire 
+output”: +/-
+400, 
+Common, 
+PE+2 signal 
+TBD TBD TBD TBD “3/2 wire 
+input”: +/-400, 
+Common, 
+PE+2 signal 
+800kW output 
+cable 
+3/2W+PE+2S 
+3/2 wire 
+output”: +/-
+400, 
+Common, 
+PE+2 signal 
+TBD TBD TBD TBD “3/2 wire 
+input”: +/-400, 
+Common, 
+PE+2 signal 
+ 
+15 Appendix D 
+This section lists options for AC interconnect cables. 
+===== PAGE 34 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 34 
+15.1 AC Input Interconnect Options 
+Two options for ACPDU input cables. For North America, the parameters are below. 
+• ACPDU interconnects use 3P+PE, Delta connection, 415Vac-480Vac 3 phase, 
+200A cables. 
+There are two options of cables, one as a whip, where all 3P+PE cables are in one 
+bundle, and the other as single-phase cable, where all cables are separated and routed 
+individually as one-phase cables. 
+All 200A cables use W type wires. Single 200A conductors use 1/0 AWG, where 4 200A 
+conductor whips use 3/0 AWG. 
+The data center busway connection is done via tap-box or MTS (manual transfer switch). 
+Each option uses different connectors, as detailed in Table 14 below. 
+Connector part numbers are preliminary. 
+ 
+ 
+ 
+Table 14: AC interconnect options with 200Aac input 
+Assembly Electrical 
+interconnect 
+source 
+Source connector   AC cable plug 
+input to AC/PDU> 
+AC PDU connector 
+200A whip one 
+phase connector 
+1x1 
+Tap-box Mechanical lugs 1x1 connector 
+Amphenol SurLock 
+plug 
+Mating receptacle 
+200A whip 4x1C, 
+Nylon mesh 
+encapsulated 
+Tap-box, MTS Ferrule 1x4 connector Molex 
+plug 
+Mating receptacle of 
+1x4 
+200A whip 2x2 Tap-box Mechanical lugs 2x2 connector 
+Amphenol plug 
+Mating receptacle of 
+2x2 Amphenol 
+ 
+ACPDU output cables target two design options, where output cables and connectors 
+selection to power shelves are left at solution implementer: 
+60A AC output cables 
+100A AC output cables 
+ 
+Option for 100A AC whip, listed in table 15 below. 
+===== PAGE 35 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 35 
+• ACPDU interconnects use 3P+PE, Delta connection, 415Vac-480Vac 3 phase, 
+100A cables. 
+All 100A cables use W type wires. These are 4x single 100A conductor, mesh 
+encapsulated assemblies using 2 AWG. 
+ 
+ 
+Table 15: AC interconnect options with 100Aac input 
+ 
+ 
+Assembly Electrical 
+interconnect 
+source 
+Source connector   AC cable plug 
+input to AC/PDU> 
+AC PDU 
+connector 
+100A whip 4x 1C, 
+Nylon mesh 
+encapsulated 
+Tap-box, MTS Ferrule 1x4 connector 
+Molex plug 
+Mating receptacle 
+of 1x4 
+ 
+ 
+16 Reference section 
+ 
+Additional reference information listed in Table 16. 
+ 
+Table 16: References 
+ 
+Document 
+number 
+Description Comments 
+UL/IEC 62368-1 Audio/Video, Information and Communication Technology Equipment – Part 
+1: Safety Requirements 
+ 
+IEC 62133 International safety standard for rechargeable batteries  
+UL 9540 Standard for Safety of Energy Storage Systems and Equipment  
+UL 9540A Fire‑propagation and thermal‑runaway test method for battery energy storage 
+systems (ESS). 
+ 
+NFPA 855 Standard for the Installation of Stationary Energy Storage Systems  
+CISPR32/35 
+EN 55032/35 
+Electromagnetic compatibility of multimedia equipment  
+===== PAGE 36 =====
+Open Compute Project •  Diablo 400 
+Date:  March 1st , 2026         Page 36 
+EN 61000-4-2 Electromagnetic compatibility (EMC) – Part 4‑2: Testing and measurement 
+techniques – Electrostatic discharge immunity test 
+ 
+   
+ 
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+ 

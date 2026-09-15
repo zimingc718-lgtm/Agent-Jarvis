@@ -1266,7 +1266,7 @@ export function FloatingChat({
         {/* 设置入口（REQ-F-200 ①）：从对话框唤起，面板呈现在动态屏上，不弹窗盖住正在看的东西。 */}
         <div className="floating-chat__panels flex items-center gap-1.5 px-1">
           <span className="text-xs text-muted-foreground">在屏上打开：</span>
-          {(["models", "skills", "tools"] as SettingsPanel[]).map((panel) => (
+          {(["models", "skills", "tools", "library"] as SettingsPanel[]).map((panel) => (
             <button
               className="floating-chat__panel rounded border border-border px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground"
               key={panel}

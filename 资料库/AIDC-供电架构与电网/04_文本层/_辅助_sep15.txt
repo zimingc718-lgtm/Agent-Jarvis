@@ -1,0 +1,597 @@
+----- PAGE 1 -----
+PJM © 2026www.pjm.com | Public
+PJM Large Computational Load (LCL)
+Ride-Through Requirements
+PJM Interconnection Proposal
+David Egan, Senior Manager
+Byoungkon Choi, Principal Engineer,
+Generator Modeling & Dynamic Studies
+Planning Committee
+September 15, 2026
+----- PAGE 2 -----
+PJM © 20262www.pjm.com | Public
+Executive Summary
+In this special session, PJM will: 
+Background (PJM Operations)
+• Discuss Operational Impetus for Large Load Ride-Through Requirements.
+• PJM Events
+• Review FERC & NERC Efforts and Large Load Working Group (LLWG) Standard Authorization 
+Request (SAR) recommendations.
+Solution (PJM Planning)
+• Propose general approach to the application of voltage and frequency ride-through requirements.
+• Review LCLs ride-through behaviors in the past load transfer events.
+• Review LCL definitions and general layout, and key components.
+• Review Manual 14B, Attachment D-2 draft language.
+----- PAGE 3 -----
+PJM © 20263www.pjm.com | Public
+Manual 14B, Attachment D-2 Language Review 
+For Large Computational Loads
+----- PAGE 4 -----
+PJM © 20264www.pjm.com | Public
+Solution Summary
+M14B Attachment D-2 & OATT Changes Voltage Ride-Through
+Frequency Ride-Through
+Tariff Changes: Establish LCL definition, require PJM to establish minimum LCL ride-through standards for TOs, allows TOs 
+to adopt more stringent reliability-based requirements, and obligate LCLs meet Attachment D-2 criteria.
+Root-Mean-Square Voltage
+(p.u. of nominal)
+Minimum Ride-Through Time
+(seconds)
+V > 1.20 May ride-through or trip
+1.10 < V ≤ 1.20 1.0
+0.90 ≤ V ≤ 1.10 Continuous
+0.80 ≤ V < 0.90 2.0
+0.50 ≤ V < 0.80 0.5
+V < 0.50 0.25
+System Frequency 
+(Hz)
+Minimum Ride-Through Time
+(seconds)
+f > 61.8 May ride-through or trip
+61.2 < f ≤ 61.8 299
+58.8 ≤ f ≤ 61.2 Continuous
+57.0 ≤ f < 58.8 299
+f < 57.0 May ride-through or trip
+Applicability & Compliance
+Goal: Prevent large block load loss and maintain Bulk Electric System 
+(BES) reliability during voltage/frequency disturbances. 
+Applies to LCLs ≥60 kV and ≥50 MW
+• New projects: Jan. 16, 2027, onward (PJM filing date +61 days)
+• Material modifications: LCL increase that cause overall load aggregation ≥50 MW 
+Transition facilities 
+(prior to Jan. 16, 2027): 
+– Commercially operating
+– In construction phase
+– Are under final agreement
+– Undergoing an existing study
+– All applicable legacy LCLs must comply by 
+later date of Jan. 16, 2028, or Commercial 
+Operation Date (COD) +1 year*
+– PJM may accelerate compliance to 90 days* 
+for reliability risk LCLs
+* Consideration will be given to provide limited exceptions when
+demonstrated that requirements cannot be met.
+----- PAGE 5 -----
+PJM © 20265www.pjm.com | Public
+Ride-Through Assessment:  July 22, 2026 Event
+Source: Dominion
+----- PAGE 6 -----
+PJM © 20266www.pjm.com | Public
+Enhancing Reliability
+LCL adoption in the PJM footprint is unique compared to other jurisdictions such 
+as ERCOT’s or MISO’s.
+– PJM has, due to infrastructure availability and other reasons, high concentration of LCL installations within smaller 
+geographic areas (currently in operation or already in development progress).
+– This concentration led to multiple large GW size load drop off events, which is materially different than all other 
+reported load drop incidents (in terms of size) including in ERCOT. 
+– This concentrated nature of existing and near to be energized LCL facilities necessitate the need for reliability 
+enhancements to existing facilities; otherwise, PJM and its customers will continue to be subject to reliability 
+impacts caused by large load drops.
+For PJM LCL installations (existing) that are geographically and electrically 
+diverse, consideration will be given to provide limited exceptions when 
+demonstrated that requirements cannot be met. 
+– Existing installations that do not have UPSs – Cooling loads
+----- PAGE 7 -----
+PJM © 20267www.pjm.com | Public
+Large Load Show Cause Order
+Paragraph 64: FERC is “concerned that the T ariff does not specify ramp rate 
+or ride-through requirements with which the transmission customer taking 
+transmission service on behalf of the large load must comply. Lastly, we 
+are concerned that the Tariff does not specify requirements for necessary 
+control technologies and/or protection systems that may be necessary to limit 
+a transmission customer’s withdrawals from the Transmission System as 
+appropriate. PJM should explain whether the Tariff remains just and 
+reasonable without these or other ongoing operational requirements as part of 
+the rates, terms, and conditions of transmission service or propose Tariff 
+revisions establishing necessary ongoing operational requirements.”
+----- PAGE 8 -----
+PJM © 20268www.pjm.com | Public
+Manual 14B, Attachment D-2: Purpose
+Attachment D: PJM Reliability Planning Criteria
+Attachment D-2: Minimum Voltage Ride-Through Requirements for Large Computational Loads
+D-2.1 Purpose
+Large Computational Loads ("LCLs"), including data centers and other computational facilities 
+whose demand is substantially supplied through power electronic conversion equipment, connected 
+at ≥ 60 kV and that aggregate to ≥ 50 MW, may significantly influence Bulk Electric System (BES) 
+voltage performance and dynamic behavior during transmission disturbances.
+PJM recognized that data centers and other non-scalable loads (LCLs) require special consideration 
+within planning analyses and that large block load additions may present reliability considerations not 
+contemplated by historical planning assumptions.
+Consistent with the Tariff, the criteria contained in this section establish minimum reliability 
+performance requirements that transmission customers (or Transmission Owners) shall establish for 
+applicable Large Computational Loads connecting in their areas.
+----- PAGE 9 -----
+PJM © 20269www.pjm.com | Public
+Manual 14B, Attachment D-2: Applicability
+D-2.2 Applicability
+These requirements are minimum voltage ride through and frequency ride-through requirements with which 
+transmission customers taking transmission service on behalf of Large Computational Load must comply 
+meeting one or more of the applicability criteria established below:
+• New LCL Facilities. Any transmission customer taking transmission service for a LCL project that enters the PJM study process on 
+or after January 16, 2027, shall demonstrate compliance with these requirements as a condition of taking transmission service. 
+• Material Modifications. A transmission customer taking transmission service for an existing facility that is modified in a manner 
+resulting in the LCL's aggregate load becoming 50 MW or greater or otherwise constituting a material modification as determined by 
+PJM and the applicable Transmission Owner on or after January 16, 2027, shall comply with these requirements.
+• Transition. Any transmission customer taking transmission service for a LCL, including an LCL undergoing a Material Modification, 
+that prior to January 16, 2027, has:
+– formally initiated or completed an interconnection study with the TO,
+– executed an interconnection agreement, service agreement, or other agreement authorizing interconnection,
+– commenced construction, or
+– achieved commercial operation,
+shall be deemed a Transition Customer for purposes of these requirements and shall achieve compliance no 
+later than January 16, 2028, or within one (1) year of its Commercial Operation Date, whichever is later. 1
+1 PJM exploring options for 
+flexibility/extensions, to 
+extent feasible on a limited 
+exception basis.
+----- PAGE 10 -----
+PJM © 202610www.pjm.com | Public
+Manual 14B, Attachment D-2: Applicability
+• Reliability-Driven Compliance. Notwithstanding the provisions above, PJM may require an existing transmission 
+customer taking transmission service for a LCL to comply with these requirements on an accelerated basis where 
+PJM determines that the facility is contributing to:
+– transient voltage instability;
+– cascading loss of load;
+– voltage collapse risk; or
+– other reliability criteria violations.
+In such cases, the transmission customer taking transmission service for such a facility shall achieve compliance 
+within 90 days,2 unless PJM determines that a shorter period is necessary to maintain Bulk Electric System reliability.
+2 PJM exploring options for flexibility/extensions, to extent feasible on a limited exception basis.
+----- PAGE 11 -----
+PJM © 202611www.pjm.com | Public
+D-2.3 Minimum Voltage Ride-Through Performance Requirements
+Transmission customers taking transmission service for Large Computational Loads shall ensure 
+that such loads remain connected and shall not experience involuntary block loss of load for voltage 
+disturbances within the ride-through envelope defined below in Table 1 and Figure 1.
+Manual 14B, Attachment D-2: Voltage Ride Through
+Root-Mean-Square Voltage
+(p.u. of nominal)
+Minimum Ride-Through Time
+(seconds)
+V > 1.20 May ride through or trip
+1.10 < V ≤ 1.20 1.0
+0.90 ≤ V ≤ 1.10 Continuous
+0.80 ≤ V < 0.90 2.0
+0.50 ≤ V < 0.80 0.5
+V < 0.50 0.25
+T able 1 – PJM minimum LCL voltage ride-through requirements
+----- PAGE 12 -----
+PJM © 202612www.pjm.com | Public
+Manual 14B, Attachment D-2: Voltage Ride Through
+Figure 1 – PJM minimum LCL voltage ride-through envelope
+----- PAGE 13 -----
+PJM © 202613www.pjm.com | Public
+A transmission customer taking transmission service for a Large Computational Load ("LCL") shall ensure that such 
+loads ride through the voltage conditions of the magnitude and duration specified in Table 1 and Figure 1, as 
+measured at the LCL's Point of Delivery or, where the LCL is co-located with a Generation Resource or Energy 
+Storage Resource, at the Point of Interconnection ("POI") of such Resource. Further, transmission customers shall 
+ensure that, an LCL shall remain connected to the Transmission System during voltage conditions requiring ride-
+through and additional LCL performance requirements applicable during ride-through conditions are satisfied as set 
+forth below:
+• Cooling loads associated with the LCL facility may ride through or trip when voltage is below 0.35 per unit for any duration.
+• When voltage at the Point of Delivery or, for an LCL co-located with a Generation Resource or Energy Storage Resource, at the POI, 
+remains within the continuous operating range specified in Table 1 during a disturbance, or exceeds 1.10 per unit but remains below 
+1.20 per unit for less than 1.0 second, the LCL shall continue to consume electric power from the Transmission System at its 
+pre-disturbance level throughout the disturbance.
+• When voltage at the Point of Delivery or POI falls below 0.90 per unit but remains above 0.50 per unit and subsequently returns above 
+0.90 and below 1.10 per unit within the applicable ride-through duration specified in Table 1, the LCL shall continue to consume electric 
+power during the low-voltage condition. The LCL may reduce its electric power consumption in proportion to the voltage reduction; 
+however, the LCL shall restore consumption to at least ninety percent (90%) of its pre-disturbance level within two (2) seconds after 
+voltage at the Point of Delivery or POI returns above 0.90 and below 1.10 per unit. This recovery time frame shall serve as the default 
+requirement unless studies demonstrate that a slower recovery is necessary to preserve Bulk Electric System reliability.
+Manual 14B, Attachment D-2: Voltage Ride Through
+----- PAGE 14 -----
+PJM © 202614www.pjm.com | Public
+Manual 14B, Attachment D-2: Voltage Ride-Through
+• When voltage at the Point of Delivery or POI is below 0.50 per unit, the LCL may reduce electric power 
+consumption as necessary to enable ride through of the disturbance; however, the LCL shall restore consumption 
+to at least ninety percent (90%) of its pre-disturbance level within two (2) seconds after voltage at the Point of 
+Delivery or POI returns above 0.90 and below 1.10 per unit. This recovery time frame shall serve as the default 
+requirements unless studies demonstrate that a slower recovery is necessary to preserve BES reliability.
+• If any cooling load at the LCL facility trips during voltage conditions below 0.35 per unit at the Point of Delivery or 
+POI, the pre-disturbance power consumption attributable to such tripped load shall be excluded from the 
+calculation of the LCL's total pre-disturbance consumption level.
+• When a voltage disturbance causes voltage at the Point of Delivery or POI to fall below the continuous operating 
+range specified in Table 1 above, the LCL shall not draw current more than one hundred fifty percent (150%) of the 
+maximum current drawn during normal operating conditions. Any such overcurrent not exceeding one hundred fifty 
+percent (150%) shall persist only during the voltage transient and for no longer than 0.5 seconds.
+----- PAGE 15 -----
+PJM © 202615www.pjm.com | Public
+Manual 14B, Attachment D-2: Voltage Ride-Through
+• If instantaneous overcurrent or overvoltage protective functions are installed and configured to trip or transfer the 
+LCL, such functions shall utilize filtered measurements and/or intentional time delays sufficient to prevent undesired 
+operation while maintaining the intended equipment protection. Any alternating-current instantaneous overvoltage 
+protection that could interrupt LCL consumption shall utilize a measurement window of not less than one cycle at 
+nominal system frequency.
+• An LCL shall not employ a load-shedding, load-transfer or transfer-to-backup-generation scheme that disconnects 
+the LCL or transfers the LCL to backup generation solely based on a specified number of voltage sags or voltage 
+swells occurring within a specified period, where the LCL is otherwise required to ride through. If operation of such 
+a scheme is required because of equipment limitations, the LCL shall be capable of remaining connected to the 
+Transmission System through a minimum of six (6) voltage sags or swells occurring within a 90-second period 
+specified by the applicable TO.
+----- PAGE 16 -----
+PJM © 202616www.pjm.com | Public
+D-2.4 Minimum Frequency Ride-Through Performance Requirements
+A transmission customer taking transmission service for a LCL shall ensure such loads ride-through frequency 
+disturbances of the magnitude and duration specified in T able 2 and Figure 2, as measured at the LCL’s Point of 
+Delivery, or if the LCL is co-located with a Generation Resource or Energy Storage Resource, at the Point of 
+Interconnection (POI) of that Resource.
+Manual 14B, Attachment D-2: Frequency Ride Through
+System Frequency 
+(Hz)
+Minimum Ride-Through Time
+(seconds)
+f > 61.8 May ride through or trip
+61.2 < f ≤ 61.8 299
+58.8 ≤ f ≤ 61.2 Continuous
+57.0 ≤ f < 58.8 299
+f < 57.0 May ride-through or trip
+T able 2 – PJM minimum LCL frequency ride-through requirements
+----- PAGE 17 -----
+PJM © 202617www.pjm.com | Public
+Manual 14B, Attachment D-2: Frequency Ride Through
+Figure 2 – PJM minimum LCL frequency ride-through envelope
+----- PAGE 18 -----
+PJM © 202618www.pjm.com | Public
+Manual 14B, Attachment D-2: Frequency Ride Through
+Transmission customer taking transmission service for LCLs must also ensure additional performance 
+requirements applicable during frequency ride-through conditions are satisfied as set forth below:
+• An LCL is not required to ride through if it is performing in accordance with its Under-Frequency Load Shed (UFLS) program.
+• LCLs should maintain pre-disturbance active power consumption while system frequency remains within the continuous operating 
+range of 58.8 Hz to 61.2 Hz. 
+• For frequency excursions outside the continuous operating range but within 57.0 Hz to 58.8 Hz or 61.2 Hz to 61.8 Hz, LCLs should 
+remain connected and maintain active power consumption within 10% of pre-disturbance levels while maintaining stable operation.
+• The specified durations of Table 2 are cumulative over one or more disturbances within a 10-minute time period.
+• If frequency protective functions are installed and configured to trip, disconnect, or transfer the LCL, such functions shall utilize 
+filtered frequency measurements and/or intentional time delays sufficient to prevent undesired operation during transient frequency 
+deviations while maintaining the intended equipment protection.
+• Frequency protective functions shall not operate based solely upon instantaneous frequency measurements.
+----- PAGE 19 -----
+PJM © 202619www.pjm.com | Public
+Proposed Tariff Changes
+----- PAGE 20 -----
+PJM © 202620www.pjm.com | Public
+Tariff, Part I: Definitions
+Tariff, Part I, Definitions L – M – N
+Large Computational Load
+“Large Computational Load” shall mean load facilities, including data centers and other computational 
+facilities, whose demand is substantially supplied through power electronic conversion equipment, 
+connected to the Transmission System at ≥ 60 KV and that aggregate to ≥ 50 MW and meeting one 
+or more of the applicability criteria below:
+• New Large Computational Load Facilities. Any Large Computational Load that enters the Transmission Provider or Transmission 
+Owner study processes on or after [61 days from filing] shall demonstrate compliance with these requirements as a condition of 
+interconnection and operation. 
+• Material Modifications. An existing facility that is modified in a manner resulting in the Large Computational Load’s aggregate load 
+becoming 50 MW or greater, or otherwise constituting a material modification as determined by Transmission Provider and the 
+applicable Transmission Owner on or after [61 days from filing], shall comply with these requirements as part of the modification.
+----- PAGE 21 -----
+PJM © 202621www.pjm.com | Public
+Tariff, Part I: Definitions
+• Transitional Large Computational Load Facilities. Any Large Computational Load, including a Large Computational Load 
+undergoing a Material Modification, that prior to [61 days from filing], has:
+– formally initiated or completed an interconnection study with the Transmission Owner,
+– executed an interconnection agreement, service agreement, or other agreement authorizing 
+interconnection,
+– commenced construction, or
+– achieved commercial operation,
+shall be deemed a Transitional Large Computational Load Facility for purposes of these 
+requirements and shall achieve compliance no later than [61 days from filing plus one year], or 
+within one (1) year of its Commercial Operation Date, whichever is later.
+----- PAGE 22 -----
+PJM © 202622www.pjm.com | Public
+Tariff, Part III: §28.2, 
+Transmission Provider Responsibilities
+Tariff, Part III, Section 28.2, Transmission Provider Responsibilities 
+[Add at end of existing 28.2]
+Large Computational Load Ride-Through Requirements
+Transmission Provider shall establish minimum voltage ride through and frequency ride-through requirements with 
+which transmission customers taking transmission service on behalf of Large Computational Load must comply, 
+which shall be set forth in PJM Manual 14B, Attachment D. Such requirements shall establish the minimum 
+performance criteria necessary to support the reliable operation of the Transmission System and Bulk Electric 
+System during voltage disturbances and frequency disturbances.
+Each transmission customer (or Transmission Owner) shall establish voltage ride through and frequency ride-
+through requirements applicable to Large Computational Load interconnected to its transmission facilities. Such 
+requirements shall be no less stringent than the minimum requirements established by Transmission Provider in 
+Manual 14B, Attachment D.
+A transmission customer (or Transmission Owner) may establish requirements that are more stringent than the 
+minimum requirements established by Transmission Provider where the Transmission Owner determines that such 
+requirements are necessary to maintain the reliability, security or operational performance of its transmission 
+facilities or the Transmission System.
+----- PAGE 23 -----
+PJM © 202623www.pjm.com | Public
+Tariff, Part III: §28.2, 
+Transmission Provider Responsibilities
+The requirements established by a transmission customer (or Transmission Owner) shall be based upon 
+reliability, planning, operational, stability, protection coordination, voltage performance, frequency performance, 
+restoration, balancing, reserve management or other reliability-related considerations and shall be applied in a 
+not unduly discriminatory manner to similarly situated Large Computational Load.
+Nothing in this section shall preclude a transmission customer (or Transmission Owner) from modifying its 
+voltage ride through or frequency ride-through requirements for Large Computational Load as necessary to 
+address changes in system conditions, reliability needs, applicable NERC Reliability Standards or Transmission 
+Provider operating requirements, provided such requirements continue to meet or exceed the minimum 
+requirements established by Transmission Provider in Manual 14B, Attachment D.
+----- PAGE 24 -----
+PJM © 202624www.pjm.com | Public
+Tariff, Part III: §35.1, 
+Operation under the Network Operating Agreement
+Tariff, Part III, Section 35.1, Operation under the Network Operating Agreement 
+[Add at end of existing 35.1] 
+[Network Customer/Eligible Customer] taking service to serve Large Computational Load shall ensure that 
+the Large Computational Load meets all the requirements established in accordance with Tariff, Part III, 
+section 28.2, Large Computational Load Ride-Through Requirements, and set forth in Manual 14B, 
+Attachment D.
+Also note that PJM will clarify the consequences for failure to comply with these requirements.
+----- PAGE 25 -----
+PJM © 202625www.pjm.com | Public
+Tariff, Part XI: §705.8, 
+Large Computational Load Ride-Through Requirements
+Tariff, Part XI, Subpart A, [new] Section 705.8, Large Computational Load 
+Ride-Through Requirements1
+[Network Customer/Eligible Customer] taking service to serve Large Computational Load shall ensure that 
+the Large Computational Load meets all the requirements established in accordance with Tariff, Part III, 
+section 28.2, Large Computational Load Ride-Through Requirements, and set forth in Manual 14B, 
+Attachment D.
+Also note that PJM will clarify the consequences for failure to comply with these requirements. 
+1 Will also need to add to the CDS sections of Part XI when we draft them.
+----- PAGE 26 -----
+PJM © 202626www.pjm.com | Public
+Dec.
+Review Timeline
+Sept. 8
+Proposed Manual 
+and Tariff Language 
+Review
+Sept. Oct. Nov. Q1 Q4Q3
+2026
+Sept. 15
+PC R-T Education 
+Session
+Oct. 6
+Proposed Manual 
+and Tariff Language 
+Review
+November
+FERC LCL Show 
+Cause Filing
+2027
+Q1/2027
+Develop & 
+Establish LCL 
+Ramp-Rate
+Q2
+Q2/2027
+Show Cause 
+Ramp-Rate 
+Filing
+Oct. 28
+MRC/MC
+Consultation
+Feb & Mar PC
+Proposed 
+Manual and 
+Tariff Language 
+Review
+Feb 2027
+PC Ramp 
+Rate Education 
+Session
+Aug & Sep PC
+Proposed 
+Manual and 
+Tariff Language 
+Review
+Q4/2027
+Show Cause 
+DE Filing
+Aug 2027
+PC Design 
+Envelope (DE) 
+Education Session
+----- PAGE 27 -----
+PJM © 202627www.pjm.com | Public
+Additional Supporting Slides
+----- PAGE 28 -----
+PJM © 202628www.pjm.com | Public
+ERCOT Voltage Ride-Through Envelope
+RMS Voltage (p.u. of nominal)
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+1.1
+1.2
+1.3
+0.0
+0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.00.0 0.15 0.25 1.2
+Time (sec)
+Continuous Operating Range
+Consume P at pre-disturbance level
+May reduce P proportional to voltage drop, 
+but shall return to >90% of pre-disturbance level 
+within 2 sec after V returns to > 0.9 p.u.
+•May reduce P as needed but shall return to >90% 
+of pre-disturbance level within 2 sec. after V 
+returns to > 0.9 p.u.
+•Cooling load allowed to trip for V<0.35 p.u.
+Overcurrent during voltage sag shall not 
+exceed 150% of maximum current 
+consumption during normal operations.
+Source: ERCOT NOGRR282 – final PUCT approved version
+0.35
+----- PAGE 29 -----
+PJM © 202629www.pjm.com | Public
+ERCOT Ride-Through Requirements
+• ERCOT LCL VRT requirements do not apply to an LCL that meets certain 
+conditions, for example if the LCL:
+– Was operational or received approval to energize on or before November 14, 2025; or
+– Has signed interconnection agreement with TPS, or Generation Resource if co-located, before 
+November 14, 2025, etc. (refer to NOGRR282 for the detailed exemption conditions).
+• Ride-through requirement for the voltage between 0.8 pu and 0.5 pu is fully 
+enforced after January 1, 2028. 
+• For the voltage between 0.8 pu and 0.5 pu, LCL may reduce active power 
+consumption proportional to voltage drop unless active power can return to 
+at least 90% of its pre-disturbance consumption level within 0.5 second.
+----- PAGE 30 -----
+PJM © 202630www.pjm.com | Public
+MISO Voltage Ride-Through Envelope-Draft
+RMS Voltage (p.u. of nominal)
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+1.1
+1.2
+1.3
+0.0
+0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.00.0 0.15
+0.25
+1.2
+Time (sec)
+Continuous Operating Range. 
+No power reduction is permitted.
+Proportional Reduction & Mandatory Recovery
+May reduce P as necessary to maintain connection during the disturbance but shall 
+return to >90% of pre-disturbance level within 2 sec. after V returns to > 0.9 p.u.
+Tripping Allowed
+Tripping Allowed
+May reduce P in proportion to dV, but shall return to >90% of pre-disturbance 
+level within 2 sec after V returns to > 0.9 p.u.
+Unless studies demonstrate that a slower recovery is necessary 
+to maintain BES reliability, this shall be the default expectation.
+----- PAGE 31 -----
+PJM © 202631www.pjm.com | Public
+NERC LLWG SAR Voltage Ride-Through Envelope
+RMS Voltage (p.u. of nominal)
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+1.1
+1.2
+1.3
+0.0
+0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.00.0 0.25
+Time (sec)
+Continuous Operating Range
+1.15
+----- PAGE 32 -----
+PJM © 202632www.pjm.com | Public
+NERC LLWG SAR Voltage Ride-Through Envelope
+Source: NERC RSTC SAR on computational loads disturbance performance
+----- PAGE 33 -----
+PJM © 202633www.pjm.com | Public
+ERCOT, MISO, LLWG SAR, PRC-029 VRT Comparison 
+Voltage (per unit)
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+1.1
+1.2
+1.3
+0.0
+0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.00.0 0.15 0.25
+0.25
+1.2
+Time (sec)
+ERCOT
+MISO
+0.35
+NERC LLWG SAR
+6 sec
+0.32
+1.15
+PRC-029-1 and IEEE 2800
+IBRs w/ aux. equipment
+IBRs w/o aux. equipment
+----- PAGE 34 -----
+PJM © 202634www.pjm.com | Public
+Dominion/AEP Voltage Ride-Through Requirements
+• Dominion VRT requirements
+– The Customer must demonstrate the ability to reliably ride-through standard Transmission System 
+disturbances without disconnecting from the grid. 
+– At a minimum, PEILLs must demonstrate the capability to ride through at least six automatic reclosing 
+attempts that last 50–70 milliseconds each, aligned with DEV-ET’s typical operational practices.
+• AEP VRT requirements
+– Large Load Customers must be capable of riding through a minimum of two consecutive voltage 
+excursions outside of transmission system operating limits (.92 Vpu–1.05 Vpu). All exceptions must be 
+approved by AEP’s Real-Time Reliability organization.
+----- PAGE 35 -----
+PJM © 202635www.pjm.com | Public
+Frequency Ride-Through Requirements Comparison
+ERCOT requires more stringent 
+over-frequency, but less conservative 
+under-frequency ride-through 
+requirements than MISO, PRC-029-1 
+and IEEE 2800.
+61.8
+An LCL should continue to consume active power 
+within 10% of the pre-disturbance level during 
+frequency deviations requiring ride-through.
+Continuous Operating Range. 
+No power reduction is permitted.
+61.2
+58.8
+57.5
+MISO, PRC-029-1 and IEEE 2800
+ERCOT
+----- PAGE 36 -----
+PJM © 202636www.pjm.com | Public
+Contact
+Presenter: 
+David Egan,
+David.Egan@pjm.com  
+SME: 
+Byoungkon Choi, 
+Byoungkon.Choi@pjm.com
+PJM LCL Ride-Through Requirements
+Member Hotline
+(610) 666-8980
+(866) 400-8980
+custsvc@pjm.com
+----- PAGE 37 -----
+PJM © 202637www.pjm.com | Public

@@ -1,0 +1,1786 @@
+--- PAGE 1 ---
+Large Load Considerations 
+ 
+Straw Proposal 
+ 
+August 12, 2026 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Prepared by: 
+ 
+Danielle Mills 
+Bill Weaver 
+Sarah Goldmuntz  
+ 
+California Independent System Operator
+--- PAGE 2 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 2   
+ 
+I. Executive Summary 
+Serving the epicenter of the hyperscaler economy, the California Independent System 
+Operator (CAISO) understands the need for new procedures to provide fast and reliable 
+interconnection of new large loads. California faces a projected surge in electricity 
+demand over the next decade, driven in part by new large loads such as data centers. 
+The CAISO coordinates intensely with local, state and federal regulatory authorities, 
+utilities, and stakeholders to ensure timely access to power for new large loads; 
+anticipating surging demand, exploring the complexities of co-located and flexible loads, 
+ensuring equitable cost allocation, and considering new technical requirements to 
+account for changing operational profiles. These actions will ensure that CAISO and its 
+Participating Transmission Owners (PTOs) facilitate economic growth and innovation 
+without compromising the overall reliability or affordability of the system. 
+This Large Loads Straw Proposal responds to the Federal Energy Regulatory 
+Commission (FERC) Order to Show Cause and illustrates the progress the CAISO has 
+made in coordination with PTOs and other stakeholders in five key areas: 
+A. Developing procedures to improve information visibility for operational awareness 
+and new technical standards for continued reliability.  
+B. Ensuring a workable framework for PTOs to develop just and reasonable deposit, 
+financing, and other cost allocation structures within their tariffs. 
+C. Establishing parallel information and application requirements for co-located 
+arrangements in the CAISO’s generator interconnection process to align with 
+PTO load interconnection studies. 
+D. Creating a framework for two new interconnection services for flexible large 
+loads, one interim and one permanent, to allow large loads to interconnect 
+quickly to the transmission system either while waiting for network upgrade 
+completion or to avoid network upgrade completion, respectively. 
+E. Evaluating the need for a process to study generating facilities serving electrically 
+proximate large loads. 
+Respecting the current assignment of responsibilities for the system, this straw proposal 
+addresses the topics for which the CAISO is responsible, which includes transmission 
+planning, generator interconnection, and reliability of the CAISO system. Federal and 
+state utility tariffs govern the study, interconnection, rates, and cost recovery for serving 
+new loads. As such, the CAISO is coordinating closely with the PTOs and expects these 
+proposals to continue to evolve as PTOs develop consistent and conforming policies 
+and procedures under their transmission tariffs. In addition, the CAISO is closely 
+coordinating with state and local regulatory authorities and looks forward to additional 
+stakeholder feedback.
+--- PAGE 3 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 3   
+Table of Contents 
+I. Executive Summary ...................................................................................................... 2 
+1. Introduction and Background........................................................................................ 4 
+A. Transmission Service to Eligible Customers on Behalf of Large Loads ... 7 
+1. Definition of Large Load ...................................................................................... 8 
+2. Large Load Application Process ....................................................................... 10 
+3. Large Load Interconnection Study Procedures ............................................... 13 
+4. Operational Requirements ................................................................................ 17 
+5. Large Load Service Agreements ...................................................................... 24 
+B. Cost Shifting Among Transmission Customers........................................ 25 
+1. Roles and Responsibilities ................................................................................ 25 
+2. Data Transparency ............................................................................................ 26 
+C. Co-Location Arrangements and Load with Behind the Meter Generation28 
+1. Terminology ....................................................................................................... 28 
+2. Serving Co-Located Loads ............................................................................... 28 
+3. Cost Allocation for Co-Located Loads .............................................................. 33 
+D. Extending New Transmission Services to Eligible Customers Taking Service on 
+Behalf of Flexible Large Loads ............................................................................... 36 
+E. Interconnection Customers Serving Electrically Proximate Large Load and Co-
+Located Load ........................................................................................................... 39 
+2. Initiative Timeline and Next Steps .............................................................................. 40 
+3. Decisional Classification ............................................................................................. 41
+--- PAGE 4 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 4   
+1. Introduction and Background 
+This Large Loads Straw Proposal constitutes a major step forward for the CAISO and 
+Participating Transmission Owners (PTOs) charting a course to enable development 
+and interconnection of new large loads, including data centers and other computing 
+loads, onto the CAISO system. The concepts proposed rest on a foundation of highly 
+integrated planning and coordination among the CAISO, PTOs, state energy agencies, 
+and local regulatory authorities, and provide a framework upon which the PTOs will 
+layer their own processes to serve new large loads while upholding and reinforcing the 
+CAISO’s commitment to reliability.   
+ 
+The CAISO opened this stakeholder initiative with the intent of clarifying roles and 
+responsibilities in anticipation of accelerating large load inquiries and load 
+interconnection requests coming to the PTOs. In 2025, the CAISO began regular 
+engagement with the PTOs and formed a Large Load Technical Requirements Working 
+Group (LLTRWG) to explore possible technical standards to ensure reliable operations 
+as new large loads interconnect to the CAISO system. The CAISO’s Issue Paper, 
+posted in January 2026, described current roles, considerations, and processes for 
+large loads, including transmission and resource planning, transmission service 
+offerings, cost allocation and responsibility, technical requirements and standards, 
+operational requirements, and related issues.1 The CAISO has continued to monitor and 
+engage in state and federal regulatory discussions regarding large loads and explored 
+central issues and procedural steps that require additional transparency or new 
+products. On June 15, 2026, the CAISO issued a Large Loads Technical Requirements 
+Straw Proposal on behalf of the LLTRWG in order to stay ahead of any potential 
+operational concerns that large loads may present.  
+ 
+On June 18, 2026, the Federal Energy Regulatory Commission (FERC or the 
+Commission) issued six tailored orders to show cause under Section 206 of the Federal 
+Power Act to each of the six regional grid operators under its jurisdiction, including the 
+CAISO. The order to show cause (Order) directed at CAISO focuses on five central 
+concerns, all of which are addressed in this Straw Proposal. The CAISO met the first of 
+the Commission’s compliance requirements with submission of an Informational Report 
+on Resource Sufficiency, describing recent attention to resource adequacy, generation 
+development, transmission expansion, and load and generator interconnection 
+processes.2  
+ 
+1  See CAISO Large Loads Issue Paper at https://www.caiso.com/documents/issue -paper-large-
+load-consideration -jan-20-2026.pdf  
+2  See CAISO Informational Report - Large Loads and Co -located Loads  at 
+https://www.caiso.com/documents/jul-20-2026-informational -report-large-loads -and-co-located -loads -
+el26-71.pdf .
+--- PAGE 5 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 5   
+ 
+As directed by the Commission, the CAISO is coordinating closely with state energy 
+agencies to complement their regulatory proceedings, as well as with the PTOs to 
+ensure a fair and consistent application of requirements and procedures across the 
+CAISO system. Such consistency is critical to enabling reliable and timely 
+interconnection, energization, and operations of new large loads. 
+ 
+To anticipate and enable increasing load growth, the CAISO works with the state energy 
+agencies, utilities, and stakeholders in its footprint. A 2022 Memorandum of 
+Understanding (MOU) between the California Energy Commission (CEC), California 
+Public Utilities Commission (CPUC), and the CAISO tightened the linkages between 
+resource and transmission planning, interconnection, and procurement so California is 
+equipped to meet its reliability needs and state energy policy objectives.3 This 
+framework has allowed the CAISO and the PTOs to meet the increasing demand 
+forecasted for the state. As of January 2026, the CEC forecasts that data center load in 
+the CAISO-managed grid will increase by 1.8 gigawatts (GW) by 2030 and 4.7 GW by 
+2035.4 The CAISO also is aware that utilities are receiving an increasing number of 
+large load interconnection and service applications, and is committed to staying ahead 
+of the curve, timely meeting new energy demand reliably and affordably.  
+ 
+To date, California’s integrated resource planning efforts have resulted in more than 36 
+GW of nameplate new generation and storage capacity coming online to serve CAISO 
+load since 2020.5 The close coordination between the CAISO, state agencies, and local 
+regulatory authorities on demand forecasts and resource planning provides a pathway 
+for proactive transmission planning that anticipates emerging large load growth and 
+aligns with resource needs to serve new loads.   
+ 
+The current assignment of transmission responsibilities for the system under the 
+CAISO’s operating control gives lead responsibilities for resource (generator and 
+storage) interconnection and transmission planning to the CAISO, while utilities, 
+ 
+3  See Memorandum of Understanding Between the California Public Utilities Commission and the 
+California Energy Commission and the California Independent System Operator Regarding Transmission 
+and Resource Planning and Implementation at https://www.caiso.com/Documents/ISO-CEC-and-CPUC-
+Memorandum-of -Understanding-Dec-2022.pdf .  
+4 California Energy Demand  2025 Hourly Forecast – CAISO – Planning Scenario: 
+https://efiling.energy.ca.gov/GetDocument.aspx?tn=268127&DocumentContentId=105135   
+5  See CPUC Resource Tracking Data Reports  at https://www.cpuc.ca.gov/industries -and-
+topics/electrical-energy/summer-2021-reliability/tracking -energy-development/cpuc -resource-tracking-
+data-reports
+--- PAGE 6 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 6   
+specifically the PTOs, hold the lead role for load connections.6 These relationships are 
+set out in the FERC-approved tariffs of the CAISO and the PTOs and the CAISO 
+transmission control agreement. To date, most of the load interconnections have been 
+distribution-system connections informed by the utilities’ distribution system 
+requirements, with third-party customer connections managed with the utilities. This 
+structure has efficiently and effectively enabled the utilities to manage both their PTO 
+responsibilities for transmission connections regulated by FERC and their state-
+jurisdictional responsibilities for rates and charges that apply to end-use customers.  
+ 
+However, the CAISO and the PTOs recognize that there is an increase in load 
+interconnection requests for transmission-system connections that raise questions 
+about the roles and responsibilities of the CAISO and the PTOs. FERC’s Order raises 
+many of these questions. This straw proposal addresses the issues the Commission 
+raises in the Order that directly pertain to the CAISO’s responsibilities to anticipate and 
+plan for new additions to the CAISO system, provide transmission service, and maintain 
+reliable operations of the grid. This straw proposal highlights several issues that will 
+require significant coordination among the PTOs to develop consistent tariff policies and 
+procedures that conform to the framework the CAISO proposes, respect the distinct 
+roles of the CAISO versus the various types of PTOs, and comply with the requirements 
+the Commission describes in the Order. 
+ 
+This Large Loads Stakeholder Initiative will address all the issues in the Order. The 
+CAISO is also conducting other stakeholder initiatives that will provide additional 
+benefits to reliability, market efficiency, and affordability, as described below. These 
+stakeholder initiatives include the CAISO’s ongoing work on: 
+ 
+• Resource adequacy;  
+• Demand and Distributed Energy Market Integration (DDEMI); and 
+• Interconnection Process Enhancements. 
+ 
+ 
+6  At times in this straw proposal , the CAISO will distinguish between utility responsibilities as 
+‘participating transmission owner (PTO), utility distribution company (UDC), or load-serving entity, or load-
+serving entity, as all carry different responsibilities depending on the type of load and regulatory topic in 
+question. Utility distribution company refers to an entity that owns a distribution system for the delivery of 
+energy to and from the CAISO-controlled grid, and that provides regulated retail electric service to Eligible 
+Customers, as well as regulated procurement service to those end-use customers who are not yet eligible 
+for direct access, or who choose not to arrange services through another retailer.  Participating 
+Transmission Owner refers to a party to the Transmission Control Agreement who has placed its 
+transmission assets and Entitlements under the CAISO’s Operational Control in accordance with the 
+Transmission Control Agreement . Load-serving entities  are responsible for serving retail electricity 
+customers and, in California, includes investor-owned utilities, community choice aggregators, publicly 
+owned utilities , and electric service providers.
+--- PAGE 7 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 7   
+In addition to this Large Load Stakeholder Initiative and other related initiatives, the 
+CAISO engages in state-level coordination efforts related to large loads as California 
+agencies are implementing state law related to data centers and examining the 
+implications of large loads in resource planning and procurement, interconnection, retail 
+rate design, and energization,7 with open proceedings at the CPUC and in certain 
+dockets at the CEC. 
+ 
+The CAISO notes that the North American Electric Reliability Corporation (NERC) is 
+actively advancing industry-wide efforts to address reliability impacts of large loads, 
+particularly large computational loads, such as data centers. In May 2026, NERC issued 
+a Level 3 Essential Actions Alert addressing large-load modeling and data, system 
+studies, commissioning, ride-through performance, and monitoring. In parallel, NERC 
+Project 2026-02 – Large Loads is developing new and revised Reliability Standards to 
+establish longer-term requirements in these areas. The CAISO is actively participating 
+in these efforts and coordinating its large-load technical requirements with the evolving 
+NERC framework.8 
+ 
+The CAISO has an important role in planning for and maintaining reliable operations of 
+the grid and in facilitating consistent approaches to large load interconnections among 
+the PTOs. Considering the urgency of onboarding new large loads and the required 
+timeline to submit a filing to FERC under Federal Power Act Section 205, the CAISO 
+issues this straw proposal for stakeholder consideration. 
+ 
+A. Transmission Service to Eligible Customers on Behalf of 
+Large Loads 
+The Commission directed the CAISO and the PTOs to either show cause as to why 
+their FERC-jurisdictional tariffs remain just and reasonable and not unduly 
+discriminatory or preferential without provisions addressing the five categories set out in 
+the Order or explain what changes to their tariffs would remedy the identified concerns. 
+The first category included provisions addressing the application process, study 
+procedures, and ongoing operational requirements that apply to “Eligible Customers” 
+seeking transmission service on behalf of large loads.9 
+ 
+ 
+7  The CPUC refers to load interconnection as “energization.” 
+8  See Large Load Technical Requirements - Straw Proposal at 
+https://stakeholdercenter.caiso.com/InitiativeDocuments/Large -Load-Technical-Requirements-Straw-
+Proposal -Jun-15-2026.pdf   
+9 Order to Show Cause at P 3.
+--- PAGE 8 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 8   
+Below, the CAISO responds to the series of deficiencies the Commission identified 
+related to this category. The CAISO agrees with the Commission that additional clarity 
+and information requirements are necessary within the CAISO tariff, especially if interim 
+or non-firm service is being considered to facilitate “speed-to-power,” or accelerated 
+large load interconnections. Further, the CAISO encourages consistency among the 
+PTOs in key areas related to large load interconnection application, study, and 
+operations.    
+ 
+In addition, the CAISO proposes a series of operational requirements, which it will 
+continue to develop in coordination with the PTOs and the LLTRWG, and in parallel with 
+the North American Electric Reliability Corporation’s (NERC) efforts to develop technical 
+standards for the reliable operation of large loads. 
+ 
+While recognizing some changes to the CAISO tariff are needed to address the 
+Commission’s concerns with regard to the first category in the Order, the CAISO does 
+not propose significant changes to the roles and responsibilities associated with large 
+load interconnection applications or studies. T he current framework of shared 
+responsibilities among the CAISO and the PTOs remains an efficient and effective 
+mechanism to achieve the aims FERC outlines in the Order. The PTOs remain largely 
+responsible for processing applications and studying new large loads and the CAISO 
+remains responsible for reviewing those studies and ensuring alignment with 
+transmission planning activities. The CAISO notes the importance of this clarity and 
+consistency as it relates to large load interconnections and operations on the system 
+and believes the proposed tariff enhancements below complement the load and 
+resource planning process described in the December 2022 Memorandum of 
+Understanding between the CAISO, CPUC, and CEC.10 The CAISO believes that this 
+framework, with some clarification and new information requirements, as well as 
+operational requirements, will address the concerns the Commission described in the 
+first category in the Order. 
+1. Definition of Large Load 
+FERC noted in the Order that the CAISO and PTO tariffs lack a definition of large load, 
+as a new category of load.11 The Commission directed the CAISO and PTOs to create 
+an appropriate definition, including a load size and interconnection voltage threshold, 
+based on the characteristics of CAISO’s transmission system. The Commission 
+ 
+10  See Memorandum of Understanding Between the California Public Utilities Commission and the 
+California Energy Commission and the California Independent System Operator Regarding Transmission 
+and Resource Planning and Implementation at https://www.caiso.com/Documents/ISO-CEC-and-CPUC-
+Memorandum-of -Understanding-Dec-2022.pdf .  
+11  Order to Show Cause  at P 58.
+--- PAGE 9 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 9   
+suggested that a potentially reasonable definition would be “a new commercial or 
+industrial customer, located at a single site behind one or more points of 
+interconnection, and that has a peak load of 50 MW or greater, interconnects to the 
+transmission system at a voltage level of greater than 69 kV, and is not part of a co-
+location arrangement.”12 
+ 
+Proposal 
+ 
+The CAISO proposes to include a definition of “Large Load” in the CAISO tariff; 
+however, the CAISO believes it may be premature to do so at this point, while NERC is 
+developing similar, potentially overlapping, terms for computational loads. As such, the 
+CAISO’s proposed definition may shift in the coming months to avoid regulatory 
+conflicts between its definition and NERC’s. Aligning with future NERC standards will 
+avoid creating dual or conflicting regulatory requirements for the same loads. 
+Nevertheless, the CAISO can describe the principles it believes are helpful in defining 
+large loads.  
+ 
+The CAISO proposes that a potential definition could be: “An End User located at a 
+single site interconnecting to the CAISO Controlled Grid, and that has a peak load of 50 
+MW or greater.”13 Similar to generating facilities, the CAISO proposes to continue to 
+adhere to FERC and California regulations on what considers a “site.” The CAISO has 
+not seen developers try to game interconnection processes to avoid MW thresholds 
+through de-aggregation, and the CAISO does not believe it is necessary to create 
+additional rules to prevent such gaming on the load side. The CAISO expects the large 
+load definition will adequately apply to large loads comprised of distinct loads, even if 
+they have separate retail meters. Operationally, such loads would still have the same 
+impact on the CAISO transmission system. 
+ 
+This proposed definition differs from the Commission’s proposal in several respects. 
+First, it does not include a description of the types of load (i.e., commercial or industrial 
+customer). Notwithstanding that NERC standards may be further qualified to include 
+specific types of loads, the CAISO does not believe that a large load definition should 
+include descriptions of the types of load. This is for several reasons. For one, the 
+CAISO does not want to create standards that result in false positives, false negatives, 
+or disputes about what constitutes “commercial” or “industrial.”  
+ 
+ 
+12  Id. at P 57. 
+13  Appendix A to the CAISO tariff defines an End User as “ A consumer of electric power who 
+consumes such power to satisfy a Load directly connected to the CAISO Controlled Grid, a Distribution 
+System . . . .” It defines the CAISO Controlled Grid as “The system of transmission lines and associated 
+facilities of the Participating TOs that have been placed under the CAISO’s Operational Control. ”
+--- PAGE 10 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 10   
+In addition, unless there is a relevant operational difference between the types of loads, 
+specifying type is unnecessary. NERC is developing Computational Load standards that 
+relate to reliability, which are mainly concerned with operational issues. The CAISO 
+intends to follow and timely adopt any necessary tariff changes to implement new 
+NERC operational standards for Computational Loads. The CAISO is not aware of long-
+term transmission planning considerations that would apply specifically to 
+Computational Loads that would not also apply to many, if not all, other types of Large 
+Loads. If a specific type of large load does warrant specialized treatment, that can be 
+added as an additional qualifier where that specialized treatment is called out.  
+ 
+The CAISO’s proposed definition also omits a specific voltage level for the 
+interconnection (FERC proposes interconnections at a voltage level greater than 69 kV). 
+The CAISO does not believe this is necessary where the definition specifies the point of 
+interconnection is with the CAISO controlled grid, as this effectively describes that the 
+large load is transmission-connected, obviating the need to specify a voltage that could 
+conflict with the existing transmission registration. 
+ 
+The CAISO’s proposed definition also does not include FERC’s proposal that the 
+definitions specify that the large load “is not part of a co-location arrangement.” The 
+CAISO does not believe it is necessary to exclude large loads participating in co-
+location arrangements from the definition of large loads. Although such loads will be 
+subject to different tariff provisions than standalone large loads, they would still 
+constitute large loads.  
+ 
+Although the voltages of the distribution grid likely challenge large loads to interconnect, 
+the CAISO recognizes that it could be possible for 50 MW loads to interconnect to the 
+distribution grid. Nevertheless, the CAISO is focused on transmission-connected large 
+loads at this time because they are the subject of FERC’s Order, and because the 
+transmission grid represents the likely interconnection point for the vast majority of large 
+loads. This initiative will thus focus on transmission interconnections, and the Demand 
+and Distributed Energy Resource Integration (DDEMI) initiative and other CAISO 
+stakeholder initiatives will continue to work on distribution-related enhancements. 
+2. Large Load Application Process 
+The Commission suggested that the CAISO and the PTOs lack clear and consistent 
+provisions establishing the application process and study procedures that will be used 
+when the CAISO and/or the PTOs evaluate the provision of transmission service to 
+Eligible Customers on behalf of large loads, including an application process,
+--- PAGE 11 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 11   
+application fee and readiness requirements, and information and data requirements.14 
+The Order also suggested that the CAISO and PTO tariffs lack appropriate study 
+provisions to recognize the unique operational characteristics of large loads that are 
+willing and able to limit their energy withdrawals under certain conditions to lessen or 
+avoid the need for network upgrades.15 
+ 
+In addition, the Commission noted that accurate models using Electromagnetic 
+Transient studies may help to ensure that transmission service needed on behalf of 
+large loads can be provided without compromising reliability and suggests clarity and 
+consistency in the evaluation of alternative transmission technologies (ATTs) as 
+potential solutions to accommodate an eligible customer’s request for transmission 
+service on behalf of a large load.16 To the extent that traditional network upgrades are 
+selected over ATTs, the Commission recommended demonstration of why ATTs were 
+not selected.17 
+ 
+Finally, the Commission directed the CAISO and the PTOs to explain whether their 
+tariffs sufficiently address identification of Direct Assignment Facilities and Network 
+Upgrades (as the Order defines) necessary to reliably provide transmission service to 
+Eligible Customers on behalf of large loads; include provisions for a 60-90-day timeline 
+to study the unique operational characteristics of large loads; and include a study 
+deadline to assess large loads.18 
+ 
+Proposal 
+ 
+The CAISO reiterates that the existing load interconnection process is conducted 
+efficiently and effectively by the PTOs. For this reason, the CAISO proposes enhanced 
+and ongoing coordination with the PTOs on the load and resource interconnection 
+processes and expects the PTOs to align application processes in order to ensure the 
+level of visibility necessary for the CAISO to plan for new large loads and maintain 
+reliability once they are interconnected.  
+ 
+Within that division of responsibilities, the CAISO agrees with the Commission’s 
+concerns in the Order that information in the large load interconnection study process 
+regarding a large load’s willingness to limit energy withdrawals under certain conditions 
+is important for the CAISO’s planning and operational purposes. To that end, the CAISO 
+expects the PTOs to develop consistent study procedures to be completed within 60 to 
+ 
+14  Order to Show Cause at P 58. 
+15  Id. at P 59. 
+16  Id. 
+17  Id. at P 61. 
+18  Id. at P 62.
+--- PAGE 12 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 12   
+90 days to enable this flexibility. In addition, the CAISO proposes a number of data 
+requirements for the large load interconnection study procedures, described in Section 
+A.4, to ensure the CAISO has the necessary information to account for such flexibility. 
+ 
+The CAISO proposes a framework for agreements under which large loads commit to 
+limiting energy withdrawals under the flexible load interconnection service offerings 
+described in Section D of this straw proposal. However, regarding the load application 
+process, the CAISO suggests that the PTOs develop consistent application processes, 
+study requirements, and agreements to ensure sufficient transparency in the load 
+application and study process.  It is important for the PTOs to maintain some degree of 
+consistency in their respective tariffs so the CAISO has a greater certainty around the 
+consistency of data and operational details received by the PTOs in the load 
+applications. 
+ 
+The CAISO currently evaluates myriad alternative transmission technologies in its 
+transmission planning process, which is the primary process through with the CAISO 
+ensures service to new large load interconnection requests. The CAISO’s evaluation 
+routinely includes static synchronous compensators, static VAR compensators19, 
+advanced power flow control devices, transmission switching, synchronous condensers, 
+voltage source converters, advanced conductors, and tower lifting. The CAISO 
+understands that transmission providers must consider ATTs at all times. As a 
+transmission provider, the CAISO must include in the generator interconnection cluster 
+study report an explanation of the results of the evaluation of the enumerated alternative 
+transmission technologies for feasibility, cost, and time savings as an alternative to a 
+traditional network upgrade.  
+ 
+Therefore the CAISO supports and has broadly adopted the practice of duly considering 
+and assigning ATTs to meet identified system needs, including when triggered by new 
+loads interconnecting to the CAISO grid. The CAISO documents consideration of such 
+technologies in its annual Transmission Plan. This has been the practice in CAISO for 
+several years and was recently memorialized in the CAISO’s tariff in compliance with 
+FERC Order Nos. 2023 and 1920 (pending FERC approval).20 To respond to the Order 
+and the large load interconnection context specifically, the CAISO proposes to clarify 
+these considerations through consistent tariff language in the CAISO tariff, which the 
+CAISO expects the PTOs will similarly include in their tariffs. Rather than providing 
+standardized documentation of the detailed rationale each time a traditional 
+transmission technology is approved over the use of ATTs, the CAISO proposes to 
+continue to report annually on the approvals of ATTs within each transmission plan. The 
+ 
+19  VAR refers to voltampere reactive, which is the unit used to measure reactive power in an AC 
+electrical grid.  
+20  See, e.g., Section 6.2 of Appendix KK to the CAISO tariff.
+--- PAGE 13 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 13   
+ISO will continue to set out the alternatives that were considered in the selection of all 
+preferred transmission solutions, whether ATTs or other more conventional solutions, to 
+the reasonable depth necessary given the nature of the transmission need. This 
+approach has worked well in the generator interconnection study process, enabling the 
+consideration and use of ATTs and grid enhancing technologies without slowing down 
+studies. 
+ 
+With regard to the Commission’s ATTs-related modeling requirements, the CAISO 
+coordinates annually with the transmission owners during the annual transmission 
+planning process on the feasibility of ATTs, particularly evaluating the application of 
+advanced conductors and flow control devices. The CAISO notes that Dynamic Line 
+Rating (DLR) refers to a transmission line rating varying based on local conditions, such 
+as ambient air temperature, wind speed, cloud cover, solar heating, and precipitation, 
+etc., rather than a static rating assumption. DLRs can provide additional capacity for a 
+transmission line. In the CAISO's production cost simulation, many congestions were 
+observed in the evening time or in lower-temperature months. Such congestion can be 
+potentially mitigated or reduced by adopting DLRs for the lines. In the CAISO’s most 
+recent planning cycle, DLRs were not modeled in production cost modeling cases, since 
+it not only requires operational history data of weather conditions and line ratings, but 
+also requires software and modeling enhancement to accommodate the data in 
+production cost model. The CAISO is coordinating with the PTOs, WECC, and the 
+software vendor of GridView to explore the feasibility and possibility of implementing 
+dynamic line rating in production cost models in future planning cycles. 
+ 
+As a general matter, the CAISO recognizes that the Order implicates various types of 
+PTOs, including non-load-serving PTOs and approved project sponsors that could be 
+impacted by large load interconnection requests but are not load-serving entities and do 
+not have retail interconnection tariffs. The CAISO expects the PTOs to work together to 
+clarify and develop complementary roles and responsibilities in their respective tariffs 
+regarding requests for interconnections to non-load-serving PTO facilities.   
+3. Large Load Interconnection Study Procedures 
+The Commission highlighted a lack of clarity and consistency regarding the study of 
+provision of transmission service to Eligible Customers on behalf of large loads.21 
+Further, the Commission noted that, while it does not seek to alter the allocation of 
+rights and responsibilities between CAISO and PTO tariffs, the CAISO’s and PTO’s 
+tariffs may not clearly specify which entity will be responsible for studying the provision 
+ 
+21  Order to Show Cause at P 51.
+--- PAGE 14 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 14   
+of transmission service to Eligible Customers on behalf of large loads.22 The Order 
+suggested that additional study considerations may be necessary to address the unique 
+operational and reliability challenges that providing transmission service to eligible 
+customers on behalf of large loads presents to the transmission system.23 The 
+Commission noted that clear and consistent study processes may be necessary to fully 
+capture the transmission system impacts of providing such transmission service, which 
+could result in significant operational risks for the transmission system,24 and suggested 
+that tariff provisions may prevent disputes over a variety of issues, e.g. study timelines 
+and delays, how the transmission service needed on behalf of the large load is studied, 
+what types of network upgrades are considered, and how required network upgrades to 
+provide the requested transmission service are determined.25  
+ 
+Finally, the Commission suggested that the CAISO and PTO tariffs fail to deter 
+speculative or duplicative requests for transmission service by Eligible Customers on 
+behalf of large loads.26 
+ 
+Proposal 
+The CAISO proposes to clarify in its tariff that the current process requires load 
+interconnection requests to be submitted to the appropriate PTO pursuant to the PTO 
+tariffs. The CAISO currently accounts for those load interconnection requests in the 
+CAISO’s transmission planning process (TPP) and to some extent in the CAISO 
+Resource Interconnection Standards (RIS). The CAISO proposes both clarifying and 
+continuing this process in its tariff. In addition, the CAISO proposes enhanced data 
+sharing and process alignment between the CAISO and the PTOs to further streamline 
+the load interconnection request and study process. 
+ 
+As noted earlier in this straw proposal, the CAISO does not propose changing the 
+allocation of rights and responsibilities for studying large load interconnection requests 
+from the framework in place today: the PTOs will continue to manage the bulk of the 
+study responsibilities. This has been a highly efficient and effective process, to date, 
+and the CAISO expects that it can continue to be so with the influx of large load 
+interconnection requests. The CAISO encourages the PTOs to align their load 
+interconnection study procedures among themselves and with the CAISO resource 
+interconnection standards and transmission planning processes for enhanced clarity 
+ 
+22  Id. at P 51.  
+23  Id. at P 52.   
+24  Id. at P 53. 
+25  Id. at P 54. 
+26  Id. at P 55.
+--- PAGE 15 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 15   
+and consistency for customers, to fully capture the transmission system impacts of 
+providing such transmission service by applying consistent study parameters, and to 
+minimize operational risks to the system through a common study framework.  
+ 
+The CAISO agrees with the Commission and proposes some tariff enhancements to 
+ensure greater coordination and visibility between the CAISO and PTOs regarding the 
+load interconnection study results. This will require continued coordination with the 
+PTOs during the study process, and will be particularly important for co-located loads 
+and generation, discussed in Section C of this straw proposal, as well as with the 
+provision of flexible interim load interconnection (FILI) service, discussed further in 
+Section D of this straw proposal. 
+ 
+The CAISO acknowledges multiple possible configurations of large loads and co-
+located loads, each of which may necessitate unique information to fully mitigate 
+operational or reliability concerns. These various configurations are described in Section 
+C of this straw proposal on co-located loads. Each will have different implications on the 
+CAISO’s generator interconnection study requirements. Co -located loads with exporting 
+generation (existing or new), for example, will need parallel review by the CAISO and 
+the relevant PTO.  
+ 
+Thus, the CAISO proposes a new requirement for co-located loads and generation to 
+provide comprehensive information on both the load and generation in the CAISO’s 
+resource interconnection process, in addition to the PTO load interconnection 
+application process. The CAISO proposes to establish procedures for the CAISO and 
+PTOs to exchange and compare information to ensure the respective studies of the load 
+and generator are consistent with the customer’s requested mode of operation and type 
+of service requested.   
+ 
+In light of the need for coordination between the CAISO’s resource interconnection 
+study process (in which the studies are conducted primarily by the PTOs) and load 
+interconnection studies, the CAISO expects PTOs to propose enhanced alignment of 
+their load interconnection request windows and study timelines with the CAISO 
+processes. This is needed for all the information to be communicated back to the 
+CAISO in a timely and consistent manner to inform the CAISO’s broader transmission 
+planning, resource interconnection, and deliverability allocation procedures. The CAISO 
+notes that its resource interconnection timeline and transmission planning timelines are 
+relatively bound in its tariff as required by FERC Order Nos. 2023, 1000, and 1920, and 
+the MOU with the California state energy agencies. Therefore, the CAISO expects the 
+PTOs will need to update their tariffs to align study processes with one another and in 
+consideration of other related CAISO processes.
+--- PAGE 16 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 16   
+ 
+To ensure clarity on behalf of stakeholders, the CAISO encourages the PTOs to 
+establish tariff revisions describing study timelines and procedures for the transmission 
+service needed on behalf of large loads, types of network upgrades considered, and 
+methods to determine required network upgrades to provide the requested transmission 
+service.27 The CAISO believes that a high degree of consistency would be useful across 
+PTO tariffs to ensure timeline alignment, process efficiencies, and utility of data. In 
+addition, the CAISO proposes to define in its tariff any instances when the CAISO would 
+reject load interconnection study results or decline to consider or approve associated 
+transmission solutions through the TPP; these conditions include instances when PTO 
+study results indicate high operational risk or uncertainty, or would interfere with CAISO 
+compliance with balancing authority, transmission operator, or reliability coordinator 
+reliability standards.   
+ 
+The most effective way to ensure load associated with new large load interconnections 
+is reflected in CAISO’s TPP is to work with CEC to reflect this new load in CEC’s 
+demand forecast before CEC finalizes its forecast in the December timeframe each 
+year. While the aim is for load forecasts incorporated into CAISO’s TPP to include all 
+anticipated load, there are instances where new load seeks to interconnect after 
+development of the demand forecast and CPUC resource portfolios that the CAISO 
+incorporates into its TPP. Currently, to address these instances, the PTOs may submit 
+proposals for the CAISO’s concurrence in the transmission plan. The concurrence for 
+load interconnections only considers the transmission component of the load 
+interconnection (i.e., the network upgrades). The CAISO reviews and provides 
+concurrence that the load interconnection and potential network upgrades to 
+interconnect the load meet the transmission reliability requirements and are consistent 
+with the long-term transmission plans in the area.  
+ 
+To address FERC’s Order, the CAISO proposes to clarify within its tariff how the 
+concurrence process addresses local network needs associated with large load 
+interconnections. The concurrence process provides important validation of the 
+assumptions used in planning and confirms that proposed load interconnections and 
+associated network upgrades do not create adverse reliability impacts to the regional 
+system. The concurrence process also helps ensure that new infrastructure is 
+appropriately sized, timed, and initiated based on credible and coordinated planning to 
+meet forecasted load growth. The CAISO’s planning framework identifies and mitigates 
+area-wide impacts driven by significant new load growth. In parallel, the PTOs continue 
+to advance the local and interconnection-driven network upgrades needed to reliably 
+serve retail customers and safely integrate new large loads under the PTOs’ obligation 
+ 
+27  Id. at P 54.
+--- PAGE 17 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 17   
+to serve them. This coordinated approach, whereby the CAISO addresses area-wide 
+impacts through the Transmission Planning Process and PTOs advance local network 
+reinforcements associated with load interconnections through the load interconnection 
+process, is essential to facilitating the timely integration of new loads and minimizing 
+reliance on operational workarounds. Thus, the CAISO proposes to clarify in its tariff the 
+purpose and approach of the concurrence process in context of large loads. The CAISO 
+proposes to specify in its tariff the conditions under which load interconnection requests 
+would be considered for concurrence to ensure reliability and consistency with long-
+term plans. 
+ 
+As discussed in Section A.2, (Large Load Application Process), the CAISO requests 
+that the PTOs clarify in their tariffs the responsibilities of non -load serving PTOs’ 
+facilities receiving load interconnection applications from the load-serving entity, and 
+which party will lead the study process.   
+ 
+Regarding FERC’s concerns regarding speculative or duplicative large load 
+interconnection requests, t he CAISO agrees that its tariff does not deter such requests 
+per se but suggests that the responsibility to do so is more appropriately held by the 
+PTOs and therefore should be addressed through revisions to the PTOs’ tariffs. For 
+CAISO planning purposes, the CAISO notes that the CEC’s Integrated Energy Policy 
+Report (IEPR) long-term demand forecast includes information on applications for 
+service submitted to utilities and applies adjustments to requested capacity based on 
+utilization factors, confidence levels, and ramping assumptions.9 Confidence levels are 
+determined based on the status of project applications. If projects have signed 
+agreements with the utility for electric service, they are included in the highest 
+confidence group. The CEC demand forecast projects capacity and energy needs of 
+new loads; and these new loads have been incorporated into the statewide planning 
+processes for the past several years. The state’s integrated resource planning and the 
+CAISO’s TPP incorporate this information. This is one mechanism to guard against 
+speculative or duplicative large load interconnection requests forming the basis of 
+infrastructure planning in the CAISO. Additional mechanisms may be appropriate in the 
+PTOs’ tariffs. 
+4. Operational Requirements  
+The Commission preliminarily found in the Order that the CAISO’s and PTOs’ tariffs 
+appear to be unjust and unreasonable because they lack provisions addressing ongoing 
+operational requirements for Eligible Customers taking transmission service on behalf of 
+large loads.28 The Commission enumerated specific examples, including the lack of 
+ 
+28  Order to Show Cause at P 63.
+--- PAGE 18 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 18   
+provisions governing hourly forecasts, telemetry data, equipment to enable the CAISO 
+to monitor large loads; requiring the transmission customer to enable the CAISO to 
+remotely disconnect large loads when necessary to maintain reliability; ramp rate or 
+ride-through requirements; and control technologies and/or protection systems that may 
+be necessary to limit eligible customer’s withdrawals from the transmission system.29 
+ 
+Proposal  
+ 
+The CAISO agrees that the operational requirements the Commission identifies in the 
+Order are necessary. The CAISO has been exploring these issues through discussions 
+with PTO representatives in the LLTRWG, which the CAISO formed in 2025, and 
+through engagement with NERC. The LLTRWG was established by the CAISO and 
+utilities interconnecting large loads to develop consistent technical requirements for the 
+reliable interconnection and operation of large data center loads connected to the 
+CAISO-controlled grid. The resulting Large Load Technical Requirements Straw 
+Proposal, released on June 15, 2026, focuses on the technical characteristics needed 
+to maintain system reliability as large data center loads, including AI-training data 
+centers, continue to grow within the CAISO footprint.30 The Large Loads Technical 
+Requirements Straw Proposal complements broader stakeholder efforts addressing 
+planning, transmission service, market, and operational considerations, and is intended 
+to remain aligned with evolving NERC Reliability Standards and industry practices.  
+ 
+The Large Loads Technical Requirements Straw Proposal proposes technical 
+requirements in the following areas, which the CAISO intends to continue to further 
+develop through ongoing discussions with the LLTRWG and based on stakeholder 
+comments to this Large Loads Stakeholder Initiative: 
+ 
+• Frequency ride-through  
+• Voltage ride-through  
+• Ramp-rate limitations  
+• Monitoring and telemetry  
+• Post-fault active power recovery  
+• Modeling data requirements  
+• Commissioning, including data verification and model validation  
+ 
+The Large Loads Technical Requirements Straw Proposal is intended to establish 
+technical reliability requirements for the reliable interconnection and operation of large 
+ 
+29  Id. 
+30  See Large Load Technical Requirements - Straw Proposal at 
+https://stakeholdercenter.caiso.com/InitiativeDocuments/Large -Load-Technical-Requirements-Straw-
+Proposal -Jun-15-2026.pdf
+--- PAGE 19 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 19   
+loads. Many of the proposed requirements address the technical operational concerns 
+the Commission identifies in the Order. The Large Loads Technical Requirements Straw 
+Proposal also identifies areas for which the LLTRWG is currently developing technical 
+requirements that the Commission does not mention in the Order, including low- and 
+high-frequency cycling, constant power operation, power quality, dynamic reactive 
+power support, phase-angle jump ride-through, protection requirements, and other 
+emerging technical considerations. 
+ 
+The following table summarizes the relationship between the Large Loads Technical 
+Requirements Straw Proposal and the operational requirements noted in the 
+Commission’s Order. 
+ 
+Operational Requirement 
+Identified in FERC Order to 
+Show Cause (P63) 
+Current 
+Technical 
+Requirements 
+Straw 
+Proposal 
+Status 
+Comments 
+Establish ramp-rate 
+requirements for large loads. Addressed 
+The Large Loads Technical 
+Requirements Straw Proposal 
+includes ramp-rate limitations as one 
+of the proposed technical 
+requirements to reduce reliability 
+impacts associated with rapid 
+changes in large load demand. 
+Establish ride-through 
+requirements for large loads. Addressed 
+The Large Loads Technical 
+Requirements Straw Proposal 
+includes both frequency ride-through 
+and voltage ride-through requirements 
+intended to improve system reliability 
+during disturbances. 
+Specify control technologies 
+and/or protection systems 
+necessary to limit large load 
+withdrawals from the 
+transmission system when 
+appropriate. 
+Addressed 
+The Large Loads Technical 
+Requirements Straw Proposal 
+identifies that protective systems may 
+include automated schemes designed 
+to reduce or disconnect portions of the 
+large load during abnormal system 
+conditions.
+--- PAGE 20 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 20   
+Operational Requirement 
+Identified in FERC Order to 
+Show Cause (P63) 
+Current 
+Technical 
+Requirements 
+Straw 
+Proposal 
+Status 
+Comments 
+Require installation of phasor 
+measurement units (PMUs) or 
+similar high-speed monitoring 
+equipment, with associated 
+costs assigned to the 
+transmission customer. 
+Partially 
+Addressed 
+The Large Loads Technical 
+Requirements Straw Proposal 
+includes monitoring and telemetry 
+requirements, including PMUs and 
+Digital Fault Recorders (DFRs), but 
+does not specify cost allocation. 
+Require hourly forecasts, 
+telemetry, and other operational 
+data to provide CAISO sufficient 
+operational visibility. 
+Not Addressed 
+The Large Loads Technical 
+Requirements Straw Proposal 
+includes monitoring and telemetry 
+requirements to improve operational 
+visibility. However, it does not 
+establish hourly forecasting 
+requirements or define data exchange 
+requirements and communication 
+protocols. 
+Enable CAISO to remotely 
+disconnect large loads when 
+necessary to maintain 
+transmission system reliability. 
+Not Addressed 
+The Large Loads Technical 
+Requirements Straw Proposal does 
+not enable CAISO to remotely 
+disconnect large loads. 
+Establish requirements for 
+maintaining communication 
+channels between CAISO and 
+transmission customers serving 
+large loads. 
+Not Addressed 
+The Large Loads Technical 
+Requirements Straw Proposal does 
+not address the operational 
+communication requirements. 
+ 
+From the table above, the CAISO identifies four operational requirements the Order 
+includes that have not been fully addressed by the Large Loads Technical 
+Requirements Straw Proposal. The CAISO proposes adoption of these requirements to 
+address these gaps:  
+• Installation of phasor measurement units (PMUs) or similar high-speed 
+monitoring equipment, with associated costs assigned to the transmission 
+customer;
+--- PAGE 21 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 21   
+• Hourly forecasts, telemetry, and other operational data to provide the CAISO 
+sufficient operational visibility;  
+• Enable the CAISO to remotely disconnect large loads when necessary to 
+maintain transmission system reliability; and 
+• Establish requirements for maintaining communication channels between the 
+CAISO and transmission customers serving large loads. 
+ 
+The LLTRWG continues to refine the technical requirements based on stakeholder 
+feedback, additional system studies, operating experience, and the ongoing 
+development of NERC Reliability Standards for computational loads. As the work 
+progresses, the CAISO and participating utilities will determine the appropriate 
+implementation mechanisms. Depending on the nature of each requirement, 
+implementation may occur via changes to the CAISO tariff, PTOs’ tariffs, utility 
+interconnection handbooks, Business Practices Manuals, and/or future NERC Reliability 
+Standards, providing a coordinated framework for reliable integration of large loads 
+within the CAISO-controlled grid.  
+ 
+For example, depending on the results of large load interconnection studies, the 
+relevant PTO may require additional monitoring, control, or protective systems beyond 
+those required by the CAISO to maintain reliability. Such systems may include 
+automated schemes designed to reduce or disconnect portions of the large load during 
+abnormal system conditions. The CAISO notes that it does not have direct control of 
+switches, so the PTOs would need to make sure they have control at the right level. In 
+other words, these requirements would be implemented at the PTO rather than at the 
+CAISO level. 
+ 
+To ensure the ongoing visibility and operational control necessary to provide reliable 
+transmission service, the CAISO also proposes tariff provisions enabling data 
+exchanges with the PTOs and load-serving entities to ensure access to the following 
+large load interconnection information. Static information about the large loads will come 
+from the PTOs near the end of the interconnection process (similar to the new resource 
+implementation process for generators). Day-ahead and real-time information will come 
+from the load-serving entity scheduling coordinator responsible for the large load’s 
+demand.31  
+ 
+ 
+31  The CAISO does not propose that the large load be required to have its own scheduling 
+coordinator, nor that large loads be considered as their own load -serving entities. Rather, large load 
+demand would be scheduled by their load-serving entity similar to non-large load demand, and that same 
+load-serving entity would report any material data for the large load. If the large load participates in a 
+CAISO demand response program, then it would a demand response provider and scheduling 
+coordinator to represent it in the CAISO mar kets.
+--- PAGE 22 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 22   
+For each large load, the CAISO proposes to require the following information from the 
+PTOs during, or at the end of, the interconnection process: 
+• Information on whether the eligible customer is enrolled in a flexible 
+interconnection program, described below in Section D of this straw proposal 
+• Load type 
+• Variable or flat load designation 
+• Expected hourly operating profile 
+• Location of service 
+• Point of delivery 
+• Connected capacity 
+• Minimum operating level 
+• Maximum operating level 
+• Utility program information  
+• Any market participation status or expected participation in demand response 
+programs 
+• Maximum operating demand 
+• Minimum operating demand 
+• Curtailment capability 
+• Expected hourly flexibility capability 
+• Ramp-up capability 
+• Ramp-down capability 
+• Expected operating information sufficient to characterize expected load behavior 
+• For co-located generation that is not exporting or CAISO-participating, all 
+generation characteristics 
+ 
+The PTO will be expected to inform the CAISO of any material changes after 
+energization. Any co-located participating generators will still go through the CAISO 
+interconnection and new resource implementation process.  
+ 
+Additionally, the CAISO proposes that the large load’s load-serving entity’s scheduling 
+coordinator will provide the CAISO with the following data specific to each large load:
+--- PAGE 23 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 23   
+• Forecast submission requirements,32 which will be incorporated into applicable 
+balancing authority area demand forecasts and operational studies: 
+o Hourly forecasts of expected load consumption for the Operating Day and 
+a rolling 7-day period following the Operating Day 
+o Day Ahead Forecasts to be submitted no later than 0700 prevailing Pacific 
+time on the day prior to the Operating Day 
+o Forecasts at the individual large load identifier level 
+• Real-time forecast updates: Updated forecasts whenever expected consumption 
+of the large load materially deviates from previously submitted day-ahead 
+forecasts, including: 
+o Expected energization activities 
+o Material changes in operations 
+o Curtailments 
+o Facility outages 
+o Co-located generation impacts on the load forecast 
+o Other known events affecting expected consumption 
+• Telemetry data:  
+o Operational status 
+o Real-time consumption 
+• Expected outages: 
+o Planned outages 
+o Forced outages 
+o De-rates 
+o Other operating conditions that materially affect expected consumption 
+ 
+As described above, the CAISO generally proposes to obtain large load data from the 
+PTOs during the interconnection process and the load-serving entities representing the 
+large load’s demand in market timeframes. At this time the CAISO does not propose to 
+require large loads to have their own scheduling coordinator or other direct relationship 
+with the CAISO; however, this framework may need to change to remain consistent with 
+ultimate NERC requirements for computational loads.  
+ 
+The CAISO also notes that it will require the PTO, load-serving entity, and large load to 
+work with the CAISO to provide all available data on any reliability event. Similar to 
+participating generator requirements, this requirement will ensure the CAISO, utilities, 
+regulators, NERC, and WECC have sufficient data to conduct meaningful post-event 
+analyses. 
+ 
+32  The CAISO tariff will establish conditions under which an interconnecting transmission operator 
+must obtain a schedule/forecast from the eligible customer to provide to the CAISO.
+--- PAGE 24 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 24   
+ 
+The CAISO also notes that to the extent that software changes are necessary, the 
+CAISO may need additional time beyond 2026 to select a vendor, and to develop and 
+implement the product; however, the CAISO would seek to implement any software 
+changes in 2027.  
+5. Large Load Service Agreements  
+The Commission preliminarily found in the Order that the CAISO and PTO tariffs lack 
+pro forma provisions in a transmission service agreement, or other applicable 
+agreement, to memorialize the technical and operational terms the Order describes.33  
+ 
+Proposal 
+ 
+The CAISO agrees with the Commission’s preliminary finding and expects the PTOs to 
+develop a consistent pro forma agreement. At this time, it is not clear whether the 
+CAISO should always be a signatory to a three-party agreement for large load 
+interconnections. For example, the CAISO likely would not have any roles or 
+responsibilities for the financing and construction of simple network upgrades needed 
+for large loads receiving firm interconnection service. Such arrangements could be 
+effectuated through a two-party interconnection agreement between the PTO and the 
+large load developer, as performed today. On the other hand, for a large load 
+requesting non-firm interconnection service, the PTO may need the CAISO to help 
+memorialize and sign on to the operational procedures necessary to provide that 
+service through new pro forma non-firm service agreements or utilizing the PTO’s two-
+party interconnection agreement. For co -located large loads with exporting generation, 
+the CAISO will need to be a party to a pro forma agreement that bridges the pro forma 
+Large Generator Interconnection Agreement (LGIA) with the pro forma large load 
+interconnection agreement or negotiate a non-conforming LGIA to account for certain 
+details of the co-located large load interconnection on an individual basis. The 
+developer also would be expected to execute a CAISO pro forma Participating 
+Generator Agreement for the generator, but not a Participating Load Agreement for the 
+large load.34 
+ 
+ 
+33  Order to Show Cause at P 64. 
+34  The Participating Load Agreement is for loads receiving wholesale service, which are not relevant 
+to this initiative at this time.
+--- PAGE 25 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 25   
+B. Cost Shifting Among Transmission Customers 
+1. Roles and Responsibilities 
+The Commission laid out key objectives regarding cost allocation of network upgrades 
+associated with Eligible Customers taking transmission service on behalf of large loads: 
+improved transparency regarding the assignment of network upgrades and their 
+associated costs; and development of a pro forma cost recovery agreement between 
+the CAISO, the relevant PTO, and the eligible customer taking transmission service on 
+behalf of large loads. The Commission states that improved transparency will provide 
+important information to state public utility commissions and other state regulators, 
+enabling them to identify which transmission costs are caused by which transmission 
+customers in order to appropriately sub-allocate costs at the retail level. According to 
+the Commission, a pro forma cost recovery agreement would ensure that Eligible 
+Customers bear the risk and are ultimately responsible for the costs incurred to provide 
+transmission service, including the cost of network upgrades.  
+ 
+Proposal 
+ 
+The CAISO agrees that the objectives the Order outlines are foundational to preventing 
+cost shifting among transmission customers and to ensuring that large loads bear 
+equitable risk and responsibility for costs incurred to interconnect, including the cost of 
+network upgrades. The CAISO shares these objectives and understands the importance 
+of maintaining affordability while addressing large load integration. 
+ 
+The CAISO sees value in development of a pro forma cost recovery agreement and is 
+working closely with the PTOs, which are leading the development of this agreement, 
+and cost allocation rules generally.35 The CAISO believes it is prudent for cost allocation 
+rules to be set forth in the PTO tariffs rather than the CAISO tariff. As discussed herein, 
+the PTOs will continue to manage large load interconnections through their tariffs. The 
+PTOs also have a direct relationship with their retail ratepayers and the regulators of 
+those ultimate rates, including the CPUC. Additionally, the PTOs have worked on these 
+cost allocation issues and have more expertise in cost allocation than the CAISO, 
+including on large loads. Finally, it is the PTOs that will construct and own the network 
+upgrades. As such, the CAISO does not propose to issue a “top-down” cost allocation 
+solution through its own tariff. The CAISO proposes some metering and settlement 
+changes in Section C of the tariff to account for co-located large loads and generation.  
+ 
+ 
+35  The cost recovery agreement could be part of the pro forma load interconnection agreement. 
+They are discussed separately here because the Order to Show Cause discusses them as separate 
+issues.
+--- PAGE 26 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 26   
+The CAISO recognizes the primary role of the PTOs in establishing just and reasonable 
+provisions in their tariffs applicable to the eligible customer taking transmission service 
+on behalf of the end-use customer in order to prevent cost shifting among 
+customers. The CAISO appreciates the concern that while each PTO’s tariff is 
+applicable to the Eligible Customers taking service from that PTO, including a separate 
+mechanism in each PTO tariff does not directly avoid cost shifting between different 
+PTOs depending on the relative number of large loads served and the specific PTO 
+tariffs ultimately developed. This is, according to those expressing such concern , 
+because the CAISO recovers high-voltage transmission costs through a single regional 
+transmission access charge based on the individual PTOs’ transmission revenue 
+requirements, which may include the cost of network upgrades triggered by new large 
+loads.  
+ 
+The CAISO notes that at this time, the inputs into the total revenue requirement 
+recovered through the regional transmission access charge are directly influenced by 
+construction contributions that offset the transmission rate base upon which a PTO’s 
+transmission revenue requirement is based. In other words, to the extent that a PTO 
+requires a large load developer to contribute to the costs of constructing network 
+upgrades on an upfront basis, those contributions offset costs that would otherwise 
+have been added to the PTO’s rate base and included in the regional transmission 
+access charge. In this way, a PTO mechanism to require upfront payments would 
+protect against any concerns in the Commission’s Order about cost shifting. There are 
+also adjustment account mechanisms that can apply certain transmission revenues 
+annually directly against the PTOs’ revenue requirements that are incorporated into the 
+overall regional transmission access charge calculation. This could include financial 
+security, minimum demand charges, exit fees, and similar mechanisms the Order 
+mentions. The CAISO believes that sufficient flexibility exists in those mechanisms for 
+the PTOs. The CAISO does not believe changing the transmission access charge is 
+necessary at this time to effectuate the PTOs’ proposals to address the Commission’s 
+cost shifting concerns for large loads. 
+2. Data Transparency 
+In the Order, the Commission highlighted the need for “the provision of data on CAISO’s 
+website in a single location, and in an easily accessible format that is searchable and 
+allows users to filter the data, on transmission service provided to Eligible Customers on 
+behalf of large loads, for network upgrades evaluated in the local transmission planning 
+process that are needed to accommodate transmission service to Eligible Customers on 
+behalf of those large loads, and the costs for those network upgrades.”36  
+ 
+36  Order to Show Cause at P 46.
+--- PAGE 27 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 27   
+ 
+Proposal 
+ 
+The CAISO agrees that cost data should be transparent and can be provided on the 
+CAISO website in a searchable format. This is important both to aid large load 
+developers in making efficient siting decisions as well as to provide information critical 
+for state regulators to ensure fair cost allocation at the retail level.  
+ 
+For large load developers, the CAISO notes that for the generator interconnection study 
+process, the CAISO already provides each PTO’s per unit cost guide for all network 
+upgrade cost components.37 These guides are updated and shared with stakeholders 
+annually based on the latest industry cost estimates. The CAISO proposes to use the 
+per unit cost guides or enhance them as needed to ensure large load developers can 
+easily obtain cost data. 
+ 
+For state regulators and stakeholders, per the Commission’s direction,38 the CAISO also 
+proposes to clarify in the TPP where network upgrades were needed to accommodate 
+both general load growth and large load interconnection specifically. Large load growth 
+has already been incorporated into the CEC, CPUC, and CAISO forecasting and 
+planning processes, as detailed in the CAISO’s Informational Report on Resource 
+Sufficiency already submitted to the Commission.39 The CAISO also proposes to 
+publicly post: 
+ 
+1. Aggregate amounts of proposed large load additions in the CAISO operating 
+area, including the aggregate amounts in each transmission pricing zone; 
+2. Planned network upgrades needed to accommodate Eligible Customers taking 
+transmission service on behalf of large loads, identified by type of equipment and 
+network upgrade (e.g., new substation, reconductoring, a new high-voltage 
+transmission line) for each transmission service request; and 
+3. Cost estimates for each planned network upgrade identified as needed for large 
+loads, as described in (2).40 
+ 
+The CAISO proposes to memorialize these transparency requirements in its tariff. The 
+CAISO also encourages the PTOs to memorialize tariff requirements to adopt large load 
+queue spreadsheets as it does for wholesale generator interconnection customers. The 
+ 
+37  See CAISO Current cost guides at  https://www.caiso.com/library/current -cost -guides. 
+38  Order to Show Cause  at P 72. 
+39  See CAISO Informational Report - Large Loads and Co -located Loads  at 
+https://www.caiso.com/documents/jul-20-2026-informational -report-large-loads -and-co-located -loads -
+el26-71.pdf . 
+40  Order to Show Cause at P 75.
+--- PAGE 28 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 28   
+CAISO likewise proposes to include in its queue report whether the interconnection 
+customer proposes to include a large load, and its capacity.41 
+C. Co-Location Arrangements and Load with Behind the Meter 
+Generation 
+1. Terminology 
+For purposes of the Order, the Commission defined “co-located load” as “end-use 
+customer load that is physically connected to the facilities of an existing or planned 
+generating facility on the generator interconnection customer’s side of the point of 
+interconnection to the RTO/ISO’s transmission system.”42 FERC further defined “Behind 
+the Meter Generation” as “a generating facility that delivers energy to load without using 
+the transmission system or any distribution facilities.”43 The Commission did not 
+explicitly suggest that the CAISO or PTO tariffs were unjust and unreasonable because 
+they lack definitions of co-located loads or behind-the-meter generation. 
+ 
+Proposal 
+ 
+The CAISO generally agrees with both definitions; h owever, the CAISO would exclude 
+from discussion station power load and the generation that exclusively serves station 
+power load. The CAISO believes the Commission is focused on typical end-user loads 
+and not loads facilitating wholesale power.44 The CAISO does not believe it is 
+necessary to create formal tariff definitions for co-located load or behind-the-meter 
+generation and is not proposing to do so. Both terms already have plain meanings, and 
+behind-the-meter is already used frequently throughout the CAISO tariff, including for 
+different configurations based on whether the meter is a CAISO meter or a retail end-
+user meter. Thus, providing a definition may have inadvertent consequences to the 
+extent it differs in any meaningful respect from the use of these terms currently. The 
+CAISO may provide clarifications if needed in its business practice manuals. 
+2. Serving Co-Located Loads 
+The Commission stated in the Order that the CAISO’s tariff does not contain provisions 
+addressing with sufficient clarity and consistency the rates, terms, and conditions of 
+ 
+41  See CAISO Generator interconnection at  https://www.caiso.com/generation -
+transmission/generation/generator -interconnection .  
+42  Order to Show Cause at P 88.  
+43  Id. at P 89.  
+44  The CAISO will continue to expect station power load to be metered separately from other loads 
+and generation, consistent with local regulatory authority requirements.
+--- PAGE 29 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 29   
+service that apply to interconnection customers serving co-located load.45 The 
+Commission included, “the scope of the analyses CAISO performs as part of its existing 
+study process to evaluate the impacts of co-location arrangements, which may need to 
+account for any potential dynamic impacts of co-located load and any potential impacts 
+of requests to modify an existing generating facility’s interconnection service level to 
+serve co-located load on transmission system reliability.”46 The Commission noted that 
+in one of its recent orders on co-located load in the PJM Interconnection (PJM), it found 
+that it was necessary to clarify that interconnection customers seeking to use new 
+generating facilities to serve co-located load may: (1) request interconnection service at 
+a level below the generating facility’s maximum facility output; (2) use existing 
+procedures to accelerate interconnection requests that satisfy certain tariff criteria; and 
+(3) request provisional interconnection service and surplus interconnection service.47 
+The Commission additionally noted that interconnection customers should have a 
+means of knowing the appropriate mechanism for setting forth the terms and conditions 
+of co-location arrangements. The Commission also expressed concern that “without an 
+eligible customer designated to take transmission service on behalf of a co-located load, 
+there is no mechanism for CAISO to address situations in which a co-located load 
+withdraws energy from the transmission system.”48 
+ 
+Proposal 
+ 
+The CAISO proposes to clarify how co-located large loads and generation may 
+interconnect to and operate within the CAISO-controlled grid.  Such clarifications will 
+require discussion and agreement with the PTOs. The CAISO reiterates that the PTOs 
+will continue to govern and study all load interconnection requests pursuant to their 
+tariffs. The CAISO, likewise, will continue to govern and study wholesale generation 
+interconnection requests. Despite the Commission’s concerns, large loads and co-
+located configurations have materialized in California under the current tariffs. 
+ 
+Nevertheless, the CAISO proposes to clarify in its tariff co-location arrangements that 
+would not require a CAISO resource interconnection request and could be 
+accommodated through applicable PTO or CPUC-jurisdictional retail interconnection 
+ 
+45  Order to Show Cause at P 93. The Order to Show Cause has similar discussions of co-located 
+loads in Section E, Interconnection Customers Serving Electrically Proximate Large Load and Co-Located 
+Load; however, the CAISO includes all co -location -related prop osals here for concision.  
+46  Id. at P 96.  
+47  PJM Interconnection, L.L.C., 193 FERC ¶ 61,217 at PP 231-235 (2025) (PJM Co-Location 
+Order). PJM’s compliance filing proposing revisions in response to these directives was accepted in part 
+on April 16, 2026. PJM Interconnection, L.L.C. , 195 FERC ¶ 61,030 (2026).  
+48  Order to Show Cause at P 96.
+--- PAGE 30 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 30   
+tariffs, such as Rule 21.49 These would include large loads with back-up generation only 
+to be used during outages or islanding, and large loads with non-exporting behind-the-
+meter generation.50 The CAISO notes that both categories would require sufficient 
+control technologies to ensure they do not impact the transmission grid.   
+ 
+The CAISO proposes that new or existing large loads proposing to co-locate with new 
+generation that may export energy to the transmission grid51 will require a CAISO 
+interconnection study under the CAISO’s Resource Interconnection Standards, 
+Appendix KK to the CAISO tariff. This means that such resource interconnection 
+requests would be screened and compete for capacity in the next cluster study based 
+on the CAISO’s scoring criteria.52 However, all scoring, financial requirements, and 
+study results would be based on the requested capacity figures the developer provides, 
+so the developer may significantly limit the generation potentially to be exported based 
+on how much generation will serve the large load. The CAISO tariff will require it to work 
+with the PTOs to produce study results that reflect the combined impact of the co-
+located large load and generation, as requested by the developer. This is a simple 
+extension of current rules that allow interconnection customers to be studied for a 
+specific interconnection capacity even if their generating capacity is higher. 
+Interconnection requests with co-located large loads may avail themselves of all rights 
+under the Resource Interconnection Standards, including surplus interconnection 
+service, grid enhancing technologies, phasing, etc.  
+ 
+Despite the ubiquity of co-located resources in California, to date, the CAISO has not 
+received any interconnection requests for co-located load with exporting or participating 
+generation, nor has any developer asked for such an option. The CAISO may be in a 
+different situation than other regions that needed to impose bring-your-own generation 
+requirements to address capacity issues. Because the CAISO does not have a bring-
+your-own generation requirement and load-serving entities are not required to procure 
+new capacity to interconnect new loads, developers have been less interested in co-
+locating load and participating generation. Additionally, to the extent large loads have 
+brought generation to serve onsite load, they have elected to do so through tariffs for 
+net energy metering, obviating the need for a CAISO interconnection request.  
+ 
+ 
+49  See CPUC’s Electric Rule 21: Generating Facility Interconnections for more information on each 
+CPUC jurisdictional load -serving entities ’ Rule 21 tariff  at https://www.cpuc.ca.gov/Rule21/ .  
+50  The sequencing likewise would not impact whether a CAISO interconnection study would be 
+required. 
+51  Frequently, constantly, or even rarely, such as in the event the Large Load is offline.  
+52  As Energy Only or Deliverable. Energy Only interconnection customers not seeking 
+reimbursement for network upgrades are not screened and proceed directly to the cluster study.
+--- PAGE 31 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 31   
+In addition to the information required in the CAISO resource interconnection request 
+process, and the large load operational requirements discussed in Section A.4, the 
+CAISO may require the following operational information for co-located resources, if 
+applicable: 
+• Expected presence of co-located load   
+• Range of energy consumption characteristics of the load 
+• Minimum and maximum generator operating capabilities 
+• Generator operating characteristics when the load is at its minimum level 
+• Market participation status, if any 
+• Any load services requested when the generator is off-line 
+ 
+For co-located large loads and wholesale energy storage, the CAISO notes that the 
+storage and large loads would need to be separate operationally, and all study results 
+would reflect the same. Energy storage resources are fully dispatchable and have 
+separate wholesale meters and settlement. Their energy could not be commingled with 
+the large load such that the large load could take power effectively at a wholesale rate. 
+The large load could otherwise net its withdrawals against behind-the-meter/non-
+participating generation and storage.53 
+ 
+All network upgrade commercial readiness deposit and generator interconnection 
+agreement deposit requirements would treat all network upgrades and interconnection 
+facilities as if they were required for the generation only. However, the PTO also may 
+apply any unique deposit or financing requirements for the network upgrades and 
+facilities required for large loads, as discussed in Section B.1 regarding cost allocation.   
+ 
+The CAISO also proposes to require co-located load and exporting generation studies 
+to proceed through the cluster study process without removing the large load 
+assumptions. In other words, after the commencement of the cluster study, the 
+interconnection customer may not remove the large load as a modification. Likewise, 
+interconnection customers already in the queue would not be allowed to add large loads 
+as modifications. Both types of modifications would require complete re-studies and 
+could not be accommodated during the study process. This is not to say that the CAISO 
+proposes to prohibit the addition of large loads to existing generation or in-progress 
+interconnection requests; only that the interconnection customer would need to do so 
+through the PTO tariff, and the generation interconnection study results would not be 
+able to reflect the combined configuration. 
+ 
+ 
+53  In other words, the CAISO does not propose any change to the status quo for separating 
+wholesale generation/storage and retail load or net energy metering generation/storage.
+--- PAGE 32 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 32   
+If an online CAISO generator seeks to add a large load to its site, the developer would 
+submit the large load interconnection request to the PTO pursuant to its tariff. When 
+ready to reflect the large load, the interconnection customer could request a post-
+commercial operation date (COD) modification54 or use the Master File change process 
+as needed to assess and capture changes currently allowed under these processes.55 
+The CAISO, PTO, and interconnection customer could likewise amend the generator 
+interconnection agreement to reflect the large load and any configuration changes.  
+ 
+The CAISO reiterates its policy recently approved by the CAISO Board of Governors in 
+the Interconnection Service Capacity and Deliverability Retention for Non-Operating 
+Generating Facilities stakeholder initiative:56 
+ 
+The ISO considers any generation that is subject to a [Participating 
+Generator Agreement] and intends to terminate participation in the ISO 
+wholesale market but continues generating to serve load through 
+applicable retail programs, to also be subject to the retirement process as 
+a generator that is permanently retiring (Retirement Scenario 3). This 
+would include, for example, distribution-connected or transmission-
+connected participating resources that wish to exit from the ISO markets 
+to serve onsite load. Although such generators will continue to produce 
+electricity, their exit from the wholesale markets will be treated as a 
+retirement, including triggering a reliability-must-run review.  
+ 
+The CAISO does not propose to change its current constructs under Order No. 888 for 
+“Eligible Customers” to obtain transmission service. The CAISO does not have a 
+forward capacity market, nor are load-serving entities required to procure capacity to 
+obtain transmission service. Transmission service will thus continue to be assumed 
+through an interconnection request, accounting for the large load’s ability to limit its 
+energy withdrawals or injections.57 The large load’s load-serving entity will schedule the 
+large load’s demand with the rest of the load-serving entity’s demand through the 
+CAISO markets, just as it does today. This will continue to enable large loads, co-
+located or not, to interconnect rapidly and without extra steps for transmission service. 
+No large load developer to date has requested otherwise. 
+ 
+54  Section 25.5 of the CAISO tariff.  
+55  See CAISO Master File at https://www.caiso.com/systems -applications/portals -
+applications/master -file.  
+56  See CAISO’s Interconnection service capacity and deliverability retention for non -operating 
+generating facilities  initiative at 
+https://stakeholdercenter.caiso.com/StakeholderInitiatives/Interconnection -Service-Capacity-
+Deliverability -Retention-for -Non-Operating-Generating-Facilities.   
+57  Order to Show Cause at P 94.
+--- PAGE 33 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 33   
+ 
+The CAISO notes that both loads and generation associated with co-located loads can 
+be eligible for resource adequacy or demand response programs pursuant to current 
+program rules.58 The CAISO does not propose changes to the eligibility criteria for 
+participation in any of these programs. Participation in demand response programs 
+remains a possibility for large loads. The CAISO is exploring such opportunities in the 
+DDEMI initiative.   
+3. Cost Allocation for Co-Located Loads 
+a) Ancillary Service Charges 
+In the Order, the Commission stated that the CAISO tariff does not appear to include a 
+mechanism to charge large loads, and co-located loads in particular, for ancillary 
+services commensurate with their use of such services, particularly if such customers 
+do not withdraw energy from the transmission system.59 Specifically, the Commission 
+noted that co-located loads may unjustly benefit from regulation and black start 
+services.60 
+ 
+Proposal 
+ 
+The CAISO agrees that assessing ancillary service costs on a net $/MWh basis to load-
+serving entities’ measured demand would enable a large load co-located with behind-
+the-meter generation to avoid an appropriate share of its costs for regulation and black 
+start services.61 That said, the CAISO already has separate rates to assess regulation62 
+and black start services.63 The issue thus becomes how to appropriately meter and 
+assess those rates onto co-located large loads. The CAISO proposes to address this 
+issue by requiring the PTOs to sub-meter each co-located large load independent of 
+any onsite generation.64 Scheduling coordinators for the load-serving entities serving 
+those loads would then be required to report those meter values separately for the 
+ 
+58  Section 40 of the CAISO tariff establishes rules about eligible capacity and uses criteria provided 
+by the CPUC and other Local Regulatory Authorities determine what projects are RA -eligible.  
+59  Order to Show Cause at PP 98-99 (“As noted in the PJM Co-Location Order, this introduces the 
+risk that costs may be allocated entirely to other transmission customers and passed through to 
+residential customers, among others ”).   
+60  Id. 
+61  Likewise, if the rate were assessed on a net meter basis to co -located load and participating 
+generation, the result would be the same.  
+62  Section 11.10.2.1 of the CAISO tariff.  
+63  Section 11.4.2 of the CAISO tariff. The PTOs assess the costs of black start services through 
+their PTO tariffs.  
+64  The CAISO could have an exemption for co-located loads connected behind generators subject 
+to the CAISO’s Net Scheduled Participating Generator Agreement (PGA) or Qualifying Facility PGA .
+--- PAGE 34 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 34   
+relevant charge codes. Each large load with co-located generation would thus pay on a 
+gross load basis for regulation and black start services. This solution not only results in 
+just and reasonable cost allocation, it is also relatively simple to implement because the 
+CAISO and PTOs would not be required to calculate and assess new rates, nor would 
+the CAISO need to create new settlement charge codes. Each large load with co-
+located generation would thus pay on a gross load basis for regulation and black start 
+services. This solution not only results in just and reasonable cost allocation, it is also 
+relatively simple to implement because the CAISO and PTOs would not be required to 
+calculate and assess new rates, nor would the CAISO need to create new settlement 
+charge codes.  
+b) Transmission Access Charges 
+The Commission preliminarily found in the Order that the CAISO tariff may be unjust 
+and unreasonable because it allows load with behind-the-meter generation to net its 
+generation against its load for purposes of calculating Regional Access Charges.65 The 
+Commission explained its thinking based on the PJM co-location proceeding:  
+ 
+In the PJM Co-Location Order, the Commission found that PJM’s BTMG 
+rules, which allowed load-serving entities that provide service to loads 
+with qualifying BTMG to reduce their costs by netting output from BTMG 
+in the calculation of their peak demand for the purpose of determining 
+NITS charges, were unjust and unreasonable.  The Commission 
+concluded that PJM’s BTMG rules were no longer consistent with cost 
+causation principles because large loads configured in a BTMG 
+arrangement with significant generation will raise cost shifting concerns 
+compared to loads pursuing smaller amounts of netting.  The 
+Commission also found that such rules could lead to reliability and 
+resource adequacy risks because PJM is obligated to serve transmission 
+customers using BTMG but does not consider such customers in 
+transmission and resource adequacy planning.66 
+ 
+The Commission then noted that it is “similarly concerned that CAISO’s Tariff allows 
+Eligible Customers that provide service to loads with BTMG to reduce their network 
+service charges because the definition of gross load,67 which is used to calculate the 
+ 
+65  Order to Show Cause at P 102.  
+66  Id. 
+67  Appendix A to the CAISO tariff defines Gross Load as “Demand (adjusted for distribution losses) 
+of End-Use Customer Loads directly connected to the transmission facilities or directly connected to the 
+Distribution System of a Utility Distribution Company or MSS Operator located in a PTO Service Territory, 
+or End Use Customer Loads directly connected to the Distribution System or transmission facilities of an
+--- PAGE 35 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 35   
+Regional Access Charge, excludes load of a retail customer served by its own onsite 
+generating unit or energy storage device.” The Commission directed the CAISO to 
+explain whether the tariff remains just and reasonable even though it allows netting of 
+behind-the-meter generation from gross load for purposes of determining Regional 
+Access Charges for loads with behind-the-meter generation, or to propose tariff 
+revisions. The Commission also stated the CAISO may explain why it remains just and 
+reasonable for customers that fall below a new megawatt materiality threshold for the 
+amount of load at a particular electrical location that network customers may net using 
+behind-the-meter generation.68 
+ 
+Proposal 
+ 
+The CAISO does not propose to revise its current constructs for behind-the-meter 
+generation, gross load, and the transmission access charges.69 Behind-the-meter 
+generation is far more abundant in California than in PJM, so the CAISO and California 
+policymakers have considered this issue far more critically. For example, in 2020, FERC 
+approved the CAISO’s proposal to amend its definition of Gross Load—the billing 
+determinant for transmission access charges—to include load served excess behind-
+the-meter production, i.e., behind-the-meter energy that exceeds the onsite load.70 The 
+CAISO amended this policy to ensure uniform settlement practices, and to ensure load-
+serving entities were allocated the correct costs of their use of the transmission system, 
+which includes use by excess behind-the-meter generation.   
+ 
+The CAISO did not propose to assess transmission access charges based on gross 
+load figures that included load served onsite by its own behind-the-meter generation. 
+Neither the CAISO nor stakeholders in 2020 believed such loads use the transmission 
+grid in proportion to those load figures. To the contrary, the point of rooftop solar, onsite 
+storage, and other behind-the-meter generation is to reduce the use of the grid and the 
+generation across it. The CAISO does not believe this rationale has changed in light of 
+large loads.  
+ 
+EDAM Transmission Service Provider in an EDAM Entity Balancing Authority Area. Gross Load includes 
+Load served by Excess Behind the Meter Production. Excess Behind the Meter Production shall not be 
+netted against End-Use Customer Load in determining Gross Load.” The definition also provides a list of 
+certain loads excluded, including “ Load of an individual retail customer served by its own onsite 
+Generating Unit or energy storage device, or as authorized by Section 218 of the California Public Utilities 
+Code;” and “Onsite Load served by a qualifying small power production facility or qualifying cogeneration 
+facility, as those terms are defined in the FERC's regulations implementing Section 201 of the Public 
+Utility Regulatory Policies Act of 1978 .” 
+68  Order to Show Cause at P 102.  
+69  Although the Commission focuses on the regional access charge, the same logic could apply to 
+the local access charge as well.  
+70  Cal. Indep. Sys. Operator Corp., Docket No. ER21 -190-000 (Dec. 23, 2020).
+--- PAGE 36 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 36   
+ 
+Perhaps more critically, the CAISO’s transmission access charges are fundamentally 
+different than the PJM transmission charges that concerned the Commission. PJM 
+calculates and assesses its transmission charges based on certain peak demand 
+figures. A large load with behind-the-meter generation thus could mask all of its 
+transmission usage simply by producing generation equal to its demand during that 
+peak period. In contrast, the CAISO assesses its transmission access charges 24/7 to 
+each utility distribution company or metered subsystem based on their gross load, which 
+consists of total end-user demand accounting for losses and excess behind-the-meter 
+production. As such, the CAISO would allocate costs to each large load with behind-the-
+meter generation to the extent the large load used the transmission system, as reflected 
+by its metered load. In other words, any energy withdrawal by the large would be 
+reflected in the gross load. The load-serving entity can then easily pass down the costs 
+of that use in the retail bill, just as every Californian with rooftop solar or home storage 
+is billed today. Thus, the CAISO does not believe that changes to its tariff are needed to 
+address concerns raised by FERC in the Order. 
+c) Transmission Service Charges 
+The Commission preliminarily found in the Order that the CAISO tariff lacks 
+transmission services that would reflect the ability of Eligible Customers on behalf of 
+large loads to take transmission services that align with their use of the transmission 
+system, which may result in inefficient and costly transmission buildout and costs paid 
+by transmission customers.71  
+ 
+Proposal 
+ 
+The CAISO agrees that enabling flexibility will offer cost savings by avoiding 
+unnecessary network upgrades, both on an interim and permanent basis. The CAISO 
+discusses its proposed new service options in Section D, below. 
+D. Extending New Transmission Services to Eligible Customers 
+Taking Service on Behalf of Flexible Large Loads   
+In the Order, the Commission preliminarily found that the CAISO tariff may be unjust 
+and unreasonable because it does not include transmission services that reflect Eligible 
+Customers taking transmission service on behalf of flexible large loads that are willing 
+and able to limit their use of the transmission system under certain conditions, 
+suggesting that “firm use” is essentially the only type of transmission service available in 
+CAISO. The Commission encouraged new transmission services be made available to 
+ 
+71  Order to Show Cause at P 102 .
+--- PAGE 37 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 37   
+reflect the operational reality that large loads may use the transmission system to 
+differing extents and certain large loads are willing and able to limit their use of the 
+transmission system under certain conditions.72 At the same time, the Commission 
+stated, “In the alternative, CAISO may explain whether, given that CAISO does not offer 
+the transmission services required by Order No. 888, CAISO’s existing transmission 
+service framework addresses the concerns described herein, or explain what specific 
+changes to its existing transmission service framework would effectively provide the 
+same range of transmission service options for flexible large loads as in the PJM Co-
+Location Order.”73 The Commission then explained that the customer “must have 
+necessary control technologies and/or protection systems, which may include a special 
+protection scheme, to limit its energy withdrawals to its approved level,” which are 
+typical elements of interconnection service.74 
+ 
+Proposal  
+ 
+The CAISO proposes to create new, flexible interconnection service options that will 
+enable large loads and co-located loads to limit their energy withdrawals or injections to 
+reduce their need for more network upgrades. The CAISO believes this will provide 
+large load developers with the options they want while protecting ratepayers from the 
+cost of network upgrades that could be avoided. Coordination with PTOs will be 
+necessary to implement these interconnection service offerings. The CAISO does not 
+propose to create new “transmission services” or create more responsibilities around 
+Eligible Customers, which would require redesigning transmission and interconnection 
+service entirely. The CAISO does not believe such a redesign is warranted, and the 
+Commission expressly invites the CAISO to explain alternative service frameworks that 
+may enable similar flexibility.75 
+ 
+Moreover, in real time, load-serving entities can schedule demand as needed, including 
+for customers limiting their use of the transmission system. With the operational data 
+and process described in Section A.4, the CAISO can accommodate flexible loads 
+without new separate classes of transmission service. This would also enable the PTOs 
+to provide bespoke interconnection configurations for large loads, saving ratepayers 
+from the costs of network upgrades that conform to specific “transmission services.” The 
+CAISO and PTOs have already demonstrated the ability to manage load flexibility 
+ 
+72  Id. at P 104.  
+73  Id. at P 103.  
+74  Id. 
+75  Id. at P 101.
+--- PAGE 38 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 38   
+without new transmission service levels through other programs, such as the CPUC’s 
+Emergency Load Reduction Program76 and other out-of-market load programs.  
+ 
+The CAISO believes this course of action is consistent with developers’ desires to 
+interconnect quickly and affordably. To date, no stakeholder has requested that the 
+CAISO develop non-firm transmission services. To the contrary, developers consistently 
+express that they are only interested in acquiring firm service and would only agree to 
+be flexible temporarily to interconnect before completion of long-lead network upgrades. 
+The CAISO believes it and the PTOs can accomplish the latter through new flexible 
+interconnection services rather than impose transmission services on large loads and 
+load-serving entities. 
+ 
+In addition to the CAISO’s current generic firm service, the CAISO and PTOs propose to 
+create two new flexible load interconnection services that will enable faster and more 
+affordable interconnections: 
+ 
+1. Flexible Interim Load Interconnection (FILI): This interim flexible load 
+interconnection offering would enable large loads to interconnect flexibly and 
+receive service up to a certain level based on grid conditions and constraints until 
+network upgrades are complete, at which time the large load would switch over 
+to receiving firm service. This will likely be a tailored option for each large load 
+based on its point of interconnection and the constraints it faces. For example, 
+some FILIs may require little flexibility for a limited time because there are few, 
+less probable contingencies. Others may require more flexibility because of 
+transmission constraints that require network upgrades with longer timelines. The 
+FILI option provides flexibility to the PTOs, CAISO, and developers to customize 
+solutions. For this reason, CAISO declines to propose any kind of temporal or 
+capacity cap on this interconnection service offering. 
+ 
+2. Flexible Load Interconnection - Permanent (FLIP): This permanent flexible load 
+interconnection offering would enable large loads to interconnect and avoid the 
+need to fund or wait for completion of those network upgrades that would be 
+required for firm load service by accepting terms of flexible interconnection 
+service in perpetuity. As with the FILI option, the PTO, CAISO, and developer 
+could customize the solution to balance costs and flexibility while maintaining 
+reliability on the system. 
+ 
+ 
+76  See CPUC’s Emergency Load Reduction Program at https://www.cpuc.ca.gov/industries -and-
+topics/electrical -energy/electric-costs/demand -response-dr/emergency-load-reduction-program
+--- PAGE 39 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 39   
+The CAISO believes that these interconnection service options would provide 
+developers with the choices they may desire in the future to interconnect large loads in 
+California and likewise address the concerns that drove the Commission’s preliminary 
+findings in the Order. At the same time, the CAISO’s goal is to prioritize those services 
+developers actually plan to use. Stakeholders should comment on which services the 
+CAISO should prioritize, including whether options such as FLIP are not worth pursuing 
+at this time.  
+ 
+The CAISO does propose control technologies and/or protection systems associated 
+with these new service offerings, which are discussed in Section A.4. 
+E. Interconnection Customers Serving Electrically Proximate 
+Large Load and Co-Located Load 
+The Commission preliminarily found in the Order that the CAISO tariff appears to be 
+unjust and unreasonable because it does not contain provisions allowing an 
+interconnection customer to seek the generator interconnection service(s) that reflects 
+the operational dynamics of serving either: (1) an electrically proximate large load; or (2) 
+a co-located load, as defined in the Order, that has a high peak load (i.e., large co-
+located loads that are 50 MW or greater).77 The Commission defined an “electrically 
+proximate large load” as a large load “sufficiently electrically close to the interconnection 
+customer’s requested point of interconnection, such that the impact on the transmission 
+system of the combination of the generating facility and the load, with the exception of 
+the transmission facilities between the two, will be effectively the same as if they were 
+located at the same substation (e.g., large load that is located no more than two 
+substations from the generating facility).”78  
+ 
+Proposal 
+ 
+As described above, the CAISO proposes to clarify its rules to enable co-located large 
+loads and generation to be studied together regardless of the configuration between the 
+onsite large load and generation.79 This would include modifying the generator 
+interconnection process, studies, and agreements to reflect co-location and the 
+electrical configurations necessary to enforce those study results and maintain safety 
+and reliability.80  
+ 
+ 
+77  Order to Show Cause at P 113.  
+78  Id. at P 112.  
+79  Exporting, non -exporting, participating generator, or non -participating generator.  
+80  Id. at P 113.
+--- PAGE 40 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 40   
+However, the CAISO does not propose to create provisions for interconnection 
+customers to serve electrically proximate large loads. Although this option exists in the 
+Southwest Power Pool, the CAISO is unaware of any interconnection customer that has 
+elected to use it. Moreover, large load developers in California have expressed no 
+interest in such an option. This is likely because the electrically proximate 
+interconnection construct is designed to meet bring-your-own generation requirements 
+the CAISO does not have, need, or propose. Unlike other regions, California is not 
+facing a capacity constraint that would require new large loads to bring or procure their 
+own generating capacity merely to interconnect. The CAISO also is concerned that 
+facilitating these interconnections could complicate and slow more common stand-alone 
+and co-located load and generator interconnections, creating challenges where none 
+existed. Finally, the CAISO is concerned that electrically proximate interconnections 
+would potentially implicate California state law, which only contemplates the provision of 
+energy at the same site as the load without becoming an electrical corporation subject 
+to myriad utility requirements.81 
+ 
+2. Initiative Timeline and Next Steps  
+The CAISO’s Large Loads Stakeholder Initiative will become the primary vehicle for 
+developing the CAISO tariff revisions necessary to comply with the Commission’s 
+Order. The CAISO will refocus the initiative on the issues the Commission has 
+identified. Given the timeline described in the Order, the CAISO is expediting the 
+stakeholder initiative with two proposals: this straw proposal and a draft final proposal in 
+September. Then the CAISO will seek Board of Governors approval at the CAISO 
+Board’s October 28, 2026 meeting. While the stakeholder initiative will be expedited, the 
+CAISO will host workshops and solicit stakeholder feedback on the proposals to better 
+inform the policy outcomes. 
+ 
+Action Tentative date  
+Post Straw Proposal August 12, 2026 
+Stakeholder workshop August 19, 2026 
+Comments due September 2, 2026 
+Post Draft Final Proposal September 21, 2026 
+Stakeholder workshop September 28, 2026 
+Comments due October 12, 2026 
+CAISO Board of Governors October 28, 2026 
+ 
+ 
+81  See Cal. PUC Code § 218.
+--- PAGE 41 ---
+Large Loads Considerations  
+Straw Proposal 
+ISO/TPID ISO Public Page 41   
+3. Decisional Classification 
+This initiative proposes certain tariff amendments to enhance the process for studying 
+and approving interconnection requests. CAISO staff believe that these proposed tariff 
+changes will go to the Board of Governors only and that the Western Energy Markets 
+(WEM) Governing Body will have no role in the decision.  
+ 
+The WEM Governing Body has primary authority over any  
+ 
+proposal to change or establish a tariff rule applicable to the WEIM/EDAM 
+Entity balancing authority areas, WEIM/EDAM Entities, or other market 
+participants within the WEIM/EDAM Entity balancing authority areas, in 
+their capacity as participants in WEIM/EDAM… The scope of this joint 
+authority excludes, without limitation, any other proposals to change or 
+establish tariff rule(s) applicable only to the CAISO balancing authority 
+area or to the CAISO-controlled grid.82 
+ 
+The tariff changes proposed here would not be “applicable to the WEIM/EDAM Entity 
+balancing authority areas, WEIM/EDAM Entities, or other market participants within the 
+WEIM/EDAM Entity balancing authority areas, in their capacity as participants in 
+WEIM/EDAM.” Rather, they would be applicable “only to … the CAISO-controlled grid.”  
+ 
+Accordingly, these proposed changes to implement these enhancements would fall 
+outside the scope of the WEM Governing Body’s primary authority. The WEM 
+Governing Body also has an advisory role that extends to any “proposals to change or 
+establish tariff rules that would apply to the real-time and/or day-ahead market but are 
+not within the scope of its primary authority.” This initiative, however, does not propose 
+changes to the rules of the real-time or day-ahead markets. Stakeholders are 
+encouraged to submit a response in their written comments to the proposed 
+classification as described above, particularly if they have concerns or questions. 
+ 
+82  Charter for WEIM and EDAM Governance § 2.2.1.

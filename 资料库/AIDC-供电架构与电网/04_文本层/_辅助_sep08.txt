@@ -1,0 +1,338 @@
+----- PAGE 1 -----
+PJM © 2026www.pjm.com | Public
+PJM LCL Ride-through Requirements
+PJM Interconnection Proposal
+David Egan, Senior Manager
+Byoungkon Choi, Principal Engineer
+Generator Modeling & Dynamic Studies
+Planning Committee
+September 8, 2026
+----- PAGE 2 -----
+PJM © 20262www.pjm.com | Public
+FERC EL26-67-000 (Large Load Show Cause Order)
+• On June 18, 2026, FERC issued a Section 206 Show Cause Order to 
+determine whether PJM's tariff adequately addresses large loads 
+integration.
+– Identifies gaps in processes for evaluating reliability impacts and 
+transmission needs of large loads.
+– Among other things, asks whether additional requirements are needed for:
+§ Ride-through performance during system disturbances
+§ Ramp-rate limitations and load restoration behavior
+• PJM plans to propose revisions to address FERC's concerns (target: 
+November 2026).
+----- PAGE 3 -----
+PJM © 20263www.pjm.com | Public
+Executive Summary
+• PJM proposes voltage and frequency ride-through requirements for 
+Large Computational Loads (LCLs)
+– Voltage ride-through envelope, power consumptions during voltage 
+disturbances
+– Post-fault active power recovery (PFAPR) requirements
+– Frequency ride-through envelope and power consumptions 
+requirements during frequency disturbances
+– Ride-through requirements review timeline (as PJM continues to 
+develop/evolve its proposal)
+----- PAGE 4 -----
+PJM © 20264www.pjm.com | Public
+Background
+• Recent Large Load (Data Center) load disconnections during and post normal 
+cleared faults
+• Multi-GW events raising stakeholder, regulatory and overall system reliability 
+concerns
+• NERC initiated activities to develop Standards/Guideline
+• Others, established ride-through requirements; MISO, ERCOT and Local TOs 
+(Dominion, AEP in PJM)
+• Most recent FERC Show Cause Order requires PJM to establish standards 
+and procedures to connect LCLs
+----- PAGE 5 -----
+PJM © 20265www.pjm.com | Public
+PJM Proposed Voltage Ride-through Envelope
+RMS  Voltage (p.u. of nominal)
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+1.1
+1.2
+1.3
+0.0
+0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.00.0 0.25
+Time (sec)
+Continuous Operating Range
+0.35
+Consume P at pre-disturbance level
+May reduce P proportional to voltage drop, 
+but shall return to >90% of pre-disturbance 
+level within 2 sec after V returns to > 0.9 p.u. 
+and < 1.1 p.u.
+•May reduce P as needed but shall return to 
+>90% of pre-disturbance level within 2 sec. 
+after V returns to > 0.9 p.u. and < 1.1 p.u.
+•Cooling load allowed to trip for V<0.35 p.u.
+Overcurrent during voltage sag shall not exceed 
+150% of maximum current consumption during 
+normal operations.
+May Ride-through Zone
+May Ride-through Zone
+----- PAGE 6 -----
+PJM © 20266www.pjm.com | Public
+PJM Proposed Frequency Ride-through Envelope
+56
+57
+58
+59
+60
+61
+62
+63
+0
+Frequency (Hz)
+Time (seconds)
+299 ∞
+58.8 58.8
+61.2
+61.8
+Continuous Operating Range. 
+Maintain Pre-disturbance Power.
+61.2
+An LCL should continue to consume active power 
+within 10% of the pre-disturbance level during 
+frequency deviations requiring ride-through.
+May Ride-through Zone
+May Ride-through Zone
+----- PAGE 7 -----
+PJM © 20267www.pjm.com | Public
+Dec.
+Review Timeline
+Sept. 8
+Proposed 
+Manual and 
+Tariff Language 
+Review
+Sept. Oct. Nov. Q1 Q4Q3
+2026
+Sept. 15
+PC Education 
+Session
+Oct. 6
+Proposed 
+Manual and Tariff 
+Language 
+Review
+November
+FERC LCL Show 
+Cause Filing
+2027
+Q1/2027
+Develop & 
+Establish LCL 
+Ramp-Rate
+Q2/2027
+Develop PJM LCL 
+Design Envelope
+Q2
+Q3/2027
+Stakeholder Review & 
+Endorsement of the 
+Design Envelope
+----- PAGE 8 -----
+PJM © 2026www.pjm.com | Public
+Additional Supporting Slides
+----- PAGE 9 -----
+PJM © 20269www.pjm.com | Public
+ERCOT Voltage Ride-through Envelop
+RMS  Voltage (p.u. of nominal)
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+1.1
+1.2
+1.3
+0.0
+0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.00.0 0.15 0.25 1.2
+Time (sec)
+Continuous Operating Range
+Consume P at pre-disturbance level
+May reduce P proportional to voltage drop, 
+but shall return to >90% of pre-disturbance 
+level within 2 sec after V returns to > 0.9 p.u.
+•May reduce P as needed but shall return to 
+>90% of pre-disturbance level within 2 sec. 
+after V returns to > 0.9 p.u.
+•Cooling load allowed to trip for V<0.35 p.u.
+Overcurrent during voltage sag shall not exceed 
+150% of maximum current consumption during 
+normal operations.
+Source: ERCOT NOGRR282 - final PUCT approved version
+0.35
+----- PAGE 10 -----
+PJM © 202610www.pjm.com | Public
+ERCOT Ride-through Requirements
+• ERCOT LCL VRT requirements do not apply to an LCL that meets certain 
+conditions, for example if the LCL:
+– Was operational or received approval to energize on or before November 14, 
+2025; or
+– Has signed interconnection agreement with TPS, or Generation Resource if co-
+located, before November 14, 2025, etc. (refer to NOGRR282 for the detailed 
+exemption conditions) 
+• Ride-through requirement for the voltage between 0.8 pu and 0.5 pu is fully 
+enforced after January 1, 2028. 
+• For the voltage between 0.8 pu and 0.5 pu,  LCL may reduce active power 
+consumption proportional to voltage drop unless active power can return to at 
+least 90% of its pre-disturbance consumption level within 0.5 second.
+----- PAGE 11 -----
+PJM © 202611www.pjm.com | Public
+MISO Voltage Ride-through Envelop-draft
+RMS Voltage (p.u. of nominal)
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+1.1
+1.2
+1.3
+0.0
+0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.00.0 0.15
+0.25
+1.2
+Time (sec)
+Continuous Operating Range. 
+No power reduction is permitted.
+Proportional Reduction & Mandatory Recovery
+May reduce P as necessary to maintain connection during the 
+disturbance but shall return to >90% of pre-disturbance level within 1 
+sec. after V returns to > 0.9 p.u.
+Tripping Allowed
+Tripping Allowed
+May reduce P in proportion to dV, but shall return to >90% of 
+pre-disturbance level within 1 sec after V returns to > 0.9 p.u.
+Unless studies demonstrate that a slower recovery is necessary to 
+maintain BES reliability, this shall be the default expectation.
+----- PAGE 12 -----
+PJM © 202612www.pjm.com | Public
+NERC LLWG SAR Voltage Ride-through Envelope
+RMS  Voltage (p.u. of nominal)
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+1.1
+1.2
+1.3
+0.0
+0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.00.0 0.25
+Time (sec)
+Continuous Operating Range
+1.15
+----- PAGE 13 -----
+PJM © 202613www.pjm.com | Public
+NERC LLWG SAR Voltage Ride-through Envelope
+Source: NERC RSTC SAR on computational loads disturbance performance
+----- PAGE 14 -----
+PJM © 202614www.pjm.com | Public
+ERCOT, MISO, LLWG SAR, PRC-029 VRT Comparison 
+Voltage (per unit)
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+1.1
+1.2
+1.3
+0.0
+0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.00.0 0.15 0.25
+0.25
+1.2
+Time (sec)
+ERCOT
+MISO
+0.35
+NERC LLWG SAR
+PRC-029-1 and IEEE 2800
+6 sec
+IBRs w/ aux. equipment
+IBRs w/o aux. equipment
+0.32
+1.15
+----- PAGE 15 -----
+PJM © 202615www.pjm.com | Public
+Dominion / AEP Voltage Ride-through Requirements
+• Dominion VRT requirements
+– The Customer must demonstrate the ability to reliably ride through standard 
+transmission system disturbances without disconnecting from the grid. 
+– At a minimum, PEILLs must demonstrate the capability to ride through at least six 
+automatic reclosing attempts that last 50-70 milliseconds each, aligned with DEV-
+ET’s typical operational practices.
+• AEP VRT requirements
+– Large Load Customers must be capable of riding through a minimum of two 
+consecutive voltage excursions outside of transmission system operating limits 
+(.92 Vpu–1.05 Vpu). All exceptions must be approved by AEP’s Real Time 
+Reliability organization.
+----- PAGE 16 -----
+PJM © 202616www.pjm.com | Public
+Frequency Ride-through Requirements Comparison
+ERCOT requires more 
+stringent over-frequency, but 
+less conservative under-
+frequency rid-through 
+requirements than MISO, 
+PRC-029-1 and IEEE 2800
+61.8
+An LCL should continue to consume active 
+power within 10% of the pre-disturbance 
+level during frequency deviations requiring 
+ride-through.
+Continuous Operating Range. 
+No power reduction is permitted.
+61.2
+58.8
+57.5
+MISO, PRC-029-1 and IEEE 2800
+ERCOT
+----- PAGE 17 -----
+PJM © 202617www.pjm.com | Public
+Contact
+Presenter: 
+David Egan,
+David.Egan@pjm.com  
+SME: 
+Byoungkon Choi, 
+Byoungkon.Choi@pjm.com
+PJM LCL Ride-through Requirements
+Member Hotline
+(610) 666 – 8980
+(866) 400 – 8980
+custsvc@pjm.com
+----- PAGE 18 -----
+PJM © 202618www.pjm.com | Public

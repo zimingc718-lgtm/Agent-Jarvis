@@ -116,6 +116,27 @@ class GovernanceCliTests(unittest.TestCase):
         self.assertNotIn(".claude/worktrees/some-branch/src/app.ts", discovered)
         self.assertIn("src/worktrees/real.ts", discovered)
 
+    def test_user_library_is_not_a_controlled_file(self) -> None:
+        """根下的「资料库」是用户数据，不是产品源码。
+
+        应用往里写归档、OneDrive 往里同步；把它纳管会让 `verify` 跟着一个活的数据目录
+        变红。前缀只匹配仓库根，所以别处同名的目录照常受控。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            library = root / "资料库" / "AIDC-供电架构与电网"
+            library.mkdir(parents=True)
+            (library / "清单.md").write_text("# 清单", encoding="utf-8")
+            elsewhere = root / "src" / "资料库"
+            elsewhere.mkdir(parents=True)
+            (elsewhere / "real.ts").write_text("export const z = 3;", encoding="utf-8")
+
+            discovered = governance.discover_controlled_files(root)
+
+        self.assertNotIn("资料库/AIDC-供电架构与电网/清单.md", discovered)
+        self.assertIn("src/资料库/real.ts", discovered)
+
     def test_verify_requires_governance_files(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             code, output = governance.run(["verify", "--root", directory])

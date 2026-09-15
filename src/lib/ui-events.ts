@@ -78,12 +78,15 @@ export type DisplayStage = "opening" | "board";
 export const SETTINGS_PANEL_EVENT = "jarvis:settings-panel";
 
 /** 动态屏上可以呈现的设置面板。 */
-export type SettingsPanel = "models" | "skills" | "tools";
+export type SettingsPanel = "models" | "skills" | "tools" | "library";
 
 export const SETTINGS_PANEL_LABEL: Record<SettingsPanel, string> = {
   models: "模型",
   skills: "技能",
   tools: "工具",
+  // 资料库的审批界面也走这条路（CR-20260915-library-adoption CP-3）：它同样是「对话里
+  // 唤起、动态屏上呈现」的那一类，不该另起一套入口。
+  library: "资料库",
 };
 
 /**

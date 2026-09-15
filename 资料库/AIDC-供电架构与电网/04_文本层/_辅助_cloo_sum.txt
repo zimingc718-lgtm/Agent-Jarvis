@@ -1,0 +1,98 @@
+----- PAGE 1 -----
+RELIABILITY | RESILIENCE | SECURITY  
+POWERING TODAY.  PROTECTING TOMORROW.  
+Computational Loads 
+Proposed Rules of Procedure Revisions Summary 
+August 19, 2026 
+ 
+Background 
+An increasing number of large commercial and industrial loads are rapidly connecting to the bulk power system (BPS). 
+Emerging large loads , such as data centers (including cryptocurrency and artiﬁcial intelligence applications)  with 
+signiﬁcant information technology uses present unique challenges in BPS planning and operations. In addition to the 
+rapid growth of such emerging computational loads, their electrical behavior can be distinctive and often less predictable 
+than that of conventional loads. These unique characteristics pose risks to the BPS that need to be understood and 
+managed. 
+  
+To expeditiously address these risks, NERC initiated the Large Load s Action Plan.1 Consistent with this plan , the NERC 
+Large Loads Working Group (a subgroup of the Reliability and Security Technical Committee) released its second white 
+paper on March 11, 2026, titled “Assessment of Gaps in Existing Practices, Requirements, and Reliability Standards for 
+Emerging Large Loads.” The paper found that the existing NERC Reliability Standards, as well as industry processes and 
+requirements, are inadequate for the reliable integration of emerging large loads onto the BPS. The white paper 
+recommendations include updates to registration  criteria, Reliability Standards, processes, and requirements.   NERC ’s 
+March 17, 2026 public report , “NERC Aggregated Report on NERC Level 2 Industry Recommendation: Large Load 
+Interconnection, Study, Commissioning, and Operations ”, wit h r esu lt s fr om the  Le v e l 2 Alert, made similar ﬁndings.  
+NERC presented its plan to update its NERC Registry Criteria  and Reliability Standards based on the technical analysis 
+underlying these publications at NERC’s Large Loads Technical Conference held on February 24-25, 2026. 
+ 
+In addition, the Federal Energy Regulatory Commission (FERC) directed NERC to submit proposed registry criteria and an 
+initial set of Reliability Standards for computational loads by December 31, 2026.
+2 This directive is consistent with NERC’s 
+Large Loads Action Plan timeline and demonstrates FERC’s support of addressing these risks in a timely manner. 
+ 
+Proposed NERC Registry Criteria 
+Based on comments received from the April posting of initial proposed criteria,3 NERC is proposing additional revisions, 
+including two new functional entity types. To appropriately identify the entities that are part of th ese functional entity 
+types, called “Computational Load Owner” and “ Computational Load Operator”, NERC develops criteria, called “NERC 
+Registry Criteria”, that clearly delineate the threshold or characteristics that make an entity qualify for registration for 
+the functional entity type to which certain mandatory and enforceable Reliability Standards
+4 will apply. 
+  
+As part of the process for developing the NERC Registry Criteria, NERC solicits public comment  on the criteria prior to  
+other necessary approvals from the NERC Board of Trustees and the Federal Energy Regulatory Commission. The NERC 
+Registry Criteria are included in Appendix 5B of the NERC Rules of Procedure, so NERC is posting clean and redline 
+versions of the proposed Appendix 5B, along with associated changes in Appendix 2 and Appendix 5A, for a n additional 
+ 
+1  More information on the Large Loads Action Plan is available on the Large Loads Action Plan web page. 
+2  See the FERC Order Directing the North American Electric Reliability Corporation to file Reliability Standard(s) Pertaining to Computational 
+Load Integration in Docket No. RD26-7-000, issued July 16, 2026. 
+3  NERC posted its initial proposed registry criteria for a 45-day comment period from April 1 through May 15, 2026. 
+4  The Reliability Standards for this new functional entity are currently under development through Project 2026-02 – Computational Loads. 
+Stakeholders interested in participating in the standards development process should contact Senior Standards Developer Laura Anderson (via 
+email) or subscribe to the Project 2026-02 mailing list.
+----- PAGE 2 -----
+2 
+public comment period  for 30 days  from August 19, 2026 until September 18, 2026. Comments must be submitted 
+electronically to ROPcomments@nerc.net.  
+ 
+Summary of Revisions 
+To add new functional entiti es, NERC must revise Rules of Procedure Appendix 2  ( D e ﬁ n i ti o n s  U s e d  i n  t h e  R u l e s  o f  
+Procedure); Appendix 5A (Organization Registration and Certiﬁcation Manual); and Appendix 5B ( Statement of 
+Compliance Registry Criteria). The following provides a summary of the proposed revisions to each of these appendices: 
+ 
+Appendix 2  (Definitions Used in the Rules of Procedure)  
+Appendix 2 to the NERC Rules of Procedure includes deﬁned terms used throughout the Rules of Procedure. The 
+proposed revisions add the following three terms: 
+• “Computational Load Operator” means the entity that operates a Computational Load Site. 
+• “Computational Load Owner” means the entity that owns and maintains a Computational Load Site. 
+• “Computational Load Site” means one or more buildings, structures, or installations at a single location 
+that 
+1) Primarily contains information technology infrastructure used for: 
+• creating, executing, and delivering software applications and services;  
+• artificial intelligence training, deployment, and delivery;  
+• cryptocurrency mining; or  
+• other computational activities at a data center; and 
+2) is supplied through electrical equipment that is connected to the BPS. 
+ 
+Appendix 5A  (Organization Registration and Certification Manual)  
+Appendix 5A contains the process used by NERC and the Regional Entities to register certain functional entity types to 
+which mandatory and enforceable Reliability Standards apply. The proposed revisions to Appendix 5A add 
+“Computational Load Owner (CLO)” and “Computational Load Operator (CLOP)”as types of entities that are required to 
+register on the NERC Compliance Registry. In addition, proposed revisions to Appendix 5A include minor administrative 
+corrections. 
+ 
+Appendix 5B (Statement of Compliance Registry Criteria)  
+Appendix 5B contains the speciﬁc criteria NERC and the Regional Entities use to identify which organizations may be 
+candidates for registration for functional entity types. In accordance with the Federal Power Act, NERC must identify the 
+owners, operators, and users of the BPS who have a material impact on the BPS . To that end, the proposed revisions in 
+Appendix 5B add  threshold criteria to identify those organizations that should be registered as Computational Load 
+Owners and Operators, summarized below: 
+• Computational Load Owner or Operator of a Computational Load Site with a total connected Load greater than 
+or equal to 50 MW that is supplied through electrical equipment connected at a voltage level greater than or 
+equal to 100 kV from one or more points of connection. 
+Candidates must meet all the criteria in the proposed revisions in Appendix 5B in order to be registered as a 
+Computational Load Owner or a Computational Load Operator . In some circumstances, a candidate may be considered 
+as both a Computational Load Owner and a Computational Load Operator and would be registered for both functions. 
+Please note that this summary is provided for convenience, but stakeholders should review and comment on the 
+proposed language in the Rules of Procedure  posted on the Proposed Changes to Rules of Procedure web page. For 
+further assistance on the Rules of Procedure comment process, please contact Marisa Hecht via email or at 404-446-
+9620.

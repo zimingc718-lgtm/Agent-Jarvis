@@ -1,0 +1,129 @@
+--- PAGE 1 ---
+Large Loads Task Force White Paper Series
+The LLTF plans to produce two white papers in 2025: 
+The first will identify risks to BPS reliability, while the 
+second will provide a Gap Analysis.
+• The first white paper , Characteristics and Risks
+of Emerging Loads, set to publish in July, finds that
+large loads vary in size—from several megawatts to
+several gigawatts—presenting unique challenges
+for the reliability and security of the BPS.
+• The second white 
+paper—Assessment of Gaps
+in Existing Practices, Requirements, and
+Reliability Standards for Emerging Large Loads—is
+scheduled to publish later this year and will assess
+potential gaps
+ in current practices, requirements,
+and Reliability Standards for each risk identified
+in the first white paper.
+Reliability Guideline: Risk Mitigation 
+Once the white papers are completed, they will be used 
+to develop the Reliability Guideline: Risk Mitigation for 
+Emerging Large Loads. Scheduled for release in the first 
+half of 2026, the guideline will provide recommendations 
+for risk mitigation, including improvements to modeling 
+practices, analyses, coordination, data collection efforts, 
+real-time monitoring, and event analysis. 
+Workshop Series 
+An industry workshop took place in June that focused 
+on mitigating risks from emerging large loads in which 
+Dominion Energy   highlighted their recent experience 
+with unplanned data center load transfers and the actions 
+being taken to increase BPS reliability. Additionally, 
+American Electric Power shared a potential risk mitigation 
+technique that would ensure that the variability of 
+emerging large loads is accounted for when planning 
+automatic underfrequency load shedding programs. 
+The next workshop, scheduled for July 24, will focus on 
+mitigating risks from emerging large loads. Audience 
+members will be able to provide input on risk mitigations. 
+The workshop is open to the public and the links to 
+LLTF meetings can be found on the meeting page. To 
+participate in the task force, contact Evan Mickelson.
+Urgency for Our Industry
+An increasing number of large commercial and industrial loads are rapidly connecting to the bulk power system 
+(BPS). Emerging large loads—such as data centers (including cryptocurrency and artificial intelligence applications), 
+hydrogen fuel plants, and others—present unique challenges in forecasting and planning for increased demand.  
+In addition to the rapid growth of emerging large loads, their electrical behavior can be distinctive and often less 
+predictable than that of conventional loads. These unique characteristics pose specific risks to the BPS that need to be 
+understood and managed. 
+To begin understanding large loads and identifying effective pathways for their integration, NERC established the 
+Large Loads Task Force (LLTF) in August 2024 and developed a work plan ; the Member Representatives Committee 
+provided written input  and hosted a technical panel session  at the February 2025 Board meeting; and NERC’s Board 
+issued a resolution in February 2025 directing NERC staff to develop an action plan, which will complement the work 
+of the task force and provide additional structure to NERC’s efforts related to large loads integration. 
+2025 Second Quarter Update 
+Large Loads Action Plan Quarterly Update
+Addressing an Emerging Reliability Issue
+July 2025
+--- PAGE 2 ---
+A recent  presentation and video to the Federal Energy Regulatory Commission as well as additional information about 
+the LLTF, including the project scope, FAQs, work plan, and upcoming meetings, is available on NERC’s Large Loads Task 
+Force web page. 
+NERC Action Plan: Large Loads
+Q2 2024—2026 Q4 2024—2025 Q4 2024—2025
+Reliability Security Technical 
+Committee’s Large Load Task 
+Force (LLTF)
+NERC-led Collaborative 
+Industry Sessions
+Q4 2024—2025
+Registration Analysis
+• Legal basis for
+registration of large users
+of the bulk power system
+• Consider if Load Serving
+Entities (LSE) accountable
+for large load
+performance
+• Ability to write Reliability
+Standards large loads or
+LSEs would follow
+Complementary Activities
+• Load Modeling Working 
+Group
+• Coordination with EPRI, 
+ESIG, and large load 
+industry groups
+• Industry communications 
+and outreach
+• Continued Incident 
+Analysis and Lessons 
+Learned
+Load Modeling Working Group (LMWG)
+The LMWG drives the advancement and utilization of 
+dynamic load modeling on an interconnection-wide 
+basis. The LMWG is actively engaging stakeholders 
+through technical presentations and discussions focused 
+on modeling large loads. Additionally, the group is 
+developing a technical reference document to inform 
+industry on how to model these emerging loads for 
+dynamic studies. To join the working group, contact 
+Hasala Dharmawardena.
+Communications, Engagement, and Outreach   
+NERC developed and is implementing a strategic 
+engagement and communications plan that sets a 
+cadence for regular updates on large loads efforts, 
+identifies opportunities to expand outreach to large 
+loads entities, and establishes the foundations for 
+collaborative industry sessions. NERC is focused on 
+expanding its engagement with the large loads industry 
+through direct outreach to trade organizations and large 
+load companies.  
+Additionally, a discussion on large load issues is planned 
+for the August Technical Session in Calgary and will 
+feature representatives from the LLTF and the large 
+loads industry, specifically data centers. Contact Zachary 
+Greene for more information.
+External Awareness and Action
+NERC continues to monitor large load incidents to 
+develop lessons learned and inform ongoing efforts and 
+recently published  Considering Simultaneous Voltage-
+Sensitive Load Reductions , which examines the risks and 
+challenges posed by the increasing integration of 
+voltage-sensitive large loads. Additionally, NERC is 
+engaging with third-party groups that oversee their 
+own large-loads stakeholder processes and 
+developing plans for successful coordination.
+Resources

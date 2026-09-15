@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html  lang="en" dir="ltr" prefix="content: http://purl.org/rss/1.0/modules/content/  dc: http://purl.org/dc/terms/  foaf: http://xmlns.com/foaf/0.1/  og: http://ogp.me/ns#  rdfs: http://www.w3.org/2000/01/rdf-schema#  schema: http://schema.org/  sioc: http://rdfs.org/sioc/ns#  sioct: http://rdfs.org/sioc/types#  skos: http://www.w3.org/2004/02/skos/core#  xsd: http://www.w3.org/2001/XMLSchema# ">
+  <head>
+    <meta charset="utf-8" />
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WSMQZELZ8L"></script>
+<script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments)};gtag("js", new Date());gtag("set", "developer_id.dMDhkMT", true);gtag("config", "G-WSMQZELZ8L", {"groups":"default","page_placeholder":"PLACEHOLDER_page_location"});</script>
+<meta name="Generator" content="Drupal 10 (https://www.drupal.org)" />
+<meta name="MobileOptimized" content="width" />
+<meta name="HandheldFriendly" content="true" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" href="/themes/custom/lbl_base/favicon.ico" type="image/vnd.microsoft.icon" />
+<link rel="canonical" href="https://datacenters.lbl.gov/resources/380-vdc-architectures-modern-data-center" />
+<link rel="shortlink" href="https://datacenters.lbl.gov/node/575" />
+
+    <title>380 Vdc Architectures for the Modern Data Center | Center of Expertise for Energy Efficiency in Data Centers</title>
+    <link rel="stylesheet" media="all" href="/sites/default/files/css/css_eZwrgqODhpKDOr8UzSwOrYvx93w8E79WYV6YKbWQvzg.css?delta=0&amp;language=en&amp;theme=lbl_base&amp;include=eJxLzkksLq7Uz8tPSdVJrSjJyczL1k8pKi1IzNGDcnVyknLikxKLU_XTc_KTEnN0iiuLS1Jz9UFCAPnUGA8" />
+<link rel="stylesheet" media="all" href="/sites/default/files/css/css_qlYGq_yvEmP7LenqiLtSlpZQGXXv024a01NZpU6km7I.css?delta=1&amp;language=en&amp;theme=lbl_base&amp;include=eJxLzkksLq7Uz8tPSdVJrSjJyczL1k8pKi1IzNGDcnVyknLikxKLU_XTc_KTEnN0iiuLS1Jz9UFCAPnUGA8" />
+<link rel="stylesheet" media="all" href="//stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" />
+<link rel="stylesheet" media="all" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" />
+<link rel="stylesheet" media="all" href="/sites/default/files/css/css_XvOYvxEl2mrh9GjllyelAPUc6_1e3kyZQBitbwGrbUs.css?delta=4&amp;language=en&amp;theme=lbl_base&amp;include=eJxLzkksLq7Uz8tPSdVJrSjJyczL1k8pKi1IzNGDcnVyknLikxKLU_XTc_KTEnN0iiuLS1Jz9UFCAPnUGA8" />
+
+    
+  </head>
+  <body class="path-node page-node-type-resources">
+    <a href="#main-content" class="visually-hidden focusable skip-link">
+      Skip to main content
+    </a>
+    
+      <div class="dialog-off-canvas-main-canvas" data-off-canvas-main-canvas>
+          <div class="top-bar">
+            <div class="container">
+                    <div class="region">
+    <nav role="navigation" aria-labelledby="block-topbar-menu" id="block-topbar">
+            
+  <h2 class="visually-hidden" id="block-topbar-menu">Top Bar</h2>
+  
+
+        
+  
+  
+  
+                          <ul class="nav">
+                    
+                                      
+              <li class="nav-item no-megamenu">
+      
+        <a href="https://lbl.gov" target="_blank">Berkeley Lab</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item no-megamenu">
+      
+        <a href="https://eta.lbl.gov" target="_blank">Energy Technologies Area</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item no-megamenu">
+      
+        <a href="https://buildings.lbl.gov/" target="_blank">Building Technology &amp; Urban Systems</a>
+        
+        
+          
+                      </li>
+                    </ul>
+      
+
+
+  </nav>
+
+  </div>
+
+              </div>
+    </div>
+  
+
+  <nav id="main-navbar" class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+                                <div class="region">
+    <div id="block-lbl-base-branding">
+  
+    
+        <a href="/" title="Home" rel="home">
+      <img src="/sites/default/files/CEEEDC_logo_WEB-01_0.png" alt="Home" />
+    </a>
+      
+</div>
+
+  </div>
+
+              
+                          <div class="region">
+    <div id="block-applynow" class="top-link">
+  
+            <div class="field field--name-field-link field--type-link field--label-hidden field__item"><a href="/who-we-are">About us</a></div>
+      
+</div>
+  </div>
+
+              
+
+
+              <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+          <svg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'>
+            <path  stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/>
+          </svg>
+        </button>
+      
+              <div class="collapse navbar-collapse" id="navbar">
+            <div class="region">
+    
+  
+  
+  
+  
+                          <ul class="nav">
+                    
+                                      
+              <li class="nav-item no-megamenu">
+      
+        <a href="/tools" data-drupal-link-system-path="node/10">Tools</a>
+                  <a class="menu-expand" href="#">+</a>
+        
+        
+                        
+  
+  
+                  <ul>
+                    
+                                      
+              <li class="nav-item">
+      
+        <a href="/dcpro" data-drupal-link-system-path="node/9">DC Pro Tool</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/resources/department-energydoe-energy-assessment" data-drupal-link-system-path="node/550">Department of Energy(DOE) Energy Assessment Process Manual</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/resources/energy-assessment-worksheet" data-drupal-link-system-path="node/315">Energy Assessment Worksheet</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/resources/energy-efficiency-assessment-report" data-drupal-link-system-path="node/552">Energy Efficiency Assessment Report Template</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/resources/air-management-packages-tool" data-drupal-link-system-path="node/591">Air Management Lookup Tables</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/resources/data-center-air-management-estimator" data-drupal-link-system-path="node/323">Data Center Air Management Estimator</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/resources/data-center-air-management-tool" data-drupal-link-system-path="node/556">Data Center Air Management Tool</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/resources/electrical-power-chain-tool" data-drupal-link-system-path="node/502">Data Center Electrical Power Chain Tool</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/resources/data-center-master-list-energy" data-drupal-link-system-path="node/483">Data Center Master List of Energy Efficiency Actions</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/resources/it-efficiency-assessment-tool" data-drupal-link-system-path="node/587">IT Equipment Energy Assessment Tool</a>
+        
+        
+          
+                      </li>
+                    </ul>
+      
+          
+                      </li>
+                
+                                      
+              <li class="nav-item no-megamenu">
+      
+        <a href="/technologies" data-drupal-link-system-path="node/8">Technologies</a>
+                  <a class="menu-expand" href="#">+</a>
+        
+        
+                        
+  
+  
+                  <ul>
+                    
+                                      
+              <li class="nav-item">
+      
+        <a href="/cooling-air-management" data-drupal-link-system-path="node/11">Cooling &amp; Air Management</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/environmental-conditions" data-drupal-link-system-path="node/15">Environmental Conditions</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/monitoring-controls" data-drupal-link-system-path="node/16">Monitoring &amp; Controls</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/it-equipment-management" data-drupal-link-system-path="node/12">IT Equipment &amp; Management</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/liquid-cooling" data-drupal-link-system-path="node/17">Liquid Cooling</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/power-lighting" data-drupal-link-system-path="node/13">Power &amp; Lighting</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/water-efficiency" data-drupal-link-system-path="node/19">Water Efficiency</a>
+        
+        
+          
+                      </li>
+                    </ul>
+      
+          
+                      </li>
+                
+                                      
+              <li class="nav-item no-megamenu">
+      
+        <a href="/training" data-drupal-link-system-path="node/20">Training</a>
+                  <a class="menu-expand" href="#">+</a>
+        
+        
+                        
+  
+  
+                  <ul>
+                    
+                                      
+              <li class="nav-item">
+      
+        <a href="/dcep" data-drupal-link-system-path="node/21">Data Center Energy Practitioner (DCEP) Training</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/demand-training" data-drupal-link-system-path="node/24">On-Demand Training</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/webinars-and-presentations" data-drupal-link-system-path="node/26">Webinars and Presentations</a>
+        
+        
+          
+                      </li>
+                    </ul>
+      
+          
+                      </li>
+                
+                                      
+              <li class="nav-item no-megamenu">
+      
+        <a href="/focus-areas" data-drupal-link-system-path="node/27">Focus Areas</a>
+                  <a class="menu-expand" href="#">+</a>
+        
+        
+                        
+  
+  
+                  <ul>
+                    
+                                      
+              <li class="nav-item">
+      
+        <a href="/activities/0" data-drupal-link-system-path="activities/0">Business Case</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/data-center-types-and-markets" data-drupal-link-system-path="node/33">Data Center Types and Markets</a>
+                  <a class="menu-expand" href="#">+</a>
+        
+        
+                        
+  
+  
+                  <ul>
+                    
+                                      
+              <li class="nav-item">
+      
+        <a href="/federal-data-centers" data-drupal-link-system-path="node/38">Federal Data Centers</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/high-performance-computing-hpc" data-drupal-link-system-path="node/39">High Performance Computing (HPC)</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/small-data-centers" data-drupal-link-system-path="node/30">Small Data Centers</a>
+        
+        
+          
+                      </li>
+                    </ul>
+      
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/us-and-international-partnerships" data-drupal-link-system-path="node/35">U.S. and International Partnerships</a>
+                  <a class="menu-expand" href="#">+</a>
+        
+        
+                        
+  
+  
+                  <ul>
+                    
+                                      
+              <li class="nav-item">
+      
+        <a href="/china" data-drupal-link-system-path="node/36">China</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/better-buildings-data-center-partners-challenge-or" data-drupal-link-system-path="node/40">Better Buildings Data Center Partners (Challenge or Accelerator)</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/femp-activities" data-drupal-link-system-path="node/43">FEMP Activities</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/india-data-center-initiative" data-drupal-link-system-path="node/23">India Data Center Initiative</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/us-utilities" data-drupal-link-system-path="node/42">U.S. Utilities</a>
+        
+        
+          
+                      </li>
+                    </ul>
+      
+          
+                      </li>
+                
+                                      
+              <li class="nav-item">
+      
+        <a href="/resilience-strategies" data-drupal-link-system-path="node/41">Resilience Strategies</a>
+        
+        
+          
+                      </li>
+                    </ul>
+      
+          
+                      </li>
+                
+                                      
+              <li class="nav-item no-megamenu">
+      
+        <a href="/resources" data-drupal-link-system-path="resources">Library</a>
+        
+        
+          
+                      </li>
+                    </ul>
+      
+
+
+<div class="views-exposed-form" data-drupal-selector="views-exposed-form-search-page" id="block-exposedformsearchpage">
+  
+    
+      <form action="/search" method="get" id="views-exposed-form-search-page" accept-charset="UTF-8">
+  <div class="js-form-item form-item js-form-type-textfield form-item-s js-form-item-s">
+      <label for="edit-s">Search</label>
+        <input data-drupal-selector="edit-s" type="text" id="edit-s" name="s" value="" size="30" maxlength="128" class="form-text form-control" />
+
+        </div>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+        width="30px" height="30px" viewBox="0 0 44 44" xml:space="preserve">
+        <path class="st0" d="M42,2v40H2V2H42 M44,0H0v44h44V0L44,0z"></path>
+        <path class="st0" d="M33.4,31.6l-5.8-5.8c0.9-1.4,1.4-3,1.4-4.8c0-5-4-9-9-9s-9,4-9,9c0,5,4,9,9,9c1.8,0,3.4-0.5,4.8-1.4l5.8,5.8
+          L33.4,31.6z M13.5,21c0-3.6,2.9-6.5,6.5-6.5s6.5,2.9,6.5,6.5s-2.9,6.5-6.5,6.5S13.5,24.6,13.5,21z"></path>
+      </svg><div data-drupal-selector="edit-actions" class="form-actions js-form-wrapper form-wrapper" id="edit-actions"><input data-drupal-selector="edit-submit-search" type="submit" id="edit-submit-search" value="Apply" class="button js-form-submit form-submit form-control" />
+</div>
+
+
+</form>
+
+  </div>
+
+  </div>
+
+        </div>
+          </div>
+  </nav>
+
+
+  <div role="main" class="main-container">
+
+        
+        <section>
+
+                              <div class="highlighted">
+            <div class="container">
+                <div class="region">
+    <div data-drupal-messages-fallback class="hidden"></div>
+
+  </div>
+
+            </div>
+          </div>
+              
+                              <div class="help">
+            <div class="container">
+              
+            </div>
+          </div>
+              
+                    <a id="main-content"></a>
+        <div class="container">
+            <div class="region">
+    <div id="block-breadcrumbs">
+  
+    
+      
+  </div>
+<div id="block-pagetitle">
+  
+    
+      
+  <h1>
+<span>380 Vdc Architectures for the Modern Data Center</span>
+</h1>
+
+
+  </div>
+<div id="block-lbl-base-content">
+  
+    
+      
+<article data-history-node-id="575" about="/resources/380-vdc-architectures-modern-data-center" class="node node--type-resources node--view-mode-full">
+
+  
+    
+
+  
+  <div class="node__content">
+    
+            <div class="field field--name-field-date field--type-datetime field--label-hidden field__item"><time datetime="2013-01-01T00:00:00Z">01/01/2013</time>
+</div>
+      
+            <div class="field field--name-body field--type-text-with-summary field--label-hidden field__item"><p>This paper presents an overview of the case for the application of 380 Vdc as a vehicle for optimization and simplification of the critical electrical system in the modern data center. Specifically, this paper presents currently available architectures consistent with ANSI/BICSI 002-2011 and the EMerge Alliance Data/Telecom Center Standard Version 1.0. Additional EMerge Alliance white papers will explore the specific elements including economics, reliability, safety and efficiency.</p>
+<p><span><span>Author(s):&nbsp;</span>EMerge Alliance</span></p>
+</div>
+      
+  <div class="field field--name-field-technologies field--type-entity-reference field--label-above">
+    <div class="field__label">Technologies</div>
+          <div class="field__items">
+              <div class="field__item">Power</div>
+              </div>
+      </div>
+
+  <div class="field field--name-field-resource-file field--type-file field--label-above">
+    <div class="field__label">File</div>
+          <div class="field__items">
+              <div class="field__item"><span class="file file--mime-application-pdf file--application-pdf"><a href="/sites/default/files/380VdcArchitecturesfortheModernDataCenter.pdf" type="application/pdf" target="_blank">380VdcArchitecturesfortheModernDataCenter.pdf</a></span>
+</div>
+              </div>
+      </div>
+
+  </div>
+
+</article>
+
+  </div>
+
+  </div>
+
+        </div>
+          </section>
+  </div>
+
+      <footer class="footer" role="contentinfo">
+      <div class="container">
+        <div class="footer-region">
+          <div class="footer-logo">
+                          <div class="footer-logo--logo">
+                <img src="https://datacenters.lbl.gov/sites/default/files/FEMP%20Logo%20White-2_1.png" class="img-responsive"/>
+              </div>
+            
+            <div class="footer-logo--links">
+                              <div class="footer-logo--content">
+                  <p><a href="http://energy.gov" target="_blank" title="U.S Department of Energy"><img alt="U.S Department of Energy" src="/sites/default/files/doe-seal.png" style="height:80px; width:80px" /></a>&nbsp;&nbsp;&nbsp;<a href="https://www.berkeley.edu/" target="_blank" title="UC Berkeley"><img alt="UC Berkeley" src="/sites/default/files/berkeley-seal.png" style="height:80px; width:80px" /></a></p>
+
+                </div>
+                                            <a class="footer-logo--social-link" href="https://www.facebook.com/energytechnologiesarea.lbnl/" target="_blank">
+                  <i class="fa fa-facebook"></i>
+                </a>
+                                            <a class="footer-logo--social-link" href="https://twitter.com/BerkeleyLabETA" target="_blank">
+                  <i class="fa fa-twitter"></i>
+                </a>
+                          </div>
+            <div class="footer-logo--copyright">
+              ©2025 Energy Technologies Area, Berkeley Lab
+            </div>
+          </div>
+            <div class="region">
+    <nav role="navigation" aria-labelledby="block-lbl-base-footer-menu" id="block-lbl-base-footer">
+      
+  <h2 id="block-lbl-base-footer-menu">OUR ORGANIZATION</h2>
+  
+
+        
+  
+  
+  
+                          <ul class="nav">
+                    
+                                      
+              <li class="nav-item no-megamenu">
+      
+        <a href="http://lbl.gov" target="_blank">Lawrence Berkeley National Laboratory</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item no-megamenu">
+      
+        <a href="http://eta.lbl.gov" target="_blank">Energy Technologies Area</a>
+        
+        
+          
+                      </li>
+                
+                                      
+              <li class="nav-item no-megamenu">
+      
+        <a href="https://energyanalysis.lbl.gov" target="_blank">Energy Analysis &amp; Environmental Impacts</a>
+        
+        
+          
+                      </li>
+                    </ul>
+      
+
+
+  </nav>
+
+  </div>
+
+        </div>
+      </div>
+    </footer>
+  
+  </div>
+
+    
+        <script type="application/json" data-drupal-selector="drupal-settings-json">{"path":{"baseUrl":"\/","pathPrefix":"","currentPath":"node\/575","currentPathIsAdmin":false,"isFront":false,"currentLanguage":"en"},"pluralDelimiter":"\u0003","suppressDeprecationErrors":true,"ajaxPageState":{"libraries":"eJxdyNEKgCAMBdAfGu2TZOoY0s1JM8i_j6CnHs8pkIjF3auS3hOt71zPawi2j2TuBk3SBWu2EvwPQkbKEsoGzwKKFVMPfusBKz4lsg","theme":"lbl_base","theme_token":null},"ajaxTrustedUrl":{"\/search":true},"google_analytics":{"account":"G-WSMQZELZ8L","trackOutbound":true,"trackMailto":true,"trackTel":true,"trackDownload":true,"trackDownloadExtensions":"7z|aac|arc|arj|asf|asx|avi|bin|csv|doc(x|m)?|dot(x|m)?|exe|flv|gif|gz|gzip|hqx|jar|jpe?g|js|mp(2|3|4|e?g)|mov(ie)?|msi|msp|pdf|phps|png|ppt(x|m)?|pot(x|m)?|pps(x|m)?|ppam|sld(x|m)?|thmx|qtm?|ra(m|r)?|sea|sit|tar|tgz|torrent|txt|wav|wma|wmv|wpd|xls(x|m|b)?|xlt(x|m)|xlam|xml|z|zip","trackColorbox":true},"data":{"extlink":{"extTarget":true,"extTargetAppendNewWindowLabel":"(opens in a new window)","extTargetNoOverride":false,"extNofollow":false,"extTitleNoOverride":false,"extNoreferrer":false,"extFollowNoOverride":false,"extClass":"0","extLabel":"(link is external)","extImgClass":false,"extSubdomains":true,"extExclude":"","extInclude":"","extCssExclude":"","extCssInclude":"","extCssExplicit":"","extAlert":false,"extAlertText":"This link will take you to an external web site. We are not responsible for their content.","extHideIcons":false,"mailtoClass":"mailto","telClass":"","mailtoLabel":"(link sends email)","telLabel":"(link is a phone number)","extUseFontAwesome":false,"extIconPlacement":"append","extPreventOrphan":false,"extFaLinkClasses":"fa fa-external-link","extFaMailtoClasses":"fa fa-envelope-o","extAdditionalLinkClasses":"","extAdditionalMailtoClasses":"","extAdditionalTelClasses":"","extFaTelClasses":"fa fa-phone","whitelistedDomains":[],"extExcludeNoreferrer":""}},"user":{"uid":0,"permissionsHash":"da33cfca95d860dc6920cb4c7358d3683438efb516c443904f3798e91be5d373"}}</script>
+<script src="/sites/default/files/js/js_ZA8VlqZcg6c4nTOiLPna70E7p6VuCqtI6MXxhQ1SeEQ.js?scope=footer&amp;delta=0&amp;language=en&amp;theme=lbl_base&amp;include=eJxLrSjJyczL1k8pKi1IzNFLhXB10vPz03NS4xPzEnMqSzKTi_XRBXRyknLikxKLU_XTc_KTEnMAGLcchw"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+<script src="//stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<script src="/sites/default/files/js/js_Ysgjhi6PIiNFLAORNc4s2vXveXegw-2B5rGNEiY_znM.js?scope=footer&amp;delta=3&amp;language=en&amp;theme=lbl_base&amp;include=eJxLrSjJyczL1k8pKi1IzNFLhXB10vPz03NS4xPzEnMqSzKTi_XRBXRyknLikxKLU_XTc_KTEnMAGLcchw"></script>
+
+  </body>
+</html>

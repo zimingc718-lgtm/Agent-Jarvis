@@ -1,0 +1,139 @@
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><meta name="source" content="新华网"> <meta name="publishdate" content="2026-07-10"> <meta name="contentid" content="20260710082757047b114b2798fcdeec42673e18"> <meta name="subject" content=""> <meta name="catalogs" content="01009005000"> <meta name="author" content=""> <meta name="publishedtype" content="1"> <meta name="filetype" content="0"> <meta name="pagetype" content="1"> <meta name="templateId" content="b5427b58c834414690d6e6f7dca0826e"> <meta http-equiv="Content-Type" content="text/html; charset=utf-8"> <meta name="SiteName" content="国家能源局"> <meta name="SiteDomain" content="www.nea.gov.cn"> <meta name="SiteIDCode" content="bm62000002号"> <div data="datasource:20260710082757047b114b2798fcdeec42673e18" datatype="content"><meta name="ArticleTitle" content="算电协同：从“概念”到“落地”的加速跑"></div> <div data="datasource:20260710082757047b114b2798fcdeec42673e18" datatype="content"><meta name="PubDate" content="2026-07-10 15:49:21"></div> <div data="datasource:20260710082757047b114b2798fcdeec42673e18" datatype="content"><meta name="ContentSource" content="新华网"></div> <meta name="description" content="国家能源网"> <meta name="keywords" content="国家能源网"> <title data="datasource:20260710082757047b114b2798fcdeec42673e18" datatype="content">
+            算电协同：从“概念”到“落地”的加速跑---国家能源局
+        </title> <link href="http://www.nea.gov.cn/static/default/css/public/master_nyj_v1.0.css" rel="stylesheet" type="text/css"> <link href="http://www.nea.gov.cn/static/default/css/article.css" rel="stylesheet" type="text/css"> <link href="http://www.nea.gov.cn/2015nyj/xinban/topbase.css" rel="stylesheet"> <link href="http://www.nea.gov.cn/detail/css/cb_videoPlayer.css" rel="stylesheet"> <script src="http://www.nea.gov.cn/static/default/js/public/jquery-1.9.1.min.js" type="text/javascript"></script> <script language="javascript">
+        $(document).ready(function () {
+
+            var lefttmp = new Image();
+            lefttmp.src = "http://www.xinhuanet.com/photo/static/arr_left.cur";
+            var righttmp = new Image();
+            righttmp.src = "http://www.xinhuanet.com/photo/static/arr_right.cur";
+            leng = $("a", $("#div_currpage")).length;
+
+            if (leng != 0)
+            //curr里有a标签==稿件不止一页
+            {
+
+                //看一共有多少个a标签
+                leng = leng - 1;
+                var nextLin = $("a", $("#div_currpage"))[leng].href; //对于多页的情况，取得下一页的地址
+                var oneword = location.href + "#";
+                if (nextLin == oneword) {
+                    leng = leng - 1;
+                    nextLin = $("a", $("#div_currpage"))[leng].href;
+                }
+                var currurl = location
+                    .href; //当前页链接地址<meta http-equiv="expires" content="Sunday 26 October 2011 01:00 GMT" /> 
+
+                var underpd = currurl.substring(currurl.indexOf("c_") + 2, currurl.indexOf(".htm"));
+                if (underpd.indexOf("_") == -1) {
+
+                    prevLink = location.href; //如果是文章首页，则左键仍是替换到本页面
+                    nextLink = $("a", $("#div_currpage"))[0].href; //下一页的赋值
+                    setTimeout("window.opener=null;window.location.href='" + nextLink + "'", 60000); //30秒跳转到下一页
+                } else
+                //是末页，http://news.xinhuanet.com/photo/2011-08/06/c_121822530.htm
+                {
+                    //当前页分页号判断
+                    var currnum = currurl.indexOf(".htm"); //链接中第一次出现.htm的位置
+                    var underlineindex = currurl.lastIndexOf("_") + 1; //下划线甄别标识，第一页则不是下划线
+                    //下一页的分页号
+                    var nextnum = nextLin.indexOf(".htm"); //链接中第一次出现.htm的位置
+                    var underlinenext = nextLin.lastIndexOf("_") + 1; //下划线甄别标识，第一页则不是下划线
+                    var undernum = nextLin.substr(nextLin.indexOf("c_")).split("_").length - 1;
+
+                    var temp = currurl.substring(underlineindex, currnum); //当前页的分页号
+                    var nexttemp = nextLin.substring(underlinenext, nextnum); //最后a标签的分页号
+                    var boolx = parseInt(temp, 10) > parseInt(nexttemp, 10);
+
+                    if ((boolx) || (undernum == 1)) //末页
+
+                    {
+
+                        if ($("img", $("a", $("#content"))).length == 0) //没有带链接的图片
+
+                        {
+                            prevLink = nextLin;
+                            if (undernum == 1) {
+                                nextLink = nextLin;
+                            } else {
+                                nextLink = prevLink.substr(0, (prevLink.lastIndexOf("_"))) + ".htm";
+                            }
+                            setTimeout("window.opener=null;window.location.href='" + nextLink + "'",
+                                60000); //30秒跳转到下一页
+                        } else //末页正文图片有链接
+                        {
+                            prevLink = nextLin;
+                            nextLink = $("a", $("#content"))[0].href; //把正文第一个带链接的链接地址赋给下一页
+                        }
+
+                    } else //不是末页
+                    {
+
+                        prevLink = $("a", $("#div_currpage"))[0].href; //把正文第一个带链接的链接地址赋给下一页
+                        nextLink = nextLin; //把正文最后一个带链接的链接地址赋给下一页
+                    }
+
+                }
+            } else
+            //只有一页
+            {
+                prevLink = location.href;
+                nextLink = location.href;
+            }
+
+            document.onkeydown = pageEvent;
+
+            function pageEvent(evt) {
+                evt = evt || window.event;
+                var key = evt.which || evt.keyCode;
+                if (key == 37) location = prevLink;
+                if (key == 39) location = nextLink;
+            };
+
+            var lefturl = prevLink;
+            var righturl = nextLink;
+            var imgurl = righturl;
+
+            $("#content img").each(function () {
+                var width = $(this).width();
+                var thisImage = $(this);
+                //alert("01");
+                $(thisImage)[0].onmousemove = function () {
+
+                    if (event.offsetX < width / 2) {
+
+                        this.style.cursor = 'url(' + lefttmp.src + '),auto';
+                        imgurl = lefturl;
+                    } else {
+
+                        this.style.cursor = 'url(' + righttmp.src + '),auto';
+                        imgurl = righturl;
+                    }
+
+                }
+
+                $(thisImage)[0].onmouseup = function () {
+                    top.location = imgurl;
+
+                }
+            });
+
+        });
+    </script></head> <body><script src="http://www.nea.gov.cn/2015nyj/xinban/topnav.js" type="text/javascript"></script> <div class="main-colum"><div class="now-site">您当前位置：<a href="http://www.nea.gov.cn/" target="_blank">首页</a> &gt; 正文</div> <div class="channel-page"><div class="article-title" data="datasource:20260710082757047b114b2798fcdeec42673e18" datatype="content"><div class="hr_10"></div> <div class="titles">
+                        算电协同：从“概念”到“落地”的加速跑
+                    </div> <div class="hr_10"></div> <span class="times">
+                        发布时间：2026-07-10
+                    </span> <span class="author">
+                        来源：新华网
+                    </span> <span class="switchsize"><b class="bigger">大</b><b class="medium">中</b><b class="smaller">小</b></span> <div class="arrow"></div></div> <div class="article-box"><div class="hr_10"></div> <div class="hr_10"></div> <div class="hr_10"></div> <div id="detail" data="datasource:20260710082757047b114b2798fcdeec42673e18" datatype="content"><div class="article-content"><span id="detailContent"><p style="text-indent: 2em;">2026年，“算电协同”首次写入政府工作报告，并被纳入“十五五”规划纲要。&emsp;&emsp;</p><p>&emsp;&emsp;3月23日，国家数据局局长刘烈宏在中国发展高层论坛2026年年会上表示，算电协同是指通过数字化技术、智能算法、信息网络，将算力基础设施与电力系统进行深度融合，推动资源动态匹配与优化配置的新基建工程，实现“以电强算、以算促电的良性循环”。</p><p>&emsp;&emsp;5月8日，国家四部门联合印发行动方案，部署算电协同等十方面任务。</p><p>&emsp;&emsp;6月18日，在国家发展改革委6月份新闻发布会上，国家发展改革委政策研究室副主任、委新闻发言人李超表示，算力网、新型电网、新一代通信网，共同构成了智能经济和智能社会的重要底座。“十五五”时期，将更加注重供需适配，加强算力网与新型电网、新一代通信网规划建设的协同联动。</p><p>&emsp;&emsp;密集的政策信号，昭示着算电协同已从概念走向加速落地。而催生这场变革的，正是人工智能时代算力需求的指数级爆发。</p><p>&emsp;&emsp;<strong>为什么需要算电协同？——被AI催生出来的命题</strong></p><p>&emsp;&emsp;算电协同，直观来说，就是让强大的算力与绿色电力（风电、光伏）深度绑定、智能配合。原因很直接：人工智能时代的设备用电量，正在以惊人速度飙升。</p><p>&emsp;&emsp;在6月26日举行的国务院新闻办发布会上，国家发展改革委党组成员、国家能源局局长王宏志表示，人工智能爆发式增长带动用电量激增。比如我们让人工智能生成5秒的高清视频，它的用电量就相当于给10部手机充电。</p><p>&emsp;&emsp;据国家能源局数据，2025年，全国算力中心总用电量达1700亿千瓦时，占全社会用电量的1.6%。按中国银河证券相关报告预测，到2030年，这一数字将突破7000亿千瓦时，占全社会用电量的5%以上。</p><p>&emsp;&emsp;更直观的参照来自AI大模型。2024年初，全国日均Token（大模型处理的语言单元）调用量仅1000亿；到2025年底，这个数字已跃升至100万亿；2026年3月，又突破140万亿。两年多时间，增长超过1000倍。</p><p>&emsp;&emsp;据国电南瑞资深专家刘文松介绍，一个满载运行的大型AI数据中心，其总耗电量相当于一座中等规模小镇全部生活与生产的用电总和。</p><p>&emsp;&emsp;当AI算力对电力的索取进入指数级增长的轨道，再让算力与电力“各走各的路”，显然已无法持续。将便宜、绿色的电力与澎湃的算力撮合到一起，成为必然的战略选择。这便是“算电协同”诞生的背景。</p><p>&emsp;&emsp;<strong>西部探路：把算力建到绿电身边去</strong></p><p>&emsp;&emsp;既然东部算力需求旺盛、用电日益紧张，为何不将数据中心直接建到风电、光伏资源丰富的西部去？这样既能就近消纳西部曾因输送通道受限而“窝电”的清洁能源，又能为东部提供绿色的算力服务。</p><p>&emsp;&emsp;伏笔其实早在2022年就已埋下。当年“东数西算”工程启动，国家规划了京津冀、长三角、粤港澳、成渝，以及内蒙古、贵州、甘肃、宁夏等八大算力枢纽节点。而真正“让算力跑在绿电上”的探索，就从这里率先起步。</p><p>&emsp;&emsp;2024年，中国华电在和林格尔启动了首个专为数据中心直供绿电的项目。呼和浩特和林格尔新区华电能源有限公司总经理李超回忆，当时给项目起名，使用了“算电协同”这个词，向上申报优秀案例后，被国家数据局认定为示范项目。</p><p>&emsp;&emsp;内蒙古和林格尔数据中心项目一期工程建起36万千瓦的风光电场，通过专用线路直供数据中心，绿电占比达到43%。按照规划，二、三期将于2026年全部建成，届时可支撑4.8万PFlops算力规模。1PFlops意味着每秒可进行一千万亿次计算，足以支撑超大规模AI模型的训练。</p><p>&emsp;&emsp;新疆伊吾，戈壁小城“算力出疆”。</p><p>&emsp;&emsp;年均气温约4.5℃的伊吾，利用天然冷源优势，正抢占绿色算力新赛道。当地企业联合多方，率先将西部绿电算力送到东部需求侧。新疆数算电科技董事长张乐介绍：“我们是‘疆算入渝’的重要实施主体，已通过跨省网络专线，为重庆长安汽车的自动驾驶大模型训练，提供了2000P专属绿色算力。”这意味着在新疆用绿电完成计算，再将结果高速传回重庆，汽车厂用上了便宜又清洁的算力。</p><p>&emsp;&emsp;内蒙古乌兰察布，率先跑通“源网荷储一体化”。</p><p>&emsp;&emsp;2025年7月，全国首个数据中心“绿电直连+源网荷储一体化”项目在乌兰察布正式投运。简单来说，就是将风电、光伏、储能与数据中心打包成一个整体，优先自发自用、余电储存、缺电时储能释放、大电网仅做最终兜底。</p><p>&emsp;&emsp;项目建设方之一金风科技内蒙公司副总经理王一兵坦言，建设过程中，遇到了大量前所未有的难题，但正是这种“蹚路”式的探索，让绿电直连算力的模式真正走通。以此为突破，乌兰察布后续一口气批复超过百万千瓦的风光资源，用于绿电直连，为全国规模化落地提供了可参考的路径。</p><p>&emsp;<strong>&emsp;协同落地：让算力主动追着风光跑</strong></p><p>&emsp;&emsp;数据中心建到绿电身边，只是第一步。更具挑战的是，要让算力变得“聪明且灵活”——风大光足时多算，无风无光时少算或靠储能支撑，实现清洁能源最大化消纳、算力负载稳定运行、用电成本合理可控的多重目标。这背后，需要一套系统化、智能化的调度体系。</p><p>&emsp;&emsp;在和林格尔，这套调度体系已经具象为一个“智能大脑”。</p><p>&emsp;&emsp;在华电项目调控中心的大屏幕上，金色代表光伏功率曲线，蓝色显示风电出力波动，绿色为数据中心算力负载。这套一体化调控平台，能以毫秒级速度采集数据，结合天气预报，瞬间计算出最优供电方案：风光充足时，指令储能充电、算力加足马力跑任务；发电不足时，让储能放电补缺，并精准防止电力倒送回公网。</p><p>&emsp;&emsp;在伊吾，国网伊吾县供电公司构建了“源网荷储一体化协同机制”：精准预测风光功率，规模化配置储能平抑波动，执行“绿电优先、储能跟进、火电调峰”的调度策略；同时引导智算中心将非实时任务，错峰调整到风力充沛时段运行，让算力主动追着绿电“跑”。“这套组合机制既最大化消纳绿电，又牢牢守住算力中心供电安全底线。”国网伊吾县供电公司经理苏佳说。</p><p>&emsp;&emsp;储能配置的经济账，正在让这一模式变得可持续。王一兵介绍，配置储能后，可在电价低谷时段（如夜间风大）多充电，在电价高峰时段由储能向数据中心供电，利用峰谷分时电价差，有效节约电费。“目前来看，这个项目经济模型比较理想，回报周期可能比单纯的风电上网项目更短。”</p><p>&emsp;&emsp;值得关注的是，大电网的角色正在这一模式下悄然改变。王一兵将其概括为“电压支撑、安全备用、故障兜底”——电网成为最可靠的“后备力量”。在新疆哈密，供电公司为智算中心配套了220千伏双电源专用供电通道，相当于上了双保险。随着哈密—重庆&plusmn;800千伏特高压直流输电工程投运，跨区域电力输送通道更加稳固，“疆算入渝”的电力“高速公路”也由此打通。</p><p>&emsp;&emsp;从内蒙古到新疆，从戈壁荒滩到东部工厂，一张由绿色电力与澎湃算力交织而成的新动脉，正在中国大地上从图纸走向现实。算电协同，本质上就是让AI算力吃上清洁、便宜且稳定的“绿电饭”，既化解AI激增的“电力焦虑”，也让西部风光资源不再白白浪费，更为整个数字经济的发展铺就更绿色、更经济、更安全的底座。</p><p>&emsp;&emsp;这场由AI算力需求驱动的能源变革，正在用清洁的电流，重新定义算力的底色。（杨静 张昊哲）</p></span></div></div> <div class="back-top"></div> <div class="hr_10"></div> <div class="hr_10"></div> <div class="hr_10"></div></div> <div class="article-other"><div class="hr_10"></div> <div class="hr_10"></div> <div class="clear"></div></div> <div class="hr_10"></div> <div class="hr_10"></div> <div class="hr_10"></div></div></div> <script src="http://www.nea.gov.cn/2015nyj/xinban/bottom.js" type="text/javascript"></script> <script src="http://www.nea.gov.cn/static/default/js/public/article-font.js" type="text/javascript"></script> <script src="http://www.nea.gov.cn/detail/js/pager.js"></script> <script src="http://www.nea.gov.cn/detail/js/cb-video.js"></script> <script>
+        $(function () {
+            /* 分页调用 */
+            parsePagingFun({
+                // preText: 'prev',//上一页
+                // nextText: 'next',//下一页
+                id: 'detailContent', //正文分页id
+                num: 8 //显示页码数个数
+            })
+
+        })
+    </script><script src="//imgs.news.cn/webdig/xinhua_webdig.js" language="javascript" type="text/javascript" async></script></body></html>
