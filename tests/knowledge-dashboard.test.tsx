@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { KNOWLEDGE_CHANGED_EVENT } from "@/lib/ui-events";
 import {
   KnowledgeDashboard,
   type DashboardData,
@@ -451,5 +452,49 @@ describe("KnowledgeDashboard", () => {
       fs.readFileSync("src/components/KnowledgeDashboard.tsx", "utf8")
     );
     expect(source).toContain(`const GENERAL_ENTITY = "${GENERAL_ENTITY}"`);
+  });
+
+  it("重渲染不再发起额外的巡检——tick 跟时间走，不跟渲染走（CR-20260915-board-tick-burst）", async () => {
+    // 故意不传 loadBoard / loadOverview / loadSweep / isVisible：要复现的正是这四个
+    // **参数默认值**每次渲染都是新函数、于是 effect 每次渲染都重跑的毛病。传稳定的 mock
+    // 进去就把缺陷绕开了。2026-09-15 用真浏览器打开看板，一挂载就连发十几个巡检请求。
+    const posts: string[] = [];
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      const method = init?.method ?? "GET";
+      if (url.endsWith("/api/entities/sweep") && method === "POST") {
+        posts.push(url);
+        return new Response(JSON.stringify({ ran: false, reason: "本轮没有到期的采集源。", remaining: 0 }), { status: 200 });
+      }
+      if (url.endsWith("/api/entities/sweep")) {
+        return new Response(JSON.stringify({ enabled: true, intervalMinutes: 180, maxPerRound: 6, lastRun: "" }), { status: 200 });
+      }
+      if (url.endsWith("/api/entities")) {
+        return new Response(JSON.stringify(board), { status: 200 });
+      }
+      if (url.endsWith("/api/knowledge/overview")) {
+        return new Response(JSON.stringify(overview), { status: 200 });
+      }
+      return new Response("{}", { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
+    try {
+      render(<KnowledgeDashboard act={noop} />);
+      await screen.findByRole("region", { name: "定时巡检" });
+      await waitFor(() => expect(posts).toHaveLength(1)); // 挂载那一次
+
+      // 逼几次重渲染：每个事件都让 reload → setState → 再渲染一遍。
+      for (let i = 0; i < 4; i += 1) {
+        await act(async () => {
+          window.dispatchEvent(new Event(KNOWLEDGE_CHANGED_EVENT));
+        });
+      }
+      await waitFor(() => expect(fetchMock.mock.calls.length).toBeGreaterThan(6)); // 重渲染确实发生了
+
+      // 改前：每次重渲染都新起一个 effect，立刻再 POST 一次；改后仍是挂载那一次。
+      expect(posts).toHaveLength(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
