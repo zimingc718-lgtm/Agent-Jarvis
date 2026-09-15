@@ -1344,6 +1344,13 @@ REAL_ENTRY_RULING = re.compile(r"^-\s*真实入口[:：].*待裁定", re.MULTILI
 # 也不该记成「已执行」——没人执行过什么，是有人做了决定。
 REAL_ENTRY_RULED = re.compile(r"^-\s*真实入口[:：].*已裁定", re.MULTILINE)
 
+# 一条真实入口**路线**自己说「没跑」（DEC-300）。写在该 CP 行的「发现方式」格里。
+#
+# 此前只有记录级的 `- 真实入口: 未执行（原因）`，而 `if ran` 一旦成立就再也不看它——
+# 一条记录跑掉三条路线、剩一条没跑时，剩的那条在账本里直接消失。于是想让它可见，
+# 就只能不给已有的证据打勾：用瞒报一件事去换另一件事可见。
+REAL_ENTRY_ROUTE_UNRUN = re.compile(r"[（(]\s*未执行[：:]\s*([^）)]*)[）)]")
+
 # 一条真实入口路线指明由哪条测试承载证据（DEC-250 ②）。写法固定为「（证据：TEST-xxx）」，
 # 因为「发现方式」这一格是散文，靠猜分不出哪个编号属于机器那一半、哪个属于真实入口那一半。
 REAL_ENTRY_EVIDENCE = re.compile(r"[（(]\s*证据[：:]\s*([^）)]*)[）)]")
@@ -1383,6 +1390,7 @@ def check_real_entry(root: Path) -> list[str]:
             )
 
     unnamed_routes = 0
+    unrun_routes: list[str] = []
     pending_ruling: list[str] = []
 
     def passed(test_id: str) -> bool:
@@ -1400,7 +1408,16 @@ def check_real_entry(root: Path) -> list[str]:
         # 逐**路线**对账，而不是逐记录（DEC-250 ②）。一条 CP 行若点名了 TEST 编号，就按那
         # 几条查；查的是「这条路线跑了吗」，不是「这个记录里有没有人跑过什么」。
         named_routes = []
+        routes_declared_unrun = 0
         for row in declared:
+            cells_for_route = [cell.strip() for cell in row.strip().strip("|").split("|")]
+            declared_unrun = REAL_ENTRY_ROUTE_UNRUN.search(cells_for_route[-1])
+            if declared_unrun:
+                # 这条路线自己说了没跑，单独记账；它不参与「这个记录跑过没有」的判定。
+                unrun_routes.append(f"{name} {cells_for_route[0]}")
+                routes_declared_unrun += 1
+                continue
+
             # 只认 `（证据：TEST-xxx）` 这一种明确标注（DEC-250 ②）。
             #
             # 第一版在整格里抓编号，当场误伤四条记录——那些编号点的是「机器」那一半
@@ -1438,6 +1455,9 @@ def check_real_entry(root: Path) -> list[str]:
                 isolated_only.append(name)
         elif REAL_ENTRY_RULING.search(text) or REAL_ENTRY_RULED.search(text):
             pass  # 上面已登记
+        elif routes_declared_unrun == len(declared):
+            # 每一条声明的路线都自己说了没跑，账已经逐条记过，记录不必再写一遍（DEC-300）。
+            pass
         elif REAL_ENTRY_UNRUN.search(text):
             unrun.append(name)
         else:
@@ -1473,6 +1493,12 @@ def check_real_entry(root: Path) -> list[str]:
         messages.append(
             f"OK REAL_ENTRY_RULED {len(ruled)} record(s) declared a product judgement and it has been ruled on: "
             + "、".join(sorted(ruled))
+        )
+    if unrun_routes:
+        # 路线级的未执行：与记录整体有没有证据无关，永远单独点名。
+        messages.append(
+            f"{ADVISORY_PREFIX}REAL_ENTRY_ROUTE_UNRUN {len(unrun_routes)} route(s) declare themselves not run, "
+            "regardless of whether their record has other evidence: " + "、".join(sorted(unrun_routes))
         )
     if unnamed_routes:
         messages.append(
