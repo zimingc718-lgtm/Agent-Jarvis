@@ -2,9 +2,9 @@
 
 - 级别: L2（新增一层受采纳约束的原始资料层：新模块 + 两条 API + 一个动态屏面板 + 既有文档工具的可见性收窄。无 schema 变更、无数据迁移——采纳登记落文件不落表，见 DEC-310）
 - 提出人: 用户 2026-09-15（INPUT-2026-09-15-028）：「把资料库目录加入版本，并与知识库链接起来。里面的内容改为待采纳，审批通过后，可正式纳入，并支持对话查阅。」两项待裁定当日已答：**全部 253 MB 入库**、**逐文件审批、界面在动态屏**
-- 状态: R1 待人工终裁
+- 状态: APPROVED（R1 人工终裁：用户 2026-09-15 提出本需求并当日答复两项待裁定——入库范围「全部 253 MB 入库」、审批粒度「逐文件审批，界面在动态屏」）
 - 占用 ID: REQ-F-220, REQ-F-230, DEC-310, DEC-320, TASK-390, TASK-400, TASK-410, TASK-420, TEST-390, TEST-400, TEST-410, TEST-420
-- 评审模型: 标准档（DEC-021 ②：五个 CP 全为双向门，但 CP-3 的审批界面与 CP-1 的入库结果只能由人在真实入口上确认）
+- 评审模型: 标准档（DEC-021 ②：六个 CP 全为双向门，但 CP-3 的审批界面与 CP-1 的入库结果只能由人在真实入口上确认）
 - 影响需求: **新增** REQ-F-220、REQ-F-230；**关联** REQ-F-110（本地原档层）、REQ-F-044..046（知识库与采纳）
 - 影响模块: MOD-KNOWLEDGE（`src/lib/library.ts` 新增、`src/lib/documents.ts` 小改）、MOD-API（`/api/library`、`/api/library/decide`）、MOD-DISPLAY（`LibraryPanel`）、MOD-AGENT（`document-tools` 按采纳状态过滤）
 - 影响任务: **新增** TASK-390, TASK-400, TASK-410, TASK-420
@@ -21,9 +21,10 @@
   - R1: 本文件有 `## 变化点登记` 表 + 结构化签置行；`check-doors` PASS；`review r1` PASS。
   - R2/R3/R4: 三层说明书各含 `变更响应 · CR-20260915-library-adoption` 节逐一响应全部 CP；本文件三张矩阵无空、无 REJECTED。
   - P3/P4: TASK-390..420 全部 DONE；TEST-390..420 全部 PASS；`check release` 全绿。
+  - CP-6 的机器检查并入 TEST-420 ④；`insight-export` 的既有用例随搬迁改指 `html-text`，不放松断言。
   - **真实入口**（人工发现项，不可由单测替代）：在用户自己那台（`npm run build:local && npm run serve:local`，端口 3000）——① 对话框「在屏上打开：资料库」能在动态屏上列出 258 条待采纳；② 逐条通过一条、拒绝一条，刷新后状态仍在；③ 通过前问模型该文件的内容，答「待采纳、未展示」；通过后同一问题能检索到并读出原文。
 - 评审记录: 标准档。R1 四角色独立评审后由用户终裁；R2/R3/R4 按 CP 表逐格裁决。
-- R1 终裁: 未完成（用户拍板后改为：已完成 | 用户 | YYYY-MM-DD）
+- R1 终裁: 已完成 | 用户 | 2026-09-15
 
 ## 背景与现状
 
@@ -51,9 +52,43 @@
 | CP-3 | 产品 | **审批界面在动态屏**：`LibraryPanel` 逐文件通过/拒绝，支持按目录全选批量；由对话框「在屏上打开：资料库」唤起（承 INPUT-027 第 3 条） | REQ-F-220, TASK-400, TASK-410 | 新增 | 双向 | 机器：TEST-400（API 契约）、TEST-410（面板渲染与批量选择）；**真实入口**：用户自己那台上逐条审批并刷新验证（人工） |
 | CP-4 | 架构 | **对话查阅只见已采纳**：`search_documents` / `read_document` / `list_documents` 对资料库内文件按采纳状态过滤；命中被挡时**不静默**，回一句「另有 N 条待采纳，未展示」 | REQ-F-230, TASK-420 | 新增 | 双向 | 机器：TEST-420（待采纳不可见、已采纳可见、被挡时有提示） |
 | CP-5 | 架构 | **采纳时写知识库索引卡**：一份 `source: library-index` 的小条目，含标题、来源 URL、取回方式、`documentId`，让 `search_knowledge` 命中后能转 `read_document` 取全文——这就是「与知识库链接起来」 | REQ-F-230, TASK-420 | 新增 | 双向 | 机器：TEST-420（采纳生成卡片、取消采纳删除卡片） |
+| CP-6 | 架构 | **网页存档纳入可读格式**：`.html` 进 `READABLE_EXTENSIONS`，`htmlToMarkdown` 从 `insight-export.ts` 搬进 `src/lib/html-text.ts` 供两处共用（直接引会成环） | REQ-F-230, TASK-420, TEST-420 | 新增 | 双向 | 机器：TEST-420 ④（采纳后的网页存档读得出正文、剥掉标签与样式） |
 
 ## 风险登记
 
 1. **origin 是公开仓库**（`zimingc718-lgtm/Agent-Jarvis`）。本 CR 只在本地提交，**不 push**。但一旦推送，214 份第三方原文（OCP/IEC 规范、论文、新闻页、经互联网档案馆取回的字节）就随之公开——是否发布由用户判断，本 CR 不代为决定，也不在验收条件里包含 push。
 2. **仓库体积不可逆**：253 MB 进历史后，删文件只减工作树不减历史，将来每次克隆都要拉一遍。用户 2026-09-15 在知悉该代价后裁定「全部入库」。
 3. **采纳登记不随版本库走**：`.data/` 不进版本库，所以换一台机器克隆下来，资料在、审批结果不在，需重审。用户若将来要求跨机器保留，再立 CR 把登记挪进版本库。
+
+## R2 评审矩阵
+
+| CP | 产品 | 架构 | 模块开发 | 测试 |
+|---|---|---|---|---|
+| CP-1 资料库进版本库 | APPROVED — 用户在知悉代价后的明确裁定 | CONDITIONAL — 单向的是**历史体积**（进了删不掉），**条件**：风险与「不 push」写进记录（已满足：风险登记 1、2） | APPROVED — 一行属性 + 一次提交 | APPROVED — `.gitattributes` 那条有断言（TEST-390 ⑧） |
+| CP-2 采纳登记层 | APPROVED — 「默认全部待采纳」正是用户要的那一步 | APPROVED — 落文件不落表，门保持双向（DEC-310） | APPROVED | APPROVED — 含「登记坏掉退回待采纳」的反例 |
+| CP-3 审批界面在动态屏 | APPROVED — 承 REQ-F-200 ① 的既有入口约定 | APPROVED — `SettingsPanel` 多一个取值，不是另一套机制 | APPROVED | CONDITIONAL — **条件**：批量必须断言「带的是每一条的 id」而非目录名（已满足：TEST-410 ③） |
+| CP-4 对话查阅只见已采纳 | APPROVED — 「审批通过后可查阅」的字面落点 | APPROVED — 闸放在工具层：只有那里知道结果要给谁看 | APPROVED | CONDITIONAL — **条件**：被挡住必须**报数**而非静默过滤，要有断言（已满足：TEST-420 ①②） |
+| CP-5 采纳时写知识库索引卡 | APPROVED — 「与知识库链接起来」的落点 | APPROVED — 卡片是目录卡不是副本，知识库形状未变 | APPROVED | APPROVED — 采纳写卡、撤回删卡两个方向都有断言 |
+| CP-6 网页存档纳入可读格式 | APPROVED — 不做这条，139 份网页在对话里等于不存在 | APPROVED — 搬迁而非抄一份，避免两份实现分叉 | APPROVED — `insight-export` 的用例随搬迁改指，不放松断言 | APPROVED — TEST-420 ④ |
+
+## R3 评审矩阵
+
+| CP | 产品 | 架构 | 模块开发 | 测试 |
+|---|---|---|---|---|
+| CP-1 资料库进版本库 | APPROVED | APPROVED | APPROVED — 无任务编号：属性一行、提交一次 | APPROVED |
+| CP-2 采纳登记层 | APPROVED | APPROVED | APPROVED — TASK-390；路径惰性求值，测试才指得开 | APPROVED |
+| CP-3 审批界面在动态屏 | APPROVED | APPROVED | APPROVED — TASK-400 / TASK-410 | APPROVED |
+| CP-4 对话查阅只见已采纳 | APPROVED | APPROVED | APPROVED — TASK-420 ①② | CONDITIONAL — **条件**：`document-tools` 既有用例不得因内置文档根而被改松（已满足：改为显式指开 `JARVIS_LIBRARY_PATH`） |
+| CP-5 采纳时写知识库索引卡 | APPROVED | APPROVED | APPROVED — TASK-390 ④ | APPROVED |
+| CP-6 网页存档纳入可读格式 | APPROVED | APPROVED | APPROVED — TASK-420 ③ | APPROVED |
+
+## R4 评审矩阵
+
+| CP | 产品 | 架构 | 模块开发 | 测试 |
+|---|---|---|---|---|
+| CP-1 资料库进版本库 | APPROVED | APPROVED | APPROVED | CONDITIONAL — **条件**：入库结果属人工发现项，须在真实入口核对（`git log -- 资料库`、克隆校验），不得只靠属性断言 |
+| CP-2 采纳登记层 | APPROVED | APPROVED | APPROVED | APPROVED — TEST-390 七条 |
+| CP-3 审批界面在动态屏 | APPROVED | APPROVED | APPROVED | CONDITIONAL — **条件**：面板与审批必须走真实入口验一遍（用户自己那台，258 条待采纳、通过/拒绝各一条、刷新后仍在） |
+| CP-4 对话查阅只见已采纳 | APPROVED | APPROVED | APPROVED | CONDITIONAL — **条件**：真实入口须验「通过前答待采纳、通过后读得出原文」这一对照 |
+| CP-5 采纳时写知识库索引卡 | APPROVED | APPROVED | APPROVED | APPROVED — TEST-390 ③ |
+| CP-6 网页存档纳入可读格式 | APPROVED | APPROVED | APPROVED | APPROVED — TEST-420 ④ |

@@ -8,6 +8,7 @@ import type { ProviderTemplate } from "@/lib/providers";
 import type { ProviderSummary } from "@/lib/types";
 import { SkillList } from "@/components/SkillList";
 import { ToolPanel } from "@/components/ToolPanel";
+import { LibraryPanel } from "@/components/LibraryPanel";
 import { buildInsightDocument, readDocumentTheme, type InsightTheme } from "@/lib/display-document";
 import {
   ASK_JARVIS_EVENT,
@@ -249,6 +250,7 @@ export function DisplayScreen({
         </div>
         <div className="mx-auto w-full max-w-3xl px-4 py-4">
           {panel === "tools" ? <ToolPanel /> : null}
+          {panel === "library" ? <LibraryPanel /> : null}
           {panel === "skills" ? <SkillList /> : null}
           {panel === "models" ? (
             providerTemplates && providerTemplates.length > 0 ? (

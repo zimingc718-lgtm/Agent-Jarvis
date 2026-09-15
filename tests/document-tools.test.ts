@@ -44,11 +44,16 @@ beforeEach(() => {
   docsRoot = join(dir, "资料");
   mkdirSync(join(docsRoot, "规格"), { recursive: true });
   store = createStore(join(dir, "db.sqlite"), encryptionKey);
+  // 资料库是内置文档根（CR-20260915-library-adoption CP-5），不指开的话这些用例会读到
+  // 仓库里那个真的 258 个文件的资料库——测试从此依赖仓库内容。这里指到一个不存在的路径，
+  // 让这一组回到「只有用户自己配的目录」的场景；资料库自己的行为由 TEST-420 覆盖。
+  process.env.JARVIS_LIBRARY_PATH = join(dir, "没有资料库");
   clearDocumentCache();
 });
 
 afterEach(() => {
   store.close();
+  delete process.env.JARVIS_LIBRARY_PATH;
   rmSync(dir, { recursive: true, force: true });
 });
 
