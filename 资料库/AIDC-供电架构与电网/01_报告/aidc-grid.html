@@ -1,0 +1,1998 @@
+<title>AI 数据中心与电网</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --ink:#101719;
+    --ink-2:#3A4749;
+    --ink-3:#667577;
+    --paper:#F1F3F3;
+    --surface:#FAFBFB;
+    --surface-2:#E7EBEB;
+    --rule:#CBD4D4;
+    --rule-soft:#DDE3E3;
+    --copper:#A85F35;
+    --copper-soft:#EFE0D6;
+    --hv:#16556B;
+    --hv-soft:#DDEAEE;
+    --caution:#8F6316;
+    --caution-soft:#F2E8D2;
+    --good:#2F6B4F;
+
+    --f-display:"Archivo","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",sans-serif;
+    --f-body:"Source Sans 3","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",sans-serif;
+    --f-mono:"IBM Plex Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+
+    --measure:70ch;
+    --wide:1120px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ink:#E4EAEA; --ink-2:#AFBDBE; --ink-3:#7E8F90;
+      --paper:#0C1113; --surface:#141B1D; --surface-2:#1C2528;
+      --rule:#2C3739; --rule-soft:#232D2F;
+      --copper:#D98A5A; --copper-soft:#2E2019;
+      --hv:#5CA8C1; --hv-soft:#13262C;
+      --caution:#C9A155; --caution-soft:#2A2317;
+      --good:#69AD8B;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#E4EAEA; --ink-2:#AFBDBE; --ink-3:#7E8F90;
+    --paper:#0C1113; --surface:#141B1D; --surface-2:#1C2528;
+    --rule:#2C3739; --rule-soft:#232D2F;
+    --copper:#D98A5A; --copper-soft:#2E2019;
+    --hv:#5CA8C1; --hv-soft:#13262C;
+    --caution:#C9A155; --caution-soft:#2A2317;
+    --good:#69AD8B;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:var(--f-body); font-size:16.5px; line-height:1.72;
+    -webkit-font-smoothing:antialiased;
+  }
+  .shell{max-width:var(--wide); margin:0 auto; padding-inline:22px; padding-block:0 96px;}
+
+  /* ---------- masthead ---------- */
+  .mast{border-bottom:2px solid var(--ink); padding-block:44px 20px; margin-bottom:8px;}
+  .eyebrow{
+    font-family:var(--f-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--copper); margin:0 0 18px;
+  }
+  h1{
+    font-family:var(--f-display); font-weight:700; font-size:clamp(2.1rem,6vw,3.5rem);
+    line-height:1.06; letter-spacing:-.018em; margin:0 0 16px; text-wrap:balance;
+  }
+  .standfirst{
+    font-size:clamp(1.02rem,2.3vw,1.18rem); color:var(--ink-2); max-width:62ch; margin:0 0 26px;
+  }
+  .mast-meta{
+    display:flex; flex-wrap:wrap; gap:8px 28px;
+    font-family:var(--f-mono); font-size:11.5px; color:var(--ink-3);
+    border-top:1px solid var(--rule-soft); padding-top:14px;
+  }
+  .mast-meta b{color:var(--ink-2); font-weight:500;}
+
+  /* ---------- layout ---------- */
+  .body-grid{display:block;}
+  @media (min-width:1080px){
+    .body-grid{display:grid; grid-template-columns:186px minmax(0,1fr); gap:56px; align-items:start;}
+    .toc{position:sticky; top:24px; max-height:calc(100vh - 48px); overflow-y:auto;}
+  }
+  .toc{padding-block:34px 0;}
+  .toc h2{
+    font-family:var(--f-mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-3); margin:0 0 12px; font-weight:400;
+  }
+  .toc ol{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:1px;}
+  .toc a{
+    display:grid; grid-template-columns:22px 1fr; gap:7px;
+    color:var(--ink-2); text-decoration:none; font-size:13.2px; line-height:1.4;
+    padding:5px 6px 5px 0; border-radius:3px;
+  }
+  .toc a span{font-family:var(--f-mono); font-size:11px; color:var(--ink-3); padding-top:1px;}
+  .toc a:hover{color:var(--copper); background:var(--surface);}
+  @media (max-width:1079px){
+    .toc{border-bottom:1px solid var(--rule); padding-bottom:22px; margin-bottom:12px;}
+    .toc ol{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:0 16px;}
+  }
+
+  main{min-width:0;}
+  section{padding-block:40px 6px; scroll-margin-top:20px;}
+  section + section{border-top:1px solid var(--rule-soft);}
+
+  .s-num{
+    font-family:var(--f-mono); font-size:11.5px; color:var(--copper);
+    letter-spacing:.1em; display:block; margin-bottom:9px;
+  }
+  h2.s-title{
+    font-family:var(--f-display); font-weight:600; font-size:clamp(1.42rem,3.4vw,1.92rem);
+    line-height:1.2; letter-spacing:-.012em; margin:0 0 20px; text-wrap:balance; max-width:26ch;
+  }
+  h3{
+    font-family:var(--f-display); font-weight:600; font-size:1.09rem; line-height:1.35;
+    margin:34px 0 11px; text-wrap:balance; max-width:44ch;
+  }
+  h4{
+    font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--ink-3); margin:26px 0 9px;
+  }
+  p{margin:0 0 15px; max-width:var(--measure);}
+  ul,ol.list{margin:0 0 15px; padding-left:1.15em; max-width:var(--measure);}
+  li{margin-bottom:7px;}
+  strong{font-weight:600; color:var(--ink);}
+  em{font-style:normal; background:linear-gradient(transparent 62%, var(--copper-soft) 62%); padding:0 1px;}
+  a{color:var(--hv);}
+
+  /* numeric / spec typography — the report's signature */
+  .q{font-family:var(--f-mono); font-size:.93em; font-variant-numeric:tabular-nums; font-weight:500; color:var(--ink);}
+  .std{font-family:var(--f-mono); font-size:.9em; letter-spacing:-.01em; color:var(--hv); white-space:nowrap;}
+
+  /* ---------- callouts ---------- */
+  .lede{
+    font-size:1.06rem; color:var(--ink-2); border-left:3px solid var(--copper);
+    padding-left:18px; margin:0 0 28px; max-width:64ch;
+  }
+  .note{
+    background:var(--surface); border:1px solid var(--rule-soft); border-left:3px solid var(--hv);
+    padding:16px 18px; margin:22px 0; max-width:var(--measure);
+  }
+  .note.caution{border-left-color:var(--caution);}
+  .note.copper{border-left-color:var(--copper);}
+  .note p:last-child{margin-bottom:0;}
+  .note-k{
+    font-family:var(--f-mono); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase;
+    color:var(--ink-3); display:block; margin-bottom:7px;
+  }
+
+  /* key-judgment cards */
+  .judgments{display:grid; gap:1px; background:var(--rule-soft); border:1px solid var(--rule-soft); margin:0 0 6px;}
+  @media (min-width:700px){.judgments{grid-template-columns:1fr 1fr;}}
+  .j{background:var(--surface); padding:20px 20px 18px; display:flex; flex-direction:column; gap:7px;}
+  .j-n{font-family:var(--f-mono); font-size:11px; color:var(--copper); letter-spacing:.1em;}
+  .j-h{font-family:var(--f-display); font-weight:600; font-size:1.02rem; line-height:1.34;}
+  .j-b{font-size:14.4px; color:var(--ink-2); line-height:1.62; margin:0;}
+
+  /* ---------- figures ---------- */
+  figure{margin:30px 0; max-width:100%;}
+  figure svg{display:block; width:100%; max-width:100%; height:auto;}
+  figcaption{
+    font-size:13.4px; color:var(--ink-3); line-height:1.6; margin-top:12px;
+    border-top:1px solid var(--rule-soft); padding-top:10px; max-width:76ch;
+  }
+  figcaption b{color:var(--ink-2); font-weight:600;}
+  .fig-wide{width:100%;}
+  @media (min-width:1080px){.fig-wide{width:calc(100% + 60px);}}
+
+  /* ---------- tables ---------- */
+  .tw{overflow-x:auto; margin:24px 0; border:1px solid var(--rule-soft); background:var(--surface);}
+  table{border-collapse:collapse; width:100%; font-size:14px; min-width:560px;}
+  caption{
+    text-align:left; font-family:var(--f-mono); font-size:10.5px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--ink-3); padding:13px 15px 0;
+  }
+  th,td{padding:9px 14px; text-align:left; vertical-align:top; border-bottom:1px solid var(--rule-soft);}
+  thead th{
+    font-family:var(--f-mono); font-size:11px; font-weight:500; letter-spacing:.04em;
+    color:var(--ink-3); border-bottom:1px solid var(--rule); white-space:nowrap;
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  td.num{font-family:var(--f-mono); font-variant-numeric:tabular-nums; white-space:nowrap;}
+  th.row{font-weight:600; color:var(--ink);}
+
+  .chip{
+    display:inline-block; font-family:var(--f-mono); font-size:10.5px; line-height:1.5;
+    padding:1px 7px; border:1px solid currentColor; border-radius:2px; white-space:nowrap;
+  }
+  .chip.ok{color:var(--good);}
+  .chip.draft{color:var(--caution);}
+  .chip.wp{color:var(--ink-3);}
+  .chip.gap{color:var(--copper);}
+
+  /* ---------- content-migration bars ---------- */
+  .bars{margin:24px 0; border:1px solid var(--rule-soft); background:var(--surface); padding:18px 18px 14px;}
+  .bar-row{display:grid; grid-template-columns:minmax(120px,1.1fr) minmax(0,2.2fr) auto; gap:12px; align-items:center; padding:7px 0;}
+  .bar-row + .bar-row{border-top:1px solid var(--rule-soft);}
+  .bar-l{font-size:13.6px; line-height:1.4;}
+  .bar-track{height:13px; background:var(--surface-2); position:relative;}
+  .bar-fill{height:100%;}
+  .bar-v{font-family:var(--f-mono); font-size:12px; font-variant-numeric:tabular-nums; color:var(--ink-2); white-space:nowrap;}
+  .bar-tag{font-family:var(--f-mono); font-size:10px; letter-spacing:.06em; display:block; margin-top:2px;}
+  @media (max-width:560px){
+    .bar-row{grid-template-columns:1fr auto; }
+    .bar-track{grid-column:1 / -1;}
+  }
+
+  /* ---------- registers (conflict / gap) ---------- */
+  .reg{border:1px solid var(--rule); margin:24px 0; background:var(--surface);}
+  .reg-item{padding:15px 18px; border-bottom:1px solid var(--rule-soft);}
+  .reg-item:last-child{border-bottom:none;}
+  .reg-id{
+    font-family:var(--f-mono); font-size:11px; color:var(--copper); letter-spacing:.08em;
+    display:inline-block; margin-right:9px;
+  }
+  .reg-h{font-weight:600; font-size:14.8px; display:inline;}
+  .reg-b{font-size:14px; color:var(--ink-2); margin:7px 0 0; line-height:1.62; max-width:74ch;}
+  .reg-r{
+    font-size:13.4px; margin:8px 0 0; padding-left:13px; border-left:2px solid var(--hv);
+    color:var(--ink-2); max-width:74ch;
+  }
+  .reg-r b{color:var(--hv); font-weight:600;}
+
+  /* ---------- timeline ---------- */
+  .tl{margin:24px 0; max-width:var(--measure);}
+  .tl-row{display:grid; grid-template-columns:78px 1fr; gap:16px; padding:9px 0; border-top:1px solid var(--rule-soft);}
+  .tl-d{font-family:var(--f-mono); font-size:12px; color:var(--copper); font-variant-numeric:tabular-nums; padding-top:2px;}
+  .tl-t{font-size:14.4px; line-height:1.6;}
+
+  hr.sep{border:none; border-top:1px solid var(--rule); margin:34px 0;}
+
+  /* ---------- citations ---------- */
+  a.c{
+    font-family:var(--f-mono); font-size:.66em; font-weight:500; line-height:1;
+    vertical-align:super; color:var(--hv); text-decoration:none;
+    padding:0 .5px; margin-left:1px; white-space:nowrap;
+  }
+  a.c:hover{color:var(--copper); text-decoration:underline;}
+  a.c::before{content:"[";}
+  a.c::after{content:"]";}
+
+  /* section lead — the "so what" line that opens each section */
+  .lead{
+    font-size:1.01rem; color:var(--ink-2); margin:0 0 22px; max-width:66ch;
+    padding:13px 0 0; border-top:1px solid var(--rule-soft);
+  }
+  .lead b{color:var(--ink);}
+
+  /* key-figures strip */
+  .kf{
+    display:grid; gap:1px; background:var(--rule-soft);
+    border:1px solid var(--rule-soft); margin:26px 0 8px;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  }
+  .kf div{background:var(--surface); padding:14px 15px 13px;}
+  .kf .n{
+    font-family:var(--f-mono); font-weight:500; font-size:1.42rem; line-height:1.1;
+    font-variant-numeric:tabular-nums; color:var(--copper); display:block; margin-bottom:5px;
+  }
+  .kf .l{font-size:12.6px; color:var(--ink-2); line-height:1.45; display:block;}
+
+  /* pull quote */
+  .pq{
+    margin:26px 0; padding:0 0 0 20px; border-left:3px solid var(--copper);
+    max-width:60ch;
+  }
+  .pq p{
+    font-family:var(--f-display); font-weight:500; font-size:1.18rem; line-height:1.44;
+    letter-spacing:-.008em; margin:0 0 8px; text-wrap:balance;
+  }
+  .pq cite{
+    font-style:normal; font-family:var(--f-mono); font-size:11.5px; color:var(--ink-3);
+    letter-spacing:.03em;
+  }
+
+  /* takeaway box */
+  .tk{
+    border:1px solid var(--rule); border-top:3px solid var(--ink);
+    background:var(--surface); padding:17px 19px; margin:26px 0; max-width:var(--measure);
+  }
+  .tk .note-k{color:var(--ink);}
+  .tk p:last-child{margin-bottom:0;}
+
+  /* ---------- references ---------- */
+  .refs{margin:22px 0 0;}
+  .refs h3{margin-top:30px;}
+  .ref-grp{
+    font-family:var(--f-mono); font-size:11px; letter-spacing:.11em; text-transform:uppercase;
+    color:var(--copper); margin:30px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--rule-soft);
+  }
+  ol.reflist{list-style:none; counter-reset:r; margin:0; padding:0; max-width:none;}
+  ol.reflist li{
+    counter-increment:r; position:relative; padding:7px 0 7px 46px;
+    border-bottom:1px solid var(--rule-soft); font-size:13.6px; line-height:1.55; margin:0;
+  }
+  ol.reflist li:target{background:var(--copper-soft);}
+  ol.reflist li::before{
+    content:"[" counter(r) "]"; position:absolute; left:0; top:7px;
+    font-family:var(--f-mono); font-size:11.5px; color:var(--ink-3);
+    font-variant-numeric:tabular-nums;
+  }
+  ol.reflist .src{color:var(--ink); font-weight:600;}
+  ol.reflist .ttl{color:var(--ink-2);}
+  ol.reflist .mt{
+    font-family:var(--f-mono); font-size:11px; color:var(--ink-3); display:block; margin-top:2px;
+    overflow-wrap:anywhere;
+  }
+  ol.reflist .tier{
+    display:inline-block; font-family:var(--f-mono); font-size:9.5px; letter-spacing:.06em;
+    border:1px solid currentColor; border-radius:2px; padding:0 4px; margin-right:6px;
+    vertical-align:1.5px;
+  }
+  .t1{color:var(--good);}   /* 一手 */
+  .t2{color:var(--hv);}     /* 厂商自述 */
+  .t3{color:var(--ink-3);}  /* 二手/转述 */
+  .t4{color:var(--caution);}/* 未能获取原文 */
+  ol.reflist .u{
+    display:block; margin-top:3px; font-family:var(--f-mono); font-size:11px;
+    color:var(--hv); text-decoration:none; overflow-wrap:anywhere; line-height:1.4;
+  }
+  ol.reflist .u:hover{text-decoration:underline; color:var(--copper);}
+  ol.reflist .u.nolink{color:var(--ink-3); font-style:italic;}
+
+  footer{
+    margin-top:56px; padding-top:22px; border-top:2px solid var(--ink);
+    font-size:13.2px; color:var(--ink-3); max-width:76ch;
+  }
+  footer p{max-width:none;}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important;}}
+  a:focus-visible,summary:focus-visible{outline:2px solid var(--copper); outline-offset:2px;}
+
+  /* ==================== PRINT / PDF ==================== */
+  @page{
+    size:A4;
+    margin:17mm 16mm 16mm;
+  }
+  @media print{
+    /* force the light palette regardless of viewer theme */
+    :root,:root[data-theme="dark"]{
+      --ink:#101719; --ink-2:#384547; --ink-3:#5E6D6F;
+      --paper:#FFFFFF; --surface:#FAFBFB; --surface-2:#EEF1F1;
+      --rule:#B9C4C4; --rule-soft:#D5DDDD;
+      --copper:#8E4E28; --copper-soft:#F0E2D8;
+      --hv:#11485B; --hv-soft:#DEEAEE;
+      --caution:#7A5410; --caution-soft:#F3E9D3;
+      --good:#255A41;
+    }
+    *{
+      -webkit-print-color-adjust:exact !important;
+      print-color-adjust:exact !important;
+    }
+    body{
+      background:#fff; color:var(--ink);
+      font-size:10.2pt; line-height:1.62;
+    }
+    .shell{max-width:none; padding:0; }
+    .body-grid{display:block !important;}
+    .toc{display:none !important;}
+    main{display:block;}
+
+    /* measure: let text use the full printed column */
+    :root{--measure:none;}
+    p,ul,ol.list{max-width:none;}
+    h2.s-title{max-width:none;}
+    .lede,.note,.reg-b,.reg-r,figcaption{max-width:none;}
+
+    /* masthead */
+    .mast{padding-block:0 14px; margin-bottom:0; border-bottom-width:1.5pt;}
+    h1{font-size:27pt; margin-bottom:9pt;}
+    .standfirst{font-size:11.4pt; max-width:none; margin-bottom:12pt;}
+    .eyebrow{margin-bottom:10pt;}
+    .mast-meta{font-size:8.2pt; gap:4pt 18pt; padding-top:8pt;}
+
+    /* section flow */
+    section{
+      padding-block:14pt 2pt;
+      break-inside:auto;
+    }
+    section + section{border-top:0.6pt solid var(--rule-soft);}
+    #s1,#s3,#s5,#s7,#s9,#s10,#s13{break-before:page;}
+    h2.s-title{font-size:16pt; margin-bottom:10pt; break-after:avoid;}
+    h3{font-size:11.6pt; margin:16pt 0 6pt; break-after:avoid; max-width:none;}
+    h4{margin:14pt 0 5pt; break-after:avoid;}
+    p{margin-bottom:8pt; orphans:3; widows:3;}
+    .s-num{margin-bottom:5pt;}
+
+    /* keep apparatus intact on a page */
+    figure,.note,.bars,.judgments,.tl{break-inside:avoid;}
+    /* 长表不整块避断：靠行不断 + 表头跨页重复，避免整页空白 */
+    .tw{break-inside:auto;}
+    caption{break-after:avoid;}
+    .reg-item,.bar-row,.tl-row,.j{break-inside:avoid;}
+    .reg{break-inside:auto;}
+    figcaption{break-before:avoid;}
+    tr,thead{break-inside:avoid;}
+    thead{display:table-header-group;}
+
+    /* components tightened for paper */
+    .judgments{grid-template-columns:1fr 1fr; gap:0.6pt;}
+    .j{padding:10pt 11pt;}
+    .j-h{font-size:10.6pt;}
+    .j-b{font-size:8.9pt; line-height:1.52;}
+    .note{padding:9pt 11pt; margin:12pt 0; border-width:0.6pt; border-left-width:2.4pt;}
+    .lede{font-size:11pt; margin-bottom:14pt; padding-left:11pt; border-left-width:2.4pt;}
+    .tw{margin:13pt 0; border-width:0.6pt;}
+    table{font-size:8.9pt; min-width:0;}
+    th,td{padding:5pt 8pt; border-bottom-width:0.5pt;}
+    caption{font-size:8pt; padding:8pt 9pt 0;}
+    figure{margin:15pt 0;}
+    figure svg{width:100%;}
+    figcaption{font-size:9pt; margin-top:7pt; padding-top:6pt;}
+    .bars{padding:10pt 11pt 8pt; margin:13pt 0;}
+    .bar-l{font-size:9.2pt;}
+    .bar-v{font-size:8.6pt;}
+    .bar-track{height:8pt;}
+    .reg{margin:13pt 0; border-width:0.6pt;}
+    .reg-item{padding:9pt 11pt;}
+    .reg-h{font-size:10pt;}
+    .reg-b,.reg-r{font-size:9.1pt; line-height:1.55;}
+    .tl-row{padding:5pt 0;}
+    .tl-t{font-size:9.2pt;}
+    .tl-d{font-size:8.6pt;}
+    .chip{font-size:7.6pt;}
+    ul,ol.list{margin-bottom:9pt;}
+    li{margin-bottom:3.5pt;}
+
+    /* links: keep them readable as ink on paper */
+    a{color:var(--ink); text-decoration:none;}
+
+    footer{margin-top:20pt; padding-top:10pt; border-top-width:1.2pt; font-size:8.8pt; break-inside:avoid;}
+    hr.sep{margin:16pt 0;}
+
+    /* citations & new components in print */
+    a.c{color:var(--hv); font-size:.62em;}
+    .lead{font-size:10.6pt; margin-bottom:12pt; padding-top:8pt; max-width:none;}
+    .kf{grid-template-columns:repeat(4,1fr); gap:0.6pt; margin:14pt 0 6pt; break-inside:avoid;}
+    .kf div{padding:8pt 9pt;}
+    .kf .n{font-size:15pt; margin-bottom:3pt;}
+    .kf .l{font-size:8.4pt;}
+    .pq{margin:14pt 0; padding-left:12pt; border-left-width:2.4pt; break-inside:avoid; max-width:none;}
+    .pq p{font-size:12.4pt; margin-bottom:5pt;}
+    .pq cite{font-size:8.4pt;}
+    .tk{padding:10pt 12pt; margin:14pt 0; border-width:0.6pt; border-top-width:2pt; break-inside:avoid;}
+    #refs{break-before:page;}
+    .ref-grp{margin:16pt 0 7pt; font-size:9.5pt; padding-bottom:4pt;}
+    ol.reflist li{
+      font-size:8.6pt; line-height:1.42; padding:4.5pt 0 4.5pt 34pt;
+      break-inside:avoid; border-bottom-width:0.4pt;
+    }
+    ol.reflist li::before{font-size:8.4pt; top:4.5pt;}
+    ol.reflist .mt{font-size:7.8pt; margin-top:1pt;}
+    ol.reflist .tier{font-size:7.2pt;}
+    ol.reflist .u{font-size:7.4pt; color:var(--hv); margin-top:1.5pt;}
+    ol.reflist .u.nolink{color:var(--ink-3);}
+  }
+</style>
+
+<div class="shell">
+
+<header class="mast">
+  <p class="eyebrow">洞察报告 · 证据驱动 · 2026-09-14 · 设备侧见<a href="https://claude.ai/artifact/JbY2XjDgDmbjf74vH1giBH" style="color:var(--copper)">《AIDC 供电架构》</a></p>
+  <h1>AI 数据中心与电网</h1>
+  <p class="standfirst">
+    数据中心第一次成为电网的监管对象。但被写进规则的风险，和被广泛讨论的风险，
+    <strong>不在同一个频段上</strong>——已确认的三起振荡事件全部出自变流器控制环，
+    而不是人们担心的机电模式共振。与此同时，一个更反直觉的事实正在成形：
+    电网侧当作问题看待的，是数据中心<em>拥有并使用</em>后备电源这件事本身。
+  </p>
+  <div class="mast-meta">
+    <span><b>范围</b> 全球为主 + 中国专章</span>
+    <span><b>边界</b> 电网侧；设备侧见《AIDC 供电架构》</span>
+    <span><b>证据期</b> 2025-01 至 2026-09</span>
+    <span><b>证据基础</b> 124 条证据条目 ／ 72 项来源</span>
+    <span><a href="#refs" style="color:var(--copper)">参考文献 ↓</a></span>
+  </div>
+</header>
+
+<div class="body-grid">
+
+  <nav class="toc" aria-label="目录">
+    <h2>目录</h2>
+    <ol>
+      <li><a href="#sum"><span>—</span>执行摘要</a></li>
+      <li><a href="#s0"><span>00</span>口径与边界</a></li>
+      <li><a href="#s1"><span>01</span>两类物理问题</a></li>
+      <li><a href="#s2"><span>02</span>已确认的振荡事件</a></li>
+      <li><a href="#s3"><span>03</span>功率变化限值</a></li>
+      <li><a href="#s4"><span>04</span>三种穿越哲学</a></li>
+      <li><a href="#s5"><span>05</span>强制标准的形成</a></li>
+      <li><a href="#s6"><span>06</span>并网与容量</a></li>
+      <li><a href="#s7"><span>07</span>柔性成为准入条件</a></li>
+      <li><a href="#s8"><span>08</span>构网与储能</a></li>
+      <li><a href="#s9"><span>09</span>测量与电能质量</a></li>
+      <li><a href="#s10"><span>10</span>中国市场</a></li>
+      <li><a href="#s11"><span>11</span>来源冲突</a></li>
+      <li><a href="#s12"><span>12</span>缺口与边界</a></li>
+      <li><a href="#refs"><span>—</span>参考文献</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+  <!-- ============ 执行摘要 ============ -->
+  <section id="sum">
+    <span class="s-num">执行摘要</span>
+    <h2 class="s-title">七项核心判断</h2>
+    <p class="lede">
+      本报告覆盖电网侧。机房侧的设备选型与架构问题——800VDC、UPS 形态、储能放置——
+      见姊妹篇<a href="https://claude.ai/artifact/JbY2XjDgDmbjf74vH1giBH">《AIDC 供电架构》</a>。两者的分界是「电网要求落到设备规格」这条缝。
+    </p>
+
+    <div class="kf">
+      <div><span class="n">3 起</span><span class="l">已确认由数据中心引发的电网振荡，机理全为变流器控制环<a class="c" href="#r25">25</a><a class="c" href="#r26">26</a></span></div>
+      <div><span class="n">20 MW<span style="font-size:.6em">/min</span></span><span class="l">SPP 已获 FERC 批准并写入关税的强制爬坡率<a class="c" href="#r17">17</a></span></div>
+      <div><span class="n">10 MW<span style="font-size:.6em">/5s</span></span><span class="l">ERCOT 与 MISO 的秒级功率变化限值，依据是轴系疲劳<a class="c" href="#r13">13</a></span></div>
+      <div><span class="n">900 MW</span><span class="l">爱尔兰全岛可管理的负荷拒动上限<a class="c" href="#r19">19</a></span></div>
+      <div><span class="n">52%</span><span class="l">爱尔兰单次故障中数据中心减载占其总需求的比例，三年翻三倍<a class="c" href="#r19">19</a></span></div>
+      <div><span class="n">30%</span><span class="l">中国部分城市算力中心接入变压器的年平均负载率<a class="c" href="#r46">46</a></span></div>
+    </div>
+
+    <div class="judgments">
+      <div class="j">
+        <span class="j-n">01</span>
+        <span class="j-h">被写进规则的风险，和被广泛讨论的风险，不在同一频段</span>
+        <p class="j-b">
+          AI 负荷的实测能量集中在 <span class="q">0.2–3 Hz</span>，与机电区域间模式重叠——这是被反复讨论的风险。
+          但<strong>三起已确认的真实事件全部发生在 11–23 Hz</strong>，机理是服务器电源与 UPS 的直流母线控制环失稳，
+          属于变流器交互而非机电共振。<em>前者是推演出来的，后者是观测到的。</em>
+        </p>
+      </div>
+      <div class="j">
+        <span class="j-n">02</span>
+        <span class="j-h">两类限值性质完全不同，混用是最常见的引用错误</span>
+        <p class="j-b">
+          <strong>分钟级 MW/min</strong> 服务于平衡与调频备用充足性；
+          <strong>秒级 MW/滑动窗口</strong> 服务于汽轮发电机轴系疲劳。
+          ERCOT 的 10 MW 之所以这么小，是因为它受制于邻近最脆弱那台机组——
+          筛查假设可承受的连续循环轴扭矩仅为发电机额定容量的 <span class="q">1%</span>。
+        </p>
+      </div>
+      <div class="j">
+        <span class="j-n">03</span>
+        <span class="j-h">后备电源已从设施资产变成系统负债</span>
+        <p class="j-b">
+          NERC 把设施切换至内部备用发电描述为「<em>equivalent to large load shedding for the grid</em>」，
+          并为此启用 CILR（客户自发负荷削减）这一术语<a class="c" href="#r6">6</a>。
+          PJM 对 <span class="q">3,800 MW</span> 事件的官方描述自始至终是「转移至备用电源」而非「跳闸」——
+          故障正常清除、无继电器误动<a class="c" href="#r15">15</a>。
+        </p>
+      </div>
+      <div class="j">
+        <span class="j-n">04</span>
+        <span class="j-h">五个辖区，三种哲学，数值尚未收敛</span>
+        <p class="j-b">
+          <strong>ERCOT</strong>（已生效）要求扰动中持续从电网取电；
+          <strong>PJM</strong> 照抄其表再收紧最深档；<strong>CAISO</strong> 草案在低压侧严 3–5 倍；
+          <strong>爱尔兰</strong>允许切至备用、只约束 500 ms 内恢复 90%；
+          <strong>NERC 第一阶段</strong>只要求可观测，穿越数值的立项申请<em>至今未提交</em><a class="c" href="#r71">71</a>。
+        </p>
+      </div>
+      <div class="j">
+        <span class="j-n">05</span>
+        <span class="j-h">「FERC 强制立标」不等于「已有强制穿越要求」</span>
+        <p class="j-b">
+          FERC 的指令只强制了<strong>提交期限</strong>，未规定任何实体性要求——无门槛、无注册标准、无穿越数值<a class="c" href="#r1">1</a>。
+          NERC 第一阶段三部草案标准全文检索 <strong>ride-through 零命中</strong><a class="c" href="#r3">3</a>，
+          建立的是建模、研究、数据、通信与录波这套<em>可观测性</em>底座。
+          穿越数值另走一份<strong>至今未提交立项</strong>的申请<a class="c" href="#r71">71</a>——
+          即 NERC 层面的强制数值 2026 年内不会出现。
+        </p>
+      </div>
+      <div class="j">
+        <span class="j-n">06</span>
+        <span class="j-h">柔性正在从市场产品变成接入条件</span>
+        <p class="j-b">
+          FERC 六令要求 RTO 设计<strong>反映负荷削减能力</strong>的输电服务品种<a class="c" href="#r9">9</a>；
+          ERCOT 的 PCLR 框架用「跟随 SCED 基点」换取输电建成前的提前用电<a class="c" href="#r12">12</a>；
+          Google 的 <span class="q">1 GW</span> 需求响应被直接写进购电协议并作为加快接入的条件<a class="c" href="#r50">50</a>。
+          柔性的定价机制尚未成形，但它的<em>准入门槛属性</em>已经确立。
+        </p>
+      </div>
+      <div class="j">
+        <span class="j-n">07</span>
+        <span class="j-h">中国缺的不是条文，是量纲</span>
+        <p class="j-b">
+           中国对用户侧扰动有可执行的量化限值——高压用户 (Δ<i>S</i>/<i>S</i><sub>sc</sub>)<sub>max</sub>
+           &lt; <span class="q">0.1%</span>，且经《电能质量管理办法》与业扩报装合同条款逐层落地为拒绝接入权<a class="c" href="#r42">42</a><a class="c" href="#r75">75</a><a class="c" href="#r73">73</a>。
+           但这套限值为电弧炉设计，量的是电压闪变；
+           <strong>七项法定电能质量指标中没有一项是有功功率变化率</strong>。
+           一座谐波合格、功率摆动数百兆瓦的智算中心，在现行条文下不构成「干扰源」。
+           缓冲则来自超配——接入变压器年平均负载率仅 <span class="q">30%</span><a class="c" href="#r46">46</a>，
+           <strong>而这个缓冲会随上架率提升而消耗掉。</strong>
+         </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 00 口径 ============ -->
+  <section id="s0">
+    <span class="s-num">00</span>
+    <h2 class="s-title">分析口径与边界</h2>
+    <p class="lead">
+      <b>本报告与姊妹篇的分界是一条具体的缝：电网要求落到设备规格的那一刻。</b>
+      规格那一侧（整流器、UPS、变流器如何选型与定容）属于供电架构；
+      规格如何产生、由谁强制、违反了会怎样，属于本报告。
+    </p>
+
+    <div class="tw">
+      <table>
+        <caption>状态标签定义（本课题最易出错处）</caption>
+        <thead><tr><th style="width:20%">标签</th><th>含义</th></tr></thead>
+        <tbody>
+          <tr><th class="row" scope="row">已生效</th><td>已获有权机关批准并进入执行，违反有后果</td></tr>
+          <tr><th class="row" scope="row">有约束力的指令</th><td>监管机构已下达、对受令方有强制力，<strong>但实体义务尚未成形</strong></td></tr>
+          <tr><th class="row" scope="row">草案／征求意见</th><td>已公开发布文本，仍在评论或投票程序中，可被修改</td></tr>
+          <tr><th class="row" scope="row">仅为提案</th><td>由 ISO／TSO 幕僚或利益相关方提出，尚未进入正式审批</td></tr>
+          <tr><th class="row" scope="row">非强制</th><td>正式发布但<strong>明文不可执行</strong>——警报、导则属此类</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note caution">
+      <span class="note-k">本报告拒绝采用的说法</span>
+      <p>
+        「FERC 已对数据中心设定强制穿越要求」——不成立，见第 5 节。
+        「中国已要求新建算力中心备案时提交算电协同方案」——检索该说法引用的两份政策原文均无此表述，属媒体演绎<a class="c" href="#r64">64</a>。
+        ERCOT 大负荷队列的单一精确值——同期流传 474 GW、445 GW、238.6 GW 三个口径，
+        本报告只用「请求量数百 GW、实际投运不足 10 GW」这一量级关系。
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 01 两类物理问题 ============ -->
+  <section id="s1">
+    <span class="s-num">01</span>
+    <h2 class="s-title">两类物理问题，不要混为一谈</h2>
+    <p class="lead">
+      <b>「数据中心影响电网」是两件事，不是一件。</b>
+      一件是负荷在正常运行中周期性起伏（摆动），一件是负荷在电网扰动时成片消失（脱网）。
+      两者的时间尺度、物理机理、监管对象与缓解手段都不同。
+    </p>
+
+    <div class="tw">
+      <table>
+        <caption>两类问题对照</caption>
+        <thead><tr><th>维度</th><th>功率摆动</th><th>集体脱网</th></tr></thead>
+        <tbody>
+          <tr><th class="row" scope="row">触发</th><td>训练迭代、检查点、集合通信的同步性</td><td>电网电压扰动触发设施自保</td></tr>
+          <tr><th class="row" scope="row">时间尺度</th><td>亚秒至分钟，周期性</td><td>毫秒级单次，成片发生</td></tr>
+          <tr><th class="row" scope="row">受害对象</th><td>汽轮发电机轴系、振荡模式阻尼</td><td>系统频率与电压，可能级联</td></tr>
+          <tr><th class="row" scope="row">限值形式</th><td>MW/min、MW/滑动窗口、频段幅值</td><td>穿越能力（电压—时间包络）</td></tr>
+          <tr><th class="row" scope="row">已确认事件</th><td><strong>3 起</strong>（第 2 节）</td><td><strong>多起，规模在放大</strong>（第 4 节）</td></tr>
+          <tr><th class="row" scope="row">监管成熟度</th><td>限值已公开，方法学在收敛</td><td>ERCOT 已强制，其余在草案</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tk">
+      <span class="note-k">监管的优先级排序是明确的</span>
+      <p>
+        NERC 三级警报的七项 Essential Actions 中，<strong>五项针对脱网，只有一项（爬坡率数据申报）针对摆动</strong><a class="c" href="#r5">5</a>。
+        真正推动立标的是脱网事件——而不是训练负荷的自然起伏。
+        <em>先解决「别跑」，再解决「别抖」。</em>
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 02 振荡事件 ============ -->
+  <section id="s2">
+    <span class="s-num">02</span>
+    <h2 class="s-title">三起已确认的振荡事件</h2>
+    <p class="lead">
+      <b>这是本报告最重要的一处澄清。</b>被广泛讨论的风险是 AI 负荷的 0.2–3 Hz 能量带撞上机电模式；
+      但迄今已确认的三起真实事件，全部发生在 11–23 Hz，机理是变流器控制环失稳。
+      两者是不同的物理问题，证据成熟度也完全不同。
+    </p>
+
+    <figure class="fig-wide">
+      <svg viewBox="0 0 880 420" role="img" aria-label="对数频率轴上的对比图：AI 负荷实测能量带位于 0.2 至 3 赫兹的机电频段，而三起已确认的数据中心振荡事件全部位于 11 至 23 赫兹的变流器控制频段">
+        <!-- NERC 频段底带 -->
+        <rect x="80" y="62" width="212" height="22" fill="#16556B" opacity=".10"/>
+        <rect x="292" y="62" width="148" height="22" fill="#16556B" opacity=".18"/>
+        <rect x="440" y="62" width="126" height="22" fill="#16556B" opacity=".26"/>
+        <rect x="566" y="62" width="180" height="22" fill="#A85F35" opacity=".22"/>
+        <g font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" text-anchor="middle">
+          <text x="186" y="77" opacity=".75">调速器 / AGC</text>
+          <text x="366" y="77" opacity=".75">机电 · 区域间</text>
+          <text x="503" y="77" opacity=".75">局部 / 励磁</text>
+          <text x="656" y="77" opacity=".85">次同步扭振 / 变流器交互</text>
+        </g>
+        <text x="80" y="52" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".6">NERC 频段划分</text>
+
+        <!-- AI 负荷能量带 -->
+        <rect x="314" y="118" width="212" height="16" fill="#A85F35" opacity=".8"/>
+        <text x="80" y="131" font-family="Source Sans 3, sans-serif" font-size="13" fill="currentColor">AI 负荷实测能量带</text>
+        <text x="534" y="131" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="#A85F35">0.2 – 3 Hz　被讨论的风险</text>
+
+        <!-- 实测区域间模式 -->
+        <rect x="297" y="158" width="135" height="12" fill="#16556B" opacity=".55"/>
+        <text x="80" y="169" font-family="Source Sans 3, sans-serif" font-size="13" fill="currentColor">各互联电网实测模式</text>
+        <text x="440" y="169" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".7">0.16 – 0.9 Hz</text>
+
+        <!-- 扭振易发带 -->
+        <rect x="566" y="192" width="108" height="12" fill="#A85F35" opacity=".45"/>
+        <text x="80" y="203" font-family="Source Sans 3, sans-serif" font-size="13" fill="currentColor">汽轮机扭振易发</text>
+        <text x="682" y="203" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".7">5 – 20 Hz</text>
+
+        <!-- 事件标记 -->
+        <text x="80" y="245" font-family="Source Sans 3, sans-serif" font-size="13" fill="currentColor" font-weight="600">已确认事件</text>
+        <g stroke="#A85F35" stroke-width="2.5">
+          <line x1="628" y1="252" x2="628" y2="296"/>
+          <line x1="650" y1="252" x2="650" y2="296"/>
+          <line x1="685" y1="252" x2="685" y2="296"/>
+        </g>
+        <g fill="#A85F35">
+          <circle cx="628" cy="252" r="4.5"/><circle cx="650" cy="252" r="4.5"/><circle cx="685" cy="252" r="4.5"/>
+        </g>
+        <g font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor">
+          <text x="600" y="313" text-anchor="middle">11 Hz</text>
+          <text x="600" y="327" text-anchor="middle" opacity=".65">Meta</text>
+          <text x="650" y="345" text-anchor="middle">14.7 Hz</text>
+          <text x="650" y="359" text-anchor="middle" opacity=".65">Dominion · UPS</text>
+          <text x="706" y="313" text-anchor="middle">23 Hz</text>
+          <text x="706" y="327" text-anchor="middle" opacity=".65">ERCOT · PSU</text>
+        </g>
+
+        <!-- 缺口标注 -->
+        <path d="M 526 140 L 560 140 L 560 246 L 620 246" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 3" opacity=".5"/>
+        <text x="565" y="160" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".65">观测到的事件不在被讨论的频段</text>
+
+        <!-- 轴 -->
+        <line x1="80" y1="378" x2="810" y2="378" stroke="currentColor" stroke-width="1.2" opacity=".5"/>
+        <g stroke="currentColor" opacity=".35">
+          <line x1="80" y1="378" x2="80" y2="384"/><line x1="260" y1="378" x2="260" y2="384"/>
+          <line x1="440" y1="378" x2="440" y2="384"/><line x1="620" y1="378" x2="620" y2="384"/>
+          <line x1="800" y1="378" x2="800" y2="384"/>
+        </g>
+        <g font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".62" text-anchor="middle">
+          <text x="80" y="398">0.01 Hz</text><text x="260" y="398">0.1 Hz</text>
+          <text x="440" y="398">1 Hz</text><text x="620" y="398">10 Hz</text><text x="800" y="398">100 Hz</text>
+        </g>
+        <text x="445" y="414" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".5" text-anchor="middle">频率（对数）</text>
+      </svg>
+      <figcaption>
+        <b>推演出来的风险与观测到的风险，落在不同频段。</b>
+        NERC 警告 AI 负荷的周期性可能激励 <span class="q">0.1–2 Hz</span> 的区域间模式<a class="c" href="#r6">6</a>，
+        而实测的 AI 负荷能量确在 <span class="q">0.2–3 Hz</span><a class="c" href="#r34">34</a>——两者重叠，风险成立。
+        但截至 2026 年 9 月，<strong>没有任何已确认由数据中心引发的区域间振荡事件</strong>；
+        已发生的三起都在变流器控制频段。频段划分取自 NERC 技术参考文件<a class="c" href="#r23">23</a>。
+      </figcaption>
+    </figure>
+
+    <div class="tw">
+      <table>
+        <caption>三起事件的一手记录</caption>
+        <thead><tr><th>事件</th><th>频率与幅值</th><th>根因</th><th>证据强度</th></tr></thead>
+        <tbody>
+          <tr>
+            <th class="row" scope="row">ERCOT<br><span style="font-weight:400;color:var(--ink-3);font-size:12.5px">2024-10-25</span></th>
+            <td>约 <span class="q">23 Hz</span>，峰峰值 <span class="q">50 MW</span>；出现在大电子负荷达约 <span class="q">320 MW</span> 时，随需求下降而消退。事件中负荷在单个遥测周期内 24 秒爬升约 300 MW</td>
+            <td>服务器电源功率因数校正单元作为同步单元，其直流母线电压控制器参数所致。<strong>该负荷固件升级后振荡不再出现</strong></td>
+            <td>IEEE PES 工作组论文，含 ERCOT 人员<a class="c" href="#r25">25</a></td>
+          </tr>
+          <tr>
+            <th class="row" scope="row">Dominion<br><span style="font-weight:400;color:var(--ink-3);font-size:12.5px">2025</span></th>
+            <td><span class="q">14.7–14.8 Hz</span>，幅值为 115 kV 变电站电压的 <span class="q">4%</span> 峰峰值；出现在附近四台水电机组降功率时</td>
+            <td>数据中心 <strong>UPS 系统</strong>相关的 10–11 Hz 模式失稳，失稳后表现为极限环；诱因是系统中一个每秒一次的周期性电压暂降作为外部激励</td>
+            <td>期刊论文 + 电网公司一手同步相量<a class="c" href="#r26">26</a></td>
+          </tr>
+          <tr>
+            <th class="row" scope="row">Meta<br><span style="font-weight:400;color:var(--ink-3);font-size:12.5px">2017</span></th>
+            <td>三相电流电压中 <span class="q">49 Hz</span> 与 <span class="q">71 Hz</span>（在有功功率测量中表现为 <span class="q">11 Hz</span>，即 60 Hz 边带对）</td>
+            <td>服务器电源的<strong>直流母线电压控制</strong>为主要贡献者；阻抗分析显示其参数显著影响 PSU 阻抗频率响应</td>
+            <td>经 IEEE 工作组论文转引<a class="c" href="#r25">25</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pq">
+      <p>已证实由复杂动态控制交互引起振荡的案例，包括 ERCOT 的一座加密货币矿场和 Dominion 的一座数据中心。</p>
+      <cite>NERC《新兴大负荷风险缓解可靠性导则》，2026-05<a class="c" href="#r6">6</a></cite>
+    </div>
+
+    <div class="tk">
+      <span class="note-k">共振放大的量级：一个有参照价值的历史事件</span>
+      <p>
+        机电模式共振的风险虽未在数据中心身上发生，但它的放大倍数有历史记录可查：
+        2005 年加拿大阿尔伯塔一个 <span class="q">0.25 Hz、20 MW</span> 的强迫振荡，
+        在 <span class="q">1,100 英里</span>外的加州—俄勒冈联络线上引发了 <span class="q">200 MW</span> 的共振振荡<a class="c" href="#r23">23</a>。
+      </p>
+      <p>
+        NERC 给出的判据是：<strong>高于 1 Hz 的强迫振荡倾向于局部性；低于 1 Hz 的可能与自然模式相互作用，
+        导致全互联范围的广域振荡</strong><a class="c" href="#r23">23</a>。
+        这正是 AI 负荷 0.2–3 Hz 能量带值得警惕的原因——它跨在这条线上。
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 03 限值 ============ -->
+  <section id="s3">
+    <span class="s-num">03</span>
+    <h2 class="s-title">功率变化限值：两类，不可混用</h2>
+    <p class="lead">
+      <b>「公用事业没有公开爬坡率限值」这一判断在 2026 年已不成立。</b>
+      限值不仅存在，而且分为性质完全不同的两类——把它们混为一谈是本领域最常见的引用错误。
+    </p>
+
+    <h3>A 类：分钟级爬坡率，服务于平衡</h3>
+    <div class="tw">
+      <table>
+        <caption>各辖区分钟级爬坡率限值</caption>
+        <thead><tr><th>运营商</th><th>限值</th><th>状态</th><th>来源</th></tr></thead>
+        <tbody>
+          <tr><th class="row" scope="row">SPP</th><td class="num">20 MW/min</td><td><strong>已生效</strong>：FERC 批准并写入关税正文，可强制执行。适用门槛 ≤69 kV 时 ≥10 MW、&gt;69 kV 时 ≥50 MW</td><td class="num"><a class="c" href="#r17">17</a></td></tr>
+          <tr><th class="row" scope="row">CAISO</th><td class="num">20 MW/min<br><span style="font-size:11.5px">（滚动 10 分钟平均）</span></td><td>草案。设计依据明确：把大负荷对西部互联 <span class="q">±0.036 Hz</span> 死区外一次调频的触发降到最低</td><td class="num"><a class="c" href="#r68">68</a></td></tr>
+          <tr><th class="row" scope="row">ERCOT</th><td class="num">20 MW/min</td><td>经 CAISO 文件转述，未直接核验 ERCOT 原文</td><td class="num"><a class="c" href="#r68">68</a></td></tr>
+          <tr><th class="row" scope="row">PJM</th><td class="num"><em>尚无数值</em></td><td>路线图排在 <strong>2027 年一季度制定、二季度提交</strong>——比穿越要求晚一年<a class="c" href="#r66">66</a></td><td class="num">—</td></tr>
+          <tr><th class="row" scope="row">MISO</th><td class="num">30 MW/min</td><td>草案，<strong>且公开了推导过程</strong>（见下）</td><td class="num"><a class="c" href="#r18">18</a></td></tr>
+          <tr><th class="row" scope="row">Southern Company</th><td class="num">≤20 MW/min</td><td>企业规定；设置值须经审核和演示</td><td class="num"><a class="c" href="#r27">27</a></td></tr>
+          <tr><th class="row" scope="row">Fingrid（芬兰）</th><td class="num">5–100% Pmax/min<br>但上限 50 MW/min</td><td>已生效</td><td class="num"><a class="c" href="#r24">24</a></td></tr>
+          <tr><th class="row" scope="row">Energinet（丹麦）</th><td class="num">60 MW/min</td><td>已生效</td><td class="num"><a class="c" href="#r24">24</a></td></tr>
+          <tr><th class="row" scope="row">AESO（阿尔伯塔）</th><td class="num">10 MW/min</td><td>已生效</td><td class="num"><a class="c" href="#r24">24</a></td></tr>
+          <tr><th class="row" scope="row">ATC</th><td class="num">&lt;0.5 MW/s<br><span style="font-size:11.5px">（适用于 &gt;50 MW 的变化）</span></td><td><strong>唯一以 MW/s 直接表述的</strong>；另规定任何小于 5 s 的时段内有功变化须 &lt;25 MW</td><td class="num"><a class="c" href="#r24">24</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      <span class="note-k">MISO 公开的推导：限值的本质是「调频备用的份额」</span>
+      <p>
+        MISO 是唯一把限值来历算给外界看的机构：「调频主要用于平衡 5 分钟调度间隔内的负荷变化。
+        动态调频备用全系统为 600–1,000 MW。任何单一大负荷占用不超过 MISO 总调频需求的 15%。」
+        于是 <span class="q">15% × 1,000 MW ÷ 5 min = 30 MW/min</span><a class="c" href="#r18">18</a>。
+      </p>
+      <p>
+        <strong>这条推导说明分钟级限值是一个「资源分配」参数，不是「物理安全」参数</strong>——
+        它随系统调频备用规模和调度间隔而变，因此各辖区数值不同是正常的。
+      </p>
+    </div>
+
+    <h3>B 类：秒级功率变化，服务于轴系疲劳</h3>
+    <p>
+      秒级限值已经在不同机构之间趋同到同一个数值：<strong>5 秒滑动窗口内 10 MW</strong>。
+      ERCOT 的提案原文是「Load power shall not <em>repetitively</em> exceed 10 MW change in a sliding
+      time window of 5 seconds」，并明确适用范围限于<strong>重复性</strong>循环行为——
+      不频繁的超过 10 MW 的功率阶跃不违反此准则<a class="c" href="#r13">13</a>。
+      MISO 采纳同一数值，并说明参考了 SOCO、ERCOT、ATC、AESO、LIPA 的实践<a class="c" href="#r18">18</a>。
+    </p>
+    <div class="tk">
+      <span class="note-k">为什么是 10 MW 这个看似很小的量级</span>
+      <p>
+        ERCOT 公开了完整的推导链，分两步<a class="c" href="#r14">14</a>：
+      </p>
+      <p>
+        <strong>第一步</strong>——耐久限值 EL（同步机可无损承受的最大连续循环轴扭矩）
+        ÷ 载荷形状比 LSR（端子有功变化到内部轴扭矩的放大系数）= <strong>MCTV</strong>。
+        算例：EL = 0.1 pu、LSR = 10 → MCTV = <span class="q">0.01 pu</span>；
+        <em>对一台 100 MW 机组，允许的连续振荡功率仅 1 MW。</em>
+      </p>
+      <p>
+        <strong>第二步</strong>——用潮流或阻抗法算出使任何邻近发电机都不超过其 MCTV 的最大负荷功率变化，
+        <strong>最受限的那台机组决定该位置的限值</strong>。
+      </p>
+      <p>
+        ERCOT 的全网筛查显示：注入功率变化从 <span class="q">5 MW</span> 增至 <span class="q">25 MW</span> 时，
+        受影响的发电机厂站数从近零升至约 <span class="q">60</span> 个<a class="c" href="#r13">13</a>——
+        这解释了为什么即便适度放宽也会急剧扩大影响范围。
+      </p>
+    </div>
+
+    <h3>其他辖区的频段型限值</h3>
+    <ul>
+      <li><strong>LIPA</strong>：5–55 Hz 范围内任意两相邻频率 bin 之和 ≤<span class="q">3.5 MW</span>，滚动窗口 10 s<a class="c" href="#r28">28</a></li>
+      <li><strong>SOCO</strong>：要求在区域间（0.1–0.5 Hz）、次区域（0.5–0.8 Hz）、局部（0.8–2 Hz）、次同步（5–55 Hz）四个频段内最小化信号注入，<strong>若振荡持续则自动解列</strong><a class="c" href="#r28">28</a></li>
+      <li><strong>Fingrid</strong>：涵盖 1–15 Hz（变流器交互相关电压波动）与 5–45 Hz（共振与扭振交互）；<strong>若可能造成强迫振荡须配置补偿装置</strong>（E-STATCOM、BESS、超级电容或机架级储能）<a class="c" href="#r24">24</a></li>
+      <li><strong>AESO</strong>：涵盖 0.1–3 Hz 低频范围<a class="c" href="#r24">24</a></li>
+    </ul>
+
+    <div class="note caution">
+      <span class="note-k">一个尚无人讨论的监管缝隙</span>
+      <p>
+        两类限值在同一设施上同时生效时，<strong>分钟级在 MW/s 意义上反而更严</strong>——
+        SPP 的 20 MW/min 等于 <span class="q">0.33 MW/s</span>，而 ERCOT 的 10 MW/5 s 等于 <span class="q">2 MW/s</span>，
+        前者严约 6 倍。但秒级限值能抓住分钟平均值掩盖不了的重复性振荡，两者互补而非冗余。
+      </p>
+      <p>
+        <strong>本报告未检索到任何文献讨论两类限值的配合关系，也未见对 5 秒至 1 分钟之间时间尺度的规定。</strong>
+        这是 SPP／MISO 框架下的一处潜在缝隙（本报告推导）。
+      </p>
+    </div>
+
+    <div class="tk">
+      <span class="note-k">先到先得：一个尚未制度化的分配问题</span>
+      <p>
+        ERCOT 的原文指出：<strong>同一位置接入的第二个大负荷必须保持极小或平坦的功率变化，
+        因为第一个已经耗尽了允许的变化裕度</strong><a class="c" href="#r14">14</a>。
+      </p>
+      <p>
+        ERCOT 自陈三种框架选项（个案化／分层混合／全系统统一）各有代价，
+        并坦承可能只能采取「全馆禁止大声说话」式的一刀切政策。
+        <em>振荡裕度是一种有限的、先到先得的公共资源，而目前没有任何分配机制。</em>
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 04 穿越哲学 ============ -->
+  <section id="s4">
+    <span class="s-num">04</span>
+    <h2 class="s-title">三种责任划分哲学</h2>
+    <p class="lead">
+      <b>同一个物理问题，三个辖区给出了三种不兼容的答案。</b>
+      分歧点只有一个：电网扰动时，数据中心究竟应该继续从电网取电，还是可以切到自己的备用电源？
+    </p>
+
+    <h3>数值已经在多个辖区落地，但强制力差别很大</h3>
+    <p>
+      到 2026 年 9 月，北美已有五个辖区给出了数据中心穿越数值。
+      <strong>它们的成熟度差别远大于数值差别</strong>——下表先按状态排列，再比数值。
+    </p>
+    <div class="tw">
+      <table>
+        <caption>五个辖区的穿越规则状态</caption>
+        <thead><tr><th>辖区</th><th>载体</th><th>状态</th><th>强制力</th></tr></thead>
+        <tbody>
+          <tr><th class="row" scope="row">ERCOT</th><td>Nodal Operating Guide §2.15／§2.6.4</td><td><strong>2026-07-09 经 PUCT 批准，即日生效</strong></td><td style="color:var(--good)">强制语言直接写入协议正文；不合规可被要求断开<a class="c" href="#r10">10</a></td></tr>
+          <tr><th class="row" scope="row">SPP</th><td>关税附件 AE §2.22 <em>引用</em>一份非关税文件</td><td>2026-01-15 关税条款生效</td><td style="color:var(--caution)"><strong>待核</strong>：被引文件生效日字段仍为占位符，条款措辞为 should 而非 shall<a class="c" href="#r67">67</a></td></tr>
+          <tr><th class="row" scope="row">MISO</th><td>FERC 提交（2026-08-28）</td><td>请求 2026-12-04 生效</td><td>审批中；提交正文未能打开，数值引自工作组草案<a class="c" href="#r69">69</a></td></tr>
+          <tr><th class="row" scope="row">PJM</th><td>Manual 14B 附件 D-2 + 关税修订</td><td>提案，计划 2026-11 提交 FERC</td><td>未经表决<a class="c" href="#r66">66</a></td></tr>
+          <tr><th class="row" scope="row">CAISO</th><td>技术要求 straw proposal</td><td>草案，拟 2026-11-16 提交</td><td>未定稿<a class="c" href="#r68">68</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note caution">
+      <span class="note-k">一处需要精确表述的地方</span>
+      <p>
+        常见说法是「ERCOT 是北美唯一有数据中心穿越数值的辖区」。<strong>这个说法不准确</strong>——
+        SPP 自 2026-01-15 起已通过关税引用形成数值约束。
+      </p>
+      <p>
+        但也不能简单说「SPP 也有」：FERC 令原文把被引文件称为
+        「a non-Tariff document that was separately approved by SPP stakeholder working groups」，
+        该文件自身的适用条款仍写着 <em>[Insert Effective Date of RR696]</em> 占位符，
+        且通篇用 <strong>should</strong> 而非 shall，开篇自述这些期望「有待未来技术细化与利益相关方批准」<a class="c" href="#r67">67</a>。
+      </p>
+      <p>
+        <strong>准确表述是</strong>：ERCOT 是北美唯一经监管机构批准、以强制语言直接写入协议正文的数据中心穿越数值表；
+        SPP 已形成引用式的数值约束，但其强制力待核。<em>本报告把 SPP 的强制力列为开放项。</em>
+      </p>
+    </div>
+
+    <h3>ERCOT：必须保持连接并继续取电（已生效）</h3>
+    <p>
+      NOGRR282 于 <strong>2026-07-09 经德州公用事业委员会批准、即日生效</strong>，
+      在 Nodal Operating Guide 新增 §2.15（电压）与 §2.6.4（频率）<a class="c" href="#r10">10</a>。
+    </p>
+    <div class="tw">
+      <table>
+        <caption>ERCOT 大型计算负荷电压穿越要求（已生效）<a class="c" href="#r10">10</a></caption>
+        <thead><tr><th>并网点电压（标幺值）</th><th>最短穿越时间</th></tr></thead>
+        <tbody>
+          <tr><td class="num">V &gt; 1.20</td><td>可穿越或跳闸</td></tr>
+          <tr><td class="num">1.10 &lt; V ≤ 1.20</td><td class="num">1.0 s</td></tr>
+          <tr><td class="num">0.90 ≤ V ≤ 1.10</td><td><strong>连续运行</strong></td></tr>
+          <tr><td class="num">0.80 ≤ V &lt; 0.90</td><td class="num">2.0 s</td></tr>
+          <tr><td class="num">0.50 ≤ V &lt; 0.80</td><td class="num">0.5 s</td></tr>
+          <tr><td class="num">0.35 ≤ V &lt; 0.50</td><td class="num">0.25 s</td></tr>
+          <tr><td class="num">V &lt; 0.35</td><td class="num">0.15 s</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>五个辖区的电压穿越数值对照</h3>
+    <div class="tw">
+      <table>
+        <caption>电压穿越要求横向对比（标幺值对应的最短穿越时间）<a class="c" href="#r10">10</a><a class="c" href="#r66">66</a><a class="c" href="#r67">67</a><a class="c" href="#r68">68</a><a class="c" href="#r69">69</a></caption>
+        <thead><tr><th>电压区间</th><th>ERCOT<br><span style="font-weight:400;font-size:11px">已生效</span></th><th>SPP<br><span style="font-weight:400;font-size:11px">待核</span></th><th>MISO<br><span style="font-weight:400;font-size:11px">已提交</span></th><th>PJM<br><span style="font-weight:400;font-size:11px">提案</span></th><th>CAISO<br><span style="font-weight:400;font-size:11px">草案</span></th></tr></thead>
+        <tbody>
+          <tr><td class="num">&gt; 1.20</td><td class="num">可跳闸</td><td class="num">可跳闸</td><td class="num">可跳闸</td><td class="num">可跳闸</td><td class="num">可跳闸</td></tr>
+          <tr><td class="num">1.10 – 1.20</td><td class="num">1.0 s</td><td class="num">0.50 s</td><td class="num">0.50 s</td><td class="num">1.0 s</td><td class="num" style="color:var(--copper)">2.0 s</td></tr>
+          <tr><td class="num">0.90 – 1.10</td><td class="num"><strong>连续</strong></td><td class="num"><strong>连续</strong></td><td class="num"><strong>连续</strong></td><td class="num"><strong>连续</strong></td><td class="num"><strong>连续</strong></td></tr>
+          <tr><td class="num">0.80 – 0.90</td><td class="num">2.0 s</td><td class="num">2.0 s</td><td class="num">2.0 s</td><td class="num">2.0 s</td><td class="num" style="color:var(--copper)">6.0 s</td></tr>
+          <tr><td class="num">0.50 – 0.80</td><td class="num">0.5 s</td><td class="num">0.5 s</td><td class="num">0.5 s</td><td class="num">0.5 s</td><td class="num" style="color:var(--copper)">3.0 s</td></tr>
+          <tr><td class="num">0.35 – 0.50</td><td class="num">0.25 s</td><td class="num" rowspan="2" style="vertical-align:middle">0.15 s<br><span style="font-size:11px">（&lt;0.50 单档）</span></td><td class="num" rowspan="2" style="vertical-align:middle">0.15 s<br><span style="font-size:11px">（&lt;0.50 单档）</span></td><td class="num" rowspan="2" style="vertical-align:middle;color:var(--good)"><strong>0.25 s</strong><br><span style="font-size:11px">（&lt;0.50 单档）</span></td><td class="num" style="color:var(--copper)">1.2 s</td></tr>
+          <tr><td class="num">&lt; 0.35</td><td class="num">0.15 s</td><td class="num">0.15 s<br><span style="font-size:11px">（&lt;0.25）</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:13.4px;color:var(--ink-3)">
+      口径提示：CAISO 的档位以「低于某值」累计定义，与其余四家的区间定义结构不同，此处按对应关系排列。
+      MISO 数值引自 2026-06-10 工作组草案，与 8-28 实际提交文本可能有出入。
+    </p>
+    <div class="tk">
+      <span class="note-k">三点值得注意的差异</span>
+      <p>
+        <strong>一、PJM 是照抄 ERCOT 再收紧尾档。</strong>五档逐字一致，
+        但把 ERCOT 最深跌落的两档合并为 <span class="q">&lt;0.50 → 0.25 s</span>——
+        ERCOT 在 0.35 以下撑 0.15 秒即可跳闸，<em>PJM 要求一路撑到 0.25 秒</em>。
+      </p>
+      <p>
+        <strong>二、CAISO 在低压侧严得多。</strong>0.80–0.90 区间要求 <span class="q">6.0 s</span>（PJM 2.0 s），
+        0.50 以下要求 <span class="q">1.2 s</span>（PJM 0.25 s）——严约 3 至 5 倍。
+        CAISO 自述该值是工作组<em>明知部分同业采用更短时长后仍决定采用的</em><a class="c" href="#r68">68</a>。
+      </p>
+      <p>
+        <strong>三、频率侧的严宽关系与电压侧相反。</strong>
+        PJM 欠频下限取 <span class="q">57.0 Hz</span>，ERCOT 取 <span class="q">57.5 Hz</span>——
+        <em>PJM 欠频侧更保守，过频侧则 ERCOT 更严</em>。PJM 的取值与 MISO、
+        <span class="std">PRC-029-1</span>、<span class="std">IEEE 2800</span> 对齐<a class="c" href="#r66">66</a>。
+      </p>
+    </div>
+
+    <h3>PJM 的附加要求：比数值表更能说明问题</h3>
+    <ul>
+      <li><strong>有功恢复</strong>：0.50–0.90 区间可按比例降功率，电压回到连续区后 <span class="q">2 秒</span>内恢复至扰动前 90%；&lt;0.50 可按需降功率，同样 2 秒内恢复<a class="c" href="#r66">66</a></li>
+      <li><strong>多次扰动</strong>：<em>禁止仅凭「窗口内电压暂降计数」触发切换或转备电</em>；若因设备限制必须如此，须能承受 <strong>90 秒内 6 次</strong>暂降或暂升</li>
+      <li><strong>保护整定</strong>：瞬时过流与过压保护须用滤波量测或延时；过压量测窗口不小于 1 个工频周波；<strong>频率保护不得仅凭瞬时频率量测动作</strong></li>
+      <li><strong>冷却负荷</strong>：0.35 以下可跳闸，但跳掉的部分须从「扰动前消费基数」中扣除——<em>即不能靠切冷却来虚报恢复率</em></li>
+      <li><strong>回溯约束既有设施</strong>：过渡设施须在 2028-01-16 或商运一年后（取较晚者）合规；PJM 可对构成可靠性风险者把合规期压缩至 90 天</li>
+    </ul>
+    <p>
+      PJM 特别说明其大负荷<strong>高度地理集中</strong>，与 ERCOT、MISO 的分布形态不同，
+      因此必须回溯约束既有设施——这是它与其他辖区在监管哲学上的一处实质差异<a class="c" href="#r66">66</a>。
+      直接动因是 FERC 2026-06-18 show cause 令第 64 段对 PJM 关税缺失爬坡率与穿越要求的关切，
+      叠加 2026-07-22 北弗吉尼亚近 4,000 MW 数据中心负荷脱网事件。
+    </p>
+
+    <p>
+      回到 ERCOT：频率侧同样成表，<span class="q">58.8–61.2 Hz</span> 连续运行，
+      <span class="q">57.5–58.8</span> 与 <span class="q">61.2–63.0 Hz</span> 各须穿越 <span class="q">299 秒</span>，
+      超出则可跳闸；穿越期间应维持在扰动前有功水平的 <span class="q">10%</span> 以内<a class="c" href="#r10">10</a>。
+    </p>
+    <ul>
+      <li>设施<strong>须保持与输电网连接</strong>；量测点为供电交付点</li>
+      <li>电压跌至 0.8–0.9 并在 2 秒内恢复时，须持续取用有功，并在电压回升后<strong>两秒内恢复至扰动前的 90%</strong></li>
+      <li>电压跌出连续运行区间时，取用电流不得超过正常最大值的 <span class="q">150%</span>，且过流不得超过 0.5 秒</li>
+      <li><strong>2028-01-01 之后投运者更严</strong>：在 0.8–0.5 标幺区间内<em>须持续从电网取用有功</em>，仅可按电压跌幅成比例临时削减</li>
+      <li>冷却与机械负荷在电压低于 0.35 时可任意时长跳闸——<em>即规则区分了 IT 负荷与辅助负荷</em></li>
+    </ul>
+    <div class="note caution">
+      <span class="note-k">执行后果</span>
+      <p>
+        不合规者，ERCOT 可要求 90 日内查明根因并报告、90 日内提交整改计划；
+        <strong>若认定构成对局部或系统可靠性的紧迫风险，可要求断开并保持断开，直至证明能够合规</strong><a class="c" href="#r10">10</a>。
+        这是目前全球唯一带断网强制手段的数据中心穿越规则。
+      </p>
+    </div>
+
+    <h3>爱尔兰：允许切备电，但限定恢复速度（审议中）</h3>
+    <p>
+      EirGrid／SONI 的 MPID345 于 2026-04-01 提交监管机构，截至本报告日仍在审议<a class="c" href="#r19">19</a>。
+      三项要求：故障穿越需维持在电压—时间包络内；<strong>±1 Hz/s</strong> 的频率变化率耐受（按滚动 500 ms 窗口量测）；
+      以及故障清除且电压恢复至 0.9 标幺后 <strong>500 ms 内将有功恢复至故障前的 90%</strong>。
+    </p>
+    <div class="pq">
+      <p>扰动期间，需求设施可以把负荷切换到备用系统，但必须在故障清除且电压恢复至标称值 90% 后的 500 毫秒内，恢复至少 90% 的故障前需求。</p>
+      <cite>EirGrid／SONI 对业界质询的正式答复，MPID345<a class="c" href="#r19">19</a></cite>
+    </div>
+    <p>
+      <strong>这与 ERCOT 是根本分歧</strong>：爱尔兰不管你扰动时用谁的电，只管你多快回到电网上；
+      ERCOT 则要求你在扰动中就待在电网上。
+    </p>
+
+    <h3>爱尔兰给出了唯一一个量化的系统承受上限</h3>
+    <div class="tw">
+      <table>
+        <caption>爱尔兰四次输电故障中的数据中心减载实测<a class="c" href="#r19">19</a></caption>
+        <thead><tr><th>日期</th><th>故障</th><th>减载量</th><th>占数据中心总需求</th></tr></thead>
+        <tbody>
+          <tr><td class="num">2022-01-07</td><td>Limerick 220 kV</td><td class="num">74 MW</td><td class="num">16%</td></tr>
+          <tr><td class="num">2022-12-13</td><td>Dublin 220 kV</td><td class="num">204 MW</td><td class="num">34%</td></tr>
+          <tr><td class="num">2025-01-26</td><td>Dublin Poolbeg 电抗器</td><td class="num">321 MW</td><td class="num">44%</td></tr>
+          <tr><td class="num">2025-05-08</td><td>Dublin North Wall–Poolbeg</td><td class="num">387 MW</td><td class="num" style="color:var(--copper)"><strong>52%</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      三年之内，单次故障中脱落的数据中心负荷占比从 <strong>16% 升到 52%</strong>。
+      基于系统研究，两家 TSO 给出了明确结论：<strong><span class="q">900 MW</span> 需求损失是可用运行缓解与系统防御手段所能管理的上限</strong>——
+      超过该限值，故障穿越事件高概率引发重大系统事故<a class="c" href="#r19">19</a>。
+      这是目前全球唯一一个公开的、量化的「负荷拒动限值」。
+    </p>
+    <div class="note">
+      <span class="note-k">风险叠加的机理</span>
+      <p>
+        同一文件指出：一次故障若同时导致一条出口 500 MW 的联络线跳闸与需求设施减载，
+        「consequential loss」可远超 500 MW，<strong>即历史最大不平衡量的两倍</strong><a class="c" href="#r19">19</a>。
+        爱尔兰另已提交合规与豁免框架，含豁免期内对非合规数据中心负荷的「需求利用阈值」，
+        并明示实时管理可能意味着<em>采取需求控制行动削减非合规负荷</em>。
+      </p>
+    </div>
+
+    <h3>NERC 第一阶段：两者都不选，只要求可观测（草案）</h3>
+    <p>
+      对 CLO-001-1／002-1／003-1 三部草案标准全文检索，<strong>「ride-through」零命中</strong><a class="c" href="#r3">3</a>。
+      电压与频率仅出现在录波量测与触发设定的语境中。第一阶段建立的是：谁编并网要求、
+      做哪几类研究、数据报给谁、录波多少采样率、出事怎么联系。详见第 5 节。
+    </p>
+  </section>
+
+  <!-- ============ 05 立标 ============ -->
+  <section id="s5">
+    <span class="s-num">05</span>
+    <h2 class="s-title">强制标准的形成过程</h2>
+    <p class="lead">
+      <b>需要先拆掉一个广泛存在的误读。</b>
+      FERC 于 2026-07-16 指令 NERC 就计算类负荷制定强制性可靠性标准——
+      这句话是对的，但它<em>不意味着已经存在强制的技术要求</em>。
+    </p>
+
+    <div class="tk">
+      <span class="note-k">FERC 的强制力落在期限上，不落在内容上</span>
+      <p>
+        Docket RD26-7-000 要求 NERC 于 <strong>2026-12-31</strong> 前提交新增或修订标准、
+        术语表变更与注册标准，并于 2027-03-01 前提交第二阶段工作计划<a class="c" href="#r1">1</a>。
+      </p>
+      <p>
+        但该命令<strong>未规定任何实体性要求</strong>——没有 MW 门槛、没有注册标准内容、没有穿越数值，
+        全部留给 NERC 的标准制定程序裁量。<em>它把 NERC 的自愿时间表转成了强制备案期限，仅此而已。</em>
+      </p>
+    </div>
+
+    <h3>第一阶段是「可观测性」标准，不是「性能」标准</h3>
+    <div class="tw">
+      <table>
+        <caption>NERC Project 2026-02 第一阶段三部草案标准<a class="c" href="#r3">3</a></caption>
+        <thead><tr><th>标准</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><th class="row" scope="row">CLO-001-1<br><span style="font-weight:400;color:var(--ink-3);font-size:12.5px">并网、研究与建模数据</span></th>
+            <td>输电与配电运营方须编制并应请求提供计算负荷场址并网要求，无既有案例者须在研究协议生效后 <span class="q">45 日</span>内完成；须涵盖协调研究、通知受影响系统、以及<strong>投运调试协调程序</strong>。规划方须研究新接入及「合格变更」的影响，含<strong>稳态、短路与动态</strong>研究</td></tr>
+          <tr><th class="row" scope="row">CLO-002-1<br><span style="font-weight:400;color:var(--ink-3);font-size:12.5px">运行数据与通信</span></th>
+            <td>输电运营方、平衡机构、可靠性协调方须各自维护数据与信息规范，含清单、冲突解决机制、报送周期、可用性与准确性绩效标准、<strong>运行模型须与规划所提交模型一致</strong>、安全传输方式。并修改现行术语，把计算负荷场址纳入<strong>可被下达运行指令的对象</strong></td></tr>
+          <tr><th class="row" scope="row">CLO-003-1<br><span style="font-weight:400;color:var(--ink-3);font-size:12.5px">保护协调与扰动记录</span></th>
+            <td>须具备事件顺序记录；主变高压侧须具备触发式故障录波，记录分相对中性点电压、各相电流及残余电流、三相有功与无功。技术参数：<strong>触发前录波不少于 2 个周波、单次总录波不少于 2.0 秒、采样率不低于每周波 64 点</strong>。另须具备连续动态扰动记录</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      程序状态：三部标准均为 Draft 1，2026-08-19 张贴，评论期至 2026-09-18，
+      初始投票 09-09 至 09-18，计划 2026-12 董事会通过<a class="c" href="#r4">4</a>。
+      <strong>截至本报告日（2026-09-15），投票仍在进行，尚无结果。</strong>
+    </p>
+    <div class="tk">
+      <span class="note-k">从「提交」到「有强制义务」之间还有很长的路</span>
+      <p>
+        FERC 要求的 2026-12-31 是<strong>提交截止日，不是生效日</strong>。
+        三部标准的实施计划均为「监管批准令生效日之后第一个日历季度的第一天」生效，
+        再分阶段强制<a class="c" href="#r72">72</a>：
+      </p>
+      <ul>
+        <li><strong>CLO-001</strong>：R7–R8 生效后 <span class="q">+3 个月</span>；R1–R3 <span class="q">+6 个月</span>；其余 <span class="q">+9 个月</span></li>
+        <li><strong>CLO-002</strong>：R1–R6 <span class="q">+6 个月</span>；R7–R15 <span class="q">+12 个月</span></li>
+        <li><strong>CLO-003</strong>：R9–R10 <span class="q">+9 个月</span>；<strong>R1–R8 +36 个月</strong></li>
+      </ul>
+      <p>
+        <strong>推论</strong>：即便 2026 年 12 月董事会通过、2027 年内 FERC 批准，
+        最早的强制义务也要到 2027 年中之后；
+        <em>CLO-003 的主体要求要到 2030 年前后才产生约束力</em>。
+        在此之前，区域规则（ERCOT、PJM、MISO、CAISO）是唯一有数值的约束。
+      </p>
+    </div>
+
+    <h3>四套互不一致的门槛正在并行推进</h3>
+    <div class="tw">
+      <table>
+        <caption>适用门槛对照</caption>
+        <thead><tr><th>来源</th><th>门槛</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr><th class="row" scope="row">NERC 草案标准</th><td class="num">≥50 MW 且 ≥100 kV</td><td>草案<a class="c" href="#r3">3</a></td></tr>
+          <tr><th class="row" scope="row">NERC 注册标准（8 月修订稿）</th><td class="num">≥50 MW 且 ≥100 kV<br><span style="font-size:11.5px;color:var(--good)">已与草案标准对齐</span></td><td>评论期至 2026-09-18<a class="c" href="#r70">70</a></td></tr>
+          <tr><th class="row" scope="row">FERC 六令</th><td class="num">≥50 MW 且 &gt;69 kV</td><td>有约束力的指令<a class="c" href="#r9">9</a></td></tr>
+          <tr><th class="row" scope="row">ERCOT Batch Zero</th><td class="num">≥75 MW</td><td>已部分实施<a class="c" href="#r12">12</a></td></tr>
+          <tr><th class="row" scope="row">AEP 建议</th><td class="num">≥75 MW 且 ≥100 kV</td><td>产业界意见<a class="c" href="#r7">7</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tk">
+      <span class="note-k">NERC 的门槛错位已在 8 月修订中消除</span>
+      <p>
+        4 月注册稿的门槛（≥20 MW、≥60 kV、含 ≥1 MW IT）与草案标准（≥50 MW 且 ≥100 kV）不一致，
+        产业界据此提出<strong>管辖权</strong>质疑：60 kV 低于 100 kV 这条大电力系统判定线，
+        将联邦电力法第 215 条的义务<em>首次施加于终端用户</em><a class="c" href="#r7">7</a>。
+      </p>
+      <p>
+        <strong>2026-08-19 的修订稿已把门槛改为 ≥50 MW 且 ≥100 kV，并取消单列 IT 容量门槛</strong>——
+        两套口径就此对齐，管辖权争议的主要抓手被拿掉<a class="c" href="#r70">70</a>。
+        「≥1 MW IT」由定性判据取代：以「主要容纳用于软件服务、AI 训练部署、加密货币挖矿
+        或其他数据中心计算活动的 IT 基础设施」界定场址。
+      </p>
+      <p>
+        <strong>但与 PJM 之间出现了新的错位</strong>：PJM 的门槛为 ≥50 MW 且 <strong>≥60 kV</strong>，
+        电压侧比 NERC 宽得多——<em>一批不触发 NERC 注册的设施，会落入 PJM 的关税义务</em><a class="c" href="#r66">66</a>。
+      </p>
+    </div>
+
+    <h3>三级警报：非强制，但内容比草案标准更技术化</h3>
+    <p>
+      NERC 于 2026-05-04 发出三级「Essential Actions」警报，七项行动、33 个问题，
+      答复截止 2026-08-03<a class="c" href="#r5">5</a>。明文非强制——不遵守不产生处罚。
+      但其技术要求比草案标准更具体：
+    </p>
+    <ul>
+      <li>建模基线<strong>至少采用 PERC1 模型或能力相当及更优者</strong>；IT 负荷与非 IT 负荷分开建模；冷却负荷的电力电子驱动亦须建模</li>
+      <li>把计算负荷的聚合损失与削减（含客户自发削减）<strong>识别为可信故障并更新故障集</strong></li>
+      <li>确保<strong>正常清除的非母线故障不造成非后果性的固定负荷损失</strong>，并与客户协调在设备能力范围内最大化设施级穿越表现</li>
+      <li>建立与计算负荷的<strong>人际通信能力</strong>与联合操作规程，可经语音、SCADA 或其他平台下达指令</li>
+    </ul>
+    <p>
+      配套的可靠性导则要求输电运营方收集 <strong>UPS 转换逻辑与备用发电机同步信息</strong>
+      （含延时逻辑、重合闸判据、电压与频率容差范围）并在仿真工具中建模验证，
+      并引入 <strong>CILR（客户自发负荷削减）</strong>作为频率稳定分析的核心变量<a class="c" href="#r6">6</a>。
+    </p>
+  </section>
+
+  <!-- ============ 06 并网与容量 ============ -->
+  <section id="s6">
+    <span class="s-num">06</span>
+    <h2 class="s-title">并网机制与容量获取</h2>
+
+    <h3>FERC 没有发规则，而是同日对六家 RTO 各下一令</h3>
+    <p>
+      2026-06-18，FERC 未发预先规则制定通知，改为依联邦电力法第 206 条对
+      PJM、MISO、SPP、CAISO、ISO-NE、NYISO <strong>同日签发六份 show cause 令</strong><a class="c" href="#r9">9</a>，
+      初步认定各自关税在大负荷接入方面不公正不合理，要求 60 日内论证或修订、30 日内提交信息性报告。
+      覆盖全美约三分之二的受管辖负荷。
+    </p>
+    <div class="note">
+      <span class="note-k">为什么是六份令而不是一份规则</span>
+      <p>
+        逐家下令可增强对抗州层面挑战的法律耐久性，并保留区域弹性。
+        代价是六条平行的时间线与六套可能不同的最终条款——
+        <em>这与统一标准的方向正好相反，值得在评估「北美会否收敛」时计入。</em>
+      </p>
+    </div>
+    <p>
+      六令把大负荷定义为<strong>峰值需求 ≥50 MW、并网电压高于 69 kV、且不属于同址安排</strong>的新增商业或工业用户，
+      明确偏离了此前 20 MW 的口径，并直接采纳 SPP 的高影响大负荷定义。
+      要求研究时限 60–90 天、滚动申请、成熟度里程碑、递增财务承诺以遏制投机申请，
+      并须评估先进导线等替代输电技术<a class="c" href="#r9">9</a>。
+    </p>
+
+    <h3>各家进度差异很大</h3>
+    <div class="tw">
+      <table>
+        <caption>六家 RTO 的应对状态（2026-08-17 回应后）<a class="c" href="#r9">9</a></caption>
+        <thead><tr><th>RTO</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr><th class="row" scope="row">SPP</th><td><strong>进度最前</strong>：高影响大负荷关税已获 FERC 附条件接受；仍缺替代输电技术评估条款与持续运行义务的标准条款</td></tr>
+          <tr><th class="row" scope="row">PJM</th><td>同址问题已单独提交并由并行程序处理；大负荷接入条款仍缺，董事会已通过快速通道发出决策函</td></tr>
+          <tr><th class="row" scope="row">MISO</th><td>自认现行关税「未提供一致或透明的评估框架」。<strong>2020 年以来数据中心容量复合年增长率 43%，为各区域最快</strong></td></tr>
+          <tr><th class="row" scope="row">NYISO</th><td>预计 2026-12 提交大负荷接入修订，同址相关修订<strong>要到 2027 年</strong></td></tr>
+          <tr><th class="row" scope="row">CAISO</th><td>无传统网络／点对点输电服务与正式申请流程，由各参与输电业主自行管理负荷接入；拟 11 月加速合规备案</td></tr>
+          <tr><th class="row" scope="row">ISO-NE</th><td>无大负荷接入专门条款；拟提出含「自带发电」要求与防止成本转嫁的新义务</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>ERCOT Batch Zero：从逐项研究改为批量分配</h3>
+    <p>
+      ERCOT 以 <strong>Batch Zero</strong> 取代逐项大负荷接入研究，改为单一、ERCOT 主导、全系统范围的批量研究，
+      按年度分配负荷，产出可执行的输电规划。适用于申请接入 ≥75 MW 负荷设施者，
+      2026-07-11 起部分实施<a class="c" href="#r12">12</a>。五个构件：纳入判据 → 批量研究 →
+      <strong>承诺闸门</strong>（签并网协议与财务承诺，不再重新评估）→ 精化研究（仅限已承诺项目）→ 打包提交规划。
+    </p>
+
+    <h3>成本分摊：州层面已落地，联邦层面仍在框架阶段</h3>
+    <div class="tw">
+      <table>
+        <caption>已生效的州级大负荷条款</caption>
+        <thead><tr><th>辖区</th><th>条款</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr><th class="row" scope="row">弗吉尼亚</th>
+            <td>新设 <strong>GS-5</strong> 费率类别单列大负荷客户；最低合同义务 <strong>14 年</strong>（2027-01-01 起新签约者）；无论实际用电须支付输配电成本的<strong>至少 85%</strong>；须为最低合同费用的<strong>最高 60%</strong> 提供担保；数据中心接入流程须提交委员会审查</td>
+            <td class="num">已裁决<a class="c" href="#r21">21</a></td></tr>
+          <tr><th class="row" scope="row">俄亥俄</th>
+            <td>大型新增数据中心须按其认购电量的<strong>至少 85%</strong> 付费，无论实际用量，<strong>期限最长 12 年</strong>；该电价已扛过申诉</td>
+            <td class="num">已生效<a class="c" href="#r53">53</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      容量市场层面，PJM 2028/2029 基础剩余拍卖于 2026-07-14 出清：
+      采购 <span class="q">138,318 MW</span>，<strong>全域出清于价格上限 $325/MW-day</strong>，
+      连续第三次触顶；总容量费约 <span class="q">$16.4 bn</span>；
+      <strong>连续第二年未能满足可靠性需求，缺口 6,821 MW</strong><a class="c" href="#r52">52</a>。
+      PJM 估计若无价格上下限约束，各区将出清于 $554.72、总额近 $30 bn。
+    </p>
+  </section>
+
+  <!-- ============ 07 柔性 ============ -->
+  <section id="s7">
+    <span class="s-num">07</span>
+    <h2 class="s-title">柔性：从市场产品变成准入条件</h2>
+    <p class="lead">
+      <b>这是 2026 年最重要的制度变化。</b>三条独立证据线同向：柔性不再只是一种可以卖钱的市场产品，
+      而正在成为换取并网许可与提前用电的<em>硬通货</em>。
+    </p>
+
+    <ul>
+      <li><strong>监管侧</strong>：FERC 六令要求 RTO 为同址负荷、表后发电与愿在特定条件下削减的柔性大负荷设立<strong>新的输电服务品种</strong>，使产品反映大负荷对电网的依赖程度及其削减能力；并鼓励设立「临时输电服务」，允许在网络升级完成前按可用容量取用<a class="c" href="#r9">9</a></li>
+      <li><strong>市场侧</strong>：ERCOT 的 <strong>PCLR</strong> 框架把大负荷拆成有功固定部分与柔性受调度部分，柔性部分<strong>须跟随经济调度基点</strong>——实质是「在输电建成前，用可调度性换取提前用电」<a class="c" href="#r12">12</a></li>
+      <li><strong>合同侧</strong>：Google 的 <span class="q">1 GW</span> 需求响应被直接写进与五家美国公用事业的长期购电协议，<strong>每份合同将需求响应作为一项定义明确的容量资源</strong>，并作为新数据中心更快接入本地电网的条件<a class="c" href="#r50">50</a></li>
+      <li><strong>爱尔兰走得更远</strong>：监管决定要求最大进口容量 ≥10 MVA 的数据中心提供与其容量匹配的可调度自备或邻近发电／储能，且须参与批发市场，否则适用强制需求削减条款<a class="c" href="#r20">20</a></li>
+    </ul>
+
+    <div class="tk">
+      <span class="note-k">但柔性解决不了摆动</span>
+      <p>
+        必须与第 3 节分开：柔性的响应粒度是分钟到小时，
+        <strong>完全无法参与秒级与亚秒级的功率变化限值合规</strong>。
+        「数据中心可以参与需求响应，所以电网没问题」是把两个时间尺度混为一谈。
+        柔性买的是<em>接入排位</em>，不是<em>振荡裕度</em>。
+      </p>
+    </div>
+
+    <p>
+      示范侧，EPRI 的 DCFlex 计划已从三个站点扩至<strong>九个</strong>（美欧），
+      新增站点中伦敦测试 AI 计算负荷响应日前、小时前与实时削减请求，
+      德州测试以 AI 平台同时控制计算负荷与暖通负荷<a class="c" href="#r51">51</a>。
+      <span style="color:var(--ink-3)">本报告未检索到九站点的量化结果报告。</span>
+    </p>
+  </section>
+
+  <!-- ============ 08 构网与储能 ============ -->
+  <section id="s8">
+    <span class="s-num">08</span>
+    <h2 class="s-title">构网型技术与储能定容</h2>
+
+    <h3>标准体系完全建立在发电侧，负荷侧是空白</h3>
+    <p>
+      <span class="std">IEEE 2800-2022</span>、<span class="std">IEEE 2800.2-2026</span>、
+      编制中的 <span class="std">IEEE P2800.1</span>（构网型设备功能与性能推荐规程），
+      以及 2026-10-01 生效的 <span class="std">NERC PRC-029-1</span>（频率与电压穿越）——
+      <strong>适用主体都是逆变器类资源与发电所有者</strong><a class="c" href="#r22">22</a>。
+    </p>
+    <div class="note caution">
+      <span class="note-k">一处结构性空白</span>
+      <p>
+        <strong>没有任何强制标准要求数据中心的 UPS 或储能变流器采用构网型控制。</strong>
+        数据中心侧采用构网型目前完全是自愿行为。
+        渗透率参考值——夏威夷电力公司的硬件在环测试显示系统机械转动惯量降至零时需约 <span class="q">30%</span>、
+        欧盟 MIGRATE 项目识别出需占逆变器资源至少 <span class="q">37%</span><a class="c" href="#r29">29</a>——
+        <em>均针对发电侧构网占比，不能直接套用到负荷侧。</em>
+      </p>
+    </div>
+
+    <h3>负荷侧的唯一定量算例</h3>
+    <p>
+      本报告检索到唯一一份把构网型控制明确用在数据中心 UPS 上并给出完整数值的文献<a class="c" href="#r31">31</a>：
+      50 MW 模块、短路比 1.5 的弱网、0.5 标幺三相电压跌落持续 150 ms 条件下，
+      未供给 IT 电量 <span class="q">0.00000 MWh</span>（瞬时停止基准为 0.00208 MWh）；
+      逆变器峰值电流 <span class="q">0.57 pu</span>（锁相环低压穿越基准 1.02 pu）；
+      并网点电压最低点改善至 <span class="q">0.79 pu</span>（基准 0.66 pu）。
+    </p>
+    <p style="color:var(--ink-3);font-size:13.6px">
+      该文献为单作者预印本，效果显著但<strong>未经第三方复现</strong>；
+      本报告亦未检索到任何数据中心采用构网型控制的商用产品规格书或实际试点报告。
+    </p>
+
+    <h3>储能定容：频率分界线与倍率分工</h3>
+    <p>
+      混合储能的频率分配方法学目前有一份公开文献给出完整参数<a class="c" href="#r32">32</a>：
+      以高通滤波器把需求分为慢快两个分量，慢分量给电池、快分量给超级电容。
+      在 1 GW 系统、50 MW 需求偏差的算例中——
+      <strong>电池 30 MW／爬坡 15 MW/s；超级电容 10 MW／爬坡 100 MW/s</strong>；
+      滤波器截止频率取 <span class="q">0.2 Hz</span>，结果电池主要覆盖 &lt;0.2 Hz、超级电容主导 &gt;0.4 Hz。
+    </p>
+    <p>
+      值得注意的是该文献识别出 AI 负荷的能量峰在 <span class="q">0.05 Hz 与 0.15 Hz</span>
+      （对应梯度迭代计算周期），落在电池侧。
+      <strong>功率型器件的爬坡能力需比能量型高出约一个数量级</strong>（100 对 15 MW/s）。
+    </p>
+
+    <div class="tk">
+      <span class="note-k">一条很锋利的负面结论：冷却系统做不了快速调节</span>
+      <p>
+        在 IEEE 39 节点系统中接入 700 MW 数据中心的算例里，
+        暖通子系统占负荷 <span class="q">30%</span>（210 MW），
+        但因热响应带宽受限，<strong>对振荡阻尼的峰值贡献为 0.000 MW</strong><a class="c" href="#r33">33</a>。
+      </p>
+      <p>
+        全部阻尼效果来自 UPS 提供的 <span class="q">5.6 MW</span>——
+        仅占该数据中心 700 MW 的 <span class="q">0.8%</span>，却使 1.94 Hz 模式的
+        稳定时间缩短 <span class="q">27.2%</span>、模态能量降低 <span class="q">50.9%</span>。
+      </p>
+      <p>
+        <strong>很小的快速可控功率，远胜于很大的慢速可控功率。</strong>
+        这条结论对「用冷却系统参与电网调节」这一常见设想是直接的否定。
+      </p>
+    </div>
+
+    <h3>监管方认可的缓解手段清单</h3>
+    <p>
+      NERC 导则原文：拥有并运营 AI 训练数据中心的大负荷主体，应按运营方指示实施必要缓解措施，
+      <strong>包括软件缓解、GPU 功率平滑和机架级储能</strong><a class="c" href="#r6">6</a>。
+      ESIG 的对应清单为补偿装置（E-STATCOM、电池储能、超级电容、机架级储能）
+      与控制方法（软件缓解、硬件级控制、GPU 爬坡率限制或最低功率水平）<a class="c" href="#r24">24</a>。
+    </p>
+    <div class="note">
+      <span class="note-k">值得注意的一处采信</span>
+      <p>
+        NERC 导则的引用文献中包含微软、OpenAI 与 NVIDIA 的联合论文<a class="c" href="#r34">34</a>——
+        <strong>监管指南直接采纳了厂商提出的方案清单</strong>。
+        该论文同时给出各手段的代价：GPU 功率平滑在功率下限设为 90% TDP 时总能耗开销 <span class="q">10.5%</span>；
+        软件方案对主负载性能开销 &lt;5% 但能量纯浪费；机架级储能被判定为最优放置层级，
+        但爬坡段所需电容量在成本、空间与隐含碳上代价高昂。
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 09 测量 ============ -->
+  <section id="s9">
+    <span class="s-num">09</span>
+    <h2 class="s-title">测量能力与电能质量</h2>
+    <p class="lead">
+      <b>测量是本课题中最被低估的约束。</b>
+      如果测不准，前面所有限值都无法验证合规。而现有的常规监测手段，已经被证明不够用。
+    </p>
+
+    <div class="tk">
+      <span class="note-k">一个真实的误读：23 Hz 被读成了 7.5 Hz</span>
+      <p>
+        ERCOT 2024 年那起事件，同步相量数据最初显示的是
+        「<span class="q">25 MW</span> 峰峰值、<span class="q">7.5 Hz</span>」，
+        <strong>后来才确定真实振荡模式是 23 Hz</strong><a class="c" href="#r25">25</a>。
+        原因是 30 Hz 上报率的同步相量把 23 Hz 混叠成了 7.5 Hz。
+      </p>
+      <p>
+        <em>常规 PMU 上报率不足以刻画数据中心引发的次同步振荡。</em>
+        ESIG 建议最低采样率 <span class="q">100 Hz</span><a class="c" href="#r24">24</a>，
+        NERC 则指出 5 Hz 以上频率的准确刻画可能需要点上波形测量<a class="c" href="#r6">6</a>。
+      </p>
+    </div>
+
+    <p>
+      SPP 已把监测写成强制条款：要求由输电所有者在高影响大负荷并网点的输电侧
+      <strong>安装同步相量测量装置或同等设备</strong>（费用由用户承担），
+      理由是「大负荷变化极快……常规 SCADA 无法捕捉」，
+      数据用于「<strong>识别和响应强迫振荡</strong>、监测相角、评估电压稳定、事后分析」<a class="c" href="#r17">17</a>。
+    </p>
+
+    <h3>但监测要求本身处在分裂状态</h3>
+    <div class="tw">
+      <table>
+        <caption>各公用事业的电能质量与监测要求<a class="c" href="#r27">27</a></caption>
+        <thead><tr><th>机构</th><th>要求</th></tr></thead>
+        <tbody>
+          <tr><th class="row" scope="row">Dominion</th><td>并网点瞬时电压波动 ≤<span class="q">3%</span>；<strong>强制永久性并网点电能质量计量</strong>，带时间戳记录有功、无功、功率因数、<strong>至 50 次谐波</strong>、闪变、快速电压变化、不平衡、暂态、频率，<strong>保留 90 天</strong></td></tr>
+          <tr><th class="row" scope="row">Southern Company</th><td>须提供<strong>至 50 次</strong>的预期谐波频谱；安装永久性并网点监测；可要求缓解并<strong>临时降载或解列</strong></td></tr>
+          <tr><th class="row" scope="row">PG&amp;E</th><td>总电压总谐波畸变 ≤<span class="q">5%</span>，用户出资缓解；峰荷时任意两相差值不应超过约 <span class="q">10%</span>；功率因数须在 95% 滞后至 95% 超前之间；<strong>持续不合规可导致解列</strong></td></tr>
+          <tr><th class="row" scope="row">Ameren / AEP</th><td>谐波须满足 <span class="std">IEEE 519</span>；闪变与快速电压变化按 <span class="std">IEEE 1453</span> 评估</td></tr>
+          <tr><th class="row" scope="row">ERCOT / SPP</th><td><strong>基于公开材料，不要求负荷侧电能质量监测</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      <strong>只有 Dominion 和 Southern Company 明确要求并网点永久性电能质量监测</strong><a class="c" href="#r27">27</a>。
+      NERC 层面则要求大负荷主体提供预期的电流与电压谐波注入频谱，
+      并申报多租户数据中心<strong>所有租户合并后的最坏情况变化性</strong>，
+      以及通过不同并网点接入的设施之间的关联披露——
+      例如<em>多个分散数据中心用于同一训练过程，一处中断导致所有关联处需求变化</em><a class="c" href="#r6">6</a>。
+    </p>
+    <div class="note caution">
+      <span class="note-k">本节最大的证据缺口</span>
+      <p>
+        检索到的全部是<strong>要求值</strong>，<strong>没有找到任何数据中心密集区的公开实测谐波、闪变或不平衡数据集</strong>。
+        相关命中多为厂商与咨询博客，未予采信。本节因此只能以「标准适用性 + 各家限值对照」定位，
+        <em>不声称有实测支撑</em>。
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 10 中国 ============ -->
+  <section id="s10">
+    <span class="s-num">10</span>
+    <h2 class="s-title">中国市场：限值存在，但量纲不对</h2>
+    <p class="lead">
+      <b>中国对用户侧的功率扰动是有量化限值的，而且写在强制执行的合同条款里——只是那套限值量的是电压质量，不是有功爬坡。</b>
+      这比「制度空白」更值得注意：真正缺的不是条文，是<em>量纲</em>。
+      现有条文足以拦住一台电弧炉，却拦不住一座谐波合格、功率剧烈摆动的智算中心。
+    </p>
+
+
+    <h3>限值是存在的：三份文件构成一条完整的约束链</h3>
+    <p>
+      先把「中国没有量化限值」这个常见说法纠正掉。<strong>限值存在，层层可追，而且是可执行的。</strong>
+      本报告取得三份原文，它们首尾相接构成一条完整的约束链：
+    </p>
+    <div class="tw">
+      <table>
+        <caption>中国用户侧功率扰动约束链（三份原文逐条核对）</caption>
+        <thead><tr><th>层级</th><th>文件</th><th>它规定了什么</th><th>约束力</th></tr></thead>
+        <tbody>
+          <tr>
+            <th class="row" scope="row">国标</th>
+            <td>GB/T 12326《电能质量 电压波动和闪变》<a class="c" href="#r42">42</a></td>
+            <td>高压用户第一级限值 <strong>(Δ<i>S</i>/<i>S</i><sub>sc</sub>)<sub>max</sub> &lt; 0.1%</strong>；
+                电压变动 <i>d</i> 按变动频度分档，高压侧 <span class="q">1–3%</span></td>
+            <td>推荐性国标，但经下两层变为合同义务</td>
+          </tr>
+          <tr>
+            <th class="row" scope="row">部门规章</th>
+            <td>《电能质量管理办法（暂行）》<a class="c" href="#r75">75</a></td>
+            <td>第十八条：电网企业审核用电设备接入产生的电能质量干扰，<strong>可拒绝不符合规定的设备接入</strong>；
+                第二十条：不采取措施者<strong>可拒绝接入或中止供电</strong></td>
+            <td><strong>硬约束</strong>——拒绝接入权</td>
+          </tr>
+          <tr>
+            <th class="row" scope="row">企业标准</th>
+            <td>《国家电网业扩报装管理规则》附件 5 第 9 条<a class="c" href="#r73">73</a></td>
+            <td>电能质量要求共三项，全部指向国标：非线性负荷须出具评估报告并提交治理方案；
+                谐波按 GB/T 14549；<strong>「冲击性负荷产生的电压波动允许值」按 GB/T 12326</strong></td>
+            <td>写进供用电合同，逐户签署</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      这条链上有一个常被忽略的事实：<strong>企业标准并没有另设一套数值</strong>。
+      业扩报装规则把电能质量整章收敛到两份国标上，因此「国网企标不公开所以查不到限值」这个担忧并不成立——
+      数值就是公开的那两个国标。<em>限值不是藏起来了，是根本没有针对功率爬坡的那一条。</em>
+    </p>
+
+    <div class="tk">
+      <span class="note-k">错配发生在量纲上，而不是数值上</span>
+      <p>
+        GB/T 12326 §3.2 把「波动负荷」的定义举例写成
+        「<strong>炼钢电弧炉、轧机、电弧焊机</strong>」<a class="c" href="#r42">42</a>——
+        这套限值是为冶金冲击负荷设计的，被约束的物理量是
+        <strong>视在功率变动引起的电压闪变</strong>，判据最终落在长时间闪变值 <i>P</i><sub>lt</sub> 上，
+        而 <i>P</i><sub>lt</sub> 的物理基础是<em>人眼对灯光照度不稳定的视感</em>。
+      </p>
+      <p>
+        北美那套限值约束的是完全不同的两件事：分钟级爬坡率服务于<strong>平衡与调频备用充裕度</strong>，
+        秒级功率变化服务于<strong>汽轮发电机轴系疲劳</strong>（见第 3 节）。
+        <strong>三者的被保护对象互不相同，因此三套数值之间没有换算关系。</strong>
+        一座智算中心完全可能同时做到：谐波合格、闪变合格、电压偏差合格，
+        而有功功率在数分钟内摆动数百兆瓦。在现行中国条文下，<em>它不构成「干扰源」</em>——
+        因为《电能质量管理办法》把「干扰源」定义为「对电能质量造成影响的非线性、不平衡、冲击性」设备<a class="c" href="#r75">75</a>，
+        而第三十一条把「电能质量指标」穷举为七项国标：频率偏差、供电电压偏差、谐波、间谐波、
+        三相电压不平衡、电压波动与闪变、电压暂降与短时中断。<strong>七项之中没有一项是有功功率变化率。</strong>
+      </p>
+    </div>
+
+    <div class="note caution">
+      <span class="note-k">本报告推导：如果真按 0.1% 这条线去卡</span>
+      <p>
+        这条限值的量级值得算一下，因为结果说明它为什么不可能被当作爬坡约束来用。
+        第 1 节引用的实测摆动为 <span class="q">250 ↔ 550 MW</span>，即 Δ<i>P</i> ≈ <span class="q">300 MW</span>；
+        数据中心功率因数接近 1，故 Δ<i>S</i> ≈ <span class="q">300 MVA</span>。
+        要满足高压用户第一级限值 Δ<i>S</i>/<i>S</i><sub>sc</sub> &lt; 0.1%，需要
+      </p>
+      <p style="text-align:center">
+        <i>S</i><sub>sc</sub> &gt; 300 MVA ÷ 0.001 = <strong>300 GVA</strong>
+      </p>
+      <p>
+        即接入点短路容量须达到摆动量的一千倍。这个量级在任何单一并网点上都不现实——
+        <strong>按字面执行，这类负荷一律通不过第一级筛查。</strong>
+      </p>
+      <p>
+        但这不等于「不许接入」，原因在于这条线的性质被误读了：
+        §5.2.2 的原文是「满足本级规定，<em>可以不经闪变核算允许接入电网</em>」——
+        <strong>第一级是一道免检线，不是准入线</strong><a class="c" href="#r42">42</a>。
+        过不了第一级，只是要转入第二级按用户协议容量分摊闪变限值、做 <i>P</i><sub>lt</sub> 核算。
+        <em>于是整条链的终点仍然是闪变，而不是功率。</em>
+        这就是本节标题的含义：<strong>条文齐备、权力齐备、数值齐备，唯独测的不是这件事。</strong>
+      </p>
+    </div>
+
+    <div class="note">
+      <span class="note-k">方向性错配：数据中心被写在「要保障」的那一侧</span>
+      <p>
+        更深一层的证据来自地方标准的分类学。雄安新区《电力用户用电导则》
+        （DB1331/T 047—2023）是本报告检索到的最详细的地方级用电导则之一，
+        其附录 D 为「<strong>重点电力用户</strong>行业分类及示例」<a class="c" href="#r74">74</a>。
+        全文中「数据中心」只出现<strong>一次</strong>，位置是表 D-1 的
+        <code>[B4.1] 证券数据中心</code>，归在「信息安全」门类下，
+        与党政机关、通信、广播电视、医疗卫生、机场铁路并列。
+      </p>
+      <p>
+        这个位置说明了一切：<strong>在中国现行制度里，数据中心是「需要被保障供电」的对象，
+        不是「需要被约束扰动」的对象。</strong>整部导则检索「爬坡」「功率变化率」同样命中为零。
+        北美的方向恰好相反——NERC 把切至自备电源称为「对电网而言等同于大规模甩负荷」（第 4 节），
+        即把数据中心<em>拥有并使用后备电源</em>这件事本身当作扰动来管理。
+        <strong>两地不只是进度差异，是把同一类设施放在了责任天平的两端。</strong>
+      </p>
+    </div>
+
+    <h3>负面证据：标准工作计划连续两年为零，地方导则同样不涉功率</h3>
+    <ul>
+      <li><strong>2025 年计划</strong>：全文 22 万字中「算力」仅三处命中，全部属于同一条目——
+        能源 20250028《算力电力协同规划设计导则》（电力规划设计总院归口，2027 年完成，
+        起草单位含华为与阿里云）。其适用范围原文为「指导行业相关单位开展算力电力协同项目的<strong>规划及设计</strong>」，
+        主要技术内容为电源方案、电网方案与一体化智慧运营平台——
+        <strong>无接入、涉网、功率控制、穿越等任何要件</strong>；
+        全文检索「爬坡」「功率变化率」「新型负荷」<strong>命中均为零</strong><a class="c" href="#r39">39</a></li>
+      <li><strong>2026 年指南</strong>：逐词检索「算力」「智算」「数据中心」「大负荷」「新型负荷」——<strong>命中全部为零</strong><a class="c" href="#r40">40</a></li>
+      <li><strong>读法</strong>：两份文件相隔一年、编制口径不同（一份是已立项计划，一份是立项指南），
+        而结论一致。这把原先的单年快照变成了<strong>两年趋势</strong>——
+        「算力负荷的涉网要求尚未进入标准工作计划」不是某一年的偶然遗漏</li>
+      <li>上海最详细的省级智算中心导则，电力章节只有可靠性要求（「宜靠近 110 kV 及以上电源点」「市电平均每月停电不应大于 1 次」），<strong>18 项引用文件中一条电能质量国标都没有</strong>，全文「构网」零命中<a class="c" href="#r45">45</a></li>
+    </ul>
+    <div class="note">
+      <span class="note-k">能源标准体系的处理方式是「绕道」</span>
+      <p>
+        2026 年立项指南的电力领域重点方向中，「新能源发电涉网安全」有专门门类，
+        <strong>负荷侧没有对应物</strong>。算力负荷是通过绿电直连、虚拟电厂、源网荷储、
+        需求侧管理这四个既有口子被接住的，而不是为它单设涉网门类<a class="c" href="#r40">40</a>。
+      </p>
+    </div>
+
+    <h3>最锋利的一处中美对比</h3>
+    <div class="tk">
+      <span class="note-k">中国能被强制做涉网试验的只有发／储侧设备</span>
+      <p>
+        《新型储能规模化建设专项行动方案》中，对储能电站用「应」字规定了
+        <strong>性能试验、涉网试验、有功无功自动调节能力、执行调度指令</strong><a class="c" href="#r38">38</a>。
+        同一份文件里，「算力设施」出现在<em>创新应用模式</em>清单中，与商业综合体、通信基站并列，是鼓励式表述。
+      </p>
+      <p>
+        <strong>即：在中国，可靠性义务体系至今只覆盖电源侧；北美则正在把大负荷拉进可靠性标准的管辖范围。</strong>
+        这是两种制度最根本的差异。
+      </p>
+    </div>
+
+    <h3>为什么中国暂时不需要：缓冲是超配出来的</h3>
+    <div class="pq">
+      <p>部分城市算力中心的电力接入变压器年平均负载率仅维持在 30% 左右，实际电力负载与电源容量配置之间存在严重失衡。</p>
+      <cite>中国信通院《算力电力协同发展研究报告（2025 年）》<a class="c" href="#r46">46</a></cite>
+    </div>
+    <p>
+      这段话原本是在批评资源闲置，但它同时解释了一件事：
+      <strong>在大幅超配接入容量的前提下，单站波动被稀释在冗余里，问题尚未在电网侧显现。</strong>
+      实际接入以 110 kV 与 220 kV 为主，与上海导则「宜靠近 110 kV 及以上电源点」一致<a class="c" href="#r45">45</a>。
+    </p>
+    <p>
+      <strong>这个缓冲会随上架率提升而消耗掉</strong>——这可能是本报告对中国市场最有价值的前瞻判断。
+      届时问题会以与北美相同的物理形式出现。
+      需要精确一点说的是，中国届时<em>不是没有制度工具</em>：拒绝接入的权力、逐户签署的合同条款、
+      三级评估的流程都是现成的（见本节第一小节）。<strong>缺的是把有功功率变化率写进指标清单的那一步。</strong>
+      这个差别决定了补课的形式——不必新建一套准入制度，只需在既有的电能质量指标体系里增加一个量纲。
+      <em>这也意味着，一旦决定要管，落地速度可能比北美从零立标快得多。</em>
+    </p>
+
+    <h3>制度重心在电量与市场，不在功率与安全</h3>
+    <p>
+      《绿电直连通知》的三个量化约束全部是千瓦时口径：
+      自发自用不低于总可用发电量 <span class="q">60%</span> 且不低于总用电量 <span class="q">30%</span>（2030 年前不低于 35%）、
+      上网电量不超过 <span class="q">20%</span><a class="c" href="#r37">37</a>。
+      信通院旗舰报告全文<strong>无一条并网技术指标</strong>，政策建议全在分时电价、绿电交易与需求响应补偿<a class="c" href="#r46">46</a>。
+    </p>
+    <div class="note">
+      <span class="note-k">电网系统内部已经意识到这个错位</span>
+      <p>
+        国网冀北电科院的研究人员在公开访谈中直接点破：
+        「当前行业对算力增长的讨论，更多聚焦于『<strong>电量</strong>』层面，
+        但真正进入电网运行阶段后，核心问题其实是『<strong>电力</strong>』」<a class="c" href="#r54">54</a>。
+        <em>认知已经到位，制度尚未响应。</em>
+      </p>
+    </div>
+
+    <h3>算电协同的落地是真的，但落在电量调节上</h3>
+    <div class="tw">
+      <table>
+        <caption>三场公开实测</caption>
+        <thead><tr><th>地区</th><th>规模与方式</th><th>性质</th></tr></thead>
+        <tbody>
+          <tr><th class="row" scope="row">冀北</th><td>11 座算力中心在不到 10 分钟内释放约 <span class="q">100 MW</span> 供电空间；国家电网在该地区部署了全电磁仿真系统<a class="c" href="#r58">58</a></td><td rowspan="3">全部是<strong>分钟级到小时级的削峰填谷与容量腾挪</strong>，<em>没有一场涉及频率响应、暂态支撑或故障穿越</em></td></tr>
+          <tr><th class="row" scope="row">上海</th><td>16 家数据中心参与，两小时内最大压减 <span class="q">97.8 MW</span>；实测三条路径——柔性负荷调节 13 户次、备电柴发切换 3 户次、算力跨域转移 1 户次<a class="c" href="#r59">59</a></td></tr>
+          <tr><th class="row" scope="row">广东</th><td>三个数据中心集群通过虚拟电厂平台<strong>国内首次以数据中心形态参与电力现货市场交易与结算</strong><a class="c" href="#r56">56</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="color:var(--ink-3);font-size:13.6px">
+      口径提示：常被引用的「广东 33 MW」指的是 2026 年 2 月广东首批<strong>发电类</strong>虚拟电厂参与现货市场的容量，
+      与数据中心聚合是两件事，不应混为一谈<a class="c" href="#r56">56</a>。
+    </p>
+    <p>
+      上海计划出台的《数据中心柴发调用规范》《算力转移协同调度规范》<a class="c" href="#r59">59</a>，
+      是目前检索到的最接近「数据中心涉网操作规则」的东西，
+      但性质是<strong>调度协同规范</strong>而非并网准入门槛。
+    </p>
+
+    <h3>三个真实的监管方向信号</h3>
+    <ol class="list">
+      <li>
+        <strong>《关于促进人工智能与能源双向赋能的行动方案》第二十条</strong>点名研制
+        「算力电力协同技术要求」与「<strong>大负荷算力设施规划建设</strong>」关键技术标准；
+        第二条首次把「<strong>电能质量要求</strong>」「接入系统规模」「电网电压等级」
+        并列为标准编制的输入变量<a class="c" href="#r36">36</a>——<em>这是最强信号</em>
+      </li>
+      <li>
+        <strong>国家标准计划《智算中心算电协同技术导则》</strong>（信通院牵头，全国智能计算标准化工作组归口），
+        拟从算力侧、电力侧、协同能力、评价指标四个维度规范<a class="c" href="#r44">44</a>。
+        注意计划号中的「Z」指<strong>指导性技术文件</strong>，非强制；且归口在信息技术口，不在电力口
+      </li>
+      <li>
+        <strong>上海的两项地方调度规范</strong>——最具操作性但层级最低
+      </li>
+    </ol>
+    <div class="note caution">
+      <span class="note-k">判断中国是否走向强制路径的观察指标</span>
+      <p>
+        三者的共同性质是「怎么协同／怎么规划」，<strong>没有一个针对功率特性设门槛</strong>。
+        （准入否决权本身是存在的，见本节第一小节的《电能质量管理办法》第十八条<a class="c" href="#r75">75</a>——
+        但它挂靠的七项指标里没有功率变化率，因此对本报告讨论的这类扰动不起作用。）
+        建议的观察指标有两个：这些导则的报批稿里会不会长出「应／须」式的功率约束条款；
+        以及归口会不会从规划设计口、信息技术口<strong>转到电力安全口</strong>。
+      </p>
+    </div>
+
+    <div class="note caution">
+      <span class="note-k">一条需要排除的流传说法</span>
+      <p>
+        有媒体称「所有新建的大中型算力中心在报批备案时<strong>必须</strong>同步提交『算电协同』方案，
+        明确配套电网接入容量和供电保障」<a class="c" href="#r64">64</a>。
+        该文引用的两项政策依据（国务院常务会议表述、以及双向赋能行动方案）<strong>均无此表述</strong>；
+        本报告在行动方案已提取条款中亦未检索到对应内容。
+        <em>该说法应视为媒体演绎，不可采信为制度事实。</em>若采信，将直接推翻本节全部结论。
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 11 冲突 ============ -->
+  <section id="s11">
+    <span class="s-num">11</span>
+    <h2 class="s-title">来源冲突与口径差异登记</h2>
+    <p class="lead">
+      <b>本节是引用本报告数据的前提。</b>以下五处冲突每一条都足以改变结论方向。
+    </p>
+    <div class="reg">
+      <div class="reg-item">
+        <span class="reg-id">C-01</span><span class="reg-h">SPP 爬坡率：20 MW/min 对「逐案确定」</span>
+        <p class="reg-b">FERC 命令（2026-01-14）载明 20 MW/min；ESIG 报告（2026-03）在同一栏记「逐案确定」。</p>
+        <p class="reg-r"><b>处理</b>　两者相差两个月，合理解释是 ESIG 数据采集截止于 SPP 关税获批之前。<strong>以 FERC 命令原文为准</strong><a class="c" href="#r17">17</a>。</p>
+      </div>
+      <div class="reg-item">
+        <span class="reg-id">C-02</span><span class="reg-h">ERCOT：ESIG 记「未规定」对 ERCOT 自己提 10 MW/5s</span>
+        <p class="reg-b">这不是冲突，是<strong>类别不同</strong>：ESIG 表格登记的是分钟级爬坡率，ERCOT 确实未规定；10 MW/5 s 属秒级功率变化限值。</p>
+        <p class="reg-r"><b>处理</b>　本报告全程按 A／B 两类分别陈述，不合并。</p>
+      </div>
+      <div class="reg-item">
+        <span class="reg-id">C-03</span><span class="reg-h">AESO：10 MW/min 对 16 kW/100 ms</span>
+        <p class="reg-b">前者为分钟级爬坡率；后者见于二手论文转引的强迫振荡草案提案，量级极小（160 kW/s）。</p>
+        <p class="reg-r"><b>处理</b>　<strong>后者的适用基准未能确证</strong>，疑为按单位容量或特定基准表述，原文未说明。本报告只采用 10 MW/min。</p>
+      </div>
+      <div class="reg-item">
+        <span class="reg-id">C-04</span><span class="reg-h">NERC 两套门槛互相错位<span style="color:var(--good)">（已解决）</span></span>
+        <p class="reg-b">4 月注册稿（20 MW／60 kV／1 MW IT）与草案标准（50 MW／100 kV）不一致，曾引发管辖权质疑。</p>
+        <p class="reg-r"><b>已解决</b>　<strong>2026-08-19 修订稿把注册门槛改为 ≥50 MW 且 ≥100 kV</strong>，两套口径对齐<a class="c" href="#r70">70</a>。但出现了新的错位：PJM 采用 ≥50 MW 且 ≥60 kV，电压侧比 NERC 宽，会捕获一批不触发 NERC 注册的设施<a class="c" href="#r66">66</a>。</p>
+      </div>
+      <div class="reg-item">
+        <span class="reg-id">C-07</span><span class="reg-h">「ERCOT 是北美唯一有穿越数值的辖区」——不准确</span>
+        <p class="reg-b">SPP 自 2026-01-15 起已通过关税附件 AE §2.22 引用一份含完整数值表的文件。但该文件为<strong>非关税文件</strong>，生效日字段仍为占位符，措辞为 should 而非 shall。</p>
+        <p class="reg-r"><b>处理</b>　改为「ERCOT 是唯一经监管批准、以强制语言写入协议正文的」，并把 SPP 的强制力列为<strong>开放项</strong>，需核 RR696 是否生效、是否有更新版本取代 v1.0<a class="c" href="#r67">67</a>。</p>
+      </div>
+      <div class="reg-item">
+        <span class="reg-id">C-08</span><span class="reg-h">MISO 有功恢复时限：1 秒还是 2 秒</span>
+        <p class="reg-b">MISO 2026-06-10 工作组草案写 1 秒；PJM 9-08 对比页转述为 1 秒，9-15 页改为 2 秒。三个口径不一致。</p>
+        <p class="reg-r"><b>处理</b>　应以 MISO 2026-08-28 提交正文为准，但 misoenergy.org 返回 403，<strong>该正文本轮未能打开</strong>。本报告标注为待核<a class="c" href="#r69">69</a>。</p>
+      </div>
+      <div class="reg-item">
+        <span class="reg-id">C-05</span><span class="reg-h">ERCOT 大负荷队列：四个数字并存</span>
+        <p class="reg-b">同期流传 474 GW、445 GW（至 2033 年）、238.6 GW（2026-03）、以及审查中 93.7 GW 等多个口径，统计时点与纳入标准不同。</p>
+        <p class="reg-r"><b>处理</b>　<strong>不引用任何单一精确值</strong>，只用「请求量数百 GW、实际投运不足 10 GW」这一量级关系。</p>
+      </div>
+      <div class="reg-item">
+        <span class="reg-id">C-06</span><span class="reg-h">PJM 容量成本的数据中心归因</span>
+        <p class="reg-b">有报道引述独立市场监督员测算，数据中心驱动 2028/29 拍卖 $16.4 bn 中的 $6.3 bn（38%）、最近四次拍卖 $63.6 bn 中的 $29.4 bn（46%）。</p>
+        <p class="reg-r"><b>处理</b>　拍卖结果本身多家一致可采信；<strong>归因数字仅见二手转述，未取得监督员报告原文</strong>，本报告不作为结论引用。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 12 缺口 ============ -->
+  <section id="s12">
+    <span class="s-num">12</span>
+    <h2 class="s-title">证据缺口与适用边界</h2>
+
+    <div class="tk">
+      <span class="note-k">三项需要读者自行折价的局限</span>
+      <p>
+        <strong>一、FERC.gov 无法直接访问。</strong>六份 show cause 令与 RD26-7-000 命令原文均未直接读取，
+        当前依赖律所简报转述。引证编号（195 FERC ¶ 61,211–61,216、196 FERC ¶ 61,031）可核，
+        但段落级条款与各 RTO 回应的实质承诺为二手。
+      </p>
+      <p>
+        <strong>二、中国电网企业标准完全未触及。</strong>大用户接入技术规定属企业标准，通常不公开检索。
+        这是本报告最大的盲区——第 10 节中「未检索到」在此处的强度最弱，很可能存在但不可见。
+        <em>相关措辞一律为「未检索到公开文献」，不写「不存在」。</em>
+      </p>
+      <p>
+        <strong>三、电能质量实测数据为零。</strong>见第 9 节。全部是要求值，没有任何公开实测数据集。
+      </p>
+    </div>
+
+    <h3>主要证据缺口</h3>
+    <div class="reg">
+      <div class="reg-item">
+        <span class="reg-id">G-A</span><span class="reg-h">PJM 穿越数值<span style="color:var(--good)">（已关闭）</span></span>
+        <p class="reg-b" style="text-decoration:line-through;opacity:.55">PJM 计划 2026-11 提交，但至今未公布具体电压与频率数值。</p>
+        <p class="reg-b"><strong style="color:var(--good)">此缺口已关闭。</strong>PJM 规划委员会 2026-09-15 特别会议材料已公开完整的电压与频率穿越表、有功恢复要求、过流与多次扰动条款、适用门槛与过渡安排<a class="c" href="#r66">66</a>。第 4 节已据此加入五辖区数值对照。</p>
+        <p class="reg-r"><b>仍待核</b>　PJM 同场的 redline 提案语言（Item 03-2）未打开；2026-11 向 FERC 的正式备案将含最终条款，届时可能与 9-15 提案有出入。</p>
+      </div>
+      <div class="reg-item">
+        <span class="reg-id">G-B</span><span class="reg-h">三级警报答复的汇总结果未公开</span>
+        <p class="reg-b">33 个问题的答复截止 2026-08-03。NERC 对<strong>二级</strong>警报曾于 2026-03 发布汇总报告，说明存在先例格式；三级的对应文件截至本报告日未见<a class="c" href="#r8">8</a>。</p>
+        <p class="reg-r"><b>影响</b>　这是第二阶段标准范围的直接输入，缺失使「下一步管什么」无法用一手证据回答。</p>
+      </div>
+      <div class="reg-item">
+        <span class="reg-id">G-C</span><span class="reg-h">构网型负荷侧应用缺乏第三方验证与真实试点</span>
+        <p class="reg-b">唯一定量文献为单作者预印本；<strong>未检索到任何数据中心 UPS 或储能变流器采用构网型控制的商用产品规格书或试点报告</strong>。</p>
+        <p class="reg-r"><b>影响</b>　第 8 节的构网型部分只能给出方向与单一算例，不能给出成熟度判断。</p>
+      </div>
+      <div class="reg-item">
+        <span class="reg-id">G-D</span><span class="reg-h">中国：智算中心负荷特性无电网侧实测</span>
+        <p class="reg-b">所有功率波动数字（1.5–15 MW、瞬间几十 MW、10 ms 内 20% 调节能力）均来自行业媒体转引咨询报告或白皮书，<strong>无一来自电科院或国网／南网研究院的公开实测报告</strong>。</p>
+        <p class="reg-r"><b>影响</b>　中国章节的负荷特性描述只能定性，不能定量。</p>
+      </div>
+      <div class="reg-item">
+        <span class="reg-id">G-E</span><span class="reg-h">中国：因电网容量不足延期的个案检索不到，但归因存疑</span>
+        <p class="reg-b">中国侧只有结构性表述（跨省通道受限、算电建设周期错配、绿电波动与算力可靠性矛盾），无具体项目；美国侧证据充分。</p>
+        <p class="reg-r"><b>处理</b>　<strong>「中国无个案」可能是信息披露机制差异造成的假象</strong>——中国没有公开的接入排队队列、没有上市公司季度电话会披露电力约束。本报告写作「公开信息不对称」，而非「中国不存在该问题」。</p>
+      </div>
+      <div class="reg-item">
+        <span class="reg-id">G-F</span><span class="reg-h">「无自备冗余」型设施的监管处理为空白</span>
+        <p class="reg-b">本报告未在任何 FERC 命令、NERC 标准草案、ISO 规则或州委员会裁决中，找到对「无 UPS、无柴发、无双路配电」型设施的专门处理——既无准入限制，也无额外并网义务。</p>
+        <p class="reg-r"><b>含义</b>　<strong>现行与拟议规则均隐含假设设施具备内部转移能力</strong>，规则的作用是约束该能力何时可以动用。一个不具备该能力的设施，落在规则体系的定义之外。这是否会被视为漏洞，取决于此类设计的规模化程度。</p>
+      </div>
+    </div>
+
+    <h3>未纳入本报告的议题</h3>
+    <ul>
+      <li><strong>系统惯量下降与数据中心负荷增长的叠加效应。</strong>方向上有共识（在线同步机容量低比逆变器占比更能预测构网需求），但<strong>没有任何文献把这两个自变量联合量化</strong>。这是一个真实的研究空白。</li>
+      <li><strong>超级电容、飞轮与锂电在此用途上的定量对比</strong>（倍率、循环寿命、成本）——仅有仿真参数与定性评级，无一手来源。</li>
+      <li><strong>市场机制的定价</strong>——柔性的准入属性已确立，但如何定价尚未成形，本报告不作推测。</li>
+    </ul>
+  </section>
+
+  <!-- ============ 结语 ============ -->
+  <section id="close">
+    <span class="s-num">结语</span>
+    <h2 class="s-title">结论与战略含义</h2>
+    <p>
+      <strong>第一，区分「被讨论的风险」与「被观测的风险」。</strong>
+      AI 负荷的 0.2–3 Hz 能量带确实与机电模式重叠，这个风险成立且有历史放大案例可参照；
+      但迄今三起已确认事件全部出自变流器控制环，频率在 11–23 Hz。
+      前者需要系统级的规划与研究，后者需要的是<em>设备控制参数的整定与验证</em>——
+      ERCOT 那起事件在负荷侧固件升级后就消失了。<strong>两类风险的应对主体完全不同。</strong>
+    </p>
+    <p>
+      <strong>第二，冗余设计已经从设施资产变成系统负债。</strong>
+      这是本报告最反直觉、也最有决策含义的一条。
+      电网侧正在把「数据中心切到自备电源」当作扰动源来监管，
+      而不是当作可靠性保障来鼓励。ERCOT 已经要求扰动中继续从电网取电，
+      2028 年后的新设施更被禁止在 0.8–0.5 标幺区间自行切换。
+      <em>这会反向影响机房侧的架构选择——见<a href="https://claude.ai/artifact/JbY2XjDgDmbjf74vH1giBH">姊妹篇</a>第 5 与第 9 节。</em>
+    </p>
+    <p>
+      <strong>第三，柔性买的是接入排位，不是振荡裕度。</strong>
+      需求响应、负荷编排、可中断协议正在成为换取并网许可的硬通货，
+      这条趋势清晰且有三条独立证据线支撑。但它的时间尺度是分钟到小时，
+      <strong>对秒级与亚秒级的功率变化限值毫无帮助</strong>。
+      把两者混为一谈会导致合规策略的根本性误判。
+    </p>
+    <hr class="sep">
+    <p style="color:var(--ink-2)">
+      最后是本报告自己的边界。它建立在 72 项可追溯来源之上，
+      其中监管文件多为一手，但 FERC 原文因访问限制依赖转述；
+      中国章节的「未检索到」在电网企业标准这一项上强度最弱；
+      电能质量一节没有任何实测支撑。
+      <strong>凡涉及「中国不存在某制度」的表述，均应读作「本轮未检索到公开文献」。</strong>
+    </p>
+  </section>
+
+
+  <!-- ============ 参考文献 ============ -->
+  <section id="refs">
+    <span class="s-num">参考文献</span>
+    <h2 class="s-title">来源清单</h2>
+    <p class="lead">
+      共 <b>72 项</b>。来源层级：
+      <span class="tier t1">一手</span> 监管命令、标准原文、期刊论文、官方实测；
+      <span class="tier t2">机构</span> 行业机构报告与预印本；
+      <span class="tier t3">二手</span> 律所简报、权威媒体转述；
+      <span class="tier t4">存疑</span> 孤证或关键标识缺失，本报告已就地标注。
+    </p>
+
+    <div class="ref-grp">一、监管命令与强制标准</div>
+    <ol class="reflist">
+      <li id="r1"><span class="tier t3">二手</span><span class="src">FERC</span>．<span class="ttl">Order Directing NERC to File Reliability Standard(s) Pertaining to Computational Load Integration，196 FERC ¶ 61,031, Docket RD26-7-000</span>．2026-07-16<span class="mt">仅强制提交期限，未规定实体性要求；FERC.gov 受 Cloudflare 阻断，经律所简报转述，令文编号可核</span><a class="u" href="https://www.willkie.com/-/media/files/publications/2026/07/ferc-orders-new-reliability-standards-for-data-centers-and-other-computational-loads.pdf" target="_blank" rel="noopener">willkie.com/-/media/files/publications/2026/07/ferc-orders-new-reliability-standards…pdf</a></li>
+      <li id="r2"><span class="tier t1">一手</span><span class="src">NERC</span>．<span class="ttl">Standard Authorization Request: Reliability Standards to Address Computational Load — Phase I</span>．2026-02-20 提交，2026-05-20 立项<a class="u" href="https://www.nerc.com/globalassets/standards/projects/2026-02/sar-comment-period/2026-02-computational-load-alignment-phase-1-sar_sc-approved.pdf" target="_blank" rel="noopener">nerc.com/globalassets/standards/projects/2026-02/…phase-1-sar_sc-approved.pdf</a></li>
+      <li id="r3"><span class="tier t1">一手</span><span class="src">NERC</span>．<span class="ttl">CLO-001-1 / CLO-002-1 / CLO-003-1 Draft 1</span>．2026-08-18 张贴，评论期至 2026-09-18<span class="mt">全文检索「ride-through」零命中；适用门槛 ≥50 MW 且 ≥100 kV；录波要求触发前不少于 2 周波、总长不少于 2.0 秒、采样率不低于每周波 64 点</span><a class="u" href="https://www.nerc.com/standards/reliability-standards-under-development/2026-02-computational-loads" target="_blank" rel="noopener">nerc.com/standards/reliability-standards-under-development/2026-02-computational-loads</a></li>
+      <li id="r4"><span class="tier t1">一手</span><span class="src">NERC</span>．<span class="ttl">Standards, Compliance, and Enforcement Bulletin</span>．2026-08-31<span class="mt">确认 Project 2026-02 拟议标准编号与投票时间表</span><a class="u" href="https://www.nerc.com/globalassets/programs/compliance/bulletins/2026_08_31_standardscompliancebulletin.pdf" target="_blank" rel="noopener">nerc.com/globalassets/programs/compliance/bulletins/2026_08_31_standardscompliancebulletin.pdf</a></li>
+      <li id="r5"><span class="tier t1">一手</span><span class="src">NERC</span>．<span class="ttl">Level 3 Essential Action Alert: Computational Load Modeling, Studies, Instrumentation, Commissioning, Operations, Protection, and Control</span>．2026-05-04<span class="mt">七项行动；明文非强制，不遵守不产生处罚；33 个问题答复截止 2026-08-03</span><a class="u" href="https://www.nerc.com/globalassets/programs/bpsa/alerts/level-3-computational-load-alert.pdf" target="_blank" rel="noopener">nerc.com/globalassets/programs/bpsa/alerts/level-3-computational-load-alert.pdf</a></li>
+      <li id="r6"><span class="tier t1">一手</span><span class="src">NERC RSTC</span>．<span class="ttl">Reliability Guideline: Risk Mitigation for Emerging Large Loads</span>．2026-05<span class="mt">首份把数据中心强迫振荡写入正式可靠性指南的文件；把切换至内部备用描述为「equivalent to large load shedding for the grid」；引入 CILR 概念</span><a class="u" href="https://www.nerc.com/globalassets/who-we-are/standing-committees/rstc/reliabilityguideline_riskmitigationforemerginglargeloads.pdf" target="_blank" rel="noopener">nerc.com/globalassets/who-we-are/standing-committees/rstc/reliabilityguideline_riskmitigation…pdf</a></li>
+      <li id="r7"><span class="tier t1">一手</span><span class="src">NERC</span>．<span class="ttl">《议事规则》附录 5B 计算类负荷注册标准评论汇编</span>．2026-04 张贴，2026-08-19 修订再贴<span class="mt">拟设门槛 ≥20 MW、≥60 kV、含 ≥1 MW IT；产业界就 60 kV 低于大电力系统判定线提出管辖权质疑</span><a class="u" href="https://www.nerc.com/globalassets/who-we-are/rules-of-procedure/proposed/cle-rop-comments_redacted-5-26-revision-3.pdf" target="_blank" rel="noopener">nerc.com/globalassets/who-we-are/rules-of-procedure/proposed/cle-rop-comments…pdf</a></li>
+      <li id="r8"><span class="tier t1">一手</span><span class="src">NERC</span>．<span class="ttl">Large Loads Action Plan 2026 年第二季度更新</span>．2026-07<span class="mt">三级警报答复汇总报告截至本报告日未见公开</span><a class="u" href="https://www.nerc.com/globalassets/initiatives/large-loads-action-plan/llap-quarterly-update-q2-2026.pdf" target="_blank" rel="noopener">nerc.com/globalassets/initiatives/large-loads-action-plan/llap-quarterly-update-q2-2026.pdf</a></li>
+      <li id="r9"><span class="tier t3">二手</span><span class="src">FERC</span>．<span class="ttl">六份 show cause 令（PJM／MISO／SPP／CAISO／ISO-NE／NYISO），195 FERC ¶ 61,211–61,216</span>．2026-06-18<span class="mt">大负荷定义为峰值 ≥50 MW、电压 &gt;69 kV、非同址；要求为运行柔性设计新的输电服务品种</span><a class="u" href="https://www.willkie.com/-/media/files/publications/2026/06/ferc-directs-grid-operators-to-reform-procedures-for-large-loads-connecting-to-the-bulk-transmission.pdf" target="_blank" rel="noopener">willkie.com/-/media/files/publications/2026/06/ferc-directs-grid-operators-to-reform…pdf</a></li>
+      <li id="r10"><span class="tier t1">一手</span><span class="src">ERCOT / PUCT</span>．<span class="ttl">NOGRR282 — Large Computational Load Ride-Through Requirements（Nodal Operating Guide §2.15、§2.6.4）</span>．PUCT 2026-07-09 批准，即日生效<span class="mt">北美首个对数据中心强制生效的穿越数值表；不合规者可被要求断开并保持断开</span><a class="u" href="https://www.ercot.com/mktrules/issues/NOGRR282" target="_blank" rel="noopener">ercot.com/mktrules/issues/NOGRR282</a></li>
+      <li id="r11"><span class="tier t1">一手</span><span class="src">ERCOT</span>．<span class="ttl">董事会材料：NOGRR282 与 NPRR1308 说明</span>．2026-06<span class="mt">载 ERCOT 对自身管辖权的法律论证；自 2022-10 以来已识别多起在典型电压扰动中发生的大负荷损失事件</span><a class="u" href="https://www.ercot.com/files/docs/2026/05/22/15.1.1.3-ERCOT-Comments-on-NOGRR282-and-NPRR1308.pdf" target="_blank" rel="noopener">ercot.com/files/docs/2026/05/22/15.1.1.3-ERCOT-Comments-on-NOGRR282-and-NPRR1308.pdf</a></li>
+      <li id="r12"><span class="tier t1">一手</span><span class="src">ERCOT</span>．<span class="ttl">Batch Study Update（PGRR145 / NPRR1325，Batch Zero）</span>．2026-04-13 董事会材料，2026-07-11 部分实施<span class="mt">适用 ≥75 MW；另含 PCLR 与自带发电两个框架（自标初步）</span><a class="u" href="https://www.ercot.com/files/docs/2026/04/13/9.1-Batch-Study-Update.pdf" target="_blank" rel="noopener">ercot.com/files/docs/2026/04/13/9.1-Batch-Study-Update.pdf</a></li>
+      <li id="r13"><span class="tier t1">一手</span><span class="src">ERCOT</span>．<span class="ttl">Large Load Power Variation Requirement Consideration（LLWG）</span>．2026-02-19<span class="mt">提案：负荷功率不得重复超过 5 秒滑动窗口内 10 MW 变化；筛查假设 MCTV = 发电机额定容量的 1%</span><a class="u" href="https://www.ercot.com/files/docs/2026/02/19/ERCOT-LEL-SSO-Power-Variation-Consideration.pdf" target="_blank" rel="noopener">ercot.com/files/docs/2026/02/19/ERCOT-LEL-SSO-Power-Variation-Consideration.pdf</a></li>
+      <li id="r14"><span class="tier t1">一手</span><span class="src">ERCOT / Electranix</span>．<span class="ttl">LEL-SSO Power Variation Criteria（LLWG）</span>．2026-01-22<span class="mt">MCTV = 耐久限值 ÷ 载荷形状比的两步法；「同一位置第二个大负荷必须保持极小功率变化」</span><a class="u" href="https://www.ercot.com/files/docs/2026/01/21/ERCOT_Electranix-LEL-SSO-Power-Variation-Criteria_LLWG-20260122-post.pdf" target="_blank" rel="noopener">ercot.com/files/docs/2026/01/21/ERCOT_Electranix-LEL-SSO-Power-Variation-Criteria…pdf</a></li>
+      <li id="r15"><span class="tier t1">一手</span><span class="src">PJM Interconnection</span>．<span class="ttl">Dominion July Loss of Load Event（运行委员会材料）</span>．2026-08-06<span class="mt">2026-07-22 07:56，约 3,800 MW 转移至备用电源；上报 ACE +3,928 MW，频率 60.092 Hz；BAAL 越限 9 分钟内恢复</span><a class="u" href="https://www.pjm.com/-/media/DotCom/committees-groups/committees/oc/2026/20260806/20260806-item-05---dominion-july-loss-of-load-event---presentation.pdf" target="_blank" rel="noopener">pjm.com/-/media/DotCom/committees-groups/committees/oc/2026/20260806/…presentation.pdf</a></li>
+      <li id="r16"><span class="tier t1">一手</span><span class="src">PJM Interconnection</span>．<span class="ttl">Reliability Standards to Manage Large Load Disconnection Events Proposed by PJM</span>．2026-09-08<span class="mt">计划 2026-11 向 FERC 提交；至今未公布具体电压与频率数值</span><a class="u" href="https://insidelines.pjm.com/reliability-standards-to-manage-large-load-disconnection-events-proposed-by-pjm/" target="_blank" rel="noopener">insidelines.pjm.com/reliability-standards-to-manage-large-load-disconnection-events-proposed-by-pjm/</a></li>
+      <li id="r17"><span class="tier t1">一手</span><span class="src">FERC / SPP</span>．<span class="ttl">Order Accepting Tariff Revisions（高影响大负荷流程），194 FERC ¶ 61,031, Docket ER26-247-000</span>．2026-01-14<span class="mt">爬坡率不超过 20 MW/min；强制在并网点安装同步相量装置用于识别强迫振荡</span><a class="u" href="https://spp.org/documents/75725/20260114_order%20-%20revisions%20to%20add%20the%20high%20impact%20large%20load%20processes%20and%20generation%20assessment_er26-247-000.pdf" target="_blank" rel="noopener">spp.org/documents/75725/…er26-247-000.pdf</a></li>
+      <li id="r18"><span class="tier t1">一手</span><span class="src">MISO</span>．<span class="ttl">Interconnection Reliability Requirements for Large Load — Technical Compendium（草案）</span>．2026-06-10<span class="mt">30 MW/min 的完整推导；并采纳 5 秒窗口 10 MW 指引</span><a class="u" href="https://cdn.misoenergy.org/20260610%20LLWG%20Item%2006%20MISO%20Large%20Load%20Interconnection%20Reliability%20Requirements_Technical%20Compendium%20Draft763427.pdf" target="_blank" rel="noopener">cdn.misoenergy.org/20260610 LLWG Item 06 MISO Large Load…pdf</a></li>
+      <li id="r19"><span class="tier t1">一手</span><span class="src">EirGrid / SONI</span>．<span class="ttl">Grid Code Modification MPID345: Fault Ride Through, RoCoF and Post Fault Active Power Recovery for Demand Facilities</span>．2026-04-01 提交监管机构，审议中<span class="mt">允许切至备用但要求 500 ms 内恢复 90%；四次故障减载实测 16%→52%；900 MW 负荷拒动限值</span><a class="u" href="https://cms.eirgrid.ie/sites/default/files/publications/MPID345-Demand-Facilities-FRT-Recommendation-Paper-01042026.pdf" target="_blank" rel="noopener">cms.eirgrid.ie/sites/default/files/publications/MPID345-Demand-Facilities-FRT…pdf</a></li>
+      <li id="r20"><span class="tier t1">一手</span><span class="src">CRU（爱尔兰能源监管委员会）</span>．<span class="ttl">大用户接入政策决定 CRU2025236</span>．2025-12-12<span class="mt">要求最大进口容量 ≥10 MVA 的数据中心提供匹配的可调度自备或邻近发电／储能并参与批发市场</span><a class="u" href="https://www.cru.ie/publications/" target="_blank" rel="noopener">cru.ie/publications/</a></li>
+      <li id="r21"><span class="tier t1">一手</span><span class="src">Virginia State Corporation Commission</span>．<span class="ttl">Case No. PUR-2025-00058（Dominion 综合费率案）情况说明</span>．2026-02<span class="mt">新设 GS-5 类别；最低合同 14 年；最低支付输配电成本 85%；担保最高 60%</span><a class="u" href="https://www.scc.virginia.gov/media/sccvirginiagov-home/about-the-scc/fact-sheets/scc-data-center-initiatives-02-2026.pdf" target="_blank" rel="noopener">scc.virginia.gov/media/sccvirginiagov-home/about-the-scc/fact-sheets/scc-data-center-initiatives-02-2026.pdf</a></li>
+      <li id="r22"><span class="tier t3">二手</span><span class="src">NERC / IEEE</span>．<span class="ttl">PRC-029-1（2026-10-01 生效）；IEEE 2800-2022；IEEE 2800.2-2026；IEEE P2800.1（在编）</span><span class="mt">适用主体均为逆变器类资源与发电所有者，不适用于负荷</span><a class="u" href="https://standards.ieee.org/ieee/2800/10453/" target="_blank" rel="noopener">standards.ieee.org/ieee/2800/10453/</a></li>
+    </ol>
+
+    <div class="ref-grp">二、技术文献与行业机构报告</div>
+    <ol class="reflist" style="counter-reset:r 22">
+      <li id="r23"><span class="tier t1">一手</span><span class="src">NERC</span>．<span class="ttl">Power System Oscillation Monitoring and Mitigation（技术参考文件，草案）</span>．2025<span class="mt">频段划分：0.01–0.15 Hz 调速器／AGC；0.15–1.00 Hz 机电区域间；1.00–5.00 Hz 局部与励磁；5.00–50.00 Hz 次同步扭振与变流器交互。载 2005 年阿尔伯塔 0.25 Hz／20 MW 振荡在 1,100 英里外放大为 200 MW 的案例</span><a class="u" href="https://www.nerc.com/globalassets/our-work/technical-reference-documents/trd-oscillation_analysis_for_monitoring_and_mitigation---draft.pdf" target="_blank" rel="noopener">nerc.com/globalassets/our-work/technical-reference-documents/trd-oscillation…pdf</a></li>
+      <li id="r24"><span class="tier t2">机构</span><span class="src">ESIG</span>．<span class="ttl">Large Load Performance Requirements</span>．2026-03<span class="mt">Table 8 跨辖区爬坡率对照；Fingrid 与 AESO 的频段型要求；建议最低采样率 100 Hz、数据保留 20 天</span><a class="u" href="https://www.esig.energy/wp-content/uploads/2026/03/ESIG-Large-Loads-Performance-Requirements-report-2026c.pdf" target="_blank" rel="noopener">esig.energy/wp-content/uploads/2026/03/ESIG-Large-Loads-Performance-Requirements-report-2026c.pdf</a></li>
+      <li id="r25"><span class="tier t1">一手</span>Fan, Yazdanpanah, Cheng, Miao, Salehi, Gravois, Huang（IEEE PES 工作组，含 ERCOT 人员）．<span class="ttl">Replicating Real-World 23-Hz Oscillations Caused by Large Electronic Loads</span>．arXiv:2605.17190，2026-05-16<span class="mt">2024-10-25 事件全记录；PMU 30 Hz 上报率把 23 Hz 混叠读成 7.5 Hz；另转引 Meta 2017 年 49/71 Hz 事件</span><a class="u" href="https://arxiv.org/pdf/2605.17190" target="_blank" rel="noopener">arxiv.org/pdf/2605.17190</a></li>
+      <li id="r26"><span class="tier t1">一手</span>Mishra, Vanfretti, Delaree, Purcell, Jones（Dominion Energy + RPI）．<span class="ttl">Understanding the inception of 14.7 Hz oscillations emerging from a data center</span>．Sustainable Energy, Grids and Networks 43 (2025) 101735<span class="mt">期刊论文 + 电网公司一手同步相量；根因为 UPS 相关 10–11 Hz 模式失稳</span><a class="u" href="https://sites.ecse.rpi.edu/~vanfrl/documents/publications/journal/JP105_CMLV_data_center_14p7_Hz_oscillation.pdf" target="_blank" rel="noopener">sites.ecse.rpi.edu/~vanfrl/…JP105_CMLV_data_center_14p7_Hz_oscillation.pdf</a></li>
+      <li id="r27"><span class="tier t1">一手</span>Zahedi, Zamani, Anilkumar（Quanta Technology）．<span class="ttl">Best Practices for Large Load Interconnections: A North American Perspective on Data Centers</span>．CIGRE US National Committee 2025 Grid of the Future Symposium<span class="mt">各公用事业电能质量与爬坡要求对照；仅 Dominion 与 Southern Company 强制并网点永久性监测</span><a class="u" href="https://arxiv.org/pdf/2601.12686" target="_blank" rel="noopener">arxiv.org/pdf/2601.12686</a></li>
+      <li id="r28"><span class="tier t2">机构</span>Hossain, Ray Chaudhuri, Sinha, Vennelaganti, Nassar（Penn State 等）．<span class="ttl">Limiting the Impact of AI Data Centers on Fatigue Life of Thermal Turbine Generators in the Grid</span>．arXiv:2605.01173，2026-05-02<span class="mt">汇编 ERCOT、LIPA、AESO、ATC、SOCO 五家的秒级限值</span><a class="u" href="https://arxiv.org/pdf/2605.01173" target="_blank" rel="noopener">arxiv.org/pdf/2605.01173</a></li>
+      <li id="r29"><span class="tier t1">一手</span><span class="src">NERC</span>．<span class="ttl">White Paper: Grid Forming Functional Specifications for BPS-Connected Battery Energy Storage Systems</span>．2023-09<span class="mt">夏威夷 PHIL 测试 30%、欧盟 MIGRATE 37% 两个渗透率参照点；明确行业尚无最小容量经验法则</span><a class="u" href="https://www.nerc.com/globalassets/our-work/white-papers/white_paper_gfm_functional_specification.pdf" target="_blank" rel="noopener">nerc.com/globalassets/our-work/white-papers/white_paper_gfm_functional_specification.pdf</a></li>
+      <li id="r30"><span class="tier t1">一手</span><span class="src">NERC</span>．<span class="ttl">Grid Forming Technology: Bulk Power System Reliability Considerations</span>．2021-12<span class="mt">构网型的裕度要求与短路比 &lt;1 运行能力；早于检索窗口，作基础定义引用</span><a class="u" href="https://www.nerc.com/globalassets/our-work/white-papers/white_paper_grid_forming_technology.pdf" target="_blank" rel="noopener">nerc.com/globalassets/our-work/white-papers/white_paper_grid_forming_technology.pdf</a></li>
+      <li id="r31"><span class="tier t2">机构</span>Shamseldein, M.．<span class="ttl">From Liability to Asset: A Three-Mode Grid-Forming Control Framework for Centralized Data Center UPS Systems</span>．arXiv:2512.16497，2025-12-18<span class="mt">唯一把构网型控制用在数据中心 UPS 并给出完整数值的文献；单作者预印本，未经第三方复现</span><a class="u" href="https://arxiv.org/pdf/2512.16497" target="_blank" rel="noopener">arxiv.org/pdf/2512.16497</a></li>
+      <li id="r32"><span class="tier t2">机构</span>Ko, Zhu（UT Austin）, Shim（Sangmyung Univ.）．<span class="ttl">Mitigation of Datacenter Demand Ramping and Fluctuation using Hybrid ESS and Supercapacitor</span>．arXiv:2512.08076，2025-12-08<span class="mt">高通滤波截止 0.2 Hz；电池 30 MW/15 MW·s⁻¹ 对超级电容 10 MW/100 MW·s⁻¹</span><a class="u" href="https://arxiv.org/pdf/2512.08076" target="_blank" rel="noopener">arxiv.org/pdf/2512.08076</a></li>
+      <li id="r33"><span class="tier t2">机构</span>Alfatlawi, Nazari（Wayne State Univ.）．<span class="ttl">Inter-Area Oscillation Damping in Data-Center-Integrated Power Systems</span>．arXiv:2607.27575，2026-07-30<span class="mt">IEEE 39 节点算例；暖通对振荡阻尼峰值贡献 0.000 MW；UPS 的 5.6 MW 使模态能量降 50.9%</span><a class="u" href="https://arxiv.org/pdf/2607.27575" target="_blank" rel="noopener">arxiv.org/pdf/2607.27575</a></li>
+      <li id="r34"><span class="tier t2">机构</span>Choukse 等（Microsoft、OpenAI、NVIDIA）．<span class="ttl">Power Stabilization for AI Training Datacenters</span>．arXiv:2508.14318，2025-08-21<span class="mt">AI 负荷 FFT 能量集中在 0.2–3 Hz；GPU 功率数据 1 ms 粒度采集。为 NERC 2026 导则的引用文献</span><a class="u" href="https://arxiv.org/abs/2508.14318" target="_blank" rel="noopener">arxiv.org/abs/2508.14318</a></li>
+      <li id="r35"><span class="tier t1">一手</span><span class="src">IEEE</span>．<span class="ttl">IEEE 519（谐波）／IEEE 1453（闪变与快速电压变化）</span><span class="mt">各公用事业电能质量要求的共同引用基准</span><a class="u" href="https://standards.ieee.org/ieee/519/10677/" target="_blank" rel="noopener">standards.ieee.org/ieee/519/10677/</a></li>
+    </ol>
+
+    <div class="ref-grp">三、中国政策、标准与研究</div>
+    <ol class="reflist" style="counter-reset:r 35">
+      <li id="r36"><span class="tier t1">一手</span><span class="src">国家发展改革委、国家能源局、工业和信息化部、国家数据局</span>．<span class="ttl">关于促进人工智能与能源双向赋能的行动方案（国能发科技〔2026〕34 号）</span>．2026-04-08 成文，2026-05-08 发布<span class="mt">第二十条点名研制「大负荷算力设施规划建设」标准；第二条首次把电能质量要求、接入系统规模、电压等级并列为标准编制输入</span><a class="u" href="https://www.nea.gov.cn/20260508/4dae97ca01d348e4871bb8654be34b3a/c.html" target="_blank" rel="noopener">nea.gov.cn/20260508/4dae97ca01d348e4871bb8654be34b3a/c.html</a></li>
+      <li id="r37"><span class="tier t1">一手</span><span class="src">国家发展改革委、国家能源局</span>．<span class="ttl">关于有序推动绿电直连发展有关事项的通知（发改能源〔2025〕650 号）</span>．2025-05-21<span class="mt">三个量化约束全为千瓦时口径</span><a class="u" href="https://www.ndrc.gov.cn/xxgk/zcfb/tz/202505/t20250530_1398138.html" target="_blank" rel="noopener">ndrc.gov.cn/xxgk/zcfb/tz/202505/t20250530_1398138.html</a></li>
+      <li id="r38"><span class="tier t1">一手</span><span class="src">国家发展改革委、国家能源局</span>．<span class="ttl">新型储能规模化建设专项行动方案（2025—2027 年）（发改能源〔2025〕1144 号）</span>．2025-08-27 成文，2025-09-12 发布<span class="mt">第七条对储能电站用「应」字规定涉网试验与调度指令执行；「算力设施」仅出现在创新应用模式清单</span><a class="u" href="https://www.ndrc.gov.cn/xxgk/zcfb/tz/202509/t20250912_1400425.html" target="_blank" rel="noopener">ndrc.gov.cn/xxgk/zcfb/tz/202509/t20250912_1400425.html</a></li>
+      <li id="r39"><span class="tier t1">一手</span><span class="src">国家能源局</span>．<span class="ttl">2025 年能源领域行业标准制定计划</span>．2025-09-15<span class="mt">项目 20250028《算力电力协同规划设计导则》，2027 年完成，内容边界为规划及设计；全文「数据中心／智算」仅此一处</span><a class="u" href="https://www.nea.gov.cn/20250915/fd22cb54f3dd471ca7be5d470d77972d/20250915fd22cb54f3dd471ca7be5d470d77972d_51716074eb35eb4db19f15375df688b4d1.pdf" target="_blank" rel="noopener">nea.gov.cn/20250915/…51716074eb35eb4db19f15375df688b4d1.pdf</a></li>
+      <li id="r40"><span class="tier t1">一手</span><span class="src">国家能源局综合司</span>．<span class="ttl">2026 年能源行业标准计划立项指南</span>．2026-03-24<span class="mt">逐词检索「算力」「智算」「数据中心」「大负荷」「新型负荷」命中全部为零；新能源发电涉网安全有专门方向，负荷侧无对应物</span><a class="u" href="https://www.nea.gov.cn/20260324/a3810b8d733c4972a67ef5891a17b8ea/20260324a3810b8d733c4972a67ef5891a17b8ea_49f3818b8b71ed439ca1d10cceef0bc714.pdf" target="_blank" rel="noopener">nea.gov.cn/20260324/…49f3818b8b71ed439ca1d10cceef0bc714.pdf</a></li>
+      <li id="r41"><span class="tier t1">一手</span><span class="src">国家标准委</span>．<span class="ttl">GB/T 44137-2024《高电能质量需求用户接入电网技术要求》</span>．2024-06-29 发布，2024-10-01 实施<span class="mt">唯一以「用户接入电网」为题的现行国标，但规制方向是保障敏感用户供电质量；未检索到针对数据中心的专门条款。全文未获取</span><a class="u" href="https://std.samr.gov.cn/gb/search/gbDetailed?id=1C2B210449617242E06397BE0A0ACA1F" target="_blank" rel="noopener">std.samr.gov.cn/gb/search/gbDetailed?id=1C2B210449617242E06397BE0A0ACA1F</a></li>
+      <li id="r42"><span class="tier t1">一手</span><span class="src">国家标准委</span>．<span class="ttl">GB/T 12326《电能质量 电压波动和闪变》／GB/T 14549《电能质量 公用电网谐波》</span><span class="mt">本报告已取得 GB/T 12326—2008 全文。§3.2 把「波动负荷」举例定义为「炼钢电弧炉、轧机、电弧焊机」；§4 表 1 给出电压变动限值 d（高压侧按变动频度 1–3%）；§5.2.2 b) 对高压用户规定 (ΔS/S<sub>sc</sub>)<sub>max</sub> &lt; 0.1%</span><a class="u" href="https://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=10A576E61901DA59E9A6AC555C2BAFD1" target="_blank" rel="noopener">openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=10A576E61901DA59E9A6AC555C2BAFD1</a></li>
+      <li id="r43"><span class="tier t1">一手</span><span class="src">全国电力储能标准化技术委员会</span>．<span class="ttl">国家标准计划 20243219-T-524《电化学储能构网型变流器技术规范》</span>．公示 2024-08<span class="mt">仍在制定；适用 35 kV 及以下，与大型智算中心 110/220 kV 接入不匹配</span><a class="u" href="https://std.samr.gov.cn/gb/search/gbDetailed?id=14380A4E263F20ACE06397BE0A0AD9EC" target="_blank" rel="noopener">std.samr.gov.cn/gb/search/gbDetailed?id=14380A4E263F20ACE06397BE0A0AD9EC</a></li>
+      <li id="r44"><span class="tier t2">机构</span><span class="src">ODCC / 全国智能计算标准化工作组</span>．<span class="ttl">国家标准计划 20262034-Z-469《智算中心算电协同技术导则》立项</span>．2026-05-06<span class="mt">信通院牵头；「Z」指指导性技术文件，非强制；归口在信息技术口而非电力口</span><a class="u" href="https://www.odcc.org.cn/news/p-2051964800411131906.html" target="_blank" rel="noopener">odcc.org.cn/news/p-2051964800411131906.html</a></li>
+      <li id="r45"><span class="tier t1">一手</span><span class="src">上海市经济和信息化委员会</span>．<span class="ttl">上海市智算中心建设导则（2025 年版）</span>．2025-01<span class="mt">电力章节只有可靠性要求；18 项引用文件无一条电能质量国标；全文「构网」零命中</span><a class="u" href="https://www.sheitc.org.cn/uploadfile/20250114/20250114144347_3158.pdf" target="_blank" rel="noopener">sheitc.org.cn/uploadfile/20250114/20250114144347_3158.pdf</a></li>
+      <li id="r46"><span class="tier t1">一手</span><span class="src">中国信息通信研究院</span>．<span class="ttl">算力电力协同发展研究报告（2025 年）</span>．2025-05<span class="mt">部分城市算力中心接入变压器年平均负载率仅约 30%；全文无并网技术指标，政策建议全在市场机制</span><a class="u" href="https://www.caict.ac.cn/english/research/whitepapers/202509/P020250903602966954403.pdf" target="_blank" rel="noopener">caict.ac.cn/english/research/whitepapers/202509/P020250903602966954403.pdf</a></li>
+      <li id="r47"><span class="tier t1">一手</span><span class="src">国家数据局</span>．<span class="ttl">全国一体化算力网 算力并网技术要求（征求意见稿）等 7 项技术文件</span>．2025-06-07<span class="mt">此处「并网」指算力资源接入算力网，与电力并网无关——避免关键词误判</span><a class="u" href="https://www.nda.gov.cn/sjj/ywpd/szkjyjcss/0608/20250608181902170645120_pc.html" target="_blank" rel="noopener">nda.gov.cn/sjj/ywpd/szkjyjcss/0608/20250608181902170645120_pc.html</a></li>
+      <li id="r48"><span class="tier t3">二手</span><span class="src">中国能源新闻网</span>．<span class="ttl">我国首个构网技术国家标准发布《电力电子装备和系统的构网性能要求及试验方法》</span>．2026-08-07<span class="mt">国网经研院牵头；报道未给标准号与实施日期，未检索到标准平台对应条目；未提及数据中心场景</span><a class="u" href="https://www.cpnn.com.cn/news/kj/202608/t20260807_1906929.html" target="_blank" rel="noopener">cpnn.com.cn/news/kj/202608/t20260807_1906929.html</a></li>
+      <li id="r49"><span class="tier t3">二手</span><span class="src">中国电机工程学会</span>．<span class="ttl">T/CES 244-2023《构网型储能系统并网测试规范》</span><span class="mt">团体标准，非强制；存在性已确认，内容未获取</span><a class="u" href="https://www.ndls.org.cn/standard/detail/83d9e5b56d29a5e2453821e173851379" target="_blank" rel="noopener">ndls.org.cn/standard/detail/83d9e5b56d29a5e2453821e173851379</a></li>
+    </ol>
+
+    <div class="ref-grp">四、市场、示范与媒体</div>
+    <ol class="reflist" style="counter-reset:r 49">
+      <li id="r50"><span class="tier t3">二手</span><span class="src">Google</span>．<span class="ttl">Google signed 1 GW of data center demand response</span>．2026-03-19<span class="mt">与五家美国公用事业签约；柔性容量直接嵌入购电协议，并作为加快接入的条件。合同原文未取得</span><a class="u" href="https://blog.google/innovation-and-ai/infrastructure-and-cloud/global-network/demand-response-data-center-milestone/" target="_blank" rel="noopener">blog.google/innovation-and-ai/infrastructure-and-cloud/global-network/demand-response-data-center-milestone/</a></li>
+      <li id="r51"><span class="tier t3">二手</span><span class="src">EPRI</span>．<span class="ttl">DCFlex Initiative Expands to Nine Demonstration Sites</span>．2026-02<span class="mt">伦敦站点测试 AI 计算负荷响应削减请求；德州站点同时控制计算与暖通负荷。未检索到量化结果报告</span><a class="u" href="https://www.epri.com/about/media-resources/press-release/rBbBPmK6zVt6eXN9rGQlWLMRwHRHQWIS" target="_blank" rel="noopener">epri.com/about/media-resources/press-release/rBbBPmK6zVt6eXN9rGQlWLMRwHRHQWIS</a></li>
+      <li id="r52"><span class="tier t3">二手</span><span class="src">PJM Interconnection</span>．<span class="ttl">2028/2029 基础剩余拍卖结果</span>．2026-07-14<span class="mt">采购 138,318 MW；全域出清于价格上限 $325/MW-day，连续第三次触顶；总容量费约 $16.4 bn；缺口 6,821 MW</span><a class="u" href="https://www.pjm.com/markets-and-operations/rpm" target="_blank" rel="noopener">pjm.com/markets-and-operations/rpm</a></li>
+      <li id="r53"><span class="tier t3">二手</span><span class="src">Ohio PUCO / AEP Ohio</span>．<span class="ttl">数据中心专门电价</span>．2025-07-23 生效<span class="mt">须按认购电量至少 85% 付费，期限最长 12 年；已扛过申诉。PUCO 命令原文未取得</span><a class="u" href="https://puco.ohio.gov/" target="_blank" rel="noopener">puco.ohio.gov/</a></li>
+      <li id="r54"><span class="tier t3">二手</span><span class="src">财新</span>．<span class="ttl">「算电协同」进入初步探索期 电网运行面临新挑战</span>．2026-05-21<span class="mt">引国网冀北电科院研究人员：行业更多聚焦「电量」，但进入电网运行阶段后核心问题是「电力」</span><a class="u" href="https://m.caixin.com/m/2026-05-21/102446296.html" target="_blank" rel="noopener">m.caixin.com/m/2026-05-21/102446296.html</a></li>
+      <li id="r55"><span class="tier t3">二手</span><span class="src">经济日报 / 新华网</span>．<span class="ttl">算电协同助力算力网建设</span>．2026-06-09<span class="mt">「十五五」期间全国算力用电量年均新增 1,000 亿千瓦时以上，2030 年预计 8,000 亿千瓦时；官方媒体首次承认负荷陡升陡降影响暂态稳定</span><a class="u" href="https://www.news.cn/tech/20260609/415460813ed8493c9bbaed8b6b87feca/c.html" target="_blank" rel="noopener">news.cn/tech/20260609/415460813ed8493c9bbaed8b6b87feca/c.html</a></li>
+      <li id="r56"><span class="tier t3">二手</span><span class="src">21 世纪经济报道</span>．<span class="ttl">首单「算随电动」落地广东</span>．2026-05-20<span class="mt">三个数据中心集群经虚拟电厂平台首次以数据中心形态参与现货市场；澄清「广东 33 MW」指发电类虚拟电厂，非数据中心聚合</span><a class="u" href="https://www.21jingji.com/article/20260520/6be9edd4e6880cbf1955b835a523b992.html" target="_blank" rel="noopener">21jingji.com/article/20260520/6be9edd4e6880cbf1955b835a523b992.html</a></li>
+      <li id="r57"><span class="tier t3">二手</span><span class="src">21 世纪经济报道</span>．<span class="ttl">专访国网冀北电力高级专家岳昊</span>．2026-06-23<span class="mt">在线推理负荷可瞬间从 50% 负载冲高至满负荷；访谈未提及电网对算力负荷是否有技术要求</span><a class="u" href="https://www.21jingji.com/article/20260623/herald/2886b4bd51542d80e5a817e2ed582ef2.html" target="_blank" rel="noopener">21jingji.com/article/20260623/herald/2886b4bd51542d80e5a817e2ed582ef2.html</a></li>
+      <li id="r58"><span class="tier t3">二手</span><span class="src">界面新闻</span>．<span class="ttl">冀北百兆瓦级算电协同调节落地</span>．2026-09-11<span class="mt">11 座算力中心不到 10 分钟释放约 100 MW；另有「10 分钟内释放 100.64 MW」口径，本报告取约值</span><a class="u" href="https://www.jiemian.com/article/15083092.html" target="_blank" rel="noopener">jiemian.com/article/15083092.html</a></li>
+      <li id="r59"><span class="tier t3">二手</span><span class="src">上观新闻 / 解放日报</span>．<span class="ttl">上海同时验证多项算电协同技术</span>．2026-07-15<span class="mt">16 家数据中心参与，两小时内最大压减 97.8 MW；计划出台《数据中心柴发调用规范》《算力转移协同调度规范》</span><a class="u" href="https://finance.sina.com.cn/jjxw/2026-07-15/doc-inihvqct7944435.shtml" target="_blank" rel="noopener">finance.sina.com.cn/jjxw/2026-07-15/doc-inihvqct7944435.shtml</a></li>
+      <li id="r60"><span class="tier t3">二手</span><span class="src">央视网 / 中国产业经济信息网</span>．<span class="ttl">算力跟着绿电走</span>．2026-08-31<span class="mt">江苏常熟算力产业最高用电负荷 20 万千瓦，占全市约 4.1%，贡献近半数用电负荷增量</span><a class="u" href="https://www.cinic.org.cn/hy/tx/1650555.html" target="_blank" rel="noopener">cinic.org.cn/hy/tx/1650555.html</a></li>
+      <li id="r61"><span class="tier t3">二手</span><span class="src">国家能源局</span>．<span class="ttl">我国牵头制定全球首个算电协同领域国际标准（IEC《数据中心微电网监控与能量管理系统技术规范》）</span>．2026-08-21<span class="mt">切入点为能量管理系统（运营层），非并网性能要求（准入层）；未检索到 IEC 项目编号</span><a class="u" href="https://www.nea.gov.cn/20260821/bed063ee8224412e9d0f37ceca74293d/c.html" target="_blank" rel="noopener">nea.gov.cn/20260821/bed063ee8224412e9d0f37ceca74293d/c.html</a></li>
+      <li id="r62"><span class="tier t3">二手</span><span class="src">财联社</span>．<span class="ttl">数据中心「基建潮」现状调研</span>．2026-06-03<span class="mt">算电协同尚在起步；瓶颈为跨省交易通道与输电权分配受限、算电建设周期错配、绿电波动与算力可靠性矛盾</span><a class="u" href="https://www.cls.cn/detail/2389992" target="_blank" rel="noopener">cls.cn/detail/2389992</a></li>
+      <li id="r63"><span class="tier t2">机构</span><span class="src">北京邮电大学、紫金山实验室等</span>．<span class="ttl">算电协同技术白皮书</span>．2025-08<span class="mt">载腾讯 10 ms 内完成服务器功耗调整、单数据中心最大 20% 瞬时调节能力等数据；多处未标注原始出处，溯源不足</span><a class="u" href="https://www.gfnds.com/uploads/20250818/63c414d3d2082ded22487edace5ca3ed.pdf" target="_blank" rel="noopener">gfnds.com/uploads/20250818/63c414d3d2082ded22487edace5ca3ed.pdf</a></li>
+      <li id="r64"><span class="tier t4">存疑</span><span class="src">中华网</span>．<span class="ttl">算力网要来了 绿电成标配</span>．2026-05-16<span class="mt">称新建大中型算力中心备案时「必须」提交算电协同方案。所引两项政策依据均无此表述，本报告已在第 0 节与第 10 节显式排除，仅作排雷记录</span><a class="u" href="https://news.china.com/socialgd/10000169/20260516/49496885.html" target="_blank" rel="noopener">news.china.com/socialgd/10000169/20260516/49496885.html</a></li>
+          <li id="r65"><span class="tier t1">一手</span><span class="src">PJM Interconnection</span>．<span class="ttl">Large Load Ride Through（规划委员会 Item 05-1）</span>．2026-09-08<span class="mt">首次提出拟议穿越要求；载体为 Manual 14B 附件 D-2 与关税修订</span><a class="u" href="https://www.pjm.com/-/media/DotCom/committees-groups/committees/pc/2026/20260908/20260908-item-05---1-large-load-ride-through---presentation.pdf" target="_blank" rel="noopener">pjm.com/-/media/DotCom/committees-groups/committees/pc/2026/20260908/…presentation.pdf</a></li>
+      <li id="r66"><span class="tier t1">一手</span><span class="src">PJM Interconnection</span>．<span class="ttl">LCL Ride-Through Requirements Solution Education（规划委员会特别会议 Item 03-1）</span>．2026-09-15<span class="mt">含完整电压与频率穿越表、有功恢复、过流与多次扰动要求、适用门槛与过渡安排；状态为提案，未经表决、未提交 FERC</span><a class="u" href="https://www.pjm.com/-/media/DotCom/committees-groups/committees/pc/2026/20260915/20260915-item-03---1-lcl-ride-through-requirements-solution-education---presentation.pdf" target="_blank" rel="noopener">pjm.com/-/media/DotCom/committees-groups/committees/pc/2026/20260915/…presentation.pdf</a></li>
+      <li id="r67"><span class="tier t1">一手</span><span class="src">SPP</span>．<span class="ttl">High Impact Large Load Ride-Through Requirements v1.0</span>．2025-08-19 更新版<span class="mt">经关税附件 AE §2.22 引用；<strong>但属非关税文件，生效日字段仍为占位符「[Insert Effective Date of RR696]」，条款措辞为 should 而非 shall</strong>，强制力待核</span><a class="u" href="https://www.spp.org/documents/74635/spp%20hill%20fault%20ride%20through%20requirements-v1.0-8-19-2025%20(updated%20version).docx" target="_blank" rel="noopener">spp.org/documents/74635/spp hill fault ride through requirements-v1.0…docx</a></li>
+      <li id="r68"><span class="tier t1">一手</span><span class="src">CAISO</span>．<span class="ttl">Large Load Technical Requirements Straw Proposal</span>．2026-06-15<span class="mt">草案；低压侧显著严于 ERCOT／PJM；爬坡率 20 MW/min（滚动 10 分钟平均），设计依据为把对西部互联 ±0.036 Hz 死区外一次调频的触发降至最低</span><a class="u" href="https://stakeholdercenter.caiso.com/InitiativeDocuments/Large-Load-Technical-Requirements-Straw-Proposal-Jun-15-2026.pdf" target="_blank" rel="noopener">stakeholdercenter.caiso.com/InitiativeDocuments/Large-Load-Technical-Requirements-Straw-Proposal-Jun-15-2026.pdf</a></li>
+      <li id="r69"><span class="tier t3">二手</span><span class="src">MISO</span>．<span class="ttl">大负荷互联可靠性要求 FERC 提交（accession 20260828-5278）</span>．2026-08-28 提交，请求 2026-12-04 生效<span class="mt">适用 &gt;50 MW，其中 ≥25 MW 来自 IT 设备；含既有设施 grandfathering。misoenergy.org 返回 403，提交正文未能打开，数值引自 2026-06-10 工作组草案</span><a class="u" href="https://www.misoenergy.org/stakeholder-engagement/committees/large-load-working-group/" target="_blank" rel="noopener">misoenergy.org/stakeholder-engagement/committees/large-load-working-group/</a></li>
+      <li id="r70"><span class="tier t1">一手</span><span class="src">NERC</span>．<span class="ttl">《议事规则》附录 5B 计算类负荷注册标准（2026-08-19 修订稿）</span>．评论期至 2026-09-18<span class="mt">门槛由 ≥20 MW／≥60 kV／含 ≥1 MW IT <strong>改为 ≥50 MW 且 ≥100 kV</strong>，取消单列 IT 容量门槛；确立 CLO（Owner）与 CLOP（Operator）二分</span><a class="u" href="https://www.nerc.com/globalassets/who-we-are/rules-of-procedure/proposed/appendix-5b-clean---august-2026-posting.pdf" target="_blank" rel="noopener">nerc.com/globalassets/who-we-are/rules-of-procedure/proposed/appendix-5b-clean---august-2026-posting.pdf</a></li>
+      <li id="r71"><span class="tier t1">一手</span><span class="src">NERC 大负荷工作组</span>．<span class="ttl">草案 SAR: Reliability Standards to Address Computational Load Disturbance Performance</span>．未提交（「Date Submitted」栏为空）<span class="mt">建议以 ERCOT NOGRR282 的穿越要求为最低基线；<strong>该 SAR 尚未立项，意味着 NERC 层面的强制穿越数值 2026 年内不会出现</strong></span><a class="u" href="https://www.nerc.com/globalassets/initiatives/large-loads-action-plan/draft_sar_computational_load_disturbance_performance-1.pdf" target="_blank" rel="noopener">nerc.com/globalassets/initiatives/large-loads-action-plan/draft_sar_computational_load_disturbance_performance-1.pdf</a></li>
+      <li id="r72"><span class="tier t1">一手</span><span class="src">NERC</span>．<span class="ttl">CLO-001-1 / CLO-002-1 / CLO-003-1 实施计划与 VRF/VSL 论证</span>．2026-08<span class="mt">分阶段合规期：CLO-001 R7–R8 +3 个月、R1–R3 +6 个月、其余 +9 个月；CLO-002 +6 至 +12 个月；<strong>CLO-003 主体要求 +36 个月</strong></span><a class="u" href="https://www.nerc.com/standards/reliability-standards-under-development/2026-02-computational-loads" target="_blank" rel="noopener">nerc.com/standards/reliability-standards-under-development/2026-02-computational-loads</a></li>
+      <li id="r73"><span class="tier t1">一手</span><span class="src">国家电网有限公司</span>．<span class="ttl">国家电网有限公司业扩报装管理规则（附件 5《供电方案／供用电合同》第 9 条「电能质量要求」）</span><span class="mt">该条共三项，全部指向国标：非线性负荷须出具电能质量评估报告；谐波按 GB/T 14549；「冲击性负荷产生的电压波动允许值」按 GB/T 12326。全文检索「爬坡」「功率变化」<strong>命中为零</strong></span><a class="u" href="http://www.sgcc.com.cn/" target="_blank" rel="noopener">国家电网有限公司企业标准（本报告取得全文，未取得可公开引用的固定 URL）</a></li>
+      <li id="r74"><span class="tier t1">一手</span><span class="src">河北雄安新区管理委员会改革发展局</span>．<span class="ttl">DB1331/T 047—2023《雄安新区电力用户用电导则》</span>．2023-08-11 发布，2023-08-15 实施<span class="mt">附录 D「重点电力用户行业分类及示例」。全文中「数据中心」仅出现一次，即表 D-1 的 [B4.1] 证券数据中心；「爬坡」「功率变化率」命中为零</span><a class="u" href="https://www.xiongan.gov.cn/" target="_blank" rel="noopener">xiongan.gov.cn — 雄安新区地方标准（本报告取得全文 PDF）</a></li>
+      <li id="r75"><span class="tier t1">一手</span><span class="src">国家能源局</span>．<span class="ttl">电能质量管理办法（暂行）</span><span class="mt">第十八条与第二十条赋予电网企业拒绝接入与中止供电的权力；第三十一条把「电能质量指标」穷举为七项国标，全部为电压／频率质量类，无一项是有功功率变化率</span><a class="u" href="https://www.nea.gov.cn/" target="_blank" rel="noopener">nea.gov.cn — 国家能源局规范性文件（本报告取得全文）</a></li>
+    </ol>
+  </section>
+
+  <footer>
+    <p>
+      <strong>方法</strong>　本报告采集 124 条证据条目、72 项来源，
+      按「原始资料 → 观察 → 证据归一化 → 横纵向比较 → 综合发现 → 推导判断」的自下而上路径形成。
+      每条核心论断标注来源层级，并对监管文件严格区分「已生效／有约束力的指令／草案／仅为提案／非强制」五种状态——
+      这是本课题最易出错之处。证据期 2025-01 至 2026-09，采集截止 2026-09-14。
+    </p>
+    <p>
+      <strong>边界</strong>　本报告覆盖电网侧。机房侧的设备选型、架构演进与产业链问题——
+      800VDC 制式之争、UPS 形态、储能放置、厂商格局——见姊妹篇<a href="https://claude.ai/artifact/JbY2XjDgDmbjf74vH1giBH">《AIDC 供电架构》</a>。
+      两份报告共用同一套口径纪律与来源分级体系。
+    </p>
+    <p>
+      <strong>局限</strong>　FERC 原文因访问限制依赖律所简报转述；
+      中国电网企业标准无法通过公开渠道检索，相关「未检索到」的强度最弱；
+      电能质量一节无任何公开实测数据支撑。详见第 12 节。
+    </p>
+  </footer>
+
+  </main>
+</div>
+
+</div>

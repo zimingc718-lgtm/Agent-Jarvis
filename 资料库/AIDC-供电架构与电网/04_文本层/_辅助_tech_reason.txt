@@ -1,0 +1,155 @@
+----- PAGE 1 -----
+RELIABILITY | RESILIENCE | SECURITY  
+POWERING TODAY.  PROTECTING TOMORROW.  
+Technical Reasoning Update 
+Proposed Computational Load Owner and Computational Load Operator  
+August 19, 2026                    
+ 
+ 
+Background 
+NERC has been actively assessing the impact of large loads on the reliability of the Bulk Power System (BPS) since March 
+of 2024 by engaging relevant stakeholders to understand risks and appropriate mitigations. In March 2024, the Reliability 
+and Security Technical Committee (RSTC) hosted a panel to discuss the impact of large loads originating from data centers 
+and cryptocurrency mining centers.  By Summer of 2024, the RSTC had launched what is today the Large Load Working 
+Group (LLWG).  The LLWG has been instrumental in helping to gauge the scope of risk, gaps, and next steps in NERC ’s 
+response. Additional work by NERC and the Regional Entities, including, the January 2025 incident review on a large load 
+loss event in the Eastern Interconnection,  and the January 2026 incident review of voltag e-sensitive crypto load 
+reductions in Texas Interconnection, also continues.   
+ 
+Through these events, NERC identiﬁed the unique electrical behaviors, composition, and aggregate impacts that increase 
+risk when large amounts of computational load are connected to the BPS. To ensure these loads that pose an increased 
+risk when connected to the BPS have speciﬁc requirements, NERC determined it should modify its Registry Criteria to 
+require computational loads (i.e., “users”) to register with NERC . The NERC Registry Criteria prescribe the threshold(s) 
+for which users, owners, and operators of the BPS must register with NERC. At a minimum, an entity registered by NERC 
+will be subject to at least one NERC Reliability Standard requirement (to be determined through the NERC Standards 
+development process). For a thorough technical discussion of the impacts and risks of large loads, please refer to the 
+source material provided on the Large Loads Action Plan web page. 
+ 
+On April 1, 2026, NERC proposed revisions to its Rules of Procedure (ROP) to require registration of Computational Load 
+Entities that contribute to an aggregate capability of 20 megawatt (MW) connected at a BPS voltage greater than or equal 
+to 60 kilovolts (kV), with 1 MW or greater of Computational Load. NERC posted these proposed ROP revisions for a public 
+comment period that ended on May 15, 2026. Based on the comments received, NERC has revised its proposed ROP 
+revisions, as described in the next section.  
+ 
+In addition, on July 16, 2026, FERC issued an Order directing NERC to ﬁle Reliability Standards pertaining to computational 
+load integration. The Order also directed NERC to develop revisions to its ROP necessary for the registration of 
+computational load entities and to submit the proposed revisions by December 31, 2026.    
+ 
+Changes to ROP Revisions 
+NERC received 32 sets of comments from 44 commenters regarding the April 1 posting of proposed ROP revisions. The 
+major themes of stakeholder comments include: 
+ 
+• General support in addressing the risk while more explicit justiﬁcation is needed 
+• Change Computational Load Entity to Computational Load Owner and Computational Load Operator functions 
+• Proposed 20 MW and/or 60 kV is too low or includes unintended entities 
+• Remove 1 MW “de minimis” criteria 
+• Suggested deﬁnition of “Computational Load Facility” for greater clarity 
+• Need clariﬁcation on the point of interconnection
+----- PAGE 2 -----
+Technical Reasoning – Proposed Computational Load Owner and Computational Load Operator 2 
+During and following the April 1 ROP posting, NERC registration staﬀ have been collaborating with the Project 2026 -02 
+Standard Drafting Team (SDT) to ensure alignment with common terms and deﬁnitions, as well as understanding of 
+proposed ROP Registry Criteria revisions. Based on the stakeholder comments and coordination with the SDT , as well as 
+addition analysis performed by NERC registration, the proposed ROP revisions have been changed as follows:  
+ 
+• Replace the single Computational Load Entity function with two functions, Computational Load Owner (CLO) and 
+Computational Load Operator (CLOP), to better represent the structure of the industry:1 
+ 
+Computational Load Owner means the entity that owns and maintains a Computational Load Site. 
+ 
+Computational Load Operator means the entity that operates a Computational Load Site. 
+ 
+• Increase the registry criteria threshold to 50 MW and 100 kV and update the point of interconnection language 
+to better align with BPS reliability risk:  
+ 
+Computational Load Owner of a Computational Load Site with a total connected Load greater than or equal 
+to 50 MW that is supplied through electrical equipment  connected at a voltage level greater than or equal 
+to 100 kV from one or more points of connection.  
+ 
+Computational Load  Operator of  a Computational Load  Site with a total connected Load greater than or 
+equal to 50 MW that is supplied through electrical equipment  connected at a voltage level greater than or 
+equal to 100 kV from one or more points of connection.  
+ 
+• Remove the 1 MW “de minimis” Computational Load criteria, and  
+• Replace the Computational Load deﬁnition with a Computations Load Site deﬁnition to clarify what loads are 
+subject to the proposed criteria: 
+ 
+Computational Load Site means one or more buildings, structures, or installations at a single location that  
+1. Primarily contains information technology infrastructure used for:  
+• creating, executing, and delivering software applications and services;   
+• artiﬁcial intelligence training, deployment, and delivery;   
+• cryptocurrency mining; or   
+• other computational activities at a data center; and  
+2. Is supplied through electrical equipment that is connected to the BPS.  
+       
+NERC registration staﬀ in collaboration with the SDT developed a Frequently Asked Questions  (FAQ) document that 
+addresses certain questions related to the application of this proposed registry criteria. For example, the FAQ includes 
+Computational Load Site conﬁguration scenarios that are evaluated against the proposed criteria, provides guidance to 
+identify the connection point(s) to the BPS, and contains factors that deﬁne a Computational Load Site boundary, as well 
+as several other issues.   
+ 
+ 
+ 
+1 This framework is also consistent with other existing NERC Registry functions, such as Generator Owners and Operators and Transmission Owners 
+and Operators.
+----- PAGE 3 -----
+Technical Reasoning – Proposed Computational Load Owner and Computational Load Operator 3 
+Thresholds 
+NERC’s proposed criteria for CLO and CLOP are based on their aggregate impact to the BPS.2 It is important to note that 
+aggregate impact, in this case, is a diﬀerent arrangement than the aggregate Computational Load Site capability of an 
+individual registration candidate as outlined in the proposed ROP Registry Criteria. Speciﬁcally, aggregate impact refers 
+to the impact of several Computational Load Sites connecting to the BPS in a similar manner where their aggregate 
+characteristics impact BPS reliability collectively.  
+ 
+NERC’s initial analysis and threshold recommendation of 20 MW and 60 kV was based on data provided from responses 
+to the Level 2 Alert. Data NERC received regarding the interconnection of large loads and other eﬀorts of the NERC LLWG 
+are summarized in the public Level 2 Alert report posted on March 17, 2026.3 Existing registered functional entities (e.g., 
+Transmission Owners, Distribution Providers, etc.) were requested to provide the total capacity of large loads on their 
+system that are currently operational and expected to be in-service by the end of 2027, including the voltage level at the 
+interconnecting point. The report concluded that large load is expected to change its composition dramatically, moving 
+from a split between industrial and computational load to almost entirely computational. The Alert worksheet 
+information further indicated that load may increase by 300 GW between 2028 and 2030, with the bulk of this increase 
+represented by data centers. A large share of the expected load growth will come from the “Traditional Data Center,” “AI 
+Data Center,” and “Cryptocurrency Mining” categories (or a combination of the three). In general, the Alert data provided 
+valuable insight into BPS-connected large load risks; however, NERC was concerned that further analysis was warranted 
+given the large share of this expected load growth. 
+ 
+As a result, NERC has performed additional research  on Computational Load Site development which has resulted in 
+updating the proposed NERC Registry  Criteria threshold to 50 MW and 100 kV. The analysis  was conducted u sing 
+comprehensive data collected by a third-party who tracks existing and future data center activity.4 The data is consistently 
+updated with NERC’s additional analysis based on June 2026  data. Data includes individual building , campus, their 
+locations, electric utility information, and load estimates. NERC used its internal analysis tools to complement the Alert 
+worksheet data voltage and interconnection information that was used to propose the initial NERC Registry Criteria 
+threshold. The additional analysis led to a more reﬁned understanding of the aggregate risks associated with data center 
+clusters connected throughout the BPS. 
+ 
+NERC ’s additional analysis revealed there is 41,827 MW of active data center load (at all voltages) as of June 2026 and 
+an additional 37,675 MW under construction and expected to be in -service by the end of 2027, for an overall total of 
+approximately 79,502 MW by year end 2027. NERC estimates that the proposed 50 MW and 100 kV threshold should 
+lead to the registration of approximately 68,288 MW of Computational Load Site owners and operators . This amount 
+equals approximately 86% of the overall total (all sizes and voltages) and captures the vast majority of computational 
+load entities that pose aggregate risks to the BPS. The threshold encompasses those Computational Load Sites that are 
+of the size and connected voltage that can create unforeseen and diﬃcult-to-explain dynamic behaviors when connected 
+to the BPS. NERC determined the 100 kV voltage criteria is an appropriate threshold based on its interconnection voltage 
+analysis. At the 50 MW threshold, there was a small diﬀerence of only 2% of the overall total load comparing 100 kV to 
+the previously proposed 60 kV threshold. The 2% of load represents those Computational Load Sites which are generally 
+smaller than 50 MW,  dispersed across the BPS , and represent a smaller fraction of the collective load where they are 
+ 
+2  North American Electric Reliability Corporation, 150 FERC ¶ 61,213 at P 58 (2015) (stating, “Registry Criteria provide that a class of entities, 
+each of which would be individually excluded, may nevertheless be registered based on their aggregate impact on Bulk-Power System reliability.”) 
+3  See NERC Aggregated Report on NERC Level 2 Industry Recommendation: Large Load Interconnection, Study, Commissioning, and 
+Operations, at https://www.nerc.com/globalassets/programs/bpsa/alerts/2025/aggregated-report-level-2-large-load-interconnection-study-
+commissioning-and-operations.pdf. For additional information, please see the NERC Large Loads Action Plan web page at 
+https://www.nerc.com/initiatives/large-loads-action-plan. 
+4 NERC has a license with Aterio to access its “US Data Center Locations and Power Demand” data set which “provides a comprehensive inventory 
+of data centers across the United States, including those currently operational, under development, and planned for future construction.”
+----- PAGE 4 -----
+Technical Reasoning – Proposed Computational Load Owner and Computational Load Operator 4 
+located, thus representing less aggregate risk . In addition, the proposed 50 MW and 100 kV threshold ensures BPS-
+connected entities are subject to registration while excluding entities that  have not been seen to negatively impact BPS 
+reliability and  removes confusion about whether a Computational Load Site is served by what may be considered local 
+distribution. Further, NERC estimated that increasing the threshold to 75 MW would lower the amount of Computational 
+Load Site owners and operators  subject to registration to approximately 63,960 MW, or 80% of the total, which NERC 
+asserts would not be suﬃcient to address the aggregate risk to the BPS. NERC will continue to monitor computational 
+total connected Load and connection voltage with respect to the aggregate risks  and reserves the right to propose 
+additional ROP Registry Criteria changes in the future to address any risks to the BPS.

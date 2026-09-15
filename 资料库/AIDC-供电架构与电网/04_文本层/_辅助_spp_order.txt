@@ -1,0 +1,1243 @@
+--- PAGE 1 ---
+194 FERC ¶ 61,031
+UNITED STATES OF AMERICA
+FEDERAL ENERGY REGULATORY COMMISSION
+Before Commissioners:  Laura V. Swett, Chairman;
+                                        David Rosner, Lindsay S. See,
+                                        Judy W. Chang, and David LaCerte.
+Southwest Power Pool, Inc. Docket No. ER26-247-000
+ORDER ACCEPTING TARIFF REVISIONS, SUBJECT TO CONDITION
+(Issued January 14, 2026)
+On October 24, 2025, pursuant to section 205 of the Federal Power Act (FPA)1
+and Part 35 of the Commission’s regulations,2 Southwest Power Pool, Inc. (SPP) 
+submitted proposed revisions to its Open Access Transmission Tariff (Tariff) to add a 
+High Impact Large Load (HILL) study process and High Impact Large Load Generation 
+Assessment (HILLGA) process.  As discussed below, we accept the proposed Tariff 
+revisions,3 effective January 15, 2026, as requested, subject to condition, and direct SPP
+to submit a compliance filing within 30 days of the date of this order .
+I. Background
+A. Order No. 2003
+In Order No. 2003,4 the Commission required public utilities that own, control, or 
+operate transmission facilities to file standard generator interconnection procedures and a 
+standard agreement to provide interconnection service to generating facilities with a 
+capacity greater than 20 megawatts (MW).  To this end, the Commission adopted the    
+                                           1 16 U.S.C. § 824d.
+2 18 C.F.R. pt. 35 (2025).
+3 See Appendix for tariff records accepted in this order.
+4 Standardization of Generator Interconnection Agreements & Procs., Order       
+No. 2003, 104 FERC ¶ 61,103 (2003), order on reh’g, Order No. 2003-A, 106 FERC 
+¶ 61,220, order on reh’g, Order No. 2003-B, 109 FERC ¶ 61,287 (2004), order on reh’g, 
+Order No. 2003-C, 111 FERC ¶ 61,401 (2005), aff’d sub nom. Nat’l Ass’n of Regul. Util. 
+Comm’rs v. FERC, 475 F.3d 1277 (D.C. Cir. 2007).
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 2 ---
+Docket No. ER26-247-000 - 2 -
+pro forma Large Generator Interconnection Procedures (LGIP) and pro forma Large 
+Generator Interconnection Agreement (LGIA) and required all public utilities subject to 
+Order No. 2003 to modify their tariffs to incorporate the pro forma LGIP and pro forma 
+LGIA.5  
+The Commission permitted transmission providers to seek variations from the    
+pro forma LGIP and pro forma LGIA if those variations were “consistent with or 
+superior to” the terms of the pro forma LGIP and pro forma LGIA.6  In addition, the 
+Commission indicated that it would allow regional transmission organizations and 
+independent system operators (RTO/ISO), such as SPP, to propose independent entity 
+variations for pricing and non-pricing provisions, stating that RTOs/ISOs have different 
+operating characteristics due to their sizes and locations and that an RTO/ISO is less 
+likely to act in an unduly discriminatory manner than a transmission provider that is also 
+a market participant.7  The Commission found that RTOs/ISOs “shall therefore have 
+greater flexibility to customize [their] interconnection procedures and agreements to fit 
+regional needs.”8  Under the independent entity variation standard, an RTO/ISO must 
+demonstrate that proposed variations from the Commission’s pro forma LGIP and        
+pro forma LGIA are just and reasonable and not unduly discriminatory or preferential 
+and accomplish the purposes of the Commission’s final rules on generator 
+interconnection, including Order Nos. 2003 and 2023.9
+B. Overview of SPP’s Attachments AQ, AX, and V Processes
+SPP evaluates a transmission customer’s request to add or modify delivery point 
+facilities associated with load additions under existing Attachments AQ (Delivery Point 
+                                           5 Order No. 2003, 104 FERC ¶ 61,103 at PP 1-2.
+6 Id. PP 825-826.  The Commission also permitted transmission providers to 
+justify a variation from the pro forma LGIP or pro forma LGIA based on regional 
+reliability requirements and required transmission providers to submit these regional 
+reliability variations to the Commission for approval under the relevant reliability 
+standard. Id. PP 824, 826.
+7 Id. P 827.
+8 Id.
+9 See, e.g., Midcontinent Indep. Sys. Operator, Inc., 185 FERC ¶ 61,084, at P 11
+(2023) (citing Order No. 2003, 104 FERC ¶ 61,103 at PP 26, 827); Improvements to 
+Generator Interconnection Procs. & Agreements, Order No. 2023, 184 FERC ¶ 61,054, 
+at P 1764, order on reh’g, 185 FERC ¶ 61,063 (2023), order on reh’g, Order No.      
+2023-A, 186 FERC ¶ 61,199, errata notice, 188 FERC ¶ 61,134 (2024).
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 3 ---
+Docket No. ER26-247-000 - 3 -
+Assessment Process) and AX (Provisional Load Process) of SPP’s Tariff.10  Under the 
+Attachments AQ and AX processes, SPP studies the impacts of the requested delivery 
+point addition or modification on the transmission system and determines what, if any, 
+network upgrades are required to accommodate the request.  The Attachment AQ process 
+is available to a transmission customer that has sufficient existing Designated Resources 
+to serve its forecasted load, while the Attachment AX process is available to a 
+transmission customer that lacks sufficient existing Designated Resources. 11
+Under SPP’s current generator interconnection procedures, contained in 
+Attachment V (Generator Interconnection Procedures (GIP)) of its Tariff, SPP conducts 
+its interconnection study process, the Definitive Interconnection System Impact Study 
+(DISIS), for which the Commission has granted an independent entity variation.12  The 
+DISIS is divided into a two-phased system impact study in DISIS Phase One and DISIS 
+Phase Two, which is followed by an interconnection facilities study.   The system impact 
+study is a cluster study that evaluates the impact of each proposed interconnection request 
+on the reliability of SPP’s transmission system. DISIS Phase One and DISIS Phase Two 
+are each followed by an interconnection customer decision point (Decision Point One and 
+Decision Point Two, respectively). The decision points provide interconnection 
+customers opportunities to evaluate study results and decide whether to proceed with or 
+withdraw their interconnection requests, including posting of financial security to 
+continue. 
+II. Filing
+A. Overview
+SPP states that it is experiencing an unprecedented surge in requests for large -
+scale load interconnections to its transmission system from data centers, cryptocurrency 
+mining operations, electrification of industrial processes, and other energy-intensive
+                                           10 SPP, Tariff, attach. AQ, § 1 (1.0.0); id. attach. AQ, § 2 (2.0.0); id. attach. AQ, § 
+3 (2.0.0); id. attach. AX, § 1 (0.0.0); id. attach. AX, § 2 (0.0.0).
+11 Transmittal at 14 n.26; Sw. Power Pool, Inc., 193 FERC ¶ 61,018, at PP 3-5 
+(2025).  Under Attachment AX, SPP will consider the transmission customer’s planned 
+generation, in addition to its existing Designated Resources, that will be used to serve its 
+forecasted load.  Sw. Power Pool, Inc., 193 FERC ¶ 61,018 at PP 5, 41.
+12 SPP, Tariff, attach. V, § 8 (Definitive Planning Phase) (25.0.0), §§ 8.4, 8.10, 
+8.11; see Sw. Power Pool, Inc., 191 FERC ¶ 61,230, at P 71 (2025); Sw. Power Pool, 
+Inc., 193 FERC ¶ 61,171, at P 4 (2025).
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 4 ---
+Docket No. ER26-247-000 - 4 -
+facilities.13  Specifically, SPP explains that in every year since 2021, transmission 
+customers, specifically large loads of over 100 MW, have submitted requests to 
+interconnect, in the form of Attachment AQ requests, in SPP totaling multiple gigawatts 
+(GW).  SPP notes that this growing trend in large load interconnection request
+submissions peaked in 2022 at nearly 11 GW, but since that peak, there has been a
+relative drop to approximately 6 GW in 2024, which, according to SPP, could be due in 
+part to SPP’s inability to study and interconnect large loads quickly enough to meet their 
+commercial needs.14  
+SPP contends that the emergence of large load developments, which frequently 
+request transmission service within months rather than years of their intended 
+commercial operation, strain the legacy regulatory frameworks, planning processes, and 
+market mechanisms that were originally designed for incremental and predictable load 
+growth.15  SPP explains, for example, that large load customers are requesting faster 
+deployment timelines for generating facilities supporting the load compared to typical 
+interconnection study timelines.16  In addition, SPP states that large loads are highly 
+energy intensive and concentrated and pose unique challenges to maintaining the reliable 
+and economic operation of the bulk electric transmission system.17 SPP explains that
+these challenges will continue to grow absent additional processes to address the 
+reliability and operational impacts of large loads.18  SPP further contends that load-
+serving entities and states in the SPP region have stressed the need to expedite the 
+process of interconnecting and serving large loads.19  
+SPP states that, to address these challenges, it proposes additional study and 
+operational tools to integrate large loads into SPP’s transmission system and to provide a 
+limited pathway for the expedited interconnection of generating facilities that are limited 
+and targeted to serve individual large loads.  Specifically, SPP proposes to add two new 
+                                           13 Transmittal at 1.
+14 Id. at 8-9, figs. 2, 3.
+15 Id. at 9-10. 
+16 Id. at 11.
+17 Id. at 4. SPP explains that large loads present unique operational and reliability 
+challenges because they may exhibit nonconforming load profiles, the ability to ramp 
+rapidly and flutter, and sensitivity to power quality issues.  Id. at 10.
+18 Id. at 4. 
+19 Id. at 3.
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 5 ---
+Docket No. ER26-247-000 - 5 -
+processes to its Tariff: (1) the HILL study process, set forth in new Attachment BA,
+which includes studies and operational requirements for large loads to interconnect to 
+SPP’s transmission system; and (2) the HILLGA process, set forth in new Attachment 
+BB, which establishes an expedited study process and new limited interconnection 
+service for generating facilities that support a HILL.20
+B. HILL Study Process
+To assess and reliably manage the challenges associated with interconnecting large 
+loads to its transmission system, SPP proposes to: (1) establish a new category of load, 
+termed a “HILL;” (2) establish enhanced study requirements for HILLs to enable SPP to 
+assess the load’s reliability impacts on the transmission system; and (3) establish 
+additional, on-going operational requirements for HILLs to ensure continued reliability of 
+the transmission system.21
+1. Definition of HILLs
+SPP proposes to establish a new category of load, a HILL, which will be subject to 
+the study and operational requirements of proposed Attachment BA.  SPP proposes to 
+define a HILL as:
+A new commercial or industrial load, or increase in 
+commercial or industrial load, at a single site connected 
+through one or more shared Points of Interconnection (POIs) 
+or delivery points, where such load is either (1) 10 MW or 
+more if connected to the Transmission System at a voltage 
+level less than or equal to 69 [kilovolts (kV)]; or (2) 50 MW 
+or more if connected to the Transmission System at a voltage 
+level greater than 69 kV.  An Electric Storage Resource is not 
+considered a HILL.  A load may be categorized as a HILL 
+after the initial effective date of Attachment BA of the Tariff.  
+High Impact Large Loads must register as such in accordance 
+                                           20 Id. at 11.
+21 Id.
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 6 ---
+Docket No. ER26-247-000 - 6 -
+with Attachment AE22 of the Tariff and follow the processes 
+specified in Attachment BA of the Tariff.23
+SPP states that large loads can differ from traditional load in several ways, but 
+they are primarily a facility requiring a large amount of energy at a single site.24  To 
+determine what qualifies as a “large” quantity of load, SPP consulted information 
+gathered by the North American Electric Reliability Corporation (NERC) Large Load 
+Task Force, which showed that survey participants qualified large load as load greater 
+than 50 MW, though it may be relative to other factors such as the voltage level at the 
+interconnection.  To reflect that the size of the load may impact SPP’s transmission 
+system differently at different voltage levels, SPP proposes to also include as a HILL
+loads that are at least 10 MW that connect at or below 69 kV.25  SPP explains that 
+although the NERC definition of the Bulk Electric System includes only transmission 
+elements of 100 kV or higher, the proposed additional 10 MW threshold is necessary due 
+to the prevalence of 69 kV lines in the Eastern Interconnection portion of SPP’s 
+footprint.26
+SPP argues that the proposed HILL definition is based on current industry 
+thinking, tailored to address the topology characteristics of the SPP transmission system, 
+and will be used to categorize the specific types of loads that will be subject to the 
+additional studies and requirements discussed above. SPP asserts that loads that do not 
+fall within the HILL definition will be properly excluded from these additional studies 
+and requirements, as will preexisting loads that may meet the definition but are currently 
+operating within the SPP transmission system.  SPP argues that the proposed definition is
+                                           22 Attachment AE in the Tariff contains provisions for SPP’s Integrated 
+Marketplace, which includes day-ahead and real-time energy and operating reserve
+markets and a transmission congestion rights market.
+23 SPP, Tariff, pt. I, § 1 (Definitions H) (1.0.0). Existing loads will not be 
+considered HILLs or be subject to the requirements of Attachment BA unless they seek to 
+increase load and otherwise meet the definitional requirements.  Transmittal at 12 -13.
+24 Transmittal at 13.  Additionally, SPP asserts that large loads can have high ramp 
+rates and the potential to exhibit sudden and rapid changes at unpredictable times.  Id. at 
+12.
+25 Id. at 13.
+26 Id. (citing NERC, Glossary of Terms, Bulk Electric System (Oct. 1, 2025), 
+https://www.nerc.com/pa/stand/glossary%20of%20terms/glossary_of_terms.pdf ).
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 7 ---
+Docket No. ER26-247-000 - 7 -
+thus narrowly tailored and targeted to identify those loads that may present a significant 
+operational or reliability risk to the transmission system.27
+2. Enhanced Study Requirements
+SPP states that, under the current Tariff, when a network customer or transmission 
+customer (collectively, Transmission Customer)28 applies for transmission service to 
+serve a load, the load must undergo certain studies, as provided in Attachment AQ or 
+Attachment AX.  SPP proposes, in new Attachment BA, to require a series of up to three
+additional studies for Transmission Customers requesting to add or modify a delivery 
+point associated with a HILL.  SPP explains that these additional studies will assess the
+HILL’s impact on SPP’s transmission system.29  
+Specifically, SPP states that all requests to add or modify a delivery point to 
+accommodate a HILL will require a HILL Delivery Point Study (HDPS), which is a 
+broader, more rigorous set of analyses compared to those under Attachment AQ or 
+Attachment AX due to the potential for more significant impacts to the transmission 
+system.30  SPP states that the HDPS will assess the impacts of the HILL delivery point on 
+the transmission system using power flow and short circuit analyses, and any other 
+analyses that may be appropriate in accordance with SPP Business Practice 7850.31  SPP 
+states that if these additional HDPS analyses identify weaknesses on the transmission 
+system caused by the interconnection of the HILL, then SPP will also perform a 
+supplemental Electromagnetic Transient (EMT) study.32
+                                           27 Id. at 21-22.
+28 A transmission customer is defined in part as “customers receiving transmission 
+service under Part II and Part III of this Tariff.” SPP, Tariff, pt. I, § 1 (Definitions T)
+(5.0.0).  Part III of SPP’s Tariff also refers to these customers as network customers, 
+which is defined as “[a]n entity receiving transmission service pursuant to the terms of 
+the Transmission Provider’s Network Integration Transmission Service [(NITS)] under 
+Part III of the Tariff.” Id. § 1 (Definitions N) (3.0.0).
+29 Transmittal at 13-17.
+30 Id. at 15. 
+31 Id. at 15-16 (citing SPP, Open Access Transmission Tariff Business Practices, 
+Business Practice 7850 (Delivery Point Additions, Modifications, and Retirements 
+Procedures)). 
+32 Id. at 15. SPP explains that an EMT study may include EMT dynamic 
+performance, sub-synchronous oscillation screening, converter-driven stability 
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 8 ---
+Docket No. ER26-247-000 - 8 -
+For all requested HILL delivery point changes, SPP proposes to provide to the 
+Transmission Customer a HILL Delivery Point Study Agreement (HDPS Agreement),
+and a request for any additional data or information required for the study.33  SPP states 
+that the Transmission Customer must return the HDPS Agreement, a $10,000 non-
+refundable application fee, and a $100,000 deposit to SPP within 30 calendar days, unless 
+otherwise agreed upon, or SPP will deem the requested HILL delivery point change to be
+withdrawn.34  Within 90 calendar days of receiving an executed HDPS Agreement, the 
+study data, and deposit, SPP will complete the HDPS and issue a study report.35 If SPP 
+determines that an EMT study is necessary, it will require an additional $200,000 deposit 
+from the Transmission Customer.  SPP states that these deposit amounts reflect the 
+estimated costs of performing the studies under new Attachment BA.  SPP explains that it 
+must refund any excess deposit funds to the Transmission Customer, and the 
+Transmission Customer must reimburse SPP for any unpaid study costs in excess of the 
+deposit.36
+SPP states that the host transmission owner may also require additional analysis 
+through a HILL Supplemental Load Connection Study (HSLCS), which will be 
+coordinated through an agreement between the Transmission Customer and the host 
+transmission owner.37  SPP explains that the host transmission owner may require 
+additional information from the Transmission Customer and an advance deposit of
+$25,000 to conduct the study, but the host transmission owner may also determine that 
+the HSLCS is unnecessary due to the Load Connection Study that is already required 
+                                           
+assessments, power capability and control studies, emergency power control, fault     
+ride-through, power quality evaluations, and model verification.  Id. at 15 n.32.  
+33 SPP, Proposed Tariff, attach. BA, § 2.1.3.4 (HILL Delivery Point Study) (0.0.0).  
+34 Transmittal at 15; see SPP, Proposed Tariff, attach. BA, § 2.1.3.4 (HILL 
+Delivery Point Study) (0.0.0), id. § 2.1.3.5 (Study Costs for HDPS) (0.0.0).
+35 SPP, Proposed Tariff, attach. BA, § 2.1.3.4 (HILL Delivery Point Study) (0.0.0).   
+If SPP is unable to complete the HDPS within 90 days, it will notify the Transmission 
+Customer and host transmission owner and provide an estimate of the time needed to 
+reach a final determination.  Id.
+36 Transmittal at 16; see SPP, Proposed Tariff, attach. BA, § 2.1.3.5 (Study Costs 
+for HDPS) (0.0.0).
+37 Transmittal at 16; see SPP, Proposed Tariff, attach. BA, § 2.1.3.3 (HILL 
+Supplemental Load Connection Study) (0.0.0).
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 9 ---
+Docket No. ER26-247-000 - 9 -
+under Attachment AQ or Attachment AX, as applicable.38  SPP proposes that the host 
+transmission owner must refund any excess deposit funds to the Transmission Customer, 
+and the Transmission Customer must reimburse the host transmission owner for any 
+unpaid study costs in excess of the deposit.39
+SPP contends that while the HDPS and HSLCS study procedures are consistent 
+with the current study processes outlined in Attachments AQ and AX, the studies are
+more complex and detailed to allow SPP and the host transmission owner to study the 
+impacts of the HILL on the transmission system.40  SPP states that the additional studies 
+are necessary to capture the unique behaviors of, and risks posed by, large loads and 
+ensure reliable system performance.  According to SPP, these additional studies take
+significantly more time and resources due to their scope, complexity, and computational 
+demands, which, in turn, drives higher study costs compared to traditional load 
+interconnection studies.41 SPP contends that the proposed study deposits are keyed to the 
+anticipated costs of these HILL studies.  SPP argues that the additional requirements also 
+ensure that highly speculative HILLs are discouraged from applying to be studied.42  
+3. Ongoing Reliability Requirements
+SPP states that HILLs’ unique characteristics necessitate that HILLs comply with 
+certain reliability requirements.  With respect to the Integrated Marketplace, SPP 
+proposes that the market participant registering a HILL must:  (1) follow all non -
+conforming load requirements (e.g., additional load forecast requirements, including 
+providing an hourly load forecast value);43 (2) provide load data via telemetry in real 
+                                           38 Transmittal at 16-17; see SPP, Proposed Tariff, attach. BA, § 2.1.3.3 (HILL 
+Supplemental Load Connection Study) (0.0.0); id. attach. AQ, § 3 (2.0.0), § 3.1 (Load 
+Connection Study), id. attach. AX, § 2 (0.0.0), § 2.1 (Load Connection Study).
+39 SPP, Proposed Tariff, attach. BA, § 2.1.3.3 (HILL Supplemental Load 
+Connection Study) (0.0.0).
+40 Transmittal at 17.
+41 Id.
+42 Id. at 22.
+43 SPP proposes to define non-conforming load as load that cannot be generally 
+forecasted through a mathematically derived pattern using only weather, time, season, or 
+other normal forecasting methods.  SPP, Proposed Tariff, attach. AE, § 1.1N (Definitions 
+N) (5.0.1).  SPP explains that the proposed definition distinguishes non-conforming load 
+from load that follows the types of patterns typically used in SPP’s load forecasts.  
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 10 ---
+Docket No. ER26-247-000 - 10 -
+time; (3) have remote capability to disconnect the load from the transmission system 
+made available to the transmission operator; (4) have an up/down ramp rate not 
+exceeding 20 MW per minute unless otherwise directed; (5) include additional 
+information with registration; and (6) not have withdrawals from the transmission system 
+without appropriate transmission service.44  
+Further, in order for the HILL to provide load data in real-time, SPP proposes to 
+require the transmission owner, at the Transmission Customer’s expense, to install a 
+Phasor Measurement Unit (PMU) or similar equipment on the transmission owner’s side 
+of the HILL interconnection prior to the HILL’s service commencement date.45  SPP 
+asserts that having this data is essential to ensuring reliability of the bulk power system 
+and compliance with reliability standards, because it enhances SPP’s ability to identify 
+and respond to forced oscillations, monitor phase angles, assess voltage stability, and 
+conduct post-event analysis.  SPP explains that HILLs may have very fast changes in 
+load and, because of their size and concentrated impacts, these changes can impact the 
+transmission system so quickly that they cannot be captured by conventional supervisory 
+control and data acquisition systems.46  
+Additionally, SPP proposes that the Transmission Customer will be required to 
+comply with the ride-through requirement guidelines outlined in SPP’s “[HILL] Ride-
+Through Requirements” document, a non-Tariff document that was separately approved 
+by SPP stakeholder working groups.47  SPP states that, absent these ride-through 
+requirements, HILLs have the potential to cause disturbances to the transmission system 
+                                           
+Transmittal at 19.
+44 See SPP, Proposed Tariff, attach. AE, § 2.22 (High Impact Large Load 
+Requirements) (0.0.0); see also SPP, Tariff, attach. AE, § 2.12 (Non-Conforming Load) 
+(3.0.0) (imposing specific forecasting and data requirements for non-conforming load).
+45 Transmittal at 19; see SPP, Proposed Tariff, attach. BA, § 2.2.4 (Additional 
+Requirements for Phasor Measurement Unit) (0.0.0).  According to SPP, PMUs supply 
+high-resolution, time-synchronized measurements that enable SPP to validate models, 
+monitor dynamic performance, and detect disturbances that may otherwise lead to 
+instability or widespread reliability impacts. Transmittal at 19.  
+46 Transmittal at 19.
+47 Id. at 19-20.  SPP is developing ride-through requirements for stand-alone 
+HILLs, which include requirements for voltage and frequency ride through .  See SPP
+documents, available at: https://www.spp.org/spp-documents-filings/?id=19845.  
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 11 ---
+Docket No. ER26-247-000 - 11 -
+and the entire bulk power system.  SPP states it will continue to modify its requirements 
+as more defined requirements from NERC or the Commission become available. 48
+SPP argues that the proposed ongoing operational requirements for HILLs are just 
+and reasonable because they will afford SPP the opportunity to maintain reliable 
+operation of the transmission system in light of the addition of HILLs to the system. SPP 
+states that the requirements will ensure that SPP has sufficient visibility into some of the 
+most impactful loads on the system, ensure that the utilities in the RTO footprint can 
+serve load in real time, and ensure that the ability to shed a HILL is available, if needed.49
+C. HILLGA Process
+SPP also proposes to implement the optional HILLGA process—a new generator 
+interconnection service and related interconnection process—to facilitate the prompt 
+interconnection of generating facilities that are specifically identified for and limited to 
+serving a HILL.50 SPP argues that the HILLGA process is just and reasonable and meets 
+the independent entity variation standard by accomplishing the goals of Order Nos. 2003, 
+2023, and 2023-A by providing a path to ensure that HILLGA interconnection customers 
+(HILLGA Customers) are able to interconnect to the transmission system, albeit on a 
+limited basis, in a reliable, efficient, transparent, and timely manner.51  
+1. HILLGA Eligibility and Requirements
+As part of the HILLGA process, SPP proposes to accept HILLGA Requests at any 
+time.52 SPP contends that this proposed feature of the HILLGA process differs from the 
+DISIS process and encourages more efficient capacity additions, a recognized goal of the 
+                                           48 Transmittal at 21 & n.58.
+49 Id. at 22.
+50 Id. at 23.
+51 Id. at 32-33 (citing Order No. 2003, 104 FERC ¶ 61,103 at PP 822-27; Order 
+No. 2023, 184 FERC ¶ 61,054 at P 10).
+52 SPP proposes to define a HILLGA Request as “an Interconnection Request 
+submitted, in the form specified in Appendix 1 to this Attachment BB, . . . to interconnect 
+a new Generating Facility, or to increase the capacity of an Existing Generating Facility 
+that is interconnected with the Transmission System.”  SPP, Proposed Tariff, attach. BB, 
+§ 1 (Definitions) (0.0.0).  
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 12 ---
+Docket No. ER26-247-000 - 12 -
+Commission.53  SPP also proposes to require that all HILLGA Requests include the 
+following:  (1) an executed HILLGA Study Agreement and executed HDPS Agreement; 
+(2) a nonrefundable application fee of $20,000; (3) a study deposit of $250,000 for 
+HILLGA Requests up to 500 MW and $500,000 for HILLGA Requests over 500 MW; 
+(4) demonstration of site control; (5) a definitive POI; (6) the nameplate capacity, 
+maximum injection capability, and network resource deliverability of the generating 
+facility; (7) a security deposit equal to $8,000/MW of the requested maximum injection 
+capability; (8) reasonable evidence that the HILLGA Customer satisfies at least one of 
+the listed development milestones (i.e., executed contracts, attestation that the generating 
+facility is included in a state resource plan, and application for a land use permit); and (9) 
+if applicable, the charging parameters and control technologies of the gener ating facility.  
+SPP also proposes that the commercial operation date of the new generating facility or 
+increase in capacity of an existing generating facility must be within five years from the 
+execution date of the HILLGA Study Agreement.54
+SPP states that these requirements are similar to, but more stringent than, its 
+existing requirements for the DISIS process.  Specifically, SPP states that the application 
+fee and security deposit for HILLGA Requests are double those in the DISIS process, and
+the study deposit for HILLGA Requests can reach up to $500,000, whereas the study 
+deposits for the DISIS process are capped at $250,000 regardless of the size of the 
+generating facility.  Further, SPP states that the development milestone requirement for 
+HILLGA Requests is at the beginning of the HILLGA process, whereas for the DISIS it 
+is not until the end of the process.55  SPP contends that these more stringent requirements 
+will encourage the entry of commercially viable, shovel-ready generating facilities and 
+deter speculative interconnection requests.56  
+SPP further proposes that a HILLGA Customer must submit a separate HILLGA 
+Request for each generating facility associated with a HILL.  SPP states that , due to the 
+limited nature of the interconnection,57 the POI identified in the HILLGA Request must 
+                                           53 Transmittal at 24 (citing Order No. 2023, 184 FERC ¶ 61,054 at P 3).
+54 SPP, Proposed Tariff, attach. BB, § 8 (0.0.0), § 8.2 (Execution of HILLGA 
+Study Agreement).
+55 Reasonable evidence of having satisfied at least one development milestone is 
+required prior to the end of Decision Point Two in the DISIS process.  SPP, Proposed 
+Tariff, attach. V, § 8 (26.0.0), § 8.5.2 (Decision Point Two).
+56 Transmittal at 24-25.
+57 See infra P 66.
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 13 ---
+Docket No. ER26-247-000 - 13 -
+be no more than two substations away from the HILL at most.58  In addition, SPP 
+proposes that a generating facility may support multiple HILLs if no more than five 
+substations are involved and no more than two existing transmission line segments are 
+used between each substation.  SPP states that these requirements are meant to ensure 
+that the proposed generating facility can support the HILL(s) in a localized area.59
+SPP also proposes to cap the HILLGA Customer’s generating facility’s projected 
+capacity accreditation MW value, as determined pursuant to Attachment AA of the 
+Tariff,60 at the requested MW load amount of the associated HILL, multiplied by the 
+higher of:  (1) 110% plus the highest approved Planning Reserve Margin percentage 
+effective at the time of the HILLGA Study Agreement and outlined in the SPP Planning 
+Criteria; or (2) 125%.61  SPP contends that this requirement will ensure that only the 
+generation capacity necessary to serve the HILL is processed through the HILLGA 
+process, while recognizing the load responsible entities’ requirement to secure sufficient 
+resources to cover the Planning Reserve Margin when the HILL receives long-term, firm 
+transmission service.62
+2. HILLGA Study Process
+Under the HILLGA process, SPP proposes to study HILLGA Requests to 
+determine whether any network upgrades are needed to accommodate the generating 
+facility’s injection to the local area.  SPP proposes that HILLGA Requests, which will be 
+studied serially, will not be considered higher queued than DISIS requests but will be 
+treated like existing generators and incorporated into SPP’s Integrated Transmission 
+Planning (ITP) models through the normal process.  SPP further notes that H ILLGA 
+Requests will not appear in DISIS studies until the DISIS models have been updated to 
+                                           58 If the HILLGA Customer’s generating facility is interconnecting to a 765 kV 
+transmission line, the generating facility must be within one substation of the HILL.  
+Transmittal at 27; see SPP, Proposed Tariff, attach. BB, § 3 (0.0.0), § 3.1.3 (HILLGA 
+Requirements).
+59 Transmittal at 26-28.
+60 New thermal generating facilities in SPP have the option of using either their 
+own design performance projections or a class average forced outage rate.  New wind and 
+solar generating facilities must either be submitted in time to be studied for the upcoming 
+season or be assigned a default accreditation value.  See SPP, Tariff, attach. AA, § 15
+(Accredited Capacity) (4.0.0).
+61 Transmittal at 26.
+62 Id.
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 14 ---
+Docket No. ER26-247-000 - 14 -
+new ITP models and therefore cannot drive upgrade costs or restudies for those DISIS 
+clusters.  SPP contends that any upgrade costs required under the HILLGA process will 
+be specific to the generating facility’s injection for the local support of the HILL and will 
+have limited impacts on other requests.63  
+To allow for more rapid study and decision-making, SPP proposes to conduct a 
+system impact study for HILLGA Requests within 90 calendar days of the HILLGA 
+Review Period.64  SPP further proposes that if a HILLGA Request requires a restudy due 
+to the withdrawal or modification of a higher-queued HILLGA Request or a change to 
+the applicable HILLGA Request’s POI, SPP will notify the HILLGA Customer of the 
+need for a restudy within 30 calendar days and will complete the restudy within 60 
+calendar days after the notification.65  SPP states that the HILLGA process can 
+accommodate this shortened timeline because HILLGA Requests will be handled through 
+a simplified, serial process, and the generating facilities will be studied only for the 
+limited purpose of injecting within the local area of the HILL.66
+SPP proposes to tender a draft HILL Generator Interconnection Agreement
+(HILLGIA) to the HILLGA Customer at the same time it posts the HILLGA system 
+impact study report.  SPP further proposes that the HILLGA Customer, the transmission 
+owner, and SPP will then have 45 calendar days to negotiate the HILLGIA, unless the 
+parties agree to a different timeline.  SPP proposes that it will tender a final HILLGIA to 
+the HILLGA Customer within 10 business days after the negotiation process concludes.  
+Within 10 business days of receiving the final HILLGIA, the HILLGA Customer must 
+either execute the HILLGIA or request that it be filed unexecuted with the Commission.67
+                                           63 Id. at 32.
+64 Id. at 30. The HILLGA Review Period is the time following SPP’s receipt of 
+the HILLGA Request through the time period allowed for the HILLGA Customer to cure 
+any deficiencies in the request.  SPP, Proposed Tariff, attach. BB , § 1 (Definitions) 
+(0.0.0).  During the HILLGA Review Period, SPP will validate HILLGA Requests within 
+15 calendar days.  SPP will provide written notice of any deficiencies with the r equest, 
+and the HILLGA Customer will then have 10 business days to cure any deficienc ies.  Id. 
+§ 8 (0.0.0), § 8.3 (HILLGA Review Period).
+65 SPP, Proposed Tariff, § 8 (0.0.0), § 8.8 (Restudy of HILLGA System Impact 
+Study).
+66 Transmittal at 30-31.
+67 Id. at 31; see SPP, Proposed Tariff, attach. BB, § 11 (0.0.0), §§ 11.1 (Tender), 
+11.2 (Negotiation), 11.3 (Execution and Filing).
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 15 ---
+Docket No. ER26-247-000 - 15 -
+Additionally, SPP proposes to coordinate with affected system operators on any 
+studies necessary to determine impacts from a HILLGA Request on an affected system. 68  
+SPP also proposes to determine whether a HILLGA Request has an impact on any Joint 
+Targeted Interconnection Queue (JTIQ) upgrades.69  If a HILLGA Request is determined 
+to impact one or more JTIQ upgrades, SPP proposes to allocate to the HILLGA Customer 
+a portion of the costs of a portfolio of JTIQ upgrades based on the amount of 
+interconnection service requested in the HILLGA Request.70
+SPP asserts that the proposed HILLGA study process represents a reasonable 
+approach to address large load generation needs without disadvantaging requests in the 
+DISIS queue because the modeling and queue priority of any pending DISIS 
+interconnection requests will not be affected by the HILLGA process.  In addition, SPP 
+asserts that the HILLGA study process will not affect the timing of any pending DISIS 
+interconnection requests because the HILLGA process will be predominantly completed 
+by outside consultants paid for by the HILLGA Customer through the required study 
+deposits.  SPP also argues that the HILLGA framework is narrowly tailored and targeted 
+to allow additional generating facilities to interconnect faster and more efficiently to the 
+transmission system to support HILLs.71
+3. Load Limited Resource Interconnection Service Available to 
+Serve HILLs
+SPP proposes to grant HILLGA Customers a new type of interconnection service, 
+called Load Limited Resource Interconnection Service (LLRIS), which grants limited 
+interconnection service solely to support the associated HILL.72 Under LLRIS, the 
+maximum economic capacity operating limits of the HILLGA Customer’s generating 
+                                           68 Transmittal at 31; see SPP, Proposed Tariff, attach. BB, § 3 (0.0.0), § 3.6 
+(Coordination with Affected Systems).
+69 The JTIQ process involves a joint study between SPP and the Midcontinent 
+Independent System Operator, Inc. (MISO) that aims to identify transmission network 
+upgrades along the MISO-SPP seam that will enable future generating facilities to 
+interconnect to the transmission grid.
+70 SPP, Proposed Tariff, attach. BB, § 3 (0.0.0), § 3.6.4 (JTIQ Provisions).  
+71 Transmittal at 35-38.
+72 Id. at 29; see SPP, Proposed Tariff, attach. BB, § 3 (0.0.0), § 3.2 (Load Limited 
+Resource Interconnection Service). LLRIS is the only “Interconnection Product Option” 
+available to HILLGA Customers in the HILLGIA.  See SPP, Proposed Tariff, attach. BB, 
+app. 2 (0.0.0), art. 4 (Scope of Service).
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 16 ---
+Docket No. ER26-247-000 - 16 -
+facility cannot exceed the hourly load forecast value of the corresponding HILL except 
+when directed by the SPP Reliability Coordinator to mitigate emergency conditions or as 
+specified in the HILLGIA.73
+SPP proposes that the HILLGIA will automatically terminate under its own terms 
+five years after the commercial operation date of a generating facility, which will 
+correspondingly terminate any LLRIS granted by the HILLGIA. 74  SPP states that if the 
+HILLGA Customer wishes for its generating facility to remain interconnected to the SPP 
+transmission system beyond the five-year limit of LLRIS, it must submit a separate 
+interconnection request through the DISIS process.75  SPP asserts that the limited 
+duration of LLRIS recognizes the importance of SPP’s DISIS process and balances use of 
+that process with the desire to interconnect HILLs in an expedited manner.76  
+SPP states that LLRIS does not convey any type of transmission service for 
+generating facilities serving a HILL.77  SPP states that HILLGA Customers must obtain 
+transmission service outside the HILLGA process to deliver the output from a generating 
+facility to the HILL.  SPP explains that, in the short term, HILLGA Customers may 
+obtain short-term service or non-firm point-to-point transmission service, based on 
+available transfer capability, if the delivery point was established under Attachment 
+                                           73 See SPP, Proposed Tariff, attach. AE, § 2.22.2 (Resource Supporting a HILL) 
+(0.0.0).  The maximum economic capacity operating limit, or economic MW level at or 
+below a resource’s maximum normal capacity operating limit used for constraining 
+energy dispatch and contingency reserve clearing during normal system conditions , is 
+used within SPP’s algorithms when considering a resource’s commitment in the day-
+ahead and intra-day reliability unit commitment executions in SPP’s Integrated 
+Marketplace.  See SPP, Tariff, attach. AE, § 1.1M (Definitions), id. § 5.2.2 (Day-Ahead 
+Reliability Unit Commitment Execution), ); id. § 6.1.2 (Intra-Day Reliability Unit 
+Commitment Execution).
+74 Transmittal at 36; see SPP, Proposed Tariff, attach. BB, app. 2 (0.0.0), art. 2.2
+(Term of Agreement).
+75 Transmittal at 5, 29.
+76 Id. at 36.
+77 Id. at 20; see SPP, Proposed Tariff, attach. BB, §1 (Definitions) (0.0.0) (defining 
+LLRIS); see also SPP, Proposed Tariff, attach. BB, app. 2 (0.0.0), art. 4.4 (“The 
+execution of this HILLGIA does not constitute a request for, nor the provision of, any 
+transmission delivery service under Transmission Provider’s Tariff, and does not convey 
+any right to deliver electricity to any specific customer or Point of Delivery .”).
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 17 ---
+Docket No. ER26-247-000 - 17 -
+AX.78  SPP explains that, to serve a HILL on a long-term basis, HILLGA Customers 
+must obtain long-term point-to-point transmission service or NITS through the Aggregate 
+Transmission Service Study process under Attachment Z1 of the Tariff.79  SPP notes that,
+to obtain NITS, the HILLGA Customer must also change its generation injection rights 
+from LLRIS to Energy Resource Interconnection Service (ERIS) or Network Resource 
+Interconnection Service (NRIS) through SPP’s GIP.80
+III. Notice of Filing and Responsive Pleadings
+Notice of SPP’s filing was issued on October 27, 2025, with interventions and 
+protests due on or before November 14, 2025 at 5:00 PM EST.
+Timely notices of intervention were filed by the Louisiana Public Service 
+Commission, the Missouri Public Service Commission, and the Public Utility 
+Commission of Texas.  Timely motions to intervene were filed by: American Clean 
+Power Association and Advanced Power Alliance, jointly; American Electric Power 
+Service Corporation (AEP), on behalf of its affiliates Public Service Company of 
+Oklahoma, Southwestern Electric Power Company, AEP Oklahoma Transmission 
+Company, Inc., and AEP Southwestern Transmission Company, Inc.; Arevon Energy, 
+Inc.; Basin Electric Power Cooperative; Calpine Corporation; City Utilities of 
+Springfield, Missouri; Constellation Energy Generation, LLC; EDF Power Solutions, 
+Inc.; Electric Power Supply Association; The Empire District Electric Company; Evergy 
+Companies;81 Geronimo Power, LLC; GridStor LLC; Kansas Electric Power 
+Cooperative, Inc.; Longroad Energy Holdings, LLC; LS Power Development, LLC;
+Monitoring Analytics, LLC, acting in its capacity as the Independent Market Monitor for 
+PJM; Natural Resources Defense Council and Sustainable FERC Project, jointly;
+NextEra Energy Resources, LLC; Oklahoma Gas and Electric Company (OG&E);
+Omaha Public Power District; Orion Renewable Energy, LLC; Sierra Club; Sunflower 
+Electric Power Corporation; Triple Oak Power LLC; Tri-State Generation and 
+Transmission Association, Inc.; Western Farmers Electric Cooperative; and Xcel Energy 
+Services Inc. (Xcel), on behalf of its affiliate Southwestern Public Service Company 
+(SPS).  
+                                           78 Transmittal at 29.
+79 Id. at 29-30.
+80 Id. at 29-30.
+81 Evergy Companies include the following subsidiaries of Evergy, Inc.:  Evergy 
+Kansas Central, Inc.; Every Metro, Inc.; and Evergy Missouri West, Inc.
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 18 ---
+Docket No. ER26-247-000 - 18 -
+On November 4, 2025, Eolian, L.P. (Eolian) filed a motion for extension of time 
+to submit interventions and comments.  On November 7, 2025, the SPP Transmission 
+Owner Group (SPP TO Group)82 submitted an answer opposing the motion.  On 
+November 12, 2025, the motion for extension of time was denied.83
+Timely motions to intervene and comments in support of SPP’s filing were filed 
+by:  Advanced Energy United (Advanced Energy); Eolian; ITC Great Plains, LLC (ITC 
+Great Plains); Solar Energy Industries Association (SEIA); and SPP Market Monitoring 
+Unit (SPP MMU). SPP TO Group filed timely comments in support of SPP’s filing.  
+Enchanted Rock, LLC (Enchanted Rock) filed a timely motion to intervene and
+comments requesting that the Commission accept SPP’s filing subject to certain 
+conditions.
+On November 17, 2025, Electricity Consumers Resource Council filed an out-of-
+time motion to intervene.  On November 24, 2025, Nebraska Public Power District filed 
+an out-of-time motion to intervene.
+On December 2, 2025, SPP TO Group filed a motion for leave to answer and 
+answer.  On December 4, 2025, SPP filed a motion for leave to answer and answer.  On 
+December 9, 2025, Eolian filed a motion for leave to answer and answer.  On December 
+10, 2025, Enchanted Rock filed a motion for leave to answer and answer.
+A. Comments and Answers
+1. Comments
+a. General Comments in Support
+Several commenters argue that SPP’s Tariff revisions to implement the HILL and 
+HILLGA processes are just and reasonable and not unduly discriminatory or 
+preferential.84  Commenters assert that SPP’s proposal provides a faster process for 
+interconnecting large loads and generators serving those loads.85  Commenters also 
+                                           82 SPP TO Group includes:  AEP, Evergy Companies, OG&E, and Xcel, on behalf 
+of SPS.
+83 Sw. Power Pool, Inc., Notice Denying Extension of Time, Docket No.       
+ER26-247-000 (issued Nov. 12, 2025).
+84 Advanced Energy Comments at 1; Eolian Comments at 3; ITC Great Plains 
+Comments at 2; SEIA Comments at 4; SPP TO Group Comments at 2, 18. 
+85 Advanced Energy Comments at 4, 9; Eolian Comments at 3-4; SEIA Comments 
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 19 ---
+Docket No. ER26-247-000 - 19 -
+contend that SPP’s proposed HILL study process appropriately addresses the unique 
+operating characteristics of HILLs to ensure their reliable interconnection to SPP’s 
+transmission system.86  In addition, commenters argue that the HILL reliability 
+requirements will avoid adverse reliability impacts after a HILL is interconnected and 
+provide proportionate and transparent tools to manage the risks that large loads pose to 
+the reliability of the transmission system.87  Commenters also contend that SPP’s 
+proposed higher application fees, study deposits, and financial security requirements will 
+prevent speculative projects and ensure only shovel-ready projects enter the HILL study
+process.88
+Commenters also assert that SPP’s proposed HILLGA process addresses the need 
+for new generation to serve large loads while ensuring that there are sufficient guardrails 
+to avoid undue discrimination and prejudice.89  In particular, commenters contend that 
+SPP’s proposal treats HILLGA Requests as existing generators and incorporates them 
+into its ITP models, meaning that HILLGA Requests will not be incorporated into the 
+DISIS models until after such models have been updated to reflect the new ITP models, 
+which will prevent a HILLGA Request from increasing costs or restudies for 
+interconnection customers in the DISIS.90  Commenters also support SPP’s proposed 
+LLRIS because it does not provide transmission service, it is instead a narrower and more 
+temporary interconnection service, and a HILLGA Customer will not be granted NRIS or 
+ERIS unless it applies through SPP’s standard interconnection processes.91
+                                           
+at 6; SPP TO Group Comments at 1-2. 
+86 Advanced Energy United Comments at 4-5; ITC Great Plains Comments at 3-4; 
+SPP TO Group Comments at 13.
+87 Advanced Energy Comments at 5; SEIA Comments at 4-5; SPP TO Group
+Comments at 6.
+88 Advanced Energy Comments at 5; SPP TO Group Comments at 15-17. 
+89 Advanced Energy Comments at 6; SPP TO Group Comments at 18.
+90 Advanced Energy Comments at 8; SEIA Comments at 5; SPP TO Group 
+Comments at 10, 19.
+91 Advanced Energy Comments at 7; ITC Great Plains Comments at 6-7; SEIA 
+Comments at 5; SPP TO Group Comments at 8-9.
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 20 ---
+Docket No. ER26-247-000 - 20 -
+b. Advanced Energy
+In addition to its general support for the proposal as noted above, Advanced 
+Energy asserts that SPP’s proposed geographic requirements in the HILLGA process will
+minimize impacts on other interconnection customers by requiring the identification of 
+the POI for the proposed generating facility and requiring that it be in close electrical 
+proximity in the same area to the load.  Advanced Energy explains that studying the local 
+impacts and requiring that generation only serve the HILL will aim to reduce withdrawals 
+that cause additional restudies.92  Advanced Energy argues that SPP’s proposed HILLGA 
+process links the generating facility with the HILL, which ensures upgrade costs are 
+associated with that project, rather than passed on to other customers.  Advanced Energy 
+explains that these geographic limitations will lead to fewer triggered upgrades and 
+minimal impacts on other interconnection requests, while also minimizing congestion 
+that could have broader adverse impacts.93
+c. Eolian
+Eolian generally supports SPP’s proposal as noted above, but states that SPP 
+should clarify that non-HILLGA generating facilities may serve as designated or planned 
+generation to serve a HILL for purposes of Attachments AQ and AX. 94  Specifically, 
+Eolian requests that SPP clarify that its Tariff revisions do not restrict non-HILLGA 
+generating facilities from specifically serving a HILL for purposes of demonstrating 
+adequate designated or planned generation pursuant to the relevant transmission service 
+study.  Eolian asserts that such clarification would remove any doubt that SPP’s proposal 
+would result in undue discrimination among HILLGA and non-HILLGA generating 
+facilities that are equally technically capable of serving a HILL’s needs and supporting a 
+Transmission Customer’s ability to establish transmission service for that load.95
+d. SEIA
+While SEIA generally supports SPP’s proposal as discussed above, SEIA also
+urges SPP to actively monitor and periodically report to the Commission and 
+stakeholders on the effectiveness of the HILL and HILLGA processes to meet rising 
+demand and support the reliable integration of new, concentrated large loads and local 
+                                           92 Advanced Energy Comments at 8 (citing Transmittal at 32).
+93 Id.
+94 Eolian Comments at 12.
+95 Id.
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 21 ---
+Docket No. ER26-247-000 - 21 -
+interconnection of associated generating facilities.96  In addition, SEIA contends that it is 
+essential that SPP honor its pledge to dedicate sufficient resources to continue to meet its 
+obligations regarding the standard interconnection process and pending DISIS requests.97  
+e. SPP MMU
+SPP MMU states that the Commission should accept SPP’s filing.  SPP MMU 
+explains that it was concerned during the overall development of SPP’s proposal that 
+HILLs, whether deemed conforming or non-conforming load, were not incentivized to 
+submit accurate operational load forecasts.  SPP MMU explains that an increase in large 
+loads on the system will only increase the current operational needs for accurate load 
+forecasts to be used in the Reliability Unit Commitment process and that SPP should 
+pursue future Tariff changes to address the issue.  SPP MMU contends that “requirements 
+for HILLs should either immediately apply to all load meeting [SPP’s proposed]
+criterion; or there should be a reasonable near-term line-of-sight to applying [SPP’s 
+proposed] requirements to existing HILLs.”98  SPP MMU states that it encourages SPP to 
+re-evaluate the grandfathering of HILL requirements after implementation of its proposed 
+HILL and HILLGA processes.99
+f. SPP TO Group
+As noted above, SPP TO Group supports SPP’s proposal. SPP TO Group argues 
+that interconnecting new large loads raises questions of federal and state jurisdiction.  
+SPP TO Group asserts that SPP crafted its HILL proposal to avoid crossing into state 
+regulation, as the proposal does not dictate terms and conditions for retail sales to end-use 
+customers and, indeed, largely replicates SPP’s existing load and generation 
+interconnection procedures, except with stricter requirements.100
+g. Enchanted Rock
+Enchanted Rock states that it generally supports SPP’s efforts to establish HILL 
+and HILLGA Tariff provisions, which facilitate the expedited, flexible, and cost -effective 
+interconnection of large loads.  Enchanted Rock, however, requests that the Commissi on 
+                                           96 SEIA Comments at 6.
+97 Id. at 6-7 (citing Transmittal at 35).
+98 SPP MMU Comments at 3.
+99 Id.
+100 SPP TO Group Comments at 20.
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 22 ---
+Docket No. ER26-247-000 - 22 -
+direct SPP to revise its capacity accreditation limits to instead be the associated HILL’s 
+requested load, multiplied by the greater of:  “[(1)] 110% plus the Planning Reserve 
+Margin outlined in the HILLGA Study Agreement; or [(2)] 150%, rather than the
+currently proposed 125% value.”101  Enchanted Rock explains that it is standard industry 
+practice for generation facilities to be oversized relative to their associated HILL demand 
+value to build in redundancies for generator failures and that large load cu stomers’ 
+targeted availability rates of 99.9% to 99.999% requires significant oversizing of on -site 
+generation, while back-up-only, on-site configurations require approximately 25% excess 
+on-site capacity to ensure reliable service.102  Enchanted Rock argues that this higher 
+capacity accreditation cap will ensure that many on-site power solutions are not 
+unnecessarily restricted from being able to meet SPP’s proposed HILL and HILLGA 
+processes’ broader goals, while also recognizing the extent to which many on -site power 
+solutions must be oversized in order to meet large load customers’ availability needs in 
+the short term.103
+2. Answers
+a. SPP
+SPP states that, apart from Enchanted Rock, all commenters support the 
+Commission approving SPP’s proposal as just and reasonable and not unduly 
+discriminatory or preferential.104  SPP contends that while Enchanted Rock’s comments 
+request specific modifications to SPP’s proposal, Enchanted Rock does not argue that 
+SPP’s proposal is unjust or unreasonable. 105  SPP argues that under FPA section 205, it 
+must only show that its proposal is just and reasonable, not that it is the best approach, 
+better than preferred alternatives, or even better than the current Tariff.  SPP argues that 
+its proposal is just and reasonable and that the Commission should accept it.106
+In response to Enchanted Rock’s request to modify the capacity accreditation cap,
+SPP explains that it limited the size of HILLGA Requests in its proposal to ensure that 
+                                           101 Enchanted Rock Comments at 6 (citing SPP, Proposed Tariff, attach. BB,         
+§ 3.1.3.2) (emphasis in original).
+102 Id. at 5.
+103 Id. at 6-7.
+104 SPP Answer at 3.
+105 Id. at 3-4.
+106 Id. at 4.
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 23 ---
+Docket No. ER26-247-000 - 23 -
+the generating facility being studied would only have injection rights, or LLRIS, 
+necessary to support the HILL.  SPP asserts that this limitation prevents generating 
+facilities from impacting other pending interconnection requests.107  SPP states that 
+nothing in its Tariff prevents a HILLGA generating facility owner from having as much 
+redundant generating capacity as it thinks is needed to support reliability. 108  SPP 
+explains, however, that its proposal will limit the injection rights to the quantity that is 
+necessary to support the HILL.  SPP argues that its proposal allows sufficient generation 
+to be built to serve the HILL in the near-term and allows sufficient generation to be 
+studied to satisfy the capacity needs of the HILL after it takes firm transmission 
+service.109
+SPP further argues that SEIA’s requested reporting requirement is not needed.110  
+SPP contends that it and its stakeholders continuously monitor every service provided 
+under the Tariff and that SPP will monitor the effectiveness of the HILL and HILLGA 
+framework in addressing the exponential growth in large loads.111
+In response to Eolian, SPP states that its Tariff processes remain unchanged other 
+than those proposed in its filing.112 SPP asserts that its proposal does not change the types 
+of resources that are currently eligible to be studied in the processe s outlined in 
+Attachments AQ and AX of its Tariff.  According to SPP, any generating facility that is 
+eligible to serve load through SPP’s transmission service processes today will continue to 
+be eligible if the Commission approves SPP’s proposal, which includes loads that qualify 
+as HILLs.  SPP asserts that its proposal does not contain any proposed Tariff language to 
+the contrary and that there is no need for SPP to make any clarifications as requested by 
+Eolian.113
+                                           107 Id. at 6.
+108 Id. at 6-7.
+109 Id. at 7.
+110 Id. (citing SEIA Comments at 6).
+111 Id. at 8.
+112 Id. at 9 (citing Eolian Comments at 2).
+113 Id.
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 24 ---
+Docket No. ER26-247-000 - 24 -
+b. SPP TO Group
+In response to Enchanted Rock’s comments, SPP TO Group argues that accepting 
+Enchanted Rock’s proposed condition would not be a “minor modification” to SPP’s 
+proposal, would subvert the fundamental understanding of SPP’s proposal, and would 
+impose an entirely new rate scheme contrary to NRG.114  SPP TO Group states that the 
+entire point of limiting HILLGA generators to LLRIS is to “grant[] limited 
+interconnection rights solely to support the HILL, which limits both the impacts of the 
+generation on SPP’s [t]ransmission [s]ystem and potential [n]etwork [u]pgrade costs.”  
+SPP TO Group argues that SPP stakeholders supported and voted in favor of SPP’s 
+proposal because it was narrowly tailored to limit HILLGA generators to serving a 
+designated HILL.115
+3. Answers to Answers
+a. Eolian
+Eolian states that it requested clarification from SPP that its Tariff revisions would 
+not restrict non-HILLGA generating facilities from specifically serving HILLs for the 
+purposes of demonstrating adequate designated or planned resource s pursuant to the 
+relevant transmission study.116  Eolian asserts that SPP’s answer explained that SPP’s
+proposal does not change the types of generating facilities that are currently eligible to be 
+studied in the processes outlined in Attachments AQ and AX of its Tariff, that any 
+generating facility that is eligible to serve load through SPP’s transmission service 
+processes today will continue to be eligible if the Commission approves SPP’s proposal, 
+and that SPP’s proposal does not contain any proposed Tariff language to the contrary. 117  
+Eolian states that SPP’s answer satisfies Eolian’s prior request for clarification.118
+b. Enchanted Rock
+Enchanted Rock states that it recognizes SPP’s clarification in its answer that the 
+HILLGA process, if approved, would not interfere with a generator’s insta llation of 
+                                           114 SPP TO Group Answer at 5 (citing NRG Power Mktg., LLC v. FERC, 862 F.3d 
+108 (D.C. Cir. 2017) (NRG)).
+115 Id. at 6.
+116 Eolian Answer at 1 (citing Eolian Comments at 12).
+117 Id. (citing SPP Answer at 9).
+118 Id.
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 25 ---
+Docket No. ER26-247-000 - 25 -
+redundant on-site capacity and, accordingly, requests that the Commission accept SPP’s 
+proposal without condition.119
+IV. Discussion
+A. Procedural Matters
+Pursuant to Rule 214 of the Commission’s Rules of Practice and Procedure,        
+18 C.F.R. § 385.214 (2025), the notices of intervention and timely, unopposed motions to 
+intervene serve to make the entities that filed them parties to this proceeding.
+Pursuant to Rule 214(d) of the Commission’s Rules of Practice and Procedure,      
+18 C.F.R. § 385.214(d) (2025), we grant Electricity Consumers Resource Council’s and
+Nebraska Public Power District’s late-filed motions to intervene given their interest in the 
+proceeding, the early stage of the proceeding, and the absence of undue prejudice or 
+delay.
+Rule 213(a)(2) of the Commission’s Rules of Practice and Procedure, 18 C.F.R.    
+§ 385.213(a)(2) (2025), prohibits an answer to a protest or answer unless otherwise 
+ordered by the decisional authority.  We accept the answers filed by SPP TO Group, SPP, 
+Eolian, and Enchanted Rock because they have provided information that assisted us in 
+our decision-making process.
+B. Substantive Matters
+As discussed below, we find SPP’s proposed Tariff revisions to establish the HILL 
+and HILLGA processes to be just and reasonable and not unduly discriminatory or 
+preferential and, therefore, accept them, effective January 15, 2026, as requested, subject 
+to condition,120 and direct SPP to submit a compliance filing within 30 days of the date of 
+this order.   
+SPP has shown that unprecedented growth in large loads in the SPP region 
+presents significant and unique operational and planning challenges. We find that SPP’s 
+proposed HILL and HILLGA processes are a just and reasonable and not unduly 
+discriminatory or preferential approach to addressing these challenges, while maintaining 
+the reliable operation of SPP’s transmission system.  We also find that SPP’s proposed 
+Tariff revisions implementing the HILLGA process accomplish the purposes of the 
+Commission’s final rules on generator interconnection, including Order Nos. 2003 and 
+                                           119 Enchanted Rock Answer at 2-3 (citing SPP Answer at 7).
+120 See NRG, 862 F.3d at 114-15 (discussing the Commission’s authority to 
+propose modifications to a utility’s FPA section 205 rate proposal).
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 26 ---
+Docket No. ER26-247-000 - 26 -
+2023, by helping to ensure that interconnection customers seeking to serve HILLs in SPP 
+are able to interconnect to the transmission system in a reliable, efficient, transparent, and 
+timely manner.121  Therefore, we find that SPP’s proposed Tariff revisions implementing 
+the HILLGA process meet the independent entity variation standard.  
+1. HILL Process
+We find that SPP has demonstrated that its proposed HILL process—including the 
+definition of HILLs, study requirements for HILLs, and ongoing reliability requirements 
+for HILLs—is a just and reasonable and not unduly discriminatory or preferential 
+approach for integrating Transmission Customers’ new large loads into SPP’s 
+transmission system in a manner that enables SPP to maintain reliable operation of that
+system.  We find that it is reasonable to subject HILLs, as SPP proposes to define them, 
+to additional study requirements and the other proposed requirements set forth in 
+Attachment BA given their unique operating characteristics. We also find that the
+voltage criterion in the proposed HILL definition recognizes that different-size loads may 
+have different impacts on the transmission system depending on the voltage level at 
+which they interconnect and reflects the prevalence of 69 kV transmission lines in the 
+Eastern Interconnection portion of SPP’s footprint.
+Regarding SPP’s proposed HDPS, EMT study, and HSLCS, we find that these
+proposed study requirements for HILLs, in conjunction with the existing study 
+requirements in Attachments AQ and AX of SPP’s Tariff, will help to ensure the reliable 
+integration of Transmission Customers’ HILLs into SPP’s transmission system.  We find 
+that the proposed study requirements for HILLs will provide SPP with information about 
+their impact on SPP’s transmission system, including the transmission system’s ability to 
+withstand and control disturbances by the HILL at the point of interconnection.  In 
+addition, we find that the proposed study deposits reflect the estimated costs of the 
+studies to be performed and will help discourage speculative HILL study requests.
+Further, refunding any excess portion of the deposit ensures Transmission Customers will 
+pay only the actual study amount.  We further find that allocating the study deposits and 
+study costs to the Transmission Customer requesting a delivery point modification 
+associated with a HILL is consistent with the Commission’s cost causation principle.122
+                                           121 Order No. 2003, 104 FERC ¶ 61,103 at PP 26, 827; Order No. 2023, 184 FERC 
+¶ 61,054 at P 1.
+122 The cost causation principle requires costs to be allocated to those who cause 
+the costs to be incurred and reap the resulting benefits. See S.C. Pub. Serv. Auth. v. 
+FERC, 762 F.3d 41, 87 (D.C. Cir. 2014) (citing Nat’l Ass’n of Regul. Util. Comm’nrs v. 
+FERC, 475 F.3d 1277, 1285 (D.C. Cir. 2007)).
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 27 ---
+Docket No. ER26-247-000 - 27 -
+We find that the proposed ongoing reliability requirements related to HILLs, 
+including, among other things, non-conforming load forecasting, PMU, and ride-through 
+requirements, are also just and reasonable and not unduly discriminatory or prefere ntial.  
+We find that the proposed requirements will allow SPP to maintain reliable operation of 
+its transmission system by increasing SPP’s visibility, providing necessary data, and 
+imposing real-time operational safeguards for HILLs. 
+2. HILLGA Process
+As noted above, the Commission applies an independent entity variation standard 
+to evaluate RTO/ISO proposals for deviations from the Commission’s pro forma LGIP 
+and pro forma LGIA.123  Under the independent entity variation standard, SPP must 
+demonstrate that its proposed variations are just and reasonable and not unduly 
+discriminatory or preferential and accomplish the purposes of the Commission’s final 
+rules on generator interconnection, including, as relevant here, Order Nos. 20 03 and 
+2023.124  We grant SPP an independent entity variation for its proposed HILLGA process 
+because we find that the proposed process is just and reasonable and not unduly 
+discriminatory or preferential and accomplishes the purposes of Order Nos. 2003 and 
+2023 to ensure that interconnection customers are able to interconnect to the transmission 
+system in a reliable, efficient, transparent, and timely manner. 125  As discussed further 
+below, we find that SPP’s HILLGA process reasonably provides a flexible, expedited,
+and separate serial interconnection process that will facilitate the prompt interconnection 
+of generating facilities that are limited to serving a HILL in the same local area .  
+We find that the more stringent eligibility requirements for the HILLGA process, 
+compared to the requirements set forth in the Commission’s pro forma LGIP, are just and 
+reasonable and not unduly discriminatory or preferential because they will help deter 
+speculative interconnection requests from entering the expedited interconnection process.  
+Specifically, we find that the more stringent financial commitments, the obligation to 
+satisfy a development milestone earlier in the process, and the requirement that 
+                                           123 See, e.g., Order No. 2003, 104 FERC ¶ 61,103 at P 827; Order No. 2023,      
+184 FERC ¶ 61,054 at P 1764 & n.3346.
+124 See, e.g., Sw. Power Pool, Inc., 183 FERC ¶ 61,215, at P 30 (2023) (“Under the 
+independent entity variation standard, SPP must demonstrate that its proposed variations 
+are just and reasonable and not unduly discriminatory or preferential, and accomplish the 
+purposes of the Commission’s rulemakings establishing the pro forma generator 
+interconnection procedures and agreements.”).
+125 See, e.g., Order No. 2023, 184 FERC ¶ 61,054 at P 693 (“This approach 
+achieves the Commission’s goals of ensuring that interconnection customers are able to 
+interconnect in a reliable, efficient, transparent, and timely manner.”).  
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 28 ---
+Docket No. ER26-247-000 - 28 -
+generating facilities enter commercial operation within five years of executing the 
+HILLGA Study Agreement, among other requirements, will encourage the submission of 
+more commercially ready and less speculative interconnection requests.  
+We further find that SPP’s proposed HILLGA substation and transmission line 
+segment requirements are just and reasonable and not unduly discriminatory or 
+preferential because they help to preserve the local, limited nature of SPP’s proposed 
+LLRIS.  These requirements help to ensure that a HILLGA interconnection will have 
+limited impacts on SPP’s transmission system by providing that the generator’s POI must 
+be in the same local area as the HILL that the HILLGA Customer will serve.  Similarly, 
+SPP proposes to cap the HILLGA Customer’s generating facility’s projected capacity 
+accreditation value at the requested load amount of the associated HILL(s), multiplied by 
+the higher of: (1) 110% plus the highest approved Planning Reserve Margin percentage 
+effective at the time of the HILLGA Study Agreement and outlined in the SPP Planning 
+Criteria; or (2) 125%.126  We find that SPP’s proposed cap on the projected capacity 
+accreditation value helps to ensure that only the generation capacity necessary to serve 
+the HILL is studied through the HILLGA process, while recognizing that the relevant 
+load responsible entity must secure sufficient resources to cover the Planning Reserve 
+Margin that it will be required to carry when the HILL receives long-term, firm 
+transmission service.127
+We also find that SPP’s proposal is just and reasonable and not unduly 
+discriminatory or preferential because we agree with SPP that the “HILLGA presents a 
+reasonable approach to address [the] large load generation needs without disadvantaging 
+                                           126 Transmittal at 26.
+127 In its comments, Enchanted Rock initially requested that the Commission 
+accept SPP’s proposal but only on the condition that SPP change the second of the 
+proposed values (i.e., the 125%) to 150%.  Enchanted Rock Comments at 6.  In its 
+answer, however, Enchanted Rock states that SPP’s answer clarifies that the HILLGA 
+proposal would not interfere with an interconnection customer’s installation of redundant 
+on-site capacity to support reliability and, therefore, asks the Commission to accept SPP’s 
+HILLGA proposal without condition.  Enchanted Rock Answer at 1-3.  In any event, for 
+the reasons discussed above, we find SPP’s proposed cap just and reasonable, and under 
+FPA section 205, SPP need not show that its proposal is the most just and reasonable 
+among all possible alternatives so long as it demonstrates that the proposal is just and 
+reasonable.  See, e.g., Cities of Bethany v. FERC, 727 F.2d 1131, 1136 (D.C. Cir. 1984)
+(describing the Commission’s authority under section 205 of the FPA as “limited to an 
+inquiry into whether the rates proposed by a utility are reasonable —and not to extend to 
+determining whether a proposed rate schedule is more or less reasonable than alternative 
+rate designs.”).
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 29 ---
+Docket No. ER26-247-000 - 29 -
+requests in the DISIS queue.”128 For instance, SPP proposes to accept HILLGA Requests 
+at any time and complete the entire HILLGA process within 150 days, which is a
+significantly faster timeline than the current DISIS process, which, as designed, takes    
+12 months to complete.129  At the same time, HILLGA Requests will not be considered 
+higher queued than pending interconnection requests in the standard DISIS queue and
+will not appear in the DISIS models until such models have been updated to include new 
+ITP models. As a result, the proposed Tariff revisions are designed to not drive 
+increased network upgrade costs or risk of restudies for pending DISIS interconnection 
+requests. In addition, SPP states that the HILLGA process will not affect the timing of 
+any pending DISIS interconnection requests because the HILLGA process will be 
+predominantly completed by outside consultants paid for by the HILLGA Customer 
+through the required study deposits.
+Regarding LLRIS, we find that SPP’s proposal is just and reasonable and not 
+unduly discriminatory or preferential because it limits a HILLGA Customer to only 
+serving a HILL or HILLs located in the same local area as the POI for its generating 
+facility and, thus, mitigates the generating facility’s impacts on SPP’s transmission 
+system. In addition, we find that it is a reasonable component of SPP’s proposal to limit 
+LLRIS to a term of five years.  Because HILLGA Customers with LLRIS have 
+interconnection service that is limited to a five-year term and limited to serving specific 
+HILL or HILLs, we find it reasonable that these customers are only eligible to obtain
+non-firm point-to-point and short-term point-to-point service without being studied in the 
+Aggregate Transmission Service Study process or obtaining different interconnection 
+service.130  We note that the expiration of LLRIS also ensures that any generating
+facilities that interconnect to the transmission system will eventually go through SPP’s 
+standard interconnection procedures, including all necessary studies, if they are to be 
+interconnected for longer than five years.  
+                                           128 Transmittal at 35.
+129 Id. at 36-37.
+130 Non-firm point-to-point transmission service includes the transmission of 
+energy on an hourly, daily, weekly, or monthly basis, not to exceed one month’s 
+reservation.  See SPP, Tariff, Pt. II, § 14.5 (Classification of Non-Firm Point-To-Point 
+Transmission Service).  Short-term firm point-to-point transmission service is firm   
+point-to-point transmission service that provides firm deliveries of capacity and energy 
+from the point(s) of receipt to the point(s) of delivery with a term of less than one year.  
+See also id., Pt. I, § 1.1S (Definitions); id., Pt. II, § 13.7 (Classification of Firm 
+Transmission Service); id., attach. P (Transmission Service Timing Requirements).
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 30 ---
+Docket No. ER26-247-000 - 30 -
+Finally, we find that SPP’s proposed HILLGA process accomplishes the purposes 
+of Order Nos. 2003 and 2023 to ensure that interconnection customers are able to 
+interconnect to the transmission system in a reliable, efficient, transparent, and timely 
+manner.  We find that SPP’s HILLGA-related revisions, taken together, accomplish these 
+purposes because they will help ensure that HILLGA Customers seeking to serve HILLs 
+are able to interconnect to the transmission system in a timely manner and increase the 
+speed of interconnection queue processing.131  Therefore, we find that SPP’s proposed 
+Tariff revisions implementing the HILLGA process meet the independent entity variation 
+standard.
+3. Miscellaneous Issues
+As noted above, SEIA asserts that the “Commission should encourage SPP to 
+undertake ongoing monitoring and reporting commitments regarding its proposed 
+HILLS/HILLGA processes.”132  We decline SEIA’s request because SPP has 
+demonstrated that the proposed HILL and HILLGA processes are just and reasonable for 
+the reasons discussed above.133  Moreover, we note that SPP asserts that it will monitor 
+the effectiveness of the HILL and HILLGA processes just like it continuously monitors 
+every service provided under its Tariff.134
+However, we note that SPP’s filing contains several ministerial errors throughout
+proposed Attachments BA and BB:  (1) incorrect usage of the acronym “HSCS” instead 
+of “HSLCS” in Attachment BA section 2.1.3.3; (2) redundant wording in the following 
+sentence in Attachment BA section 2.1.3.4: “The Transmission Provider will perform a 
+supplemental assessment, in addition to the studies required pursuant to Attachment AQ 
+and AX of the Tariff, of the impact of a requested HILL delivery point configuration 
+change on the Transmission System for the full requested term, in addition to the studies 
+required in Attachment AX and Attachment AX of the Tariff ”;135 (3) failure to specify 
+“90-Calendar Day extension” in the following sentence in Attachment BA, section 
+2.1.3.4: “The Transmission Provider may grant a 90-day extension for completion of 
+                                           131 See, e.g., Order No. 2023, 184 FERC ¶ 61,054 at PP 4, 693.
+132 SEIA Comments at 7.
+133 See Cities of Bethany v. FERC, 727 F.2d at 1136.
+134 SPP Answer at 8.
+135 SPP, Proposed Tariff, attach. BA, § 2 (0.0.0), § 2.1.3.4 (HILL Delivery Point 
+Study) (emphasis added).
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 31 ---
+Docket No. ER26-247-000 - 31 -
+such negotiations”;136 (4) inconsistent usage of the term “Transmission Owner” in 
+Attachment BA section 2.2.4 and the term “Host Transmission Owner” in the remainder 
+of Attachment BA; (5) inclusion of the capitalized term “High Impact Large Load 
+Generation Assessment Study Procedures” in the defined term “High Impact Large Load 
+Generation Assessment Request” in Attachment BB section 1, which is not defined or 
+used elsewhere in Attachment BB; and (6) incorrect usage of the acronym “HILGA” 
+instead of “HILLGA” in Attachment BB sections 3.4.4.1 and 4.4.  Therefore, we direct 
+SPP to submit, within 30 days of the date of this order, a compliance filing that corrects 
+the ministerial errors listed above.
+The Commission orders:
+(A) SPP’s proposed Tariff revisions are hereby accepted, effective January 15, 
+2026, as requested, subject to condition, as discussed in the body of this order.
+(B) SPP is hereby directed to submit a compliance filing, within 30 days of the 
+date of this order, as discussed in the body of this order.
+By the Commission.  Commissioner Rosner is concurring with a separate statement 
+  attached.
+( S E A L )
+Debbie-Anne A. Reese,
+Secretary.
+                                           136 Id. 
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 32 ---
+Docket No. ER26-247-000 - 32 -
+Appendix – Tariff Records
+Southwest Power Pool, Inc.
+Open Access Transmission Tariff, Sixth Revised Volume No. 1
+ Table of Contents, Table of Contents (17.0.6)
+ Definitions H, 1 Definitions H (1.0.0)
+ Definitions P, 1 Definitions P (4.0.0)
+ Attachment J Section V, Attachment J Section V (4.0.3)
+ Attachment O Section I, Attachment O Section I (8.0.0)
+ Attachment O Section V, Attachment O Section V (9.0.0)
+ Attachment V Section 8, Attachment V Section 8 (26.0.0)
+ Attachment AE (MPL), Attachment AE Integrated Marketplace (28.0.0)
+ Att. AE (MPL) 1.1 N, Attachment AE (MPL) Section 1.1 N (5.0.1)
+ Att. AE (MPL) 2.2, Attachment AE (MPL) Section 2.2 (22.0.0)
+ Att. AE (MPL) 2.5, Attachment AE (MPL) Section 2.5 (1.0.0)
+ Att. AE (MPL) 2.22, Attachment AE (MPL) Section 2.22 (0.0.0)
+ Att. AE (MPL) 2.22.1, Attachment AE (MPL) Section 2.22.1 (0.0.0)
+ Att. AE (MPL) 2.22.2, Attachment AE (MPL) Section 2.22.2 (0.0.0)
+ Attachment AQ Section 1, Attachment AQ Section 1 (2.0.0)
+ Attachment AQ Section 3, Attachment AQ Section 3 (3.0.0)
+ Attachment AQ Addendum 1, Attachment AQ Addendum 1 (2.0.0)
+ Att. AX Section 1, Attachment AX Section 1 (1.0.0)
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 33 ---
+Docket No. ER26-247-000 - 33 -
+ Att. AX Section 2, Attachment AX Section 2 (1.0.0)
+ Att. AX Addendum 1, Attachment AX Addendum 1 (1.0.0)
+ Attachment BA, Attachment BA High Impact Large Load (0.0.0)
+ Attachment BA TOC, Attachment BA Table of Contents (0.0.0)
+ Att. BA Section 1, Attachment BA Section 1 (0.0.0)
+ Att. BA Section 2, Attachment BA Section 2 (0.0.0)
+ Att. BA Section 3, Attachment BA Section 3 (0.0.0)
+ Attachment BB, Attachment BB High Impact Large Load Generationâ€¦ (0.0.0)
+ Attachment BB TOC, Attachment BB Table of Contents (0.0.0)
+ Att. BB Section 1, Attachment BB Section 1 (0.0.0)
+ Att. BB Section 2, Attachment BB Section 2 (0.0.0)
+ Att. BB Section 3, Attachment BB Section 3 (0.0.0)
+ Att. BB Section 4, Attachment BB Section 4 (0.0.0)
+ Att. BB Section 5, Attachment BB Section 5 (0.0.0)
+ Att. BB Section 6, Attachment BB Section 6 (0.0.0)
+ Att. BB Section 7, Attachment BB Section 7 (0.0.0)
+ Att. BB Section 8, Attachment BB Section 8 (0.0.0)
+ Att. BB Section 9, Attachment BB Section 9 (0.0.0)
+ Att. BB Section 10, Attachment BB Section 10 (0.0.0)
+ Att. BB Section 11, Attachment BB Section 11 (0.0.0)
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 34 ---
+Docket No. ER26-247-000 - 34 -
+ Att. BB Section 12, Attachment BB Section 12 (0.0.0)
+ Att. BB Section 13, Attachment BB Section 13 (0.0.0)
+ Att. BB App 1, Attachment BB Appendix 1 (0.0.0)
+ Att. BB App 2, Attachment BB Appendix 2 (0.0.0)
+ Att. BB App 3, Attachment BB Appendix 3 (0.0.0)
+ Att. BB App 4, Attachment BB Appendix 4 (0.0.0)
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 35 ---
+UNITED STATES OF AMERICA
+FEDERAL ENERGY REGULATORY COMMISSION
+Southwest Power Pool, Inc. Docket No. ER26-247-000
+(Issued January 14, 2026)
+ROSNER, Commissioner, concurring: 
+Today’s order accepts SPP’s proposal to establish new study processes for new 
+High Impact Large Loads (HILLs) and associated generation through the High Impact 
+Large Load Generation Assessment (HILLGA).  Together, these processes will enable 
+SPP to efficiently identify new large loads, expedite the interconnection of new 
+generation needed to serve them, and protect the reliability of the bulk power system.  
+The proposal also encourages “bring-your-own-new-generation” solutions in SPP, which 
+will enable rapid interconnection of new large loads without raising costs or threatening 
+electric reliability for other customers.  I concur to highlight SPP’s pragmatic steps to 
+support economic growth in its footprint and call on other transmission providers across 
+the country to consider similar proposals through FPA section 205 filings.  
+The HILLs and HILLGA processes work together to pair shovel-ready generation 
+with large loads and allow them to interconnect to the grid in less than half the time 
+typically required for generators to clear SPP’s generator interconnection queue.  The 
+secret sauce behind SPP’s proposal is Load Limited Resource Interconnection Service 
+(LLRIS), a new interconnection service that limits the amount of power a generator can 
+put on the SPP grid to the forecasted hourly load of the nearby large load it serves.  
+Because the generator’s output is matched to the large load’s demand, the impacts of 
+adding load and generation to the transmission system effectively cancel each other out, 
+which minimizes the need for time-consuming transmission upgrades.  SPP’s proposal is 
+grounded in physics, takes a harder look at reliability impacts of large loads on the grid 
+than current practice requires, and unlocks large load opportunities while protecting othe r 
+customers from rising bills.  
+There are also clear parallels between SPP’s approach in its HILLs and HILLGA 
+processes and the new transmission services the Commission recently directed PJM to 
+create for load co-located with generation.1  While the mechanics of these approaches are 
+distinct between the different regions, the practical outcome is similar: they both enable
+new generation needed to serve new large loads to connect to the grid faster and at lower 
+                                           1 See 193 FERC ¶ 61,217 at PP 200-03; 234.
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 36 ---
+cost. The common thread is a recognition that when generation is paired with load that is 
+physically proximate, the impacts on the transmission system are lower than they are in 
+the status quo, in which large loads and generation are planned separately.   
+I also note that SPP’s proposal is another step towards realizing the goals of 
+Secretary Wright’s Large Load ANOPR proposal in three important ways: first, it pairs
+new large loads and new generation to connect them to the grid rapidly and reliably;2
+second, it minimizes costs borne by other customers;3 and third, it does so through an 
+FPA section 205 filing, rather than waiting on the Commission to require such action .4
+Today’s order is a productive step toward facilitating the energy needed to win t he 
+AI race, bring back American manufacturing, and deliver the reliable and affordable 
+energy on which families and small businesses depend.  I encourage other transmission 
+providers to take note of the innovative approach SPP proposed in this filing, and to 
+consider proposing similar solutions tailored to meet the needs within their own 
+footprints. 
+For these reasons, I respectfully concur.
+David Rosner
+Commissioner
+                                           2 See U.S. Department of Energy, Secretary of Energy, Direction that the
+Commission Initiate Rulemaking Procedures and Proposal Regarding the Interconnection
+of Large Loads Pursuant to the Secretary’s Authority Under Section 403 of the
+Department of Energy Organization Act (Oct. 23, 2025) at P 20.
+3 See Id. at P 25.
+4 See Id. at P 32. 
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026
+--- PAGE 37 ---
+Document Content(s)
+ER26-247-000.docx.........................................................1
+Document Accession #: 20260114-3109      Filed Date: 01/14/2026

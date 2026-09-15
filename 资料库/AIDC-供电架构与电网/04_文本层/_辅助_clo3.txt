@@ -1,0 +1,716 @@
+----- PAGE 1 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 1 of 15 
+Standard Development Timeline 
+This section is maintained by the drafting team during the development of the standard and will 
+be removed when the standard becomes effective. 
+ 
+Description of Current Draft 
+This is the first draft of proposed standard for the initial formal 30-day comment period. 
+ 
+Completed Actions Date 
+Standards Committee approved Standard Authorization Request 
+(SAR) for posting 
+March 18, 2026 
+SAR posted for comment April 1 - 30, 2026 
+Standards Committee approved Standard Authorization Request 
+(SAR) for formal development 
+May 20, 2026 
+ 
+Anticipated Actions Date 
+30-day formal comment period with 10-day ballot August 19 - September 18, 2026 
+20-day formal comment period with additional ballot October 2026 
+5-day final ballot November 2026 
+Board adoption December 2026
+----- PAGE 2 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 2 of 15 
+New or Modified Term(s) Used in NERC Reliability Standards 
+This section includes all new or modified terms used in the proposed standard that will be 
+included in the Glossary of Terms Used in NERC Reliability Standards upon applicable regulatory 
+approval. Terms used in the proposed standard that are already defined and are not being 
+modified can be found in the Glossary of Terms Used in NERC Reliability Standards. The new or 
+revised terms listed below will be presented for approval with the proposed standard. Upon 
+Board adoption, this section will be removed. 
+ 
+Term(s): 
+Computational Load Site  
+One or more buildings, structures, or installations at a single location that: 
+1. primarily contains information technology infrastructure used for: 
+• creating, executing, and delivering software applications and services; 
+• artificial intelligences training, deployment, and delivery; 
+• cryptocurrency mining; or 
+• other computational activities at a data center; and 
+2. is supplied through electrical equipment that is connected to the Bulk-Power System. 
+ 
+Computational Load Owner (CLO) 
+The entity that owns and maintains a Computational Load Site.
+----- PAGE 3 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 3 of 15 
+A. Introduction 
+1. Title: Computational Load Protection Coordination & Disturbance Monitoring 
+2. Number: CLO-003-1 
+3. Purpose:  To maintain the coordination of Protection Systems at Computational 
+Load Sites and to have adequate data available from Computational Load 
+Sites to facilitate analysis of System Disturbances. 
+4. Applicability: 
+4.1. Functional Entities: 
+4.1.1 Computational Load Owner 
+4.1.2 Transmission Owner 
+4.1.3 Distribution Provider 
+4.1.4 Generator Owner 
+4.2. Facilities: 
+4.2.1 Computational Load Sites with a total connected Load greater than or 
+equal to 50 MW that are supplied through electrical equipment 
+connected at a voltage level greater than or equal to 100 kV from one or 
+more points of connection.  
+5. Effective Date: See Implementation Plan for CLO-003-1.
+----- PAGE 4 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 4 of 15 
+B. Requirements and Measures 
+R1. Each Computational Load Owner shall have sequence of event recording (SER) data 
+for Computational Load Sites, including: [Violation Risk Factor: Lower] [Time Horizon: 
+Long-term Planning] 
+1.1. Circuit breaker position (open/close) for circuit breakers associated with 
+equipment it owns including bus(es), and, as applicable, the main power 
+transformer(s)1, on-site generation, shunt static and dynamic reactive device(s). 
+M1. The Computational Load Owner has evidence (electronic or hard copy) of data, as 
+applicable, as specified in Requirement R1. Evidence may include, but is not limited 
+to: (1) actual data recordings; (2) documents describing the device interconnections 
+and configurations which may include a single design standard as representative for 
+common installations; or (3) station or equipment drawings.  
+R2. Each Computational Load Owner, Transmission Owner, Distribution Provider, or 
+Generator Owner that owns the main power transformer(s) that supplies a 
+Computational Load Site shall have triggered fault recording (FR) data on the high-side 
+of the main power transformer(s) or common point of connection(s) to determine the 
+following electrical quantities for the Computational Load Site: [Violation Risk Factor: 
+Lower] [Time Horizon: Long-term Planning] 
+2.1. Phase-to-neutral voltage for each phase. 
+2.2. Each phase current and the residual or neutral current. 
+2.3. Real and Reactive Power expressed on a three-phase basis. 
+M2. The Computational Load Owner, Transmission Owner, Distribution Provider, or 
+Generator Owner that owns the main power transformer(s) that supplies a 
+Computational Load Site has evidence (electronic or hard copy) of FR data that is 
+sufficient to determine electrical quantities as specified in Requirement R2. Evidence 
+may include, but is not limited to: (1) actual data recordings or derivations; (2) 
+documents describing the device specifications and configurations which may include 
+a single design standard as representative for common installations; or (3) station or 
+equipment drawings. 
+R3. Each Computational Load Owner, Transmission Owner, Distribution Provider, or 
+Generator Owner that owns the main power transformer(s) that supplies a 
+Computational Load Site shall have FR data as specified in Requirement R2 that meets 
+the following: [Violation Risk Factor: Lower] [Time Horizon: Long-term Planning] 
+3.1. A single record or multiple records that include a pre-trigger record length of at 
+least two cycles and a total record length of at least 2.0 seconds for the same 
+trigger point.  
+ 
+1 For the purpose of this standard, the main power transformer is the power transformer and its associated equipment that 
+steps down the voltage for the Computational Load Site from its nominal transmission/interconnecting system voltage.
+----- PAGE 5 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 5 of 15 
+3.2. A minimum recording rate of 64 samples per cycle. 
+3.3. Trigger settings for at least the following:  
+3.3.1. Neutral (residual) overcurrent.  
+3.3.2. AC phase overvoltage and undervoltage.  
+3.3.3. Overfrequency and underfrequency  
+M3. The Computational Load Owner, Transmission Owner, Distribution Provider, or 
+Generator Owner that owns the main power transformer(s) that supplies a 
+Computational Load Site has evidence (electronic or hard copy) that FR data meets 
+Requirement R3. Evidence may include, but is not limited to: (1) actual data 
+recordings or derivations, or (2) documents describing the device specification and 
+device configuration or settings. 
+R4. Each Computational Load Owner, Transmission Owner, Distribution Provider, or 
+Generator Owner that owns the main power transformer(s) that supplies a 
+Computational Load Site shall have continuous dynamic disturbance recording (DDR) 
+data and storage on the high-side of the main power transformer(s) or common point 
+of connection(s) to determine the following electrical quantities for the 
+Computational Load Site: [Violation Risk Factor: Lower] [Time Horizon: Long-term 
+Planning] 
+4.1. Phase-to-neutral voltage for each phase. 
+4.2. Each phase current and the residual or neutral current. 
+4.3. Real Power and Reactive Power flows expressed on a three-phase basis 
+corresponding to all circuits where current measurements are required. 
+4.4. Frequency of any one of the voltage(s) in Requirement R4, Part 4.1.
+----- PAGE 6 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 6 of 15 
+M4. The Computational Load Owner, Transmission Owner, Distribution Provider, or 
+Generator Owner that owns the main power transformer(s) that supplies a 
+Computational Load Site has evidence (electronic or hard copy) of continuous DDR 
+data recording and storage to determine electrical quantities as specified in 
+Requirement R4. Evidence may include, but is not limited to: (1) actual data 
+recordings or derivations; or (2) documents describing the device specifications and 
+configurations, which may include a single design standard as representative for 
+common installations; or (3) station drawings. 
+R5. Each Computational Load Owner, Transmission Owner, Distribution Provider, or 
+Generator Owner responsible for DDR data for the electrical quantities identified in 
+Requirement R4 shall have DDR data that meet the following: [Violation Risk Factor: 
+Lower] [Time Horizon: Long-term Planning] 
+5.1. Input sampling rate of at least 960 samples per second.  
+5.2. Output recording rate of electrical quantities of at least 60 times per second. 
+M5. The Computational Load Owner, Transmission Owner, Distribution Provider, or 
+Generator Owner has evidence (electronic or hard copy) that DDR data meets 
+Requirement R5. Evidence may include, but is not limited to: (1) documents 
+describing the device specification, device configuration, or settings (Requirement R5, 
+Part 5.1; Requirement R5, Part 5.2); or (2) actual data recordings (Requirement R5, 
+Part 5.2). 
+R6. Each Computational Load Owner, Transmission Owner, Distribution Provider, or 
+Generator Owner responsible for SER, FR, or DDR data identified in Requirement R1, 
+Requirement R2, or Requirement R4 shall time synchronize the SER, FR, or DDR data 
+to meet the following: [Violation Risk Factor: Lower] [Time Horizon: Long-term 
+Planning] 
+6.1. Synchronization to Coordinated Universal Time (UTC) with or without a local 
+time offset. 
+6.2. Synchronized device clock accuracy within ± 1 milliseconds of UTC. 
+M6. The Computational Load Owner, Transmission Owner, Distribution Provider, or 
+Generator Owner has evidence (electronic or hard copy) of time synchronization of 
+applicable SER, FR, or DDR data described in Requirement R6. Evidence may include, 
+but is not limited to: (1) documents describing the device specification, configuration, 
+or setting; (2) time synchronization indication or status; or 3) station drawings.  
+R7. Each Computational Load Owner, Transmission Owner, Distribution Provider, or 
+Generator Owner responsible for SER, FR, or DDR data identified in Requirement R1, 
+Requirement R2, or Requirement R4 shall provide all requested SER, FR, and DDR data 
+to its Transmission Planner, Planning Coordinator, Transmission Operator, Balancing 
+Authority, Reliability Coordinator, Regional Entity, or NERC in accordance with the 
+following: [Violation Risk Factor: Lower] [Time Horizon: Long-term Planning]
+----- PAGE 7 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 7 of 15 
+7.1. Data shall be retrievable for the period of 20 calendar days, inclusive of the day 
+the data was recorded. 
+7.2. Data subject to Requirement R7, Part 7.1 shall be provided within 15 calendar 
+days of a request unless an extension is granted by the requestor. 
+7.3. SER data shall be provided in ASCII2 Comma Separated Value (CSV) format 
+following Attachment 1. 
+7.4. FR data shall be provided either in CSV format with appropriate headers or in 
+electronic files that are formatted in conformance with C37.111, IEEE Standard 
+Common Format for Transient Data Exchange (COMTRADE), revision C37.111 
+1999 or later. 
+7.5. DDR data shall be provided either in CSV format with appropriate headers or in 
+electronic files that are formatted in conformance with C37.111, IEEE Standard 
+Common Format for Transient Data Exchange (COMTRADE), revision C37.111 
+1999 or later. 
+7.6. Data files shall be named in conformance with C37.232, IEEE Standard for 
+Common Format for Naming Time Sequence Data Files (COMNAME), revision 
+C37.232-2011 or later. 
+M7. The Computational Load Owner, Transmission Owner, Distribution Provider, or 
+Generator Owner has evidence (electronic or hard copy) that applicable SER, FR, or 
+DDR data was submitted upon request in accordance with Requirement R7. Evidence 
+may include, but is not limited to: (1) actual data recordings; (2) dated transmittals to 
+the requesting entity with formatted records; or (3) documents describing data 
+storage capability, device specification, configuration, or settings. 
+R8. Each Computational Load Owner, Transmission Owner, Distribution Provider, or 
+Generator Owner responsible for SER, FR, or DDR data identified in Requirement R1, 
+Requirement R2, or Requirement R4 shall, upon the discovery of a failure of the 
+recording capability for the SER, FR, or DDR data: [Violation Risk Factor: Lower] [Time 
+Horizon: Long-term Planning]  
+• Restore the recording capability within 90 calendar days, or 
+• Submit a Corrective Action Plan (CAP) to the Regional Entity within 90 calendar 
+days and then implement it according to CAP timeline. 
+M8. The Computational Load Owner, Transmission Owner, Distribution Provider, or 
+Generator Owner has dated evidence (electronic or hard copy) that meets 
+Requirement R8. Evidence may include, but is not limited to: (1) dated reports of the 
+discovery of a failure, (2) documentation noting the date the data recording was 
+restored, (3) SCADA records, or (4) dated Corrective Action Plan transmittals to the 
+Regional Entity and evidence of Corrective Action Plan implementation. 
+ 
+2 American Standard Code for Information Interchange
+----- PAGE 8 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 8 of 15 
+R9. Each Computational Load Owner shall establish a process for developing new and 
+revised Protection System settings for Computational Load Sites, such that the 
+Protection Systems operate in the intended sequence during Faults. The process shall 
+include: [Violation Risk Factor: Medium] [Time Horizon: Long-term Planning]  
+9.1. For Protection System settings applied on Computational Load Sites that 
+electrically join equipment owned by separate functional entities (Transmission 
+Owners, Generator Owners, and Distribution Providers), provisions to: 
+9.1.1. Respond to any owner(s) that provided its proposed Protection System 
+settings by identifying any coordination issue(s) or affirming that no 
+coordination issue(s) were identified. 
+9.1.2. Verify that identified coordination issue(s) associated with the proposed 
+Protection System settings for the Computational Load Sites are 
+addressed prior to implementation. 
+9.1.3. Communicate with the other owner(s) of the electrically joined 
+equipment regarding revised Protection System settings resulting from 
+unforeseen circumstances that arise during implementation or 
+commissioning, Misoperation investigations, maintenance activities, or 
+emergency replacements required as a result of Protection System 
+component failure. 
+M9. Acceptable evidence may include, but is not limited to, dated electronic or hard copy 
+documentation to demonstrate that the responsible entity established a process to 
+develop settings for its Protection Systems, in accordance with Requirement R9. 
+R10. Each Computational Load Owner shall utilize its process established in Requirement 
+R9 to develop new and revised Protection System settings for Computational Load 
+Sites. [Violation Risk Factor: High] [Time Horizon: Operations Planning]  
+M10. Acceptable evidence may include, but is not limited to, dated electronic or hard copy 
+documentation to demonstrate that the responsible entity utilized its settings 
+development process established in Requirement R9, as specified in Requirement 
+R10.
+----- PAGE 9 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 9 of 15 
+C. Compliance 
+1. Compliance Monitoring Process 
+1.1. Compliance Enforcement Authority: “Compliance Enforcement Authority” 
+means NERC or the Regional Entity, or any entity otherwise designated by an 
+Applicable Governmental Authority, in their respective roles of monitoring and 
+enforcing compliance with mandatory and enforceable NERC Reliability 
+Standards. 
+1.2. Evidence Retention: The following evidence retention period(s) identify the 
+period of time an entity is required to retain specific evidence to demonstrate 
+compliance. For instances where the evidence retention period specified below 
+is shorter than the time since the last audit, the Compliance Enforcement 
+Authority may ask an entity to provide other evidence to show that it was 
+compliant for the full-time period since the last audit. 
+ 
+The applicable entity shall keep data or evidence to show compliance as 
+identified below unless directed by its Compliance Enforcement Authority to 
+retain specific evidence for a longer period of time as part of an investigation. 
+• Requirements R1 through R10, and Measures M1 through M10, since the last 
+audit, unless directed by its Compliance Enforcement Authority to retain 
+specific evidence for a longer period of time as part of an investigation. 
+1.3. Compliance Monitoring and Enforcement Program: “Compliance Monitoring 
+Enforcement Program” or “CMEP” means, depending on the context (1) the 
+NERC Compliance Monitoring and Enforcement Program (Appendix 4C to the 
+NERC Rules of Procedure), or (2) the program, department or organization within 
+NERC or a Regional Entity, or any entity as otherwise designated by an Applicable 
+Government Authority, that is responsible for performing compliance monitoring 
+and enforcement activities with respect to Registered Entities’ compliance with 
+Reliability Standards.
+----- PAGE 10 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 10 of 15 
+Violation Severity Levels 
+R # 
+Violation Severity Levels 
+Lower VSL Moderate VSL High VSL Severe VSL 
+R1. 
+ 
+Each Computational Load 
+Owner as directed by 
+Requirement R1 to have the 
+required SER data had more 
+than 80 percent, but less than 
+100 percent of the circuit 
+breaker(s) identified in 
+Requirement R1. 
+Each Computational Load 
+Owner as directed by 
+Requirement R1 to have the 
+required SER data had more 
+than 70 percent, but less than 
+or equal to 80 percent of the 
+circuit breaker(s) identified in 
+Requirement R1. 
+Each Computational Load 
+Owner as directed by 
+Requirement R1 to have the 
+required SER data had more 
+than 60 percent, but less than 
+or equal to 70 percent of the 
+circuit breaker(s) identified in 
+Requirement R1. 
+Each Computational Load 
+Owner as directed by 
+Requirement R1 to have the 
+required SER data had less 
+than or equal to 60 percent of 
+the circuit breaker(s) identified 
+in Requirement R1. 
+R2. 
+ 
+The responsible entity had FR 
+data as directed by 
+Requirement R2 that covers 
+more than 80 percent, but less 
+than 100 percent of the total 
+required electrical quantities, 
+which is the product of the 
+total number of monitored 
+equipment and the number of 
+specified electrical quantities 
+for each monitored 
+equipment. 
+The responsible entity had FR 
+data as directed by 
+Requirement R2 that covers 
+more than 70 percent, but less 
+than or equal to 80 percent of 
+the total required electrical 
+quantities, which is the 
+product of the total number of 
+monitored equipment and the 
+number of specified electrical 
+quantities for each monitored 
+equipment. 
+The responsible entity had FR 
+data as directed by 
+Requirement R2 that covers 
+more than 60 percent, but less 
+than or equal to 70 percent of 
+the total required electrical 
+quantities, which is the 
+product of the total number of 
+monitored equipment and the 
+number of specified electrical 
+quantities for each monitored 
+equipment. 
+The responsible entity had FR 
+data as directed by 
+Requirement R2 that covers 
+less than or equal to 60 
+percent of the total required 
+electrical quantities, which is 
+the product of the total 
+number of monitored 
+equipment and the number of 
+specified electrical quantities 
+for each monitored 
+equipment. 
+R3. 
+ 
+The responsible entity had FR 
+data that meets more than 80 
+percent, but less than 100 
+percent of the total recording 
+parameters as specified in 
+Requirement R3. 
+The responsible entity had FR 
+data that meets more than 70 
+percent, but less than or equal 
+to 80 percent of the total 
+recording parameters as 
+specified in Requirement R3. 
+The responsible entity had FR 
+data that meets more than 60 
+percent, but less than or equal 
+to 70 percent of the total 
+recording parameters as 
+specified in Requirement R3. 
+The responsible entity had FR 
+data that meets less than or 
+equal to 60 percent of the 
+total recording parameters as 
+specified in Requirement R3.
+----- PAGE 11 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 11 of 15 
+R # 
+Violation Severity Levels 
+Lower VSL Moderate VSL High VSL Severe VSL 
+R4. 
+ 
+The responsible entity had 
+DDR data as directed by 
+Requirement R4, Parts 4.1 
+through 4.4 that covered more 
+than 80 percent, but less than 
+100 percent of the total 
+required electrical quantities, 
+which is the product of the 
+total number of monitored 
+equipment and the number of 
+specified electrical quantities 
+for each monitored 
+equipment. 
+The responsible entity had 
+DDR data as directed by 
+Requirement R4, Parts 4.1 
+through 4.4 for more than 70 
+percent, but less than or equal 
+to 80 percent of the total 
+required electrical quantities, 
+which is the product of the 
+total number of monitored 
+equipment and the number of 
+specified electrical quantities 
+for each monitored 
+equipment. 
+The responsible entity had 
+DDR data as directed by 
+Requirement R4, Parts 4.1 
+through 4.4 for more than 60 
+percent, but less than or equal 
+to 70 percent of the total 
+required electrical quantities, 
+which is the product of the 
+total number of monitored 
+equipment and the number of 
+specified electrical quantities 
+for each monitored 
+equipment. 
+The responsible entity had 
+DDR data as directed by 
+Requirement R4, Parts 4.1 
+through 4.4 for less than or 
+equal to 60 percent of the 
+total required electrical 
+quantities, which is the 
+product of the total number of 
+monitored equipment and the 
+number of specified electrical 
+quantities for each monitored 
+equipment. 
+R5. 
+ 
+The responsible entity had 
+DDR data that meets more 
+than 80 percent, but less than 
+100 percent of the total 
+recording parameters as 
+specified in Requirement R5. 
+The responsible entity had 
+DDR data that meets more 
+than 70 percent, but less than 
+or equal to 80 percent of the 
+total recording properties as 
+specified in Requirement R5. 
+The responsible entity had 
+DDR data that meets more 
+than 60 percent, but less than 
+or equal to 70 percent of the 
+total recording properties as 
+specified in Requirement R5. 
+The responsible entity had 
+DDR data that meets less than 
+or equal to 60 percent of the 
+total recording properties as 
+specified in Requirement R5. 
+R6.  
+ 
+The responsible entity had 
+time synchronized SER, FR, or 
+DDR data per Requirement R6, 
+Parts 6.1 and 6.2 for more 
+than 90 percent, but less than 
+100 percent of the monitored 
+equipment. 
+The responsible entity had 
+time synchronized SER, FR, or 
+DDR data per Requirement R6, 
+Parts 6.1 and 6.2 for more 
+than 80 percent, but less than 
+or equal to 90 percent of the 
+monitored equipment. 
+The responsible entity had 
+time synchronized SER, FR, or 
+DDR data per Requirement R6, 
+Parts 6.1 and 6.2 for more 
+than 70 percent, but less than 
+or equal to 80 percent of the 
+monitored equipment. 
+The responsible entity failed to 
+have time synchronized SER, 
+FR, or DDR data per 
+Requirement R6, Parts 6.1 and 
+6.2 for less than or equal to 70 
+percent of the monitored 
+equipment.
+----- PAGE 12 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 12 of 15 
+R # 
+Violation Severity Levels 
+Lower VSL Moderate VSL High VSL Severe VSL 
+R7.  
+ 
+The responsible entity as 
+directed by Requirement R7 
+provided more than 90 
+percent, but less than 100 
+percent of the requested data. 
+OR 
+The responsible entity as 
+directed by Requirement R7, 
+Part 7.2 provided the 
+requested data one to 10 
+calendar days late.  
+OR  
+The responsible entity as 
+directed by Requirement R7, 
+Parts 7.3 through 7.6 provided 
+more than 90 percent of the 
+data, but less than 100 percent 
+of the data in the proper data 
+format. 
+The responsible entity as 
+directed by Requirement R7 
+provided more than 80 
+percent, but less than or equal 
+to 90 percent of the requested 
+data.  
+OR 
+The responsible entity as 
+directed by Requirement R7, 
+Part 7.2 provided the 
+requested data 11 to 20 
+calendar days late.  
+OR  
+The responsible entity as 
+directed by Requirement R7, 
+Parts 7.3 through 7.6 provided 
+more than 80 percent of the 
+data, but less than or equal to 
+90 percent of the data in the 
+proper data format. 
+The responsible entity as 
+directed by Requirement R7 
+provided more than 70 
+percent, but less than or equal 
+to 80 percent of the requested 
+data.  
+OR 
+The responsible entity as 
+directed by Requirement R7, 
+Part 7.2 provided the 
+requested data 21 to 30 
+calendar days late.  
+OR  
+The responsible entity as 
+directed by Requirement R7, 
+Parts 7.3 through 7.6 provided 
+more than 70 percent of the 
+data, but less than or equal to 
+80 percent of the data in the 
+proper data format. 
+The responsible entity as 
+directed by Requirement R7 
+failed to provide less than or 
+equal to 70 percent of the 
+requested data.  
+OR 
+The responsible entity as 
+directed by Requirement R7, 
+Part 7.2 provided the 
+requested data more than 30 
+calendar days late.  
+OR  
+The responsible entity as 
+directed by Requirement R7, 
+Parts 7.3 through 7.6 provided 
+less than or equal to 70 
+percent of the data in the 
+proper data format. 
+R8. 
+ 
+The responsible entity as 
+directed by Requirement R8 
+was unable to restore 
+recording capability within 90 
+calendar days and provided a 
+Corrective Action Plan to the 
+Regional Entity more than 90 
+The responsible entity as 
+directed by Requirement R8 
+was unable to restore 
+recording capability within 90 
+calendar days and provided a 
+Corrective Action Plan to the 
+Regional Entity more than 100 
+The responsible entity as 
+directed by Requirement R8 
+was unable to restore 
+recording capability within 90 
+calendar days and provided a 
+Corrective Action Plan to the 
+Regional Entity more than 110 
+The responsible entity as 
+directed by Requirement R8 
+was unable to restore 
+recording capability within 90 
+calendar days and provided a 
+Corrective Action Plan to the 
+Regional Entity more than 120
+----- PAGE 13 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 13 of 15 
+R # 
+Violation Severity Levels 
+Lower VSL Moderate VSL High VSL Severe VSL 
+calendar days, but less than or 
+equal to 100 calendar days 
+after discovery of the failure. 
+calendar days, but less than or 
+equal to 110 calendar days 
+after discovery of the failure. 
+calendar days, but less than or 
+equal to 120 calendar days 
+after discovery of the failure.  
+OR  
+The responsible entity as 
+directed by Requirement R8 
+submitted a Corrective Action 
+Plan to the Regional Entity but 
+failed to implement it. 
+calendar days after discovery 
+of the failure.  
+OR  
+The responsible entity as 
+directed by Requirement R8 
+failed to restore the recording 
+capability within 90 calendar 
+days and failed to submit a 
+Corrective Action Plan to the 
+Regional Entity. 
+R9. 
+ 
+N/A N/A N/A The Computational Load 
+Owner established a process in 
+accordance with Requirement 
+R9, but failed to include 
+Requirement R9, Part 9.1.  
+OR 
+The Computational Load 
+Owner failed to establish any 
+process in accordance with 
+Requirement R9. 
+R10. 
+ 
+N/A N/A N/A The Computational Load 
+Owner failed to utilize the 
+process established in 
+accordance with Requirement 
+R9.
+----- PAGE 14 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 14 of 15 
+D. Regional Variances 
+None. 
+E. Associated Documents 
+• Project 2026-02 Computational Load Protection Coordination & Disturbance Monitoring 
+Implementation Plan 
+• Project 2026-02 Computational Load Protection Coordination & Disturbance Monitoring 
+Technical Rationale
+----- PAGE 15 -----
+CLO-003-1 – Computational Load Protection Coordination & Disturbance Monitoring 
+Draft 1 of CLO-003-1 
+August 2026 Page 15 of 15 
+Attachment 1 
+Sequence of Events Recording (SER) Data Format 
+(Requirement R7, Part 7.3) 
+ 
+Date, Time, Local Time Code, Site Name, Device3, State4  
+08/27/23, 23:58:57.110, -5, Site name 1, Breaker 1, Close  
+08/27/23, 23:58:57.082, -5, Site name 2, Breaker 2, Close  
+ 
+ 
+3 Device name may include specific names of breakers as appropriate. 
+4 Breaker status and any other terminology such as TRIP, TRIP TO LOCKOUT, RECLOSE, etc. is acceptable.

@@ -1,0 +1,184 @@
+
+1670057848600By SPP Operations
+Published on 07/08/2025
+Version .1
+00By SPP Operations
+Published on 07/08/2025
+Version .1
+center1790700High IMpact Large Load Ride-Through Requirements
+Subtitle
+00High IMpact Large Load Ride-Through Requirements
+Subtitle
+left95250000
+Revision History
+Date And version number
+Author
+Change Description
+Comments
+2025-08-04:    .1
+Daniel Baker/Mostafa Sedighizadeh
+Initial Draft
+
+Contents
+ TOC \o "1-3" \h \z \u Revision History PAGEREF _Toc202874422 \h i
+Purpose and Intent PAGEREF _Toc202874423 \h 1
+Background PAGEREF _Toc202874424 \h 1
+Applicability PAGEREF _Toc202874425 \h 1
+Ride-Through Performance Expectations PAGEREF _Toc202874426 \h 2
+Evaluation and Compliance PAGEREF _Toc202874427 \h 7
+Industry Alignment and References PAGEREF _Toc202874428 \h 7
+Terms and Acronyms PAGEREF _Toc202874429 \h 8
+
+
+Purpose and Intent
+This document outlines binding requirements for all new High Impact Large Loads (HILLs) interconnecting to the SPP Transmission System. This document outlines potential reliability expectations for HILLs. These expectations and requirements are subject to future technical refinement, stakeholder approval, and potential incorporation into other SPP governing documents.
+Background
+With the rapid growth of HILLs—such as data centers, industrial facilities, and crypto mining operations, SPP anticipates a growing risk to system stability during voltage and frequency disturbances. Historically, such loads have not been expected to ride through transmission faults, largely because their equipment was not designed with this capability.
+Today, there are no industry standards explicitly requiring load ride-through performance requirements. However, given the increasing concentration and size of HILLs, uncontrolled load tripping during voltage sags/swells or frequency events may cause or exacerbate cascading outages.
+Transmission system reinforcements, such as synchronous condensers, Static Var Compensators (SVCs) Static Synchronous Compensators (STATCOMs), can help reduce the extent of voltage excursions during faults. However, these measures alone cannot eliminate the reliability risk. Therefore, it is necessary to develop expectations for load performance similar to those already required of generators interconnecting to the SPP transmission system.
+Applicability
+The following criteria define a HILL for purposes of this proposal:
+Loads greater than 10 MW connected at 69 kV, or
+Loads greater than 50 MW connected at voltages above 69 kV
+These expectations apply to all new HILL interconnections. When a Transmission Customer has a paired inverter-based resource (IBR) or a synchronous generator, a type 1 or type 2 wind resources, or a synchronous condensers electrically connected with a HILL on a common bus, both the HILL and the resource supporting the HILL shall comply with the performance requirements specified in this document.
+Ride-Through Performance Expectations
+Voltage Ride-Through (VRT)
+HILLs should ride through the voltage profiles shown in Tables 1 and 2 below. These profiles are intended to be consistent with the ride-through curves defined in Information Technology Industry Council (ITIC) curve formerly known as the Computer & Business Equipment Manufacturers Association (CBEMA) curve and Institute of Electrical and Electronics Engineers (IEEE) standard 1668-2017, IEEE standard 2800-2022 (Clause 7 adopted by SPP) and North American Reliability Corporation (NERC) standard PRC-029-1. HILLs shall not cease power consumption within these boundaries as measured at the Point of Interconnection (POI), unless disconnection is necessary to protect equipment.
+Table 1. Voltage Ride-Through Requirements at POI 
+Root Mean Square Voltage (p .u. of nominal)
+Minimum Ride Through Time (Seconds)
+V>1.20
+NA (May ride through or trip)
+1.10<V≤1.20
+0.50
+0.90≤V≤1.10
+Continuous
+0.80≤V<0.90
+2.00
+0.70≤V<0.80
+0.50
+0.50≤V<0.70
+0.2
+V<0.50
+0.15
+* Based on ITIC curve (formerly known as the CBEMA curve) and IEEE 1668-2017 Single-Phase and Phase-Phase Curve 
+
+Table 2. Transient Overvoltage Voltage Ride-Through Requirements at POI (IEEE 2800-2022)
+Instantaneous Phase to Phase or Phase to Ground (p.u. of nominal)a
+Minimum Ride Through Time (milliseconds)b
+V>1.80
+May ride through or trip
+1.70<V≤1.80
+0.2
+1.60<V≤1.70
+1.0
+1.40<V≤1.60
+3.0
+1.20<V≤1.40
+15.0
+a Specified voltage magnitudes are the residual voltages with surge arresters applied.
+b Cumulative time over a 1-min time window
+
+Frequency Ride-Through 
+HILLs should remain connected and continue consuming power within the frequency profiles shown in the Table 3. These limits also reference IEEE 2800-2022 (Clause 7 adopted by SPP) and NERC PRC-029-1 frequency disturbance ride-through expectations. Table 3 shows the requirements pointed out by NERC PRC-029-1. Tripping for frequency excursions within these boundaries should not occur unless required by internal protection schemes.
+Table 3. Frequency Ride-Through Requirements at POI
+System Frequency (Hz)
+Minimum Ride Through Time (Seconds)
+f≥61.8
+May Trip
+f≥61.2
+299
+f≤ 61.2 and f≥ 58.8
+Continuous
+f< 58.8
+299
+f< 57.0
+May trip
+
+Fault Ride-Through (FRT) Requirements for Inverter Based Resources (IBRs) supporting a HILL at a Common Bus
+In this section, the FRT requirements from IEEE 2800-2022 are considered applicable to IBRs supporting HILL facilities that are electrically coupled with one another at a common bus. Since the IBRs and the HILLs share the same POI, it is critical that the equipment located at the HILL demonstrates similar FRT performance as required for IBRs. This ensures system reliability and stability during grid disturbances, preventing adverse interactions between the HILL, onsite generation, and the bulk power system.
+FRT Requirements for IBRs
+The IBR Plants paired with HILLs shall adhere to IEEE 2800-2022 Clause 7 requirements, except for subclauses 7.2.1 (voltage protection), and 7.3.1 (mandatory frequency tripping). Where future NERC reliability standards require more stringent ride-through requirements compared to IEEE 2800-2022 Clause 7 requirements, those standards shall supersede the standards set forth in this Section.
+Within the adopted IEEE 2800-2022 Subclauses, the following requirements shall be incorporated as Transmission Provider and Transmission Owner decision points noted in IEEE 2800-2022. 
+Subclause 7.2.2.1: The Transmission Owner shall specify the nominal voltage for use by this clause. Nominal voltages may include nominal transmission system voltages that are different from standard ANSI C84.1-2016 voltages.
+Subclause 7.2.2.2: If the IBR Plant cannot deliver both active and reactive power due to its current limit (or apparent power limit), when the Applicable Voltage is below 95%, then preference shall be given to reactive power while minimizing any reductions in active power.
+Subclause 7.2.2.3: The IBR Plant shall give preference to reactive current. In addition, the IBR Plant shall minimize reductions in active power while carrying out the reactive current priority mode response. 
+Subclause 7.2.2.3.4: The Interconnection Customer shall submit the IBR Plant controls default relationship between the magnitude of incremental positive and negative sequence reactive currents. The Transmission Provider and Transmission Owner, through High Impact Large Load Generator Interconnection Assessment (HILLGIA) Agreement, may specify a required IBR Plant response relationship between the incremental positive and negative sequence reactive currents.
+
+FRT Requirements for HILLs 
+The HILLs shall comply with the FRT performance requirements outlined in Tables 12, 14, and 15 of IEEE Std 2800-2022. Where future NERC reliability standards require more stringent ride-through requirements compared to IEEE 2800-2022 Clause 7 requirements, those standards shall supersede the standards set forth in this Section. Given that the HILLs are electrically connected to a common bus with IBRs, the HILL’s FRT performance must align with the voltage and frequency ride-through capabilities defined for IBRs. This alignment ensures system reliability and prevents adverse impacts during grid disturbances.
+Fault Ride-Through (FRT) Requirements for Synchronous Generators, Type 1 and Type 2 Wind Resources, and Synchronous Condensers supporting HILLs at a Common Bus
+In this section, the FRT requirements from PRC-024-4 are considered applicable to synchronous generators, Type 1 and Type 2 wind resources, and synchronous condensers supporting a HILL and are electrically coupled with one another at a common bus. Since these resources and the HILL share the same POI, it is critical that the equipment located at the HILL demonstrates similar FRT performance as required for the supporting resources. This ensures system reliability and stability during grid disturbances, preventing adverse interactions between the HILL, onsite generation, and the bulk power system.
+FRT Requirements for Synchronous Generators, Type 1 and Type 2 Wind Resources, and Synchronous Condensers
+These generating resources supporting a HILL shall adhere to PRC-024-4. Tables 4 and 5 show voltage ride-through and frequency ride-through requirements for these resources.
+Table 4. Voltage Ride-Through Requirements at POI 
+Root Mean Square Voltage (p .u. of nominal)
+Minimum Ride Through Time (Seconds)
+V≥1.200
+0.00
+V≥1.175
+0.20
+V≥1.15
+0.50
+V≥1.10
+1.00
+V<1.10
+4.00
+V≥ 0.90
+4.00
+V<0.90
+3.00
+V<0.75
+2.00
+V<0.65
+0.30
+V<0.45
+0.15
+Table 5. Frequency Ride-Through Requirements at POI
+System Frequency (Hz)
+Minimum Ride Through Time (Seconds)
+f≥61.8
+Instantaneous
+f≥60.5
+10(90.935-1.45713*f)
+f<60.5
+Continuous operation
+f> 59.5
+Continuous operation
+f≤59.5
+10(1.7373*f-100.116)
+f≤57.8
+Instantaneous
+FRT Requirements for HILLs
+ The HILLs shall comply with the FRT performance requirements outlined in Tables 4, and 5 of this document. Where future NERC reliability standards require more stringent ride-through requirements compared to PRC-024-4 requirements, those standards shall supersede the standards set forth in this Section. Given that the HILLs are electrically connected to a common bus with synchronous generators, Type 1 and Type 2 wind resources, and synchronous condensers, the HILL’s FRT performance must align with the voltage and frequency ride-through capabilities defined for synchronous generators, Type 1 and Type 2 wind resources, and synchronous condensers. This alignment ensures system reliability and prevents adverse impacts during grid disturbances.
+ Control Methodology for Power-Electronic Loads
+For HILLs consisting primarily of power electronic devices and/or variable-speed drives:
+Must use constant current control during disturbances; and
+Must avoid constant power control, which can result in increased current draw during voltage sags and exacerbate local or system-wide instability
+Evaluation and Compliance
+These ride-through capabilities will be evaluated during the generator interconnection study processes and load addition study processes outlined in the SPP Open Access Transmission Tariff, and verified through modeling, commissioning tests, or operational monitoring as appropriate.
+Compliance mechanisms will be determined through stakeholder discussions, and may include:
+Dynamic load modeling validation
+Ride-through performance demonstration
+Data retention and performance logs following disturbance events
+Industry Alignment and References
+SPP intends for this proposal to be consistent with industry efforts including:
+NERC PRC-024 (Generator Ride-Through Requirements)
+NERC PRC-029-1 (Frequency and Voltage Ride‐through Requirements for Inverter‐Based Generating Resources) (under review by FERC)
+IEEE 2800-2022,” Standard for Interconnection and Interoperability of IBR Interconnecting with Transmission Systems” 
+IEEE 1547, “Standard for Interconnection and Interoperability of Distributed Energy Resources with Associated Electric Power Systems Interfaces”
+Related standards on power electronic control and disturbance performance
+Efforts under the NERC Large Load Task Force (LLTF) for operational considerations
+Efforts under the NERC Load Modeling Task Force (LMTF) related to accurate and dynamic modeling of large loads
+Efforts under the Energy Systems Integration Group (ESIG) Large Load Task Force related to Interconnection Requirements
+Efforts under the Electric Power Research Institute (EPRI) Large Load subprogram: EPRI White Paper on Grid Flexibility & Data Centers 
+IEEE 1668-2017 – “ IEEE Recommended Practice for Voltage Sag and Short Interruption Ride-Through Testing for End-Use Electrical Equipment Rated Less than 1000 V”
+ITIC (Information Technology Industry Council), "ITIC Curve: CBEMA Curve Update," 2000.[Online]. Available: https://www.itic.org/
+Terms and Acronyms
+Acronym
+Term
+SPP
+Southwest Power Pool
+…
+
+

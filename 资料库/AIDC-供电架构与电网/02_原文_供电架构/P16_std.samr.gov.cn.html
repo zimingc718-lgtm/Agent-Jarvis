@@ -1,0 +1,2619 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/> 
+<title>首页 - 全国标准信息公共服务平台</title>
+<link charset="utf-8" href="css/bootstrap.min.css" rel="stylesheet"/>
+<link charset="utf-8" href="css/snews.css" rel="stylesheet"/>
+<link charset="utf-8" href="css/liftFloor.css" rel="stylesheet"/>
+<link charset="utf-8" href="css/home.css" rel="stylesheet"/>
+<script type="text/javascript" src="resources/jquery/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="js/snews.js"></script>
+<script type="text/javascript" src="js/jqueryColor.js"></script>
+<script type="text/javascript" src="js/liftFloor.js"></script>
+<script type="text/javascript" src="js/bootstrap.min.js"></script>
+<script type="text/javascript" src="js/bootstrap.autocomplete.js"></script>
+<style type="text/css">
+.tnum{width: 100%;table-layout: fixed;}
+.tnum1{text-align: left;white-space:nowrap; overflow:hidden; text-overflow:ellipsis;width: 100%;}
+.typeahead{width: 90%;}
+.div_show{display: block; }
+.div_hide{display: none;}
+.listtab2 li{cursor: pointer;}
+.cgImg img {width: 100%;}
+.table{
+margin: 0px 10px;width: 95%;table-layout:fixed;white-space: nowrap;
+}
+.table td{text-overflow: ellipsis;overflow: hidden;}
+.subItem{
+	border:1px solid #e6a735;
+	height: 24px !important;
+    line-height: 24px !important;
+    padding-right:5px; 
+    border-radius: 2px; 
+    background-color: #f8f8f8;
+}
+.subItem:hover{
+	background-color:#ffd384;
+}
+.subItem a{
+	float:left;
+	line-height: 22px !important;
+}
+.subItem a:hover,.subItem a:link{
+	text-decoration: none;
+}
+.subItem img{
+	float:left;
+	margin-left:-1px;
+	margin-top:-1px;
+}
+.mod-hd .title .subItem {
+    position: relative;
+    bottom: -3px;
+    float: left;
+    height: 40px;
+    line-height: 30px;
+    color: #333;
+    margin-right: 15px;
+    cursor: pointer;
+}
+.header-carousel{
+	border:1px #ddd solid;
+}
+.carousel-control{
+	background-image: inherit !important;
+}
+.carousel-control .glyphicon{
+	color:#80d0ff;
+}
+
+.flag{
+	display:table-cell;
+	vertical-align:middle;
+	padding: 15px 0;
+	padding-right:10px;
+}
+.std-society{
+	display:table-cell;
+	vertical-align:middle;
+}
+.std-society a, .std-society a:hover, .std-society a:link{
+	text-decoration: none;
+	color:#333;
+	font-weight: 700;
+}
+.std-society b{
+	display:block;
+}
+.panel-body {
+	padding:0 15px;
+}
+.panel-footer a{
+	color: #777777
+}
+.panel-footer p{
+	display: inline;
+	margin-left: 20px;
+}
+.gw-dtb1{
+	display:table-cell; 
+	width:60px; 
+	vertical-align:top;
+}
+.gw-dtb2{
+	display:table-cell; 
+	text-align: center;
+}
+</style>
+<script> 
+var showAllTypeTimer;
+function showAllType(time) {
+	$('.dcpsp-search-area .search-body .search-type .type-area .badge:not(.active):first').addClass('active').animate({'backgroundColor':'#789FC1','color':'white','margin-right':'-4px'},time);
+	if($('.dcpsp-search-area .search-body .search-type .type-area .badge:not(.active):first').length==0){
+		clearInterval(showAllTypeTimer);
+	}
+}
+function removeAllType(time) {
+	$('.dcpsp-search-area .search-body .search-type .type-area .badge.active:first').removeClass('active').animate({'backgroundColor':'#EAEAEA','color':'#8A8A8A','margin-right':'10%'},time);
+	if($('.dcpsp-search-area .search-body .search-type .type-area .badge.active:first').length==0){
+		clearInterval(showAllTypeTimer);
+	}
+}
+function setCookie(name,value){
+	var Days = 30;
+	var exp = new Date();
+	exp.setTime(exp.getTime() + Days*24*60*60*1000);
+	document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString();
+}
+
+function getCookie(name){
+	var arr,reg=new RegExp("(^| )"+name+"=([^;]*)(;|$)");
+	if(arr=document.cookie.match(reg))
+	return unescape(arr[2]);
+	else
+	return null;
+}
+function closePop(){
+	setCookie('first-open','false');
+}
+$(function(){
+	$('[data-toggle="tooltip"]').tooltip();
+	var isTouch=('ontouchstart' in window);
+    if(isTouch){
+      $(".carousel").on('touchstart', function(e){
+          var that=$(this);
+          var touch = e.originalEvent.changedTouches[0];
+          var startX = touch.pageX;
+          var startY = touch.pageY;
+          $(document).on('touchmove',function(e){
+            touch = e.originalEvent.touches[0] ||e.originalEvent.changedTouches[0];
+            var endX=touch.pageX - startX;
+            var endY=touch.pageY - startY;
+            if(Math.abs(endY)<Math.abs(endX)){
+              if(endX > 10){
+                $(this).off('touchmove');
+                that.carousel('prev');
+              }else if (endX < -10){
+                $(this).off('touchmove');
+                that.carousel('next');
+              }
+              return false;
+            }
+          });
+      });
+      $(document).on('touchend',function(){
+        $(this).off('touchmove');
+      });
+    }
+	 $(".search-head li").each(function(index){ 
+         $(this).click(function(){
+        	 $(".search-head li").removeClass("active");
+        	 var key = $(".search-form:visible .input-group input").val();
+        	 $(this).addClass("active"); 
+        	 $(".search-form").hide();
+        	 if(index==0||index==4){
+        		$('.dropdown-toggle').html("全部<span class=\"caret\"></span>");
+             	$('.dropdown-toggle').attr("tid","");
+        	 }
+        	 $(".search-body>div:eq("+index+")").find('.input-group input').val(key);
+        	 $(".search-body>div:eq("+index+")").show();
+         })
+     });
+	
+	 $(document).on('click',".search-form .hotword a",function(){
+		 if($(this).parent().parent().attr("rid")=='0')
+			 $(this).attr("href",'https://std.samr.gov.cn/search/std?q='+encodeURIComponent($(this).text()));
+    	 if($(this).parent().parent().attr("rid")=='1')
+    		 $(this).attr("href",'https://std.samr.gov.cn/search/org?q='+encodeURIComponent($(this).text()));
+    	 if($(this).parent().parent().attr("rid")=='2')
+    		 $(this).attr("href",'https://std.samr.gov.cn/search/person?q='+encodeURIComponent($(this).text()));
+    	 if($(this).parent().parent().attr("rid")=='3')
+    		 $(this).attr("href",'https://std.samr.gov.cn/search/kpi?q='+encodeURIComponent($(this).text()));
+    	 if($(this).parent().parent().attr("rid")=='4')
+    		 $(this).attr("href",'https://std.samr.gov.cn/search/iso?tid=&q='+encodeURIComponent($(this).text()));
+	 });
+
+	 $(".nda").each(function(index){
+		var clickNum = 2;
+		$(this).click(function(){
+			if(index<3){
+				var ps=new Array("stdKeysPage","orgKeysPage","perKeysPage");
+				$.ajax({
+					type: "post",
+					dataType:'json',
+					cache:false,
+					url: "/home/"+ps[index],
+					data:{"pageNumber":clickNum, "pageSize":8},
+					success: function(data){
+						var con = "";
+						$.each(data, function(index, item){
+							con += '<div class="col-xs-4 col-md-3"><a href="#">'+item.NAME+'</a></div>';
+						});
+						if(con.length>0)$("#"+ps[index]).html(con);
+						clickNum++;
+					}
+	      		});
+			}
+		 })
+	 });
+	 $("#btn-military").click(function(){
+		 $('#military').modal();
+	 });
+	 $(".btn-primary").each(function(index){
+         $(this).click(function(){
+      	   var q = $(".form-control:eq("+index+")").val();
+      	   var params = ["std","org","person","iso"];
+      	   var uri = 'https://std.samr.gov.cn/search/'+params[index]+'?q='+encodeURIComponent(q);
+      	   if(index==3){//国际国外标准
+      		 if($('.dropdown-toggle:eq(1)').attr("tid"))
+        		   uri = uri+'&tid='+$('.dropdown-toggle:eq(1)').attr("tid");
+      	   }else{
+      		 if($('.dropdown-toggle:eq(0)').attr("tid"))
+        		   uri = uri+'&tid='+$('.dropdown-toggle:eq(0)').attr("tid");
+      	   }
+	      	 $(document.body).append($('<a href="'+uri+'" target="_blank" id="openNewWin"></a>'))  
+	         document.getElementById("openNewWin").click();
+	         $('#openNewWin').remove();  
+      	   //window.open(uri);
+         })
+     });
+	 $(".dropdown-menu li").each(function(index){
+         $(this).click(function(){
+        	var idx = $(this).parent('.dropdown-menu').attr("idx")
+        	$('.dropdown-toggle:eq('+idx+')').html($(this).text()+"<span class=\"caret\"></span>");
+        	$('.dropdown-toggle:eq('+idx+')').attr("tid",$(this).attr("tid"));
+         })
+     });
+	 
+	 $(".form-control").each(function(index){
+  	 $(this).autocomplete({
+         source:function(query,process){
+        	var rid = $('.form-control:eq('+index+')').attr("rid");
+			var keyWord = $('.form-control:eq('+index+')').val() ;
+			var tid;
+       	 if(index==4){//国际国外标准
+         		 if($('.dropdown-toggle:eq(1)').attr("tid"))
+           		   tid = $('.dropdown-toggle:eq(1)').attr("tid");
+         	   }else{
+         		 if($('.dropdown-toggle:eq(0)').attr("tid"))
+           		   tid = $('.dropdown-toggle:eq(0)').attr("tid");
+         	 }
+       	 if(keyWord){
+       		 if(checkRate(keyWord) && keyWord.length==1)return ;//如果输入的是 1个数字或者1个字母时，不匹配
+       		 
+       		 var ps = {"type":rid,"prefix":keyWord};
+           	 if(tid)ps.tid=tid;
+            $.post("https://std.samr.gov.cn/search/autoComplete",ps,function(respData){
+                return process(respData);  
+             });
+       	   }
+          },
+         formatItem:function(item){
+        	 if(index==1){//机构不显示条目
+        		 return "<table class=\"tnum\"><tr><td class=\"tnum1\">"+item["name"]+"</td></tr></table>"; 
+        	 }
+        	 return "<table class='tnum'><tr><td align=\"left\">"+item["name"]+"</td><td align=\"right\">约 "+item["value"]+" 条数据</td></tr></table>"; 
+          },  
+         setValue:function(item){
+             return {'data-value':item["name"],'real-value':item["value"]};  
+          }
+      }).click(function(){
+    	  $(".typeahead").width($('.form-control:eq('+index+')').width()+75);
+          $(this).autocomplete("lookup");
+      }).keypress(function(event){
+    	  if(event.keyCode == "13"){
+    		  $(".btn-primary:eq("+index+")").click();
+  	    }
+      })
+  	 
+     });
+	 $(".list-div a").each(function(index){
+		  $(this).click(function(){
+	      	   var q = $(this).text().replace(/[^\u4e00-\u9fa5]/gi,"");
+	      	 	window.open("https://std.samr.gov.cn/gb?initnode="+encodeURIComponent(q)+"&rid="+$(this).attr('rid')); 
+	      }) 
+	 });
+	 $(".hb-list li a").each(function(index){
+		  $(this).click(function(){
+	      	   var q = $(this).text();
+	      	   //q = q.replace(/[^a-z]+/ig,"")+' '+q.replace(/[^\u4e00-\u9fa5]/gi,"");
+	      	   q = q.replace(/[^\u4e00-\u9fa5]/gi,"");
+	      	   $(this).attr("href","http://hbba.sacinfo.org.cn/stdList?key=&trade="+encodeURIComponent(q));
+	      }) 
+	 });
+	 $(".gj-list li a").each(function(index){
+		  $(this).click(function(){
+	      	   var id = $(this).attr("gjid");
+	      	   $(this).attr("href","https://std.samr.gov.cn/gj/search/gjOrgDetailed?id="+id);
+	      }) 
+	 });
+	 $(".db-list .db-title span").each(function(index){
+		  $(this).click(function(){
+	      	 var q = $(this).text().replace(/[^\u4e00-\u9fa5]/gi,"");
+	      	 $(this).attr("href","https://std.samr.gov.cn/db/search/dbQuery?initnode="+encodeURIComponent(q+"地区"));
+	      }) 
+	 });
+	 $(".db-list a").each(function(index){
+	   var q = $(this).attr('code');
+	   $(this).attr("href","http://dbba.sacinfo.org.cn/stdList?key=&ministry="+q);
+	 });
+	 $(".tb-list li a").each(function(index){
+		  $(this).click(function(){
+	      	   var q = $($(this).parent().children()[0]).text();
+	      	   //$(this).attr("href","https://std.samr.gov.cn/tb?initnode="+encodeURIComponent(q));
+	      	   $(this).attr("href","https://www.ttbz.org.cn/Home/Standard/?CNL1Code="+q);
+	      }) 
+	 });
+	 
+	 $(".org-list li a").each(function(index){
+		  $(this).click(function(){
+	      	   var q = $(this).html();
+	      	   $(this).attr("href","https://std.samr.gov.cn/search/orgDetailView?tcCode="+encodeURIComponent(q.substring(0,q.indexOf("（"))));
+	      }) 
+	 });
+	$('ul.listtab2 li').click(function(){
+		var id = $(this).parent().attr('id');
+		id = (id+"_div").substr(3);
+        $(this).prevAll().removeClass('active');
+        $(this).nextAll().removeClass('active');
+        $(this).addClass('active');
+        $('.'+id).removeClass('div_show').addClass('div_hide');
+        var liNum = $(this).index();
+        $('.'+id).each(function(){
+            if ((liNum+1)==$(this).index()) {
+            	$(this).removeClass('div_hide').addClass('div_show');
+			}
+        });
+   	})
+	showAllTypeTimer = setInterval("showAllType(300)",180);
+	var firstOpen = getCookie('first-open');
+	if(firstOpen==null||firstOpen=='true') {
+		//$('#msg').modal();
+	}
+})
+
+</script>
+<style>
+.header-container{
+	display:table;
+	width:100%;
+}
+.header-container .header-carousel{
+	display:table-cell;
+	width:386px;
+	vertical-align: top;
+}
+.header-container .header-search{
+	display:table-cell;
+	padding-left:10px;
+	vertical-align: top;
+}
+.header-container .search-form .input-group,.header-container .search-form .hot-area,.header-container .search-form .hot-title{ 
+	width:85%;
+	margin:0 auto;
+}
+.header-container .search-form .input-group{
+	margin-top:40px;
+}
+.header-container .search-form .hot-title{
+	margin-top:25px;
+}
+.header-container .search-form .hot-title .sub-img{
+	margin-top:-20px;margin-left:-5px;
+}
+.gb-list .sub-img {
+    position:absolute;
+    top: -5px;
+    left: 48px;
+    width:16px;
+}
+.header-container .search-form .hot-title .nda{
+	margin-left:10px;
+}
+.header-container .dcpsp-search-area .search-body .search-form .hot-area .hotword{
+	margin-top:5px; 
+}
+.header-container .dcpsp-search-area .search-body .search-form .hot-area .hotword div{
+	padding:4px 15px; 
+	padding-right:0; 
+}
+.header-container .dcpsp-search-area .search-body .search-form .hotword a{
+	display:inline-block;
+	height:18px;
+	color:gray;
+	overflow: hidden;
+}
+.header-container .dcpsp-search-area .nav li a{
+	height:34px;
+	overflow:hidden;
+}
+.mod-bd .mod-bd-left{
+	border-right: 1px dotted #a3a3a3;
+}
+.mod-bd .mod-bd-right {
+	padding-top:15px;
+	padding-right:30px;
+	overflow:hidden;
+}
+.mod-bd .mod-bd-right .cgImg{
+	margin-top:8px;
+}
+.mod-bd .mod-bd-right .cgImg:first-child{
+	margin-top:0;
+}
+.mod-bd .mod-bd-right .cgImg img{
+	width:100%;
+}
+.mod-list {
+	padding:20px;
+	padding-right:0;
+}
+.hb-list li {
+	width:20%;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+} 
+.tb-list li {
+	width:33.33333%;
+	list-style:none;
+	line-height: 40px;
+    padding-left: 22px;
+    float: left;
+    overflow:hidden;
+    font-size:14px;
+    border-bottom: 1px dotted #EAEAEA;
+}
+.tb-list li .label{
+	margin-left:0; 
+}
+.db-list {
+	padding: 20px;
+}
+.db-list .db-row .db-title,.db-list .db-row .db-content{
+	padding:15px 0;
+	padding-left:18px !important; 
+}
+.db-list .db-title {
+	padding-top:20px !important; 
+	font-size: 13px;
+} 
+.db-list .db-title span{
+	cursor:pointer;
+} 
+.db-list .db-title span:hover{
+	background-color: #ffc646;
+} 
+.db-list .db-row{
+	border-top: 1px dotted #EAEAEA;
+}
+.db-list a {
+	font-size:14px;
+	white-space:nowrap;
+}
+.db-list .separator {
+	margin-left:10px;
+	margin-right:10px;
+}
+.db-list .db-row:first-child{
+	border-top: 0;
+}
+.third-standard {
+	margin-right: 15px;
+	color: #c45a00;
+}
+.gw-panel {
+	background-color:#f8f8f8;
+	margin-bottom:10px;
+    padding: 5px 15px;
+	border:1px solid #d6d6d6;
+	border-radius:5px;
+	cursor:pointer;
+}
+.gw-panel:hover {
+	background-color:#fff;
+}
+.gw-panel b{
+	margin-left:10px;
+}
+.gw-panel .listgj{
+	margin-bottom:0;
+}
+.gw-panel a:hover,.gw-panel a:link{
+	text-decoration: none;
+}
+.flogo{
+	border:3px solid #eee;
+	border-radius:50%; 
+}
+.flogo:hover{
+	opacity:0.8;
+	border:4px solid #d6d6d6;
+}
+.gb-list {
+	padding-bottom:0; 
+} 
+.header-container .search-form .info{
+	width: 84%;
+    height: 20px;
+    margin: 15px auto;
+    margin-bottom: -35px;
+    font-size: 12px;
+    color: red;
+    font-weight:bold;
+}
+.header-container .search-form .input-group-tip{
+	font-size: 12px; 
+	color: #b74b4b; 
+	margin-top: 20px; 
+	margin-bottom: -37px;
+}
+@media (max-width: 992px){
+	.header-container .search-form .input-group-tip{
+		margin-bottom: -25px;
+	}
+	.header-container .search-form .input-group{
+		margin-top:25px;
+	}
+	.header-container .search-form .info{
+	    margin: 5px auto;
+	    margin-bottom: -25px;
+	}
+}
+@media (max-width: 768px){
+	.gw-dtb1{
+		width:50px; 
+	}
+	.panel-body{
+		padding:5px;
+		font-size:12px;
+	}
+	.panel-footer{
+		padding:5px; 
+		font-size:12px;
+	}
+	.header-container{
+		display:block;
+	}
+	.header-container .header-carousel{
+		display:block;
+		width:100%;
+	}
+	.header-container .header-search{
+		display:block;
+		width:100%;
+		padding-left:0;
+		margin-top:10px;
+	}
+	.header-container .dcpsp-search-area .nav{
+		display:table;
+	}
+	.header-container .dcpsp-search-area .nav li{
+		display:table-cell;
+	}
+	.header-container .hot-area{
+		margin-top:15px;
+		width:90%;
+	}
+	.mod-hd {
+		padding:0 15px;
+	}
+	.mod-hd .current{
+		margin-right:0 !important;
+	}
+	.mod-hd .title small{
+		display:none;
+	}
+	.mod-list .col-sm-4{
+		padding-top:4px;
+		padding-bottom:4px;
+	}
+	.mod-bd .mod-bd-right .cgImg{
+		
+		padding:5px;
+	}
+.mod-bd .mod-bd-right .cgImg:first-child{
+	margin-top:8px;
+}
+	.mod-bd .mod-bd-right {
+    		padding-left: 30px;
+	}
+	.gb-list a{
+		position:relative;
+		padding:5px 0;
+	 	padding-left:26px  !important;
+	 	display: inline-block;
+	 	
+	}
+	.gb-list a img{
+		position:absolute;
+	 	width:22px;
+	 	left:0;
+	 	top:4px;
+	}
+	.gb-list .sub-img {
+		position:absolute;
+	    top: -8px;
+	    left: 22px;
+	    width:16px; 
+	}
+	.hb-list li {
+		width:50%;
+	} 
+	.tb-list li {
+		width:50%;
+		padding-top:8px;
+		padding-bottom:8px;
+	} 
+	.tb-list li span{
+		float:left;
+	}
+	.tb-list li a{
+		float:left;
+	    display: inline-block;
+	    width:60%;
+	    line-height: 20px;
+	}
+	.carousel-control{
+		display:none;
+	}
+}
+.z-logo{
+    margin-left:4px;
+    vertical-align: text-top;
+    font-size: 84%;
+    text-align: center;
+    //background: #f13f40;
+    color:#f13f40;
+    width: 18px;
+    height:17px;
+    display:inline-block;
+    border: 1px solid #efb9b9;
+    line-height: 14px;
+    border-radius:1px;
+}
+.main-body{
+	overflow: hidden;
+}
+#military p{
+	text-indent: 2em;
+	font-size: 16px;
+    line-height: 26px;
+    margin-top: 15px;
+}
+}
+</style>
+</head>
+<body>
+
+
+
+<script type="text/javascript" src="https://std.samr.gov.cn/js/layer/layer.js"></script>
+<script type="text/javascript" src="https://std.samr.gov.cn/js/uni-webview-js@0.0.3/index.js"></script>
+<style>
+
+
+    .main-body {
+        padding: 15px;
+    }
+
+    .bs-docs-nav .navbar-toggle .icon-bar {
+        background-color: #563d7c;
+    }
+
+    .navbar-toggle {
+        margin-right: 0 !important;
+    }
+
+    .navbar-toggle .icon-bar {
+        background-color: white;
+    }
+
+    .nav-menu {
+        background-color: #005da8;
+        overflow: hidden;
+    }
+
+    .nav-menu ul {
+        margin-bottom: 0 !important;
+        padding-left: 0;
+    }
+
+    .navbar-toggle {
+        position: absolute !important;
+        right: 6px;
+        cursor: pointer;
+    }
+
+    .navbar-toggle:hover {
+        background-color: #418ede;
+    }
+
+    .nav-menu ul li {
+        cursor: pointer;
+        list-style: none;
+        width: 96px;
+        text-align: center;
+        float: left;
+        height: 43px;
+        line-height: 43px;
+        color: #fff;
+        margin-right: 7px;
+        font-size: 16px;
+    }
+
+    .nav-menu ul li:hover {
+        background-color: #338eff;
+    }
+
+    .nav-menu ul li a {
+        color: #fff;
+    }
+
+    .nav-menu ul li a:hover, .nav-menu li a:focus, .nav-menu li a:link {
+        text-decoration: none;
+    }
+
+    .nav-menu .nav_in {
+        background-color: #0f89eb;
+    }
+
+
+    @media (max-width: 1200px) {
+        .nav-menu ul li {
+            width: 84px;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .nav-menu ul li {
+            width: 68px;
+            margin-right: 4px;
+            font-size: 14px;
+        }
+
+        #login-area {
+            top: 3px !important;
+            right: 3px !important;
+        }
+    }
+
+    @media (max-width: 368px) {
+        .navbar-brand small {
+            display: none;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .main-body {
+            padding: 0;
+        }
+
+        .nav-menu-show {
+            display: block !important;
+            height: 200px !important;
+        }
+
+        .nav-menu {
+            height: 0;
+            background-color: #3f75b7;
+            transition: height 500ms;
+            -moz-transition: height 500ms; /* Firefox 4 */
+            -webkit-transition: height 500ms; /* Safari and Chrome */
+            -o-transition: height 500ms; /* Opera */
+        }
+
+        .nav-menu .nav_in {
+            background-color: #338eff;
+        }
+
+        .nav-menu ul li {
+            display: block;
+            width: 33.33333%;
+            height: 50px;
+            line-height: 50px;
+            font-size: 16px;
+            margin-right: 0;
+            border-top: 1px solid #ddd;
+            font-family: arial, tahoma, 'Microsoft Yahei', '\5b8b\4f53', sans-serif;
+        }
+
+        .nav-menu ul li:nth-child(-1n+4) {
+            border-top: 0;
+        }
+
+        .nav-menu ul li a {
+            color: white;
+        }
+
+        .header-carousel {
+            border: 0;
+        }
+
+        #top-bg {
+            background: url(https://std.samr.gov.cn/images/logoimg.jpg) right -110px center no-repeat #187ed0 !important;
+        }
+
+       
+
+    }
+    
+</style>
+<!-- PHPStat Start -->
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?3122593ef7de9af6abeec2ee6b2e11a4";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<!--/PHPStat End -->
+<script>
+    var isAppPlus = false;
+    var userAgent = 'Mozilla/5.0 &#40;Windows NT 10.0; Win64; x64&#41; AppleWebKit/537.36 &#40;KHTML, like Gecko&#41; Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0';
+
+    $(function () {
+	if(userAgent.toLowerCase().indexOf("micromessenger")>-1) {
+    		$('.normal-banner').hide();
+    	}
+	uni.getEnv(function(res){
+		console.log('当前环境：' + JSON.stringify(res));
+		
+		if(res.plus||(res.h5&&(userAgent.indexOf("HBuilderX")>-1||userAgent.indexOf("uni-app")>-1))){
+			isAppPlus = true;
+			$(document).on("click", "a", function (event) {
+				var href = $(this).attr('href');
+				if(href!=null&&href!=''&&href.indexOf('javascript')<0){
+					uni.navigateTo({
+						url: '/pages/outter/outter?title=国标通-信息查询&src='+href
+					});
+					event.stopPropagation();
+					return false;
+				}
+			});
+		}
+	});
+        document.onkeydown = function (e) {
+            if (!e) {
+                e = window.event;
+            }
+            if ((e.keyCode || e.which) == 13) {
+                //登陆
+                $('.btnSumit').click();
+            }
+        }
+
+        $('.navbar-toggle').click(function () {
+            $('.nav-menu').toggleClass("nav-menu-show");
+        });
+        $('.nav-menu li').click(function () {
+            var target = $(this).find("a").attr('target');
+            var href = $(this).find("a").attr('href')
+            if (target == null || target == '') {
+                window.location.href = href;
+            } else {
+                window.open(href);
+            }
+            return false;
+        });
+
+        $.ajaxSetup({
+            cache: false, //关闭AJAX缓存
+            contentType: "application/x-www-form-urlencoded;charset=utf-8",
+            complete: function (XMLHttpRequest, textStatus) {
+                //通过XMLHttpRequest取得响应头，sessionstatus，
+                var sessionstatus = XMLHttpRequest.getResponseHeader("sessionstatus");
+                if (sessionstatus == "timeout") {
+                    layer.msg('登录超时');
+                    loginPop();
+                }
+            }
+        });
+    });
+
+
+    function getLoginedArea(data) {
+        var loginedArea = '<a href="https://std.samr.gov.cn/user/personalCenter" class="btn btn-secondary bg-primary btn-sm" style="background-color:#004984;color: #fff;">' + data.username
+            + ',个人中心</a>  <a href="javascript:logout()" class="btn btn-secondary bg-primary btn-sm" style="background-color:#004984;color: #fff;" title="注销">注销&nbsp;<span class="glyphicon glyphicon-off"></span></a>'
+            + '<input type="text" id="re_username" value=' + data.username + ' style="display:none" />  '
+            + '<input type="text" id="re_realname" value=' + data.realname + ' style="display:none" />  '
+            + '<input type="text" id="re_mobile"   value=' + data.mobile + '   style="display:none" />  '
+            + '<input type="text" id="re_email"    value=' + data.email + '    style="display:none" />  '
+            + '<input type="text" id="re_resource" value=' + data.resource + ' style="display:none" />  ';
+        return loginedArea;
+    }
+
+    var isLogon = false;
+    var uacServerUrl = 'https://puac.sacinfo.org.cn/uac';
+    var sacUacServerUrl = 'https://uac.sacinfo.org.cn/uac';
+    var loginChecking = false;
+
+    function invokeNotLoggedIn(onNotLoggedIn) {
+        loginChecking = false;
+        if (typeof onNotLoggedIn === 'function') {
+            onNotLoggedIn();
+        }
+    }
+
+    function redirectAfterLogin() {
+        loginChecking = false;
+        var requestURI = '';
+        if (requestURI == '') {
+            window.location.reload();
+        } else {
+            window.location.href = "https://std.samr.gov.cn" + requestURI;
+        }
+    }
+
+    function checkSacUuidLogin(onNotLoggedIn) {
+        $.ajax({
+            type: "GET",
+            url: sacUacServerUrl + "/clientLogin/checkUuid.do",
+            dataType: 'JSONP',
+            crossDomain: true,
+            jsonp: "jsonpCallback",
+            timeout: 1000,
+            success: function (data) {
+                if (data && data.result) {
+                    var uuid = (data.uuid);
+                    if (uuid == null || uuid == "") {
+                        invokeNotLoggedIn(onNotLoggedIn);
+                    } else {
+                        $.ajax({
+                            type: "GET",
+                            url: "https://std.samr.gov.cn/user/sacLoginByUUID.do",
+                            data: {'uuid': uuid},
+                            dataType: 'JSON',
+                            timeout: 10000,
+                            success: function (data) {
+                                if (data && data.result) {
+                                    redirectAfterLogin();
+                                } else {
+                                    invokeNotLoggedIn(onNotLoggedIn);
+                                }
+                            },
+                            error: function () {
+                                invokeNotLoggedIn(onNotLoggedIn);
+                            }
+                        });
+                    }
+                } else {
+                    invokeNotLoggedIn(onNotLoggedIn);
+                }
+            }
+        }).fail(function () {
+            invokeNotLoggedIn(onNotLoggedIn);
+        });
+    }
+
+    function checkUuidLogin(onNotLoggedIn) {
+        $.ajax({
+            type: "GET",
+            url: uacServerUrl + "/clientLogin/checkUuid.do",
+            dataType: 'JSONP',
+            crossDomain: true,
+            jsonp: "jsonpCallback",
+            timeout: 5000,
+            success: function (data) {
+                if (data && data.result) {
+                    var uuid = (data.uuid);
+                    if (uuid == null || uuid == "") {
+                        checkSacUuidLogin(onNotLoggedIn);
+                    } else {
+                        $.ajax({
+                            type: "GET",
+                            url: "https://std.samr.gov.cn/user/loginByUUID.do",
+                            data: {'uuid': uuid},
+                            dataType: 'JSON',
+                            timeout: 10000,
+                            success: function (data) {
+                                if (data && data.result) {
+                                    redirectAfterLogin();
+                                } else {
+                                    invokeNotLoggedIn(onNotLoggedIn);
+                                }
+                            },
+                            error: function () {
+                                invokeNotLoggedIn(onNotLoggedIn);
+                            }
+                        });
+                    }
+                } else {
+                    checkSacUuidLogin(onNotLoggedIn);
+                }
+            },
+            error: function () {
+                checkSacUuidLogin(onNotLoggedIn);
+            }
+        });
+    }
+
+    function handleLoginClick() {
+        if (loginChecking) {
+            return false;
+        }
+        loginChecking = true;
+        checkUuidLogin(redirectUacLogin);
+        return false;
+    }
+
+    $(function () {
+        isIntercepted();
+    });
+
+
+    //监控是否被拦截器拦出
+    function isIntercepted() {
+        var intercepted = !('' == '');
+        if (intercepted && !isLogon) {
+            /* loginLayer(); */
+            checkUuidLogin(redirectUacLogin);
+        }
+    }
+
+
+    var InterValObj; //timer变量，控制时间
+    var count = 180; //间隔函数，1秒执行
+    var curCount;//当前剩余秒数
+
+    function sendMessage(num) {
+        curCount = num;
+        //设置button效果，开始计时
+        $("#getPCodeInput").attr("disabled", "disabled");
+        $("#getPCodeInput").html(curCount + "秒");
+        InterValObj = window.setInterval(SetRemainTime, 1000); //启动计时器，1秒执行一次
+    }
+
+    //timer处理函数
+    function SetRemainTime() {
+        if (curCount == 0) {
+            window.clearInterval(InterValObj);//停止计时器
+            $("#getPCodeInput").removeAttr("disabled");//启用按钮
+            $("#getPCodeInput").html("获取验证码");
+        } else {
+            curCount--;
+            $("#getPCodeInput").html(curCount + "秒");
+        }
+    }
+
+    //停止计时器
+    function overRemainTime() {
+        window.clearInterval(InterValObj);//停止计时器
+        $("#getPCodeInput").removeAttr("disabled");
+        $("#getPCodeInput").html("获取验证码");
+    }
+
+    function changeCode() {
+        var imgNode = $(".layui-vimg");
+        var srcStr = "https://std.samr.gov.cn/user/get/vcode.do?t=" + Math.random();
+        imgNode.attr("src", srcStr);
+    }
+
+    function getPhoneMsg() {
+
+
+        var vcode = $.trim($('#vcode').val());
+
+
+        if (vcode == null || vcode == "") {
+            layer.tips('请输入图片验证码', '#vcode', {
+                tips: [1, '#f00e0e'],
+                time: 3000
+            });
+            return;
+        }
+
+        var username = $.trim($('#cellphone').val());
+        if (username == null || username == "") {
+            layer.tips('请输入用手机号', '#cellphone', {
+                tips: [1, '#f00e0e'],
+                time: 3000
+            });
+            return;
+        }
+
+        var result = getPCode('mLoginForm');
+
+
+        if (result.success == true) {
+            sendMessage(result.datetime);
+            return false;
+        } else {
+            layer.msg(result.errorMessage, {icon: 5});
+            return false;
+        }
+    }
+
+    var loginHtml = '<div>' +
+        '<div>' +
+        '<ul class="nav nav-tabs nav-justified search-head">' +
+        '<li onclick="changeTab(1)" class="loginHead active"><a href="javascript:void(0)">社会公众</a></li>' +
+        '<li onclick="changeTab(2)" class="loginHead"><a href="javascript:void(0)">SAC用户</a></li>' +
+        '</ul>' +
+        '<div class="search-body">' +
+        //社会公众
+        '<div class="search-form loginBody" style="display: block;">' +
+        '  <div style="margin: 25px;">' +
+        '	<label class="radio-inline">' +
+        '	  <input type="radio" name="loginSelect" onclick="changeLoginType(1)"  value="p" checked="checked"> 密码登录 ' +
+        '	</label>' +
+        '	<label class="radio-inline">' +
+        '	  <input type="radio" name="loginSelect" onclick="changeLoginType(2)" " value="m"> 短信登录 ' +
+        '	</label>' +
+        '  </div>' +
+        //密码登录
+        '  <div style="margin: 25px;">' +
+        '  <div id="pLogin">' +
+        '      <form id="pLoginForm" action="#" method="post">' +
+        '          <div class="form-group">' +
+        '          <label>用户名</label>' +
+        '          <input type="text" class="form-control" id="username1" placeholder="请在此输入用户名" name="username"/>' +
+        '          </div>' +
+        '          <div class="form-group">' +
+        '          <label>密码</label>' +
+        '          <input type="password" class="form-control" id="password1" placeholder="请在此输入密码" name="password" />' +
+        '          </div>' +
+        '          <button class="btn btn-danger radius form-submit btnSumit1 btnSumit"  type="button" onclick="doSubmitByPwd()">登 录</button>' +
+        '          <a href="https://std.samr.gov.cn/user/findPwd" target="_blank"> 忘记密码？  </a>' +
+        '      </form>' +
+        '  </div>' +
+        //短信登录
+        '  <div id="mLogin" style="display: none">' +
+        '      <form id="mLoginForm" action="#" method="post">' +
+        '          <div class="form-group">' +
+        '          <label>手机号码</label>' +
+        '          <input type="text" class="form-control" id="cellphone" placeholder="请在此输入手机号" name="account"/>' +
+        '          </div>' +
+        '          <div class="form-group">' +
+        '          <label>短信验证</label>' +
+        '          <div class="row">' +
+        '              <div class="col-md-8"><input type="text" id="pCode" class="form-control" id="pcode" placeholder="请在此输入短信验证码" name="pcode"/></div>' +
+        '              <div class="col-md-4"><button type="button" id="getPCodeInput" onclick="getPhoneMsg()" class="btn btn-default btncx" style="float: right; line-height: 20px; margin-top: 0px;">获取验证码</button> </div>' +
+        '          </div>' +
+        '          </div>' +
+        '          <div class="row">' +
+        '      	       <div class="col-md-8"><input  class="form-control" id="vcode" name="rand" placeholder="验证码" value=""></div>' +
+        '              <div class="col-md-4"><img class="layui-vimg" style="height: 34px; float: right;" title="点击更换" onclick="changeCode();" src="https://std.samr.gov.cn/user/get/vcode.do"></div>' +
+        '          </div><br/>' +
+        '          <button class="btn btn-danger radius form-submit btnSumit2"  type="button" onclick="doSubmitByPhone()">登 录</button>' +
+        '          <a href="https://std.samr.gov.cn/user/findPwd" target="_blank"> 忘记密码？  </a>' +
+        '      </form>' +
+        '  </div>' +
+        '  </div>' +
+        '</div>' +
+        //SAC用户公众
+        '<div  class="search-form loginBody" style="display: none;">' +
+        '' +
+        '  <div style="margin: 25px;">' +
+        '  <div id="sacLogin" style="margin-top: 40px;">' +
+        '      <form id="sacLoginForm" action="#" method="post">' +
+        '          <div class="form-group">' +
+        '          <label>用户名</label>' +
+        '          <input type="text" id="account3" class="form-control" placeholder="请输入SAC账号" name="account3"/>' +
+        '          </div>' +
+        '          <div class="form-group">' +
+        '          <label>密码</label>' +
+        '          <input type="password" class="form-control" id="pCode3" name="pCode3" placeholder="请在此输入密码" name="password" />' +
+        '          </div>' +
+        '          <input class="btn btn-danger radius form-submit btnSumit3"  type="button" onclick="ajaxLogin(\'https://uac.sacinfo.org.cn/uac\');" value="SAC登录" /><a href="http://uac.sacinfo.org.cn/uac/forget/findingPassword.do" target="_blank"> 忘记密码？  </a>' +
+        '          ' +
+        '          <P style="font-size: 12px; color: blue; min-height: 50px;">' +
+        '          <br> <em id="J_ErrorMsg" style="color: red;"></em> ' +
+        '          </P>' +
+        '      </form>' +
+        '  </div>' +
+        '  </div>' +
+        '' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '</div>';
+
+    function loginPop() {
+        layer.open({
+            type: 1,
+            title: '用户登录',
+            closeBtn: false,
+            skin: 'layui-layer-rim', //加上边框
+            content: loginHtml
+        });
+        $('#username1').focus();
+    }
+
+    function loginLayer() {
+        layer.open({
+            type: 1,
+            title: '用户登录',
+            shadeClose: true,
+            skin: 'layui-layer-rim', //加上边框
+            content: loginHtml
+        });
+        $('#loginATag').blur();
+    }
+
+    //跳转至uac登录页
+    function redirectUacLogin() {
+        //判断是否存在session
+        if (!isLogon) {
+            var url = 'https://puac.sacinfo.org.cn' + '?service=' + window.location.href;
+            window.location.href = url;
+        }
+        return false;
+    }
+
+    //切换tab页面
+    function changeTab(num) {
+        var heads = $(".loginHead");
+        var bodys = $(".loginBody");
+        for (var i = 0; i < heads.length; i++) {
+            $(heads[i]).removeClass("active");
+            $(bodys[i]).css('display', 'none');
+            if (i == (num - 1)) {
+                $(heads[i]).addClass("active");
+                $(bodys[i]).css('display', 'block');
+            }
+        }
+
+
+        //如果num为1则为社会公众登陆，将回车键绑定到btnSumit1上，否则绑定到btnSumit3上
+        if (num == 1) {
+            if ($(".btnSumit1").hasClass("btnSumit")) {
+
+            } else {
+                $(".btnSumit1").addClass("btnSumit");
+                $(".btnSumit2").removeClass("btnSumit");
+                $(".btnSumit3").removeClass("btnSumit");
+            }
+        } else {
+            if ($(".btnSumit3").hasClass("btnSumit")) {
+
+            } else {
+                $(".btnSumit3").addClass("btnSumit");
+                $(".btnSumit2").removeClass("btnSumit");
+                $(".btnSumit1").removeClass("btnSumit");
+            }
+        }
+    }
+
+    //控制登录方式
+    function changeLoginType(num) {
+        if (num == 1) {
+            $("#pLogin").css("display", "block");
+            $("#mLogin").css("display", "none");
+
+            //控制回车绑定
+            if ($(".btnSumit1").hasClass("btnSumit")) {
+
+            } else {
+                $(".btnSumit1").addClass("btnSumit");
+                $(".btnSumit2").removeClass("btnSumit");
+                $(".btnSumit3").removeClass("btnSumit");
+            }
+        }
+        if (num == 2) {
+            $("#mLogin").css("display", "block");
+            $("#pLogin").css("display", "none");
+
+            //控制回车绑定
+            if ($(".btnSumit2").hasClass("btnSumit")) {
+
+            } else {
+                $(".btnSumit2").addClass("btnSumit");
+                $(".btnSumit1").removeClass("btnSumit");
+                $(".btnSumit3").removeClass("btnSumit");
+            }
+
+        }
+    }
+
+    //获取验证码
+    function changeCode() {
+        var imgNode = $(".layui-vimg");
+        var srcStr = "https://std.samr.gov.cn/user/get/vcode.do?t=" + Math.random();
+        imgNode.attr("src", srcStr);
+    }
+</script>
+<!--用于社会公众登录的js-->
+<script type="text/javascript">
+    var uacServerUrl = 'https://puac.sacinfo.org.cn/uac';
+    var casServerUrl = 'https://puac.sacinfo.org.cn';
+
+    function doSubmitByPwd() {
+        var username = $.trim($('#username1').val());
+        var pwd = $.trim($('#password1').val());
+        var systemCode = 'system001-unite-certification';
+        var url = uacServerUrl + "/clientLogin/ajaxLogin.do";
+        if (username == null || username == "") {
+            layer.tips('请输入用户名', '#username1', {
+                tips: [1, '#f00e0e'],
+                time: 3000
+            });
+            return;
+        } else if (pwd == null || pwd == "") {
+            layer.tips('请输入用密码', '#password1', {
+                tips: [1, '#f00e0e'],
+                time: 3000
+            });
+            return;
+        } else {
+            var index = layer.load(1, {
+                shade: [0.1, '#fff'] //0.1透明度的白色背景
+            });
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: {'sysd': systemCode, 'un': username, 'pwd': pwd},
+                dataType: 'JSONP',
+                crossDomain: true,
+                jsonp: "jsonpCallback", //固定写法
+                success: function (data) {
+                    layer.close(index);
+                    if (data.result) {
+                        var uuid = data.uuid;
+                        //获取到uuid后，将uuid传到后台，通过接口获取到用户信息，完成本地session初始化，登录完成
+                        $.ajax({
+                            type: "GET",
+                            url: "https://std.samr.gov.cn/user/loginByUUID.do",
+                            data: {'uuid': uuid},
+                            dataType: 'JSON',
+                            success: function (data) {
+
+                                var requestURI = '';
+
+                                if (requestURI == '') {
+                                    $("#login-area").html(getLoginedArea(data));
+                                    layer.closeAll();
+                                    //window.location.reload();
+
+                                } else {
+                                    window.location.href = "https://std.samr.gov.cn" + requestURI;
+                                }
+
+                            }
+                        });
+                    } else {
+                        layer.msg(data.msg, {icon: 5});
+                    }
+                }
+            });
+        }
+    }
+
+    function doSubmitByPhone() {
+        var username = $.trim($('#cellphone').val());
+        var pCode = $.trim($('#pCode').val());
+        var systemCode = 'system001-unite-certification';
+        //var url = uacServerUrl + "/clientLogin/ajaxLogin.do?sysd=" + systemCode+"&un=" + username + "&pwd=" + pwd;
+        var url = uacServerUrl + "/clientLogin/ajaxLogin.do";
+        if (username == null || username == "") {
+            layer.tips('请输入用手机号', '#cellphone', {
+                tips: [1, '#f00e0e'],
+                time: 3000
+            });
+        } else if (pCode == null || pCode == "") {
+            layer.tips('请输入短信验证码', '#pCode', {
+                tips: [1, '#f00e0e'],
+                time: 3000
+            });
+        } else {
+            var index = layer.load(1, {
+                shade: [0.1, '#fff'] //0.1透明度的白色背景
+            });
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: {'sysd': systemCode, 'un': username, 'pwd': pCode, 'isPhoneLogin': 'true'},
+                dataType: 'JSONP',
+                crossDomain: true,
+                jsonp: "jsonpCallback", //固定写法
+                success: function (data) {
+                    layer.close(index);
+                    if (data.result) {
+                        var uuid = data.uuid;
+                        //获取到uuid后，将uuid传到后台，通过接口获取到用户信息，完成本地session初始化，登录完成
+                        $.ajax({
+                            type: "GET",
+                            url: "https://std.samr.gov.cn/user/loginByUUID.do",
+                            data: {'uuid': uuid},
+                            dataType: 'JSON',
+                            success: function (data) {
+                                var requestURI = '';
+
+                                if (requestURI == '') {
+
+                                    $("#login-area").html(getLoginedArea(data));
+                                    layer.closeAll();
+
+                                    //window.location.reload();
+
+                                } else {
+
+                                    window.location.href = "https://std.samr.gov.cn" + requestURI;
+
+                                }
+                            }
+                        });
+                    } else {
+                        layer.msg(data.msg, {icon: 5});
+                    }
+                }
+            });
+        }
+    }
+
+    //注销
+    function logout() {
+        $.ajax({
+            type: "GET",
+            url: casServerUrl + "/logout?server=system0012-cpsc",
+            dataType: 'JSONP',
+            crossDomain: true,
+            jsonp: "jsonpCallback",
+            success: function (data) {
+                window.location = "https://std.samr.gov.cn/user/logout.do";
+            },
+            error: function (data) {
+                window.location = "https://std.samr.gov.cn/user/logout.do";
+            }
+        });
+        window.location = "https://std.samr.gov.cn/user/logout.do";
+    }
+
+    //获取短信验证码
+    function getPCode(str) {
+        var result;
+        $.ajax({
+            url: "https://std.samr.gov.cn/user/getPhoneCode.do",
+            type: "post",
+            dataType: "json",
+            data: $('#' + str).serialize(),
+            async: false,
+            success: function (data) {
+                result = data;
+            }
+        });
+        return result;
+    }
+</script>
+<!--用于SAC登录的js-->
+<script type="text/javascript">
+    var ajaxLogin = function (url) {
+        var usm = $.trim($('#account3').val());
+        var pwd = $.trim($('#pCode3').val());
+        var msg = '';
+        if ($.trim(usm).length == 0) {
+            msg = "用户名不能为空。";
+        } else if ($.trim(pwd).length == 0) {
+            msg = "密码不能为空。";
+        }
+        if (msg && msg.length > 0) {
+            $('#J_ErrorMsg').text(msg);
+            return false;
+        }
+        $('#J_ErrorMsg').text('');
+        $.ajax({
+            type: "GET",
+            url: url + "/clientLogin/ajaxLogin.do?un=" + usm + "&pwd=" + encodeURIComponent(pwd) + "&sysd=system0011-tcrm",
+            dataType: 'JSONP',
+            crossDomain: true,
+            jsonp: "jsonpCallback",
+            success: function (data) {
+                if (data.result) {
+                    //登录成功，在本地写入session
+                    $.post("https://std.samr.gov.cn/user/sacUserLogin.do", {"username": usm, "realname": data.realname, "uid": data.uid, "mobile": data.mobile, "email": data.email}, function (data2) {
+                        if (data2.result) {
+                            $("#login-area").html('<a href="https://std.samr.gov.cn/proposal/proposalQuery" class="btn btn-secondary bg-primary btn-sm" style="background-color:#004984;color: #fff;">' + data.username + ',个人中心</a>  <a href="javascript:logout()" class="btn btn-secondary bg-primary btn-sm" style="background-color:#004984;color: #fff;" title="注销">注销&nbsp;<span class="glyphicon glyphicon-off"></span></a>');
+                            layer.closeAll();
+                            /* window.location.reload(); */
+                        } else {
+                            $('#J_ErrorMsg').text(data2.msg);
+                            return;
+                        }
+                    });
+                } else {
+                    $('#J_ErrorMsg').text(data.msg);
+                    return;
+                }
+            }
+        });
+    };
+</script>
+<div class="top_nav" style="background:url(https://std.samr.gov.cn/images/bgrep.jpg) top repeat-x;width:100%;background-color: #187ed0;">
+    <!-- <div style="background-color:rgba(83, 83, 83, 0.32);">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                    <div style="color:#ff9c3d;padding:5px 0"><span class="label label-danger" style="margin-right: 15px;">重要通知</span>因机房设备维修，2022年10月28日17点到10月29日24点，系统暂时停止访问服务，望请知悉，带来不便，敬请谅解。</div>
+                </div>
+            </div>
+        </div>
+    </div>-->
+    <div style="background-color:rgba(0, 95, 171, 0.32);">
+        <div class="container normal-banner">
+            <div class="row">
+                <div class="col-sm-12">
+                    <div style="color:#ff9c3d;padding:5px 0;height:35px;position:relative;">
+
+                        <div id="login-area" style="position: absolute;top: 4px;right: 0px;display: inline-block;min-width:96px; height:35px;line-height: 35px;text-align: center; border-radius:3px;background-color:#0071cb;border:0px #fff solid;color: white;">
+                            
+                                
+                                <!-- 不使用弹出层 <a style="color: white;font-weight: bolder;" id="loginATag" href="javascript:loginLayer();">登录</a> -->
+                                
+                                <a  class="btn btn-secondary bg-primary btn-sm" type="button" style="float:right;background-color:#004984;color:white;"  href="https://puac.sacinfo.org.cn/uac/registerv2/register-individual.do?registerServer=http://std.samr.gov.cn/" target="_blank">
+									<span class="glyphicon glyphicon-user"></span>&nbsp;&nbsp;注册
+								</a>
+						        <button id="loginATag" class="btn btn-secondary bg-primary btn-sm" type="button" style="float:right;margin-right:10px;background-color:#004984;color:white;" onclick="handleLoginClick();return false;">
+									<span class="glyphicon glyphicon-lock"></span>&nbsp;&nbsp;登录
+								</button>
+
+                            
+                            
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container" style="overflow: visible;">
+        <div class="row" style="overflow: visible;">
+            <div id="top-bg" class="col-sm-12" style="overflow: visible;width:100%;font-family: arial,tahoma,'Microsoft Yahei','\5b8b\4f53',sans-serif;z-index:2;">
+                <img class="hidden-xs" src="https://std.samr.gov.cn/images/bgrep.gif" style="position:absolute;right:-180px;top:0;height:100%;z-index:-1;"/>
+                <img class="hidden-xs" src="https://std.samr.gov.cn/images/logonew.png" style="z-index:2;"/>
+
+                <div style="padding:5px 0;padding-right:30px;" class="visible-xs" class="navbar-header">
+                    <button class=" navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a style="color:white;padding:15px 0;" href="https://std.samr.gov.cn" class="navbar-brand">
+                        <img style="display:inline-block;margin-right:10px;margin-top:-5px;" width="30px" src="https://std.samr.gov.cn/images/shareLogo.png"/>
+                        全国标准信息公共服务平台
+                    </a>
+
+                    <div style="clear:both;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="nav-menu">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <ul>
+                    <li class="hidden-xs nav_in"><a href="https://std.samr.gov.cn/">首页</a></li>
+                    <li ><a href="https://openstd.samr.gov.cn/bzgk/std/">国家标准</a></li>
+                    <li ><a href="https://hbba.sacinfo.org.cn" target="_blank">行业标准</a></li>
+                    <li ><a href="https://dbba.sacinfo.org.cn" target="_blank">地方标准</a></li>
+                    <li ><a href="https://www.ttbz.org.cn/" target="_blank">团体标准</a></li>
+                    <li ><a href="https://www.qybz.org.cn/" target="_blank">企业标准</a></li>
+                    <li ><a href="https://std.samr.gov.cn/#gj">国际标准</a></li>
+                    <li ><a href="https://std.samr.gov.cn/#gw">国外标准</a></li>
+                    <!-- <li ><a href="https://sfq.sacinfo.org.cn/" target="_blank">示范试点</a></li> -->
+                    <li ><a href="https://std.samr.gov.cn/org">技术委员会</a></li>
+                    <!--  <li ><a href="https://talent.sacinfo.org.cn/">标准化人才</a></li> -->
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div style="clear:both;"></div>
+</div>
+<div class="container main-body">
+	<ul class="lift-show hidden-xs"></ul>
+	<div class="row">
+		<div class="col-sm-12">
+			<div class="header-container">
+				<div class="header-carousel">
+					<div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+						<!-- Indicators -->
+						<ol class="carousel-indicators">
+							<li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>
+							<li data-target="#carousel-example-generic" data-slide-to="1"></li>
+							<li data-target="#carousel-example-generic" data-slide-to="2"></li>
+							<li data-target="#carousel-example-generic" data-slide-to="3"></li>
+							<li data-target="#carousel-example-generic" data-slide-to="4"></li>
+						</ol>
+						<!-- Wrapper for slides -->
+						<div class="carousel-inner" role="listbox">
+							<a class="item active" href="https://std.samr.gov.cn/html/app/index.html" target="_blank">
+								<img src="images/scrollImg-big/6.jpg" style="width:100%;" alt="国标通App"/>
+							</a>
+							<a class="item" href="https://www.ttbz.org.cn/" target="_blank">
+								<img src="images/scrollImg-big/4.jpg" style="width:100%;" alt="团体标准信息平台"/>
+							</a>
+							<a class="item" href="https://www.qybz.org.cn/" target="_blank">
+								<img src="images/scrollImg-big/5.jpg" style="width:100%;" alt="企业标准信息平台"/>
+							</a>
+							<a class="item" href="http://www.sacinfo.cn" target="_blank">
+								<img src="images/scrollImg-big/1.jpg" style="width:100%;" alt="中国标准信息服务网"/>
+							</a>
+							<a class="item" href="https://www.sacinfo.cn/obpAd" target="_blank">
+							 	<img src="images/scrollImg-big/3.jpg" style="width:100%;" alt="电子阅览室"/>
+						 	</a>
+						</div>
+							
+						<!-- Controls -->
+						<a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
+							<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+							<span class="sr-only">Previous</span>
+						</a>
+						<a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
+							<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+							<span class="sr-only">Next</span>
+						</a>
+					</div>
+				</div>
+				<div class="header-search">
+					<div class="dcpsp-search-area">
+						<ul class="nav nav-tabs nav-justified search-head">
+							<li role="presentation" class="active"><a href="javascript:void(0)">标准</a></li>
+							<li role="presentation"><a href="javascript:void(0)">机构</a></li>
+							<li role="presentation"><a href="javascript:void(0)">专家</a></li>
+							<!--<li role="presentation"><a href="javascript:void(0)">指标</a></li>-->
+							<li role="presentation"><a href="javascript:void(0)">国际国外</a></li> 
+						</ul>
+						<div class="search-body">
+							<!-- 标准搜索区 -->
+							<div class="search-form" style="display: block;">
+								<div class="input-group input-group-tip">
+									<span class="glyphicon glyphicon-bookmark" aria-hidden="true" style="margin-right:3px;vertical-align: text-top;"></span>
+									<a class="third-standard" target="_blank" href="https://sppt.cfsa.net.cn:8086/db">食品安全国家标准</a><a class="third-standard" target="_blank" href="https://www.mee.gov.cn/ywgz/fgbz/bz/">生态环境国家标准</a><a class="third-standard" href="#" data-toggle="tooltip" data-placement="top" title="工程建设国家标准未纳入本系统，请咨询相关部委">工程建设国家标准</a><a id="btn-military" class="third-standard" style="color: #f11919;" href="#" data-toggle="tooltip" data-placement="top">军用标准<span class="news-logo news-logo-new"></span></a>
+								</div>
+								<div class="input-group">  
+									<span class="input-group-btn">
+									    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">全部 <span class="caret"></span></button>
+									    <ul class="dropdown-menu" idx="0">
+									    	<li tid=""><a href="#">全部</a></li>
+									    	<li tid="plan"><a href="#">国家标准计划</a></li>
+									    	<li tid="gb"><a href="#">国家标准</a></li>
+									    	<li tid="hb"><a href="#">行业标准</a></li>
+									    	<li tid="db"><a href="#">地方标准</a></li>
+									    </ul>
+									</span>
+									<input type="text" class="form-control" placeholder="请输入关键词" rid="std"/>
+									<span class="input-group-btn">
+										<button class="btn btn-primary " type="button">检索</button> 
+									</span>
+								</div>
+								<div class="hot-title">
+									<span class="text-danger">实时热搜</span> 
+									<img class="sub-img" src="images/hot.jpg"/> 
+									<a class="nda"><span class="glyphicon glyphicon-refresh text-default"></span>&nbsp;<span class="text-default">换一批</span></a>
+									<a style="float:right;margin-top:-15px;" href="https://std.samr.gov.cn/gb/search/gbAdvancedSearch" target="_blank"><span class="text-default">高级检索</span></a>
+								</div>
+								<div class="hot-area">
+									<div class="row hotword" rid="0" id="stdKeysPage">
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">消防<span class="news-logo"></span></a>
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">建筑防火<span class="news-logo"></span></a>
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">食品<span class="news-logo"></span></a> 
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">安全<span class="news-logo"></span></a> 
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">电动自行车<span class="news-logo"></span></a>
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">压力容器<span class="news-logo"></span></a>
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">混凝土<span class="news-logo"></span></a> 
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">不锈钢<span class="news-logo"></span></a> 
+										</div>
+									</div>
+								</div>
+							</div>
+							<!-- 机构搜索区 -->
+							<div class="search-form">
+								<div class="input-group">  
+									<input type="text" class="form-control" placeholder="请输入关键词" rid="org"/>
+									<span class="input-group-btn">
+										<button class="btn btn-primary " type="button">检索</button> 
+									</span>
+								</div>
+								<div class="hot-title">
+									<span class="text-danger">实时热搜</span> 
+									<img class="sub-img" src="images/hot.jpg"/> 
+									<a class="nda"><span class="glyphicon glyphicon-refresh text-default"></span>&nbsp;<span class="text-default">换一批</span></a>
+								</div>
+								<div class="hot-area">
+									<div class="row hotword" rid="1" id="orgKeysPage">
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">床上用品</a>
+											</div>
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">森林资源</a>
+											</div>
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">连接件</a>
+											</div>
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">工业设计基础</a>
+											</div>
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">行政管理和服务</a>
+											</div>
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">海洋船</a>
+											</div>
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">电热毯</a>
+											</div>
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">保健和类似器具</a>
+											</div>
+										
+									</div>
+								</div>
+							</div>
+							<!-- 人才搜索区 -->
+							<div class="search-form">
+								<div class="input-group">  
+									<input type="text" class="form-control" placeholder="请输入关键词" rid="person"/>
+									<span class="input-group-btn">
+										<button class="btn btn-primary " type="button">检索</button> 
+									</span>
+								</div>
+								<div class="hot-title">
+									<span class="text-danger">实时热搜</span> 
+									<img class="sub-img" src="images/hot.jpg"/> 
+									<a class="nda"><span class="glyphicon glyphicon-refresh text-default"></span>&nbsp;<span class="text-default">换一批</span></a>
+								</div>
+								<div class="hot-area">
+									<div class="row hotword" rid="2" id="perKeysPage">
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">微电机控制</a>
+											</div>
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">技术管理</a>
+											</div>
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">电机设计与制造</a>
+											</div>
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">橡胶V带配方</a>
+											</div>
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">轻工机械</a>
+											</div>
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">传动带配方设计</a>
+											</div>
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">机械与标准化</a>
+											</div>
+										
+											<div class="col-xs-4 col-md-3">
+												<a href="#" target="_blank">检验检测</a>
+											</div>
+										
+									</div>
+								</div>
+							</div>
+							<!-- 指标搜索区 -->
+							<!-- <div class="search-form">
+								<div class="info">
+									该功能为演示功能
+								</div>
+								<div class="input-group">
+									<input type="text" class="form-control" placeholder="请输入关键词" rid="kpi"/>
+									<span class="input-group-btn">
+										<button class="btn btn-primary " type="button">检索</button> 
+									</span>
+								</div>
+								<div class="hot-title">
+									<span class="text-danger">实时热搜</span> 
+									<img class="sub-img" src="images/hot.jpg"/> 
+									<a class="nda"><span class="glyphicon glyphicon-refresh text-default"></span>&nbsp;<span class="text-default">换一批</span></a>
+								</div>
+								<div class="hot-area">
+									<div class="row hotword" rid="3">
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">PH值<span class="news-logo news-logo-new"></span></a>
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">机械强度<span class="news-logo news-logo-new"></span></a>
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">耐潮湿<span class="news-logo news-logo-new"></span></a> 
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">耐热和耐燃<span class="news-logo news-logo-new"></span></a> 
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">易燃</a>
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">蒸馏水</a>
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">邻苯二甲酸酯<span class="news-logo news-logo-hot"></span></a>
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">染料<span class="news-logo news-logo-hot"></span></a>
+										</div>
+									</div>
+								</div>
+							</div>-->
+							<!-- 国际国外搜索区 -->
+							<div class="search-form">
+								<div class="input-group">  
+									<span class="input-group-btn">
+									    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">全部 <span class="caret"></span></button>
+									    	<ul class="dropdown-menu" idx="1">
+									          	<li tid=""><a href="#">全部</a></li>
+									          	<li tid="iso"><a href="#">ISO</a></li>
+									          	<li tid="iec"><a href="#">IEC</a></li>
+									          	<li tid="din"><a href="#">DIN</a></li>
+									          	<li tid="afnor"><a href="#">AFNOR</a></li>
+									       </ul>
+									</span>
+									<input type="text" class="form-control" placeholder="请输入关键词" rid="iso"/>
+									<span class="input-group-btn">
+										<button class="btn btn-primary " type="button">检索</button> 
+									</span>
+								</div>
+								<div class="hot-title">
+									<span class="text-danger">实时热搜</span> 
+									<img class="sub-img" src="images/hot.jpg"/> 
+									<a class="nda"><span class="glyphicon glyphicon-refresh text-default"></span>&nbsp;<span class="text-default">换一批</span></a>
+								</div>
+								<div class="hot-area">
+									<div class="row hotword" rid="4">
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">ISO 9001<span class="news-logo"></span></a>
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">ISO 14001<span class="news-logo"></span></a>
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">ISO/IEC 27001<span class="news-logo"></span></a> 
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">ISO/TS 29001<span class="news-logo"></span></a> 
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">ISO 13485</a>
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">ISO 9004</a>
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">ISO 9000<span class="news-logo"></span></a>
+										</div>
+										<div class="col-xs-4 col-md-3">
+											<a href="#" target="_blank">ISO/IEC 90003<span class="news-logo"></span></a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row lift-floor" flogo="国" ftext="国家<br/>标准">
+		<div class="col-sm-12" id="gb-data-area">
+			<div class="mod-hd">
+				<div class="row">
+					<div class="col-sm-12">
+						<h2 class="title">
+							<span class="current" idx="0"><a href="https://std.samr.gov.cn/gb" target="_blank">国家标准化</a><i></i></span> 
+							<span class="subItem" style="float:right;margin-right:0"><a href="https://std.samr.gov.cn/coordination" target="_blank"><img src="images/xtm2.png"/>业务协同系统</a><i></i></span>
+							<a style="clear:both;"></a>
+						</h2>
+					</div>
+				</div>
+			</div>
+			<!--国家标准化数据区域  -->
+			<div class="mod-bd">
+				<div class="row">
+					<div class="col-sm-9 mod-bd-left">
+						<div class="mod-list gb-list">
+							<h5>意见征集</h5>
+							<div class="row">
+								<div class="col-xs-12 col-sm-4">
+									<a href="http://org.sacinfo.org.cn:8088/tcrm" target="_blank"><img src="images/tb22.jpg"/>技术委员会信息公示</a><span class="z-logo">征</span></a>
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/gb/gbOpinion" target="_blank"><img src="images/tb12.jpg"/>国家标准实施信息反馈</a><span class="z-logo">征</span></a>
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/gb/withdrawnReview" target="_blank"><img src="images/tbfz.jpg"/>国家标准复审结论公示<span class="z-logo">征</span></a>
+								</div> 
+								
+							</div>
+							<div class="row">
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/gb/gbSuggestionPlan" target="_blank"><img src="images/tb1.jpg"/>拟立项标准公示<span class="z-logo">征</span></a>
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/gfs/gfsSuggestionPlan" target="_blank"><img src="images/tb5.jpg"/>拟立项外文版公示<span class="z-logo">征</span></a>
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/gsm/gsmPlanPublic" target="_blank"><img src="images/tb1.jpg"/>拟立项标准样品公示<span class="z-logo">征</span></a>
+								</div>
+							</div>
+							<div class="row">
+								
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/gb/gbqSuggestion" target="_blank"><img src="images/tb2.jpg"/>强标草案征求意见<span class="z-logo">征</span></a> 
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/gb/gbPlanDraft" target="_blank"><img src="images/tb2.jpg"/>推标草案征求意见<span class="z-logo">征</span></a>
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/qbprop/introduce" target="_blank"><img src="images/tb3.jpg"/>国家标准立项建议征集<span class="z-logo">征</span></a>
+								</div>
+								
+								
+							</div>
+							<div class="row">
+								
+								<div class="col-xs-12 col-sm-4">
+									<a href="http://patent.sacinfo.org.cn/" target="_blank"><img src="images/tb30.jpg"/>标准涉及专利公示</a>
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="http://org.sacinfo.org.cn/" target="_blank"><img src="images/tb8.jpg"/>技术委员会组织管理系统</a>
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="http://zxd.sacinfo.org.cn/" target="_blank"><img src="images/tb6.jpg"/>国家标准制修订管理系统</a> 
+								</div>
+				
+							</div>
+							<h5>标准公告</h5>
+							<div class="row">
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/noc/nocGB" target="_blank"><img src="images/iconGB.jpg"/>国家标准公告</a>
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/noc/nocHB" target="_blank"><img src="images/iconHB.jpg"/>行标备案月报</a>
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/noc/nocDB" target="_blank"><img src="images/iconDB.jpg"/>地标备案月报</a>
+								</div>
+							</div>
+							<div class="row">
+								
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/noc/nocCMR" target="_blank"><img src="images/iconTC.jpg"/>技术委员会公告</a>
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/noc/nocPlan" target="_blank"><img src="images/tbnew1.jpg"/>国标计划通知</a>
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="http://org.sacinfo.org.cn/manage-commitee-member-readonly/public-commitee-member-info-skip.do" target="_blank"><img src="images/tb19.jpg"/>委员聘书核验</a>
+								</div>
+							</div>
+							<h5>信息查询</h5>
+							<div class="row">
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/gb/gbProcessInfo" target="_blank"><img src="images/tb4.jpg"/>国家标准计划查询</a>
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/gb/gbzProcessInfo" target="_blank"><img src="images/tb11.jpg"/>指导性技术文件登记项目查询</a>
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/gb/gbQuery" target="_blank"><img src="images/tb10.jpg"/>国家标准目录查询</a>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/org/orgTcQuery" target="_blank"><img src="images/tb17.jpg"/>技术委员会目录查询</a>
+								</div>
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/gsm/query" target="_blank"><img src="images/tb13.jpg"/>国家标准样品查询</a>
+								</div>
+								
+								<div class="col-xs-12 col-sm-4">
+									<a href="https://std.samr.gov.cn/gfs/query" target="_blank"><img src="images/tb14.jpg"/>国家标准外文版查询</a>
+								</div>
+							</div>
+							
+						</div>
+					</div>
+					<div class="col-sm-3 mod-bd-right">
+						<div class="row">
+							<div class="col-xs-6 col-sm-12 cgImg">
+								<a href="https://std.samr.gov.cn/html/app/index.html" target="_blank"><img src="images/cg/20231012/cg_2.jpg"/></a>
+							</div>
+							<div class="col-xs-6 col-sm-12 cgImg"> 
+								<a href="http://cc.sacinfo.org.cn/" target="_blank"><img src="images/cg/20231012/cg_3.jpg"/></a>
+							</div>
+							<div class="col-xs-6 col-sm-12 cgImg">
+								<a href="http://zxd.sacinfo.org.cn/adoptTB/register/xmsb" target="_blank"><img src="images/cg/20231012/cg_4.jpg"/></a>
+							</div>
+							<div class="col-xs-6 col-sm-12 cgImg">
+								<a href="https://www.sacinfo.cn/" target="_blank"><img src="images/cg/20260413/cg_3.jpg"/></a>
+							</div>
+							<div class="col-xs-6 col-sm-12 cgImg">
+								<a href="https://std.samr.gov.cn/home/bzbjq" target="_blank"><img src="images/cg/20260413/cg_4.jpg"/></a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--<div class="row" style="margin-top: 15px;">
+		<div class="col-sm-4 cgImg">
+			<a href="http://www.znfy.org.cn" target="_blank"><img src="images/cg/20231012/cg_5.jpg"/></a>
+		</div>
+		<div class="col-sm-6 cgImg">
+			<a href="https://std.samr.gov.cn/home/rck" target="_blank"><img src="images/cg/20231012/cg_6.jpg"/></a>
+		</div>
+		<div class="col-sm-6 cgImg">
+			<a href="https://std.samr.gov.cn/home/bzbjq" target="_blank"><img src="images/cg/20240808/cg_7.jpg"/></a>
+		</div>
+	</div>-->
+	<div class="row lift-floor" flogo="行" ftext="行业<br/>标准">
+		<div class="col-sm-12">
+			<div class="mod-hd">
+				<h2 class="title">
+					<span class="current" idx="0"><a href="http://hbba.sacinfo.org.cn/" target="_blank">行业标准化</a><small>本系统当前共收录<a class="text-danger" href="http://hbba.sacinfo.org.cn/stdList" target="_blank">76</a>个行业,共计<a class="text-danger" href="http://hbba.sacinfo.org.cn/stdList" target="_blank">88692</a>个标准</small><i></i></span>
+					<span class="subItem" style="float:right;margin-right:0"><a href="http://hbba.sacinfo.org.cn" target="_blank"><img src="images/xtm2.png"/><span class="hidden-xs hidden-sm">行业标准</span>信息服务<span class="hidden-xs hidden-sm">平台</span></a><i></i></span>
+					<span class="subItem" style="float:right;"><a href="https://std.samr.gov.cn/noc/nocHB" target="_blank"><img src="images/xtm1.png"/><span class="hidden-xs hidden-sm">行业标准</span>备案月报</a><i></i></span>
+					<a style="clear:both;"></a>
+				</h2>
+			</div>
+			<div class="mod-bd">
+				<div class="row">
+					<div class="col-sm-12" style="overflow:hidden">						
+						
+<div class="hb-list-container" style="width:100%;margin-top:15px;"> 
+	<ul class="hb-list" style="width:100%;" index="1">
+		<li><a href="#" title="AQ（安全生产）" target="_blank">AQ（安全生产）</a></li> 
+		<li><a href="#" title="BB（包装）" target="_blank">BB（包装）</a></li> 
+		<li><a href="#" title="CB（船舶）" target="_blank">CB（船舶）</a></li> 
+		<li><a href="#" title="CH（测绘）" target="_blank">CH（测绘）</a></li> 
+		<li><a href="#" title="CJ（城镇建设）" target="_blank">CJ（城镇建设）</a></li> 
+		<li><a href="#" title="CY（新闻出版）" target="_blank">CY（新闻出版）</a></li> 
+		<li><a href="#" title="DA（档案）" target="_blank">DA（档案）</a></li> 
+		<li><a href="#" title="DB（地震）" target="_blank">DB（地震）</a></li> 
+		<li><a href="#" title="DL（电力）" target="_blank">DL（电力）</a></li> 
+		<li><a href="#" title="DY（电影）" target="_blank">DY（电影）</a></li> 
+		<li><a href="#" title="DZ（地质矿产）" target="_blank">DZ（地质矿产）</a></li> 
+		<li><a href="#" title="EJ（核工业）" target="_blank">EJ（核工业）</a></li> 
+		<li><a href="#" title="FZ（纺织）" target="_blank">FZ（纺织）</a></li> 
+		<li><a href="#" title="GA（公共安全）" target="_blank">GA（公共安全）</a></li> 
+		<li><a href="#" title="GC（国家物资储备）" target="_blank">GC（国家物资储备）</a></li> 
+		<li><a href="#" title="GF（国防工业）" target="_blank">GF（国防工业）</a></li> 
+		<li><a href="#" title="GH（供销合作）" target="_blank">GH（供销合作）</a></li> 
+		<li><a href="#" title="GM（国密）" target="_blank">GM（国密）</a></li> 
+		<li><a href="#" title="GY（广播电视和网络视听）" target="_blank">GY（广播电视和网络视听）</a></li> 
+		<li><a href="#" title="HB（航空）" target="_blank">HB（航空）</a></li> 
+	</ul>
+	<ul class="hb-list" style="width:100%;" index="2">
+		<li><a href="#" title="HG（化工）" target="_blank">HG（化工）</a></li> 
+		<li><a href="#" title="HJ（环境保护）" target="_blank">HJ（环境保护）</a></li> 
+		<li><a href="#" title="HS（海关）" target="_blank">HS（海关）</a></li> 
+		<li><a href="#" title="HY（海洋）" target="_blank">HY（海洋）</a></li> 
+		<li><a href="#" title="JB（机械）" target="_blank">JB（机械）</a></li> 
+		<li><a href="#" title="JC（建材）" target="_blank">JC（建材）</a></li> 
+		<li><a href="#" title="JG（建筑工程）" target="_blank">JG（建筑工程）</a></li> 
+		<li><a href="#" title="JR（金融）" target="_blank">JR（金融）</a></li> 
+		<li><a href="#" title="JS（机关事务）" target="_blank">JS（机关事务）</a></li> 
+		<li><a href="#" title="JT（交通）" target="_blank">JT（交通）</a></li> 
+		<li><a href="#" title="JY（教育）" target="_blank">JY（教育）</a></li> 
+		<li><a href="#" title="KA（矿山安全）" target="_blank">KA（矿山安全）</a></li> 
+		<li><a href="#" title="LB（旅游）" target="_blank">LB（旅游）</a></li> 
+		<li><a href="#" title="LD（劳动和劳动安全）" target="_blank">LD（劳动和劳动安全）</a></li> 
+		<li><a href="#" title="LS（粮食）" target="_blank">LS（粮食）</a></li> 
+		<li><a href="#" title="LY（林业）" target="_blank">LY（林业）</a></li> 
+		<li><a href="#" title="MH（民用航空）" target="_blank">MH（民用航空）</a></li> 
+		<li><a href="#" title="MR（市场监管）" target="_blank">MR（市场监管）</a></li> 
+		<li><a href="#" title="MT（煤炭）" target="_blank">MT（煤炭）</a></li> 
+		<li><a href="#" title="MZ（民政）" target="_blank">MZ（民政）</a></li> 
+		<li><a href="#" title="NB（能源）" target="_blank">NB（能源）</a></li> 
+		<li><a href="#" title="NY（农业）" target="_blank">NY（农业）</a></li> 
+		<li><a href="#" title="QB（轻工）" target="_blank">QB（轻工）</a></li> 
+		<li><a href="#" title="QC（汽车）" target="_blank">QC（汽车）</a></li> 
+		<li><a href="#" title="QJ（航天）" target="_blank">QJ（航天）</a></li> 
+	</ul>
+	<ul class="hb-list" style="width:100%;" index="3">
+		<li><a href="#" title="QX（气象）" target="_blank">QX（气象）</a></li> 
+		<li><a href="#" title="RB（认证认可）" target="_blank">RB（认证认可）</a></li> 
+		<li><a href="#" title="RF（人民防空）" target="_blank">RF（人民防空）</a></li> 
+		<li><a href="#" title="SB（国内贸易）" target="_blank">SB（国内贸易）</a></li> 
+		<li><a href="#" title="SC（水产）" target="_blank">SC（水产）</a></li> 
+		<li><a href="#" title="SF（司法）" target="_blank">SF（司法）</a></li> 
+		<li><a href="#" title="SH（石油化工）" target="_blank">SH（石油化工）</a></li> 
+		<li><a href="#" title="SJ（电子）" target="_blank">SJ（电子）</a></li> 
+		<li><a href="#" title="SL（水利）" target="_blank">SL（水利）</a></li> 
+		<li><a href="#" title="SN（出入境检验检疫）" target="_blank">SN（出入境检验检疫）</a></li> 
+		<li><a href="#" title="SW（税务）" target="_blank">SW（税务）</a></li> 
+		<li><a href="#" title="SY（石油天然气）" target="_blank">SY（石油天然气）</a></li> 
+		<li><a href="#" title="TB（铁路）" target="_blank">TB（铁路）</a></li> 
+		<li><a href="#" title="TD（土地管理）" target="_blank">TD（土地管理）</a></li> 
+		<li><a href="#" title="TY（体育）" target="_blank">TY（体育）</a></li> 
+		<li><a href="#" title="WB（物资管理）" target="_blank">WB（物资管理）</a></li> 
+		<li><a href="#" title="WH（文化）" target="_blank">WH（文化）</a></li> 
+		<li><a href="#" title="WJ（兵工民品）" target="_blank">WJ（兵工民品）</a></li> 
+		<li><a href="#" title="WM（外经贸）" target="_blank">WM（外经贸）</a></li> 
+		<li><a href="#" title="WS（卫生）" target="_blank">WS（卫生）</a></li> 
+	</ul>
+	<ul class="hb-list" style="width:100%;" index="4">
+		<li><a href="#" title="WW（文物保护）" target="_blank">WW（文物保护）</a></li> 
+		<li><a href="#" title="XB（稀土）" target="_blank">XB（稀土）</a></li> 
+		<li><a href="#" title="XF（消防救援）" target="_blank">XF（消防救援）</a></li> 
+		<li><a href="#" title="YB（黑色冶金）" target="_blank">YB（黑色冶金）</a></li> 
+		<li><a href="#" title="YC（烟草）" target="_blank">YC（烟草）</a></li> 
+		<li><a href="#" title="YD（通信）" target="_blank">YD（通信）</a></li> 
+		<li><a href="#" title="YJ（减灾救灾与综合性应急管理）" target="_blank">YJ（减灾救灾与综合性应急管理）</a></li> 
+		<li><a href="#" title="YS（有色金属）" target="_blank">YS（有色金属）</a></li> 
+		<li><a href="#" title="YY（医药）" target="_blank">YY（医药）</a></li> 
+		<li><a href="#" title="YZ（邮政）" target="_blank">YZ（邮政）</a></li> 
+		<li class="noborder"><a href="#" title="ZY（中医药）" target="_blank">ZY（中医药）</a></li> 
+	</ul>
+</div>		
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row lift-floor" flogo="地" ftext="地方<br/>标准">
+		<div class="col-sm-12">
+			<div class="mod-hd">
+				<h2 class="title">
+					<span class="current" idx="0"><a href="http://dbba.sacinfo.org.cn/" target="_blank">地方标准化</a><small>本系统当前共收录<a class="text-danger" href="http://dbba.sacinfo.org.cn/stdList" target="_blank">51770</a>个标准</small><i></i></span>
+					<span class="subItem" style="float:right;margin-right:0"><a href="http://dbba.sacinfo.org.cn" target="_blank"><img src="images/xtm2.png"/><span class="hidden-xs hidden-sm">地方标准</span>信息服务<span class="hidden-xs hidden-sm">平台</span></a><i></i></span>
+					<span class="subItem" style="float:right;"><a href="https://std.samr.gov.cn/noc/nocDB" target="_blank"><img src="images/xtm1.png"/><span class="hidden-xs hidden-sm">地方标准</span>备案月报</a><i></i></span>
+					<a style="clear:both;"></a>
+				</h2>
+			</div>
+			<div class="mod-bd">
+				<div class="row">
+					<div class="col-sm-12">
+						
+<div class="db-list">
+	<div class="row db-row">
+		<div class="col-xs-2 col-sm-1 db-title">
+			<span class="label label-warning">华&nbsp;北</span>
+		</div>
+		<div class="col-xs-10 col-sm-5 db-content">
+			<a href="#" target="_blank" code="bjzjj">北京市</a><span class="separator">|</span><a href="#" target="_blank" code="tjzjj">天津市</a><span class="separator">|</span>
+			<a href="#" target="_blank" code="hebeizjj">河北省</a><span class="separator">|</span> <a href="#" target="_blank" code="sxzjj14">山西省</a><span class="separator">|</span>
+			<a href="#" target="_blank" code="nmgzjj">内蒙古自治区</a>
+		</div>
+		<div class="col-xs-2 col-sm-1 db-title">
+			<span class="label label-warning">东&nbsp;北</span>
+		</div>
+		<div class="col-xs-10 col-sm-5 db-content" >
+			<a href="#" target="_blank" code="lnzjj">辽宁省</a><span class="separator">|</span> <a href="#" target="_blank" code="jlzjj">吉林省</a><span class="separator">|</span>
+			<a href="#" target="_blank" code="hljzjj">黑龙江省</a>
+		</div>
+	</div>
+	<div class="row db-row">
+		<div class="col-xs-2 col-sm-1 db-title">
+			<span class="label label-warning">华&nbsp;东</span>
+		</div>
+		<div class="col-xs-10 col-sm-5 db-content" >
+			<a href="#" target="_blank" code="shzjj">上海市</a><span class="separator">|</span> <a href="#" target="_blank" code="jszjj">江苏省</a><span class="separator">|</span>
+			<a href="#" target="_blank" code="zjzjj">浙江省</a><span class="separator">|</span> <a href="#" target="_blank" code="ahzjj">安徽省</a><span class="separator">|</span>
+			<a href="#" target="_blank" code="fjzjj">福建省</a><span class="separator">|</span> <a href="#" target="_blank" code="jxzjj">江西省</a><span class="separator">|</span>
+			<a href="#" target="_blank" code="sdzjj">山东省</a>
+		</div>
+		<div class="col-xs-2 col-sm-1 db-title">
+			<span class="label label-warning">中&nbsp;南</span>
+		</div>
+		<div class="col-xs-10 col-sm-5 db-content">
+			<a href="#" target="_blank" code="henanzjj">河南省</a><span class="separator">|</span> <a href="#" target="_blank" code="hubeizjj">湖北省</a><span class="separator">|</span>
+			<a href="#" target="_blank" code="hunanzjj">湖南省</a><span class="separator">|</span> <a href="#" target="_blank" code="gdzjj">广东省</a><span class="separator">|</span>
+			<a href="#" target="_blank" code="gxzjj">广西壮族自治区</a><span class="separator">|</span> <a href="#" target="_blank" code="hainanzjj">海南省</a>
+		</div>
+	</div>
+	<div class="row db-row">
+		<div class="col-xs-2 col-sm-1 db-title">
+			<span class="label label-warning">西&nbsp;南</span>
+		</div>
+		<div class="col-xs-10 col-sm-5 db-content">
+			<a href="#" target="_blank" code="cqzjj">重庆市</a><span class="separator">|</span> <a href="#" target="_blank" code="sczjj">四川省</a><span class="separator">|</span>
+			<a href="#" target="_blank" code="gzzjj">贵州省</a><span class="separator">|</span> <a href="#" target="_blank" code="ynzjj">云南省</a><span class="separator">|</span>
+			<a href="#" target="_blank" code="xzzjj">西藏自治区</a>
+		</div>
+		<div class="col-xs-2 col-sm-1 db-title">
+			<span class="label label-warning">西&nbsp;北</span>
+		</div>
+		<div class="col-xs-10 col-sm-5 db-content">
+			<a href="#" target="_blank" code="sxzjj61">陕西省</a><span class="separator">|</span> <a href="#" target="_blank" code="gszjj">甘肃省</a><span class="separator">|</span>
+			<a href="#" target="_blank" code="qhzjj">青海省</a><span class="separator">|</span> <a href="#" target="_blank" code="nxzjj">宁夏回族自治区</a><span class="separator">|</span>
+			<a href="#" target="_blank" code="xjzjj">新疆维吾尔自治区</a>
+		</div>
+	</div>
+</div>		
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row lift-floor" flogo="团" ftext="团体<br/>标准">
+		<div class="col-sm-12">
+			<div class="mod-hd">
+				<h2 class="title">
+					<span class="current" idx="0"><a href="https://www.ttbz.org.cn/" target="_blank">团体标准化</a><i></i></span>
+					<span class="subItem" style="float:right;margin-right:0"><a href="https://www.ttbz.org.cn/" target="_blank"><img src="images/xtm2.png"/>团体标准信息平台</a><i></i></span>
+					<a style="clear:both;"></a>
+				</h2>
+			</div>
+			<div class="mod-bd">
+				<div class="row">
+					<div class="col-sm-12">
+						
+<div class="tb-list-container" style="width:100%;margin-top:15px;"> 
+	<ul class="tb-list" style="width:100%;" index="1">
+		<li><span class="label label-info">A</span><a href="#" title="A（农、林、牧、渔业）" target="_blank">农、林、牧、渔业</a></li> 
+		<li><span class="label label-info">B</span><a href="#" title="B（采矿业）" target="_blank">采矿业</a></li>
+		<li><span class="label label-info">C</span><a href="#" title="C（制造业）" target="_blank">制造业</a></li>
+		<li><span class="label label-info">D</span><a href="#" title="D（电力、热力、燃气及水生产和供应业）" target="_blank">电力、热力、燃气及水生产和供应业</a></li>
+		<li><span class="label label-info">E</span><a href="#" title="E（建筑业）" target="_blank">建筑业</a></li>
+		<li><span class="label label-info">F</span><a href="#" title="F（批发和零售业）" target="_blank">批发和零售业</a></li>
+		<li><span class="label label-info">G</span><a href="#" title="G（交通运输、仓储和邮政业）" target="_blank">交通运输、仓储和邮政业</a></li>
+		<li><span class="label label-info">H</span><a href="#" title="H（住宿和餐饮业）" target="_blank">住宿和餐饮业</a></li>
+		<li><span class="label label-info">I</span><a href="#" title="I（信息传输、软件和信息技术服务业）" target="_blank">信息传输、软件和信息技术服务业</a></li>
+		<li><span class="label label-info">J</span><a href="#" title="J（金融业）" target="_blank">金融业</a></li>
+		<li><span class="label label-info">K</span><a href="#" title="K（房地产业）" target="_blank">房地产业</a></li>
+		<li><span class="label label-info">L</span><a href="#" title="L（租赁和商务服务业）" target="_blank">租赁和商务服务业</a></li>
+		<li><span class="label label-info">M</span><a href="#" title="M（科学研究和技术服务业）" target="_blank">科学研究和技术服务业</a></li>
+		<li><span class="label label-info">N</span><a href="#" title="N（水利、环境和公共设施管理业）" target="_blank">水利、环境和公共设施管理业</a></li>
+		<li><span class="label label-info">O</span><a href="#" title="O（居民服务、修理和其他服务业）" target="_blank">居民服务、修理和其他服务业</a></li>
+		<li><span class="label label-info">P</span><a href="#" title="P（教育）" target="_blank">教育</a></li>
+		<li><span class="label label-info">Q</span><a href="#" title="Q（卫生和社会工作）" target="_blank">卫生和社会工作</a></li>
+		<li><span class="label label-info">R</span><a href="#" title="R（文化、体育和娱乐业）" target="_blank">文化、体育和娱乐业</a></li>
+		<li class="noborder"><span class="label label-info">S</span><a href="#" title="S（公共管理、社会保障和社会组织）" target="_blank">公共管理、社会保障和社会组织</a></li>
+	</ul>
+</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="gj" class="row lift-floor" flogo="国际" ftext="国际<br/>标准">
+		<div class="col-sm-12">
+			<div class="mod-hd">
+				<h2 class="title">
+					<span class="current" idx="0"><a href="https://std.samr.gov.cn/gj" target="_blank">国际标准化</a><i></i></span>
+					<span class="subItem" style="float:right;margin-right:0"><a href="http://www.sacinfo.cn/" target="_blank"><img src="images/xtm3.png"/>购买国际标准<i></i></a></span>
+					<a style="clear:both;"></a>
+				</h2>
+			</div>
+			<div class="mod-bd">
+				<div class="row">
+					<div class="col-sm-6">
+						<div style="padding:20px 15px;">
+							<span class="interIcon"><img src="images/ISO.png"/>国际标准化组织</span>
+							<div class="row">
+								<div class="col-sm-11" style="padding:0;">
+									<div class="row">
+										<div class="col-xs-3">
+											<a class="interFuncIcon" href="https://std.samr.gov.cn/gj/news?op=ISO" target="_blank">
+												<img class="flogo" src="images/ltb1.png"/>
+												ISO动态
+											</a>
+										</div>
+										<div class="col-xs-3">
+											<a class="interFuncIcon" href="https://std.samr.gov.cn/gj/org?op=ISO" target="_blank">
+												<img class="flogo" src="images/ltb2.png"/>
+												ISO标准化组织机构
+											</a>
+										</div>
+										<div class="col-xs-3">
+											<a class="interFuncIcon" href="https://std.samr.gov.cn/gj/orgCn?type=ISO" target="_blank">
+												<img class="flogo" src="images/ltb7.png"/>
+												ISO标准化组织国内对口单位查询
+											</a>
+										</div>
+										<div class="col-xs-3">
+											<a class="interFuncIcon" href="https://std.samr.gov.cn/gj/std?op=ISO" target="_blank">
+												<img class="flogo" src="images/ltb3.png"/>
+												ISO标准查询
+											</a>
+										</div>
+									</div>
+								</div>
+								<div class="col-sm-2">
+									
+								</div>
+							</div>		
+						</div>
+					</div>
+					<div class="col-sm-6" style="border-left: 1px dotted #a3a3a3;">
+						<div style="padding:20px 15px;">
+							<span class="interIcon"><img src="images/IEC.png"/>国际电工委员会</span>
+							<div class="row">
+								<div class="col-sm-11" style="padding:0;">
+									<div class="row">
+										<div class="col-xs-3">
+											<a class="interFuncIcon" href="https://std.samr.gov.cn/gj/news?op=IEC" target="_blank">
+												<img class="flogo" src="images/ltb4.png"/>
+												IEC动态
+											</a>
+										</div> 
+										<div class="col-xs-3">
+											<a class="interFuncIcon" href="https://std.samr.gov.cn/gj/org?op=IEC" target="_blank">
+												<img class="flogo" src="images/ltb5.png"/>
+												IEC标准化组织机构
+											</a>
+										</div>
+										<div class="col-xs-3">
+											<a class="interFuncIcon" href="https://std.samr.gov.cn/gj/orgCn?type=IEC" target="_blank">
+												<img class="flogo" src="images/ltb7.png"/>
+												IEC标准化组织国内对口单位查询
+											</a>
+										</div>
+										<div class="col-xs-3">
+											<a class="interFuncIcon" href="https://std.samr.gov.cn/gj/std?op=IEC" target="_blank">
+												<img class="flogo" src="images/ltb6.png"/>
+												IEC标准查询
+											</a>
+										</div>
+									</div>
+								</div>
+								<div class="col-sm-2">
+									
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="gw" class="row lift-floor" flogo="国外" ftext="国外<br/>标准">
+		<div class="col-sm-12">
+			<div class="mod-hd">
+				<h2 class="title">
+					<span class="current" idx="0"><a href="https://std.samr.gov.cn/gw" target="_blank">国外标准化</a><i></i></span>
+					<span class="subItem" style="float:right;margin-right:0"><a href="http://www.sacinfo.cn/" target="_blank"><img src="images/xtm3.png"/>购买国外标准<i></i></a></span>
+					<a style="clear:both;"></a>
+				</h2>
+			</div>
+			<div class="mod-bd">
+				<div class="row">
+					<div class="col-sm-3" style="padding:20px;padding-left:30px;">
+						<div class="page-header" style="margin:0;margin-bottom:10px;">
+							<span class="text-muted" style="font-weight:bold;">国外标准查询</span>
+						</div>
+						<a href="https://std.samr.gov.cn/gw/std?op=DIN" target="_blank"><img style="width:50px;" src="images/DIN.png"/></a>
+						<a href="https://std.samr.gov.cn/gw/std?op=AFNOR" target="_blank"><img style="width:50px;margin-left:10px;" src="images/AFNOR.png"/></a>
+						<a href="https://std.samr.gov.cn/gw/std?op=AENOR" target="_blank"><img style="width:50px;margin-left:10px;" src="images/AENOR.png"/></a>
+						<div class="page-header" style="">
+							<span class="text-muted" style="font-weight:bold;">区域或国外标准机构</span>
+						</div>
+						<a href="https://std.samr.gov.cn/gw/org" target="_blank"><img style="width:220px;" src="images/jgcx.png"/></a>
+					</div>
+					<div class="col-sm-9" style="border-left: 1px dotted #a3a3a3;padding:20px;padding-left:30px;padding-right:35px;">  
+						<div class="con4_m2">
+							<div class="row">
+								<div class="col-xs-6 col-md-4">
+									<div class="panel panel-default">
+										<div class="panel-body">
+											<div class="flag">
+												<img src="images/gq4.jpg"/>
+											</div>
+											<div class="std-society">
+												<a href="https://www.ansi.org/" target="_blank">美国<span class="hidden-xs">国家标准学会</span>(ANSI)</a>
+											</div>
+										</div>
+										<div class="panel-footer">
+											<div style="display:table; width:100%;">
+												<div class="gw-dtb1"> 
+													<a href="https://std.samr.gov.cn/gw/news?channelId=89" target="_blank">标准动态</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-xs-6 col-md-4">
+									<div class="panel panel-default">
+										<div class="panel-body">
+											<div class="flag">
+												<img src="images/gq2.jpg"/>
+											</div>
+											<div class="std-society">
+												<a href="https://www.cen.eu" target="_blank">欧洲<span class="hidden-xs">标准化委员会</span>(CEN)</a>
+											</div>
+										</div>
+										<div class="panel-footer">
+											<div style="display:table; width:100%;">
+												<div class="gw-dtb1"> 
+													<a href="https://std.samr.gov.cn/gw/news?channelId=87" target="_blank">标准动态</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-xs-6 col-md-4">
+									<div class="panel panel-default">
+										<div class="panel-body">
+											<div class="flag">
+												<img src="images/gq3.jpg"/>
+											</div>
+											<div class="std-society">
+												<a href="https://www.din.de" target="_blank">德国<span class="hidden-xs">标准化学会</span>(DIN)</a>
+											</div>
+										</div>
+										<div class="panel-footer">
+											<div style="display:table; width:100%;">
+												<div class="gw-dtb1">
+													<a href="https://std.samr.gov.cn/gw/news?channelId=88" target="_blank">标准动态</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-xs-6 col-md-4">
+									<div class="panel panel-default">
+										<div class="panel-body">
+											<div class="flag">
+												<img src="images/gq5.jpg"/>
+											</div>
+											<div class="std-society">
+												<a href="https://www.bsigroup.com/" target="_blank">英国<span class="hidden-xs">标准协会</span>(BSI)</a>
+											</div>
+										</div>
+										<div class="panel-footer">
+											<div style="display:table; width:100%;">
+												<div class="gw-dtb1">
+													<a href="https://std.samr.gov.cn/gw/news?channelId=90" target="_blank">标准动态</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-xs-6 col-md-4"> 
+									<div class="panel panel-default">
+										<div class="panel-body"">
+											<div class="flag">
+												<img src="images/gq6.jpg"/>
+											</div>
+											<div class="std-society">
+												<a href="https://www.standards.org.au/" target="_blank">澳大利亚<span class="hidden-xs">标准学会</span>(SA)</a><br/>
+												<a href="http://www.standards.govt.nz/" target="_blank">新西兰<span class="hidden-xs">标准学会</span>(NZSO)</a>
+											</div>
+										</div>
+										<div class="panel-footer">
+											<div style="display:table; width:100%;">
+												<div class="gw-dtb1">
+													<a href="https://std.samr.gov.cn/gw/news?channelId=91" target="_blank">标准动态</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-xs-6 col-md-4">
+									<div class="panel panel-default">
+										<div class="panel-body">
+											<div class="flag">
+												<img src="images/gq8.jpg"/>
+											</div>
+											<div class="std-society">
+												<a href="http://www.kats.go.kr/" target="_blank">韩国<span class="hidden-xs">技术标准署</span>(KATS)</a>
+											</div>
+										</div>
+										<div class="panel-footer">
+											<div style="display:table; width:100%;">
+												<div class="gw-dtb1">
+													<a href="https://std.samr.gov.cn/gw/news?channelId=92" target="_blank">标准动态</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="msg">
+	<div class="modal-dialog" style="width: 100%; max-width:708px; top: 50%;margin:0 auto; margin-top: -223px;padding: 10px;"> 
+		<div class="modal-content" style="overflow: hidden;">
+			<div class="modal-body" style="padding:0;">
+				<a href="https://std.samr.gov.cn/html/app/index.html" target="_blank">
+					<img style="width: 100%;" src="https://std.samr.gov.cn/images/pop.jpg"/>
+				</a>
+				<button onClick="closePop()" type="button" class="close" data-dismiss="modal" aria-label="Close" style="position: absolute; top: 15px; right: 15px;"><span aria-hidden="true">&times;</span></button>
+			</div>
+		</div>
+	</div>
+</div> 
+<div class="modal fade" id="military">
+	<div class="modal-dialog" style="width: 100%; max-width:708px; top: 50%;margin:0 auto; margin-top: -223px;padding: 10px;"> 
+		<div class="modal-content" style="overflow: hidden;">
+			<div class="modal-header" style="background-color: #00a9ff; color: #fff;">
+        		<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        		<h4 class="modal-title">中央军委装备发展部开设军用标准服务中心</h4>
+      		</div>
+			<div class="modal-body">
+				<p>中央军委装备发展部依托中国航空综合技术研究所设立军用标准服务中心（以下简称服务中心），开展军用标准信息资源窗口服务。</p>
+				<p>服务中心位于北京市朝阳区京顺路7号院7号楼，设置3部服务热线：010-84380230、84380260、84380290，工作时间（上午8:30-11:30，下午13:30-17:30）提供专人服务。</p>
+			</div>
+		</div>
+	</div>
+</div> 
+
+<style>
+@media (max-width: 768px) {
+	.footer-body li {
+	    color: white;
+	    font-size: 12px;
+	}
+}
+</style>
+<div class="footer-body" style="background-color: #0566ab;font-family: arial,tahoma,'Microsoft Yahei','\5b8b\4f53',sans-serif;">
+	<div class="container">
+		<div class="row" style="padding:15px 0;">
+			<div class="col-sm-5 col-xs-6">
+				<ul style="list-style:none;">
+					<li style="margin: 10px 0px;"><h6 style="color:white;font-weight: bold;line-height: 1.1;font-size: 14px;">版权所有 侵权必究</h6></li>
+					<li style="margin: 2px 0px;color:#bec8ce;" >主管：国家市场监督管理总局 国家标准化管理委员会</li>
+					<li style="margin: 2px 0px;color:#bec8ce;" >主办：国家市场监督管理总局国家标准技术审评中心</li>
+					<li style="margin: 2px 0px;color:#bec8ce;" >技术支持：北京中标赛宇科技有限公司</li>
+					<li style="margin: 2px 0px;color:#bec8ce;" >支持电话：010-82261054</li>
+					<li style="margin: 2px 0px;color:#bec8ce;" >备案号：<a style="color:#bec8ce;" href="https://beian.miit.gov.cn/" target="_blank">京ICP备18022388号-1</a></li>
+				</ul>
+			</div>
+			<div class="col-sm-3 col-xs-6">
+				<ul style="list-style:none;"> 
+					<li style="margin: 10px 0px"><h6 style="color:white;font-weight: bold;line-height: 1.1;font-size: 14px;">重要网站链接</h6></li>
+					<li style="margin: 2px 0px;color:#bec8ce;" ><a style="color:#bec8ce;" href="http://www.samr.gov.cn/" target="_blank">国家市场监督管理总局</a></li>
+					<li style="margin: 2px 0px;color:#bec8ce;" ><a style="color:#bec8ce;" href="http://www.sac.gov.cn/" target="_blank">国家标准化管理委员会</a></li> 
+					<li style="margin: 2px 0px;color:#bec8ce;" ><a style="color:#bec8ce;" href="http://ncse.ac.cn/" target="_blank">国家市场监督管理总局国家标准技术审评中心</a></li>
+				</ul>
+			</div>
+			<div class="col-sm-2" style="text-align:center;">
+				<div>
+				<a href="javascript:return void(0);" onclick="Link('bm31370001')"><img src="https://std.samr.gov.cn/images/jiucuo.png" style="width: 90px;"/></a>
+				</div>
+				<div style="margin-top: 15px;">
+				<a target="_blank" href="https://bszs.conac.cn/sitename?method=show&id=A1B86006AA736CD2E05310291AAC4CC7"><img src="https://std.samr.gov.cn/images/dzjg.png" /></a>
+				</div>
+			</div>
+			<div class="col-sm-2 hidden-xs" style="text-align:center;"> 
+				<img width="100%" src="https://std.samr.gov.cn/images/ewm.jpg" style="width: 128px;height: 128px;"/> 
+			</div>
+		</div>
+	</div>
+	<script>
+        //点击图标
+        function Link(site_code) {
+            //获取该站点需要纠错页面的url地址
+            var url = getCurrUrl();
+            //跳转至纠错系统填写页面 
+            window.open("https://zfwzgl.www.gov.cn/exposure/jiucuo.html?site_code=" + site_code + "&url=" + encodeURIComponent(url));
+        }
+        //获取该站点需要纠错页面的url地址
+        function getCurrUrl() {
+            var url = "";
+            if (parent !== window) {
+                try {
+                    url = window.top.location.href;
+                } catch (e) {
+                    url = window.top.document.referrer;
+                }
+            }
+            if (url.length == 0)
+                url = document.location.href;
+            return url;
+        }
+    </script>
+</div>
+</body>
+</html>

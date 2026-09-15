@@ -1,0 +1,263 @@
+----- PAGE 1 -----
+RELIABILITY | RESILIENCE | SECURITY  
+POWERING TODAY.  PROTECTING TOMORROW.  
+Large Loads Frequently Asked Questions 
+August 2026 
+ 
+Addressing Large Loads on the Grid 
+An increasing number of large commercial and industrial loads are rapidly connecting to the bulk power system (BPS). In 
+particular, “computational loads,” such as data centers (including cryptocurrency and artiﬁcial intelligence), present 
+unique BPS reliability challenges. 
+ 
+NERC established the Large Loads Task Force in August 2024 (now the Large Loads Working Group (LLWG)) to understand 
+emerging large loads  and identify eﬀective pathways for their integration.  The Member Representatives Committee 
+provided written input and hosted a technical panel session at the February 2025 Board meeting. NERC’s Board issued a 
+resolution in February 2025 directing NERC staﬀ to develop an action plan, which provides additional structure to 
+NERC’s eﬀorts related to large loads integration.  The LLWG’s work products highlight some of the unique attributes 
+associated with computational load integration. Through extensive analysis, report development, and engagement 
+conducted to date, NERC has determined that it must act now to integrate computational loads to maintain a reliable 
+and secure BPS.  
+ 
+NEW Watch this video for a brief overview of NERC’s upcoming actions addressing large computational loads with 
+additional details available in the information provided below. 
+ 
+What NERC is Doing Related to Large Computational Loads  
+ 
+NERC’s Large Loads Action Plan is advancing a three-pronged, concurrent approach:  
+• Registration Criteria for Computational Loads : NERC will deﬁne which entities, based on speciﬁc  physical and 
+electrical criteria, will be required to register  with NERC  and comply with  its Reliability Standards. NERC is 
+proposing revisions to its Rules of Procedure to develop new registered entity types known as Computational 
+Load Owners and Computational Load Operators.  
+• Reliability Standards : NERC will develop and adopt Reliability  Standards to establish measurable 
+requirements for registered entities with initial Reliability Standards required to be ﬁnalized by the end of 2026.  
+• Technical Insights: NERC is soliciting industry input through alerts that prompt speciﬁc actions for registered 
+entities. Working groups give NERC and Regional Entity subject matter experts the opportunity to interact with 
+stakeholders on the complexities surrounding the integration of large computational lo ads. White papers and 
+other resources provide detailed analysis and recommendations for stakeholders. 
+ 
+In-Depth: NERC Actions to Address Large Computational Loads 
+ 
+Registration 
+NERC is proposing to establish new registered entity types called Computational Load Owner and Computational Load 
+Operator (that would be subject to Reliability Standards) to address large computational loads. Accordingly, NERC plans 
+to revise its Rules of Procedure, Appendix 5B Statement of Compliance Registry Criteria to account for Computational 
+Load Entities. The draft was posted for an initial 45-day comment period on April 1, 2026,  on the Proposed Changes to 
+Rules of Procedure  web page. In response to feedback, NERC posted proposed revisions that raised the MW and kV 
+thresholds and developed a Computational Load Site deﬁnition, among other reﬁnements  to Appendices 2, 5A, and 5B 
+for additional public comment for 30 days from August 19 to September 18, 2026. Stakeholders can submit 
+comments here, and learn more here. NERC is required to ﬁnalize the registry criteria by the end of 2026.
+----- PAGE 2 -----
+Large Loads FAQs 2 
+ 
+Standards Development 
+In 2026, the drafting team under Project 2026-02 has prioritized foundational Reliability Standards with accompanying 
+Glossary of Terms  updates that align with changes to the registry criteria to support reliable computational load 
+integration. Beginning in 2027, additional standards will examine broader, more integrated changes.  
+ 
+A 30-day initial formal comment period began on August 19, 2026, for stakeholders to provide input into proposed new 
+computational load standards. Project 2026-02 will accept public comments through 8:00 p.m. Eastern on  September 
+18, 2026. Project 2026-02 will accept public comments August 19 through September 18, 2026 with ballot period during 
+the last 10 days.  The proposed Reliability Standards would align with FERC’s July order, and include improved situational 
+awareness, enhanced model ﬁdelity, clear expectations for interfacing entities, and a structured framework for ongoing 
+standards development. 
+ 
+The proposed standards are based on requirements from currently enforced Reliability Standards that have been 
+compliance-vetted and industry supported. Three foundational standards will address:  
+- CLO-001-1 Computational Load Interconnection, Studies, & Modeling Data. 
+- CLO-002-1 Computational Load Operational Data and Communications. 
+- CLO-003-1 Computational Load Protection Coordination and Disturbance Monitoring. 
+ 
+The proposal also includes very limited updates to FAC -001-5 and FAC-002-5 to ensure clarity. Stakeholders can submit 
+comments via the Standards Balloting and Commenting System (SBS) . To vote, Registered Ballot Body members must 
+ﬁrst join the Ballot Pool by  8:00 p.m. Eastern, September 3, 2026, via the link here. Stakeholders should review the 
+Checklist for New Computational Loads  for actions they can take to participate in the process . See below under “How 
+Can I Get Involved?” for more information. 
+ 
+NERC has  also established the Computational Load Short -Term Advisory Group to support the drafting team in the 
+standards development process. There are 105 members on the Advisory Group. In addition, observers interested in this 
+project may join public drafting team meetings. Additional information is on the Reliability Standards Under Development 
+page. 
+ 
+Technical Insights 
+ 
+Large Loads Working Group  
+The Large Loads Working Group (LLWG) focuses on providing ongoing technical guidance, industry collaboration, and 
+reliability risk assessment and monitoring for the increasing integration of large, complex, and rapidly evolving loads. The 
+next meeting will take place on September 15. To join the LLWG, contact Evan Mickelson.  
+ 
+Load Modeling Working Group  
+The Load Modeling Working Group (LMWG) actively engages stakeholders through publications, technical presentations, 
+and discussions focused on modeling loads  for power system studies . The group recently published and will continue 
+updating a technical reference document to inform industry on how to model emer ging loads, including computational 
+loads. The group has developed a tool to help data center and grid planners gather and submit data to improve the 
+datacenter model quality. The LMWG is hosting a workshop on Data Center Modeling September 15-16 and will hold its 
+next meeting on November 17. 
+ 
+To join the working group please contact Hasala Dharmawardena through this request form.
+----- PAGE 3 -----
+Large Loads FAQs 3 
+White Papers  
+In July 2025, NERC published a white paper on Characteristics and Risks of Emerging Large Loads, which found that peak 
+demand (or power consumption) is just one of several factors that can impact BPS reliability, and further action is needed 
+to address these risks.  
+ 
+A second white paper published in March 2026 examined Gaps in Existing Practices, Requirements, and Reliability 
+Standards for Emerging Loads and found that the existing NERC Reliability Standards, as well as industry processes and 
+requirements, are inadequate for the reliable integration of emerging large loads , including computational loads,  onto 
+the BPS.  The white paper  contains recommendations for NERC, the NERC LLWG, registered entities, regulators , and 
+policymakers, as well as others. These recommendations include updates to registration criteria, Reliability Standards, 
+processes, and requirements. 
+ 
+NERC is currently developing a white paper on Large Load Disturbance Performance: Impact Analysis and Ride -Through 
+Recommendations that is targeted to be published in December 2026. The paper analyzes large load customer-initiated 
+load reduction events and factors that impact large load performance during disturbances.  This paper also provides 
+recommendations for ride-through and post -fault active power recovery requirements, as well as other 
+recommendations, to address BPS reliability risks. A Standard Authorization Request on this topic is also being developed 
+by the LLWG. 
+ 
+Reliability Guideline  
+In May 2026, NERC published a Reliability Guideline: Risk Mitigation for Emerging Large Loads. The guideline is intended 
+to supplement (rather than replace) any existing or new Reliability Standards, and it is voluntary and non-binding. The 
+focus is on improving modeling practices, analyses, coordination, data collection eﬀorts, real-time monitoring, and event 
+analysis. NERC received more than 800 comments on the draft guideline and is appreciative of the level of stakeholder 
+engagement. 
+ 
+Industry Alerts  
+In September 2025, NERC issued a Level 2 Industry Recommendation Alert  urging industry participants to take speciﬁc 
+actions to mitigate risks to BPS reliability that may arise from the integration of large loads. Speciﬁcally, the alert focuses 
+on interconnection practices, dynamic modeling , simulation practices, and operational coordination  related to large 
+loads. NERC has posted a report summarizing the key ﬁndings from the Level 2 Alert. 
+ 
+In May 2026, NERC followed up with a Level 3 Essential Action Alert , urging seven near-term mitigation actions that 
+current registered entities should take to address critical reliability risks  from the integration of computa tional loads. 
+The deadline for registered entities to submit their responses was August 3, 2026. 
+ 
+FERC Advance Notice of Proposed Rulemaking  
+NERC submitted comments to the Federal Energy Regulatory Commission’s Advance Notice of Proposed Rulemaking 
+(ANOPR) addressing the reliable interconnection of large loads. NERC previously ﬁled comments in the Commission’s co-
+location proceeding in Docket No. AD24 -11. In the ANOPR comments, NERC cites its support for addressing the rapid 
+growth of these large loads and appreciation for recognition of NERC’s role and its request that future actions reference 
+NERC’ s full authority under Section 215 of the Federal Power Act to include users, owners, and operators of the BPS. 
+Additionally, the comments underscore that NERC is actively collaborating with stakeholders to assess risks and mitigation 
+options and to provide details on potential future eﬀorts. 
+ 
+In March 2026, NERC submitted a supplemental letter to FERC detailing an accelerated action plan, including revising 
+registry criteria and Reliability Standards by the end of 2026. On July 16, 2026, FERC directed NERC to develop and submit
+----- PAGE 4 -----
+Large Loads FAQs 4 
+new or modiﬁed Reliability Standards  and Registry Criteria by December 31, 2026 to address  the reliability risks 
+associated with the integration of computational loads into the BPS. 
+ 
+Technical Conference  
+NERC hosted a technical conference on February 24–25, 2026, to discuss power system risks and associated mitigation 
+pathways for emerging large loads , focusing on computational loads . The conference focused on data centers and the 
+characteristics of computational loads  and demonstrated the need for risk mitigation specific for computational loads . 
+This conference also discussed planning and operations, interconnection processes, facility performance requirements, 
+and other topics related to the integration of computational loads.  
+ 
+How can I get involved in the process? 
+ 
+Collaboration and engagement are at the heart of all of NERC’s initiatives. NERC has transitioned from the data collection 
+and analysis phase to the comment and drafting phase in the development of Reliability Standards . As the process 
+advances, perspective and input from stakeholders remains critical. 
+ 
+In 2026, s takeholders will have the opportunity to provide comment s on the proposed registry criteria and Reliability 
+Standards. NERC has a balloting process for passing Reliability Standards and deﬁnitions, ensuring that all interests are 
+heard in a fair and equitable manner. Working groups and conferences will provide other opportunities to participate. 
+ 
+Stakeholders are encouraged to take the following steps:  
+• File comments on the second round of NERC Registry Criteria on or before September 18, 2026. 
+• Join the NERC listserv to receive important updates on the process. Contact Zach Greene, Manager Strategic 
+Engagement, to join the listserv and ask other questions as needed. 
+• Review the Checklist for New Computational Loads  with links to actions that stakeholders can take right now. 
+These include: 
+ Join the Registered Ballot Body to vote on Reliability Standards. 
+ Create a Standards Balloting System Account to ﬁle comments. 
+ Sign up for an ERO Portal account for more information. 
+• Join the Large Loads Working Group or the Load Modeling Working Group (please see above for the appropriate 
+contact information). 
+ 
+How do I stay informed? 
+ 
+NERC has established a dedicated web page under the Initiatives tab on www.nerc.com to provide information on the 
+Large Loads Action Plan. The page features resources from the LLWG and LMWG as well as Quarterly Updates, meeting 
+presentations, recordings, and more information.  
+ 
+About Computational Loads and Their Unique Needs 
+ 
+What characteristics are typical for large loads? 
+Historically, large loads referred to industrial facilities with high electrical demand. They had long er interconnection1 
+timelines that allowed for more study time under traditional planning processes. Currently, emerging large loads include 
+cryptocurrency mining and data centers (conventional and artiﬁcial intelligence),  which may be referred to as 
+ 
+1 Interconnection refers to the process of integrating new generators, loads, or other equipment into the grid.
+----- PAGE 5 -----
+Large Loads FAQs 5 
+“computational loads.” Many have a shorter timeline to interconnect (months vs. years) to the grid. In addition to these 
+rapid timelines, some emerging large loads introduce new challenges to grid operators like rapid demand ﬂuctuations 
+and increased voltage sensitivity. 
+ 
+What unique factors exist with integrating computational loads onto the grid? 
+Integrating computational large loads onto the grid poses several unique factors, including accurately forecasting future 
+demand, ensuring that transmission and generation capacity keep pace with this demand, and managing rapid 
+ﬂuctuations in consumption during all conditions— including fault and normal— which can destabilize the grid.  
+ 
+What reliability challenges do computational large loads pose to the bulk power system? 
+NERC has observed several reliability challenges resulting from computational loads around timing, data collection and 
+forecasting, and modeling. The LLWG and other NERC assessments describe some of these matters as follows: 
+ 
+Timing 
+Some computational large loads seek to connect within one to two years, and the traditional planning processes are not 
+equipped to ensure the grid can reliably serve this new demand. Additionally, the transmission upgrades required to 
+handle the full new requested loads cannot be completed quickly enough. Since some loads want to connect to the BPS 
+as soon as possible, they submit speculative interconnection requests to ﬁnd the interconnection point with the fastest 
+timeline, signiﬁcantly increasing the number of interconnection studies utilities must perform. Due to the sheer number 
+of interconnection requests, limited time is available to study the implications of these new loads. 
+ 
+Data Collection and Forecasting  
+To better quantify the risk, the electrical characteristics of computational large load facilities, such as ramping capabilities, 
+power electronic settings, internal protection schemes, and coordination across multiple facilities, must be better 
+understood. A better understanding of standardizing large-load modeling for long-term forecasting is needed. 
+ 
+Modeling  
+Current dynamic load models have challenges accurately representing the behavior of emerging large loads such as data 
+centers. Considering the immense growth of these loads, modeling their dynamic behavior has become more critical 
+than ever. NERC’s LMWG is working on modeling methodologies that can accurately simulate these emerging loads’ 
+electrical behavior. These models can be used in studies to assess risks posed by large loads.   
+ 
+Transmission Planning  
+Currently, transmission expansion projects can take a decade from planning to energization. There is a growing urgency 
+for processes to address the shorter-term needs associated with this rapid load growth. Additionally, rapid integration of 
+computational large loads may pose short and long -term resource adequacy concerns, as generation can take years to 
+be operational, longer than some large-load interconnection timelines of months to years. A proactive, holistic approach 
+is necessary for integrating large loads. 
+ 
+Voltage Ride-Through  
+Currently, there are no speciﬁc voltage ride-through Reliability Standards for large loads. Computational large loads house 
+a multitude of sensitive electronics that require ideal electrical conditions. If poor electrical conditions exist (like low 
+voltage), computational loads can disconnect from the grid to protect their equipment from damage. This behavior gives 
+rise to grid stability challenges.
+----- PAGE 6 -----
+Large Loads FAQs 6 
+Co-Locating Large Loads 
+Large loads co -located at generating facilities are referred to as co -located large loads. The Federal Energy Regulatory 
+Commission, NERC, and industry began examining co -located loads in 2024, with additional proceedings in 2025 and 
+2026. Co-located loads present unique considerations as discussed in NERC’s ﬁling in that Commission proceeding. 
+ 
+NERC’s ﬁndings and ﬁlings have highlighted the importance of planning and coordination to reduce risks, while noting 
+that overall reliability impacts will depend on how large loads are implemented, their associated technologies, and any 
+applicable regulatory framework. NERC has emphasized that maintaining diversity across electric generation and 
+consumption will help ensure system reliability and resilience. NERC also noted the complexity of load balancing and 
+forecasting associated with the changing resource mix. The complexity of this load and generation balance will continue 
+to increase as more computational loads connect to the grid. 
+ 
+Continued assessments reﬂect other potential considerations. For example, co -location of a generation unit at a load 
+facility (or vice versa) can result in close dynamic interactions between these loads, generation and parts of the 
+connecting utility, even in scenarios where the utility connection is only the provider of last resort. These dynamic 
+interactions could aﬀect the reliability of the co-located facilities as well as the other users of the interconnected BPS. 
+ 
+Furthermore, generation capacity and the Essential Reliability Services  that are associated with it are critical to 
+maintaining BPS reliability. When generation capacity is removed or reduced from one location, the Essential Reliability 
+Services it provided need to be supplemented elsewhere. Regardless of co -location or direc t connection, suﬃcient 
+Essential Reliability Services will need to be provided on the transforming grid to maintain BPS reliability. All utility -
+connected load facilities rely upon the Essential Reliability Services provided by the interconnected bulk power system.

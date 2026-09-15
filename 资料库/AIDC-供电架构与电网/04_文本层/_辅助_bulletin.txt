@@ -1,0 +1,268 @@
+----- PAGE 1 -----
+RELIABILITY | RESILIENCE | SECURITY 
+POWERING TODAY.  PROTECTING TOMORROW.  
+Standards, Compliance, and Enforcement Bulletin 
+August 31-September 7, 2026 
+ 
+Next week, the Standards, Compliance, and Enforcement  Bulletin will become Weekly Regulatory Updates – a new name to reﬂect its expanded scope 
+better. Along with the Standards, Compliance, Enforcement, Align/SEL, and Board of Trustees updates readers rely on, each issue will include Registration 
+News, creating a more comprehensive weekly source for key regulatory developments. 
+ 
+ 
+ACTIVE STANDARDS POSTINGS 
+Current and Upcoming Ballots (ballot periods close at 8:00 p.m. Eastern) 
+Project Action Start Date End Date 
+Standard Process Manual (SPM) | Modernization of the Standards Process 
+& Procedures (MSPP) Implementation Initial Ballot 10/16/26 10/26/26 
+2026-02 Computational Loads | CLO-001-1, CLO-002-1, CLO-003-1, FAC-
+001-5, FAC-002-5 Initial Ballots and Non-Binding Poll 9/9/26 9/18/26 
+2022-05 Modifications to CIP-008 Reporting Threshold | CIP-003-12, CIP-
+008-8 Initial Ballots and Non-Binding Poll 9/14/26 9/23/26 
+2025-01 Canadian-Speciﬁc Revisions to EOP-012-3 | EOP-012-4 Initial Ballots and Non-Binding Poll 8/21/26 8/31/26 
+Join Ballot Pools 
+Project Action Start Date End Date 
+Standard Process Manual (SPM) | Modernization of the Standards Process 
+& Procedures (MSPP) Implementation Join Ballot Pool 8/26/26 10/9/26 
+2026-02 Computational Loads | CLO-001-1, CLO-002-1, CLO-003-1, FAC-
+001-5, FAC-002-5 Join Ballot Pools 8/19/26 9/3/26 
+2022-05 Modifications to CIP-008 Reporting Threshold | CIP-003-12, CIP-
+008-8 Join Ballot Pools 7/21/26 9/7/26 
+INSIDE THIS EDITION 
+Active Standards Postings | Standards News | Standards Subject to Future Enforcement | Compliance and Enforcement 
+News | Align and SEL News | FERC Action | About the SC&E Bulletin
+----- PAGE 2 -----
+Standards, Compliance, and Enforcement Bulletin | August 31-September 7, 2026 2 
+ 
+Posted for Comment (comment periods close at 8 p.m. Eastern) 
+Project Action Start Date End Date 
+Standard Process Manual (SPM) | Modernization of the Standards Process 
+& Procedures (MSPP) Implementation Submit Comments 8/26/26 10/26/26 
+2026-02 Computational Loads | CLO-001-1, CLO-002-1, CLO-003-1, FAC-
+001-5, FAC-002-5 Submit Comments 8/19/26 9/18/26 
+2027-2029 Reliability Standards Development Plan Submit Comments 8/5/26 9/3/26 
+2022-05 Modifications to CIP-008 Reporting Threshold | CIP-003-12, CIP-
+008-8 Submit Comments 7/21/26 9/23/26 
+2025-01 Canadian-Speciﬁc Revisions to EOP-012-3 | EOP-012-4 Submit Comments 7/16/26 8/31/26 
+STANDARD DRAFTING TEAM NOMINATIONS 
+Project Action Start Date End Date 
+--  -- -- -- 
+ 
+Other draft documents, such as Reliability and Security Guidelines, draft reports, and other Technical Reference Documents, available for comment, can be 
+located on NERC’s “Draft Documents for Comments” webpage. Please refer to this webpage for the active drafts under review and associated comment 
+periods.  
+ 
+ 
+NEW Standards Committee (SC) Action to Support Transition to the 
+Modernization of Standards Processes and Procedures (MSPP) 
+Framework 
+ 
+SC Event Details 
+ 
+At its February 2026 meeting, the NERC Board of Trustees accepted the MSPP Task Force’s 
+Recommendations for Transforming the Reliability Standard Development Framework  to 
+more effectively and efficiently develop Reliability Standards to meet the speed at which 
+risks to the Bulk Power System emerge. Subject to regulatory approval, NERC staff expect 
+implementation of the new standards development process framework as early as quarter 
+3 or 4 of 2027. 
+STANDARDS NEWS 
+Quick Links 
+Register in the SBS 
+Standards Project Prioritization 
+Projected Posting Schedule 
+Project Tracker Spreadsheet 
+2026-2028 Reliability Standards Development Plan (Filed 
+With FERC) 
+One-Stop Shop (Status, Purpose, Implementation Plans, 
+FERC Orders, RSAWs) 
+Submit Questions or Feedback (Help Desk – login with ERO 
+Portal Credentials)
+----- PAGE 3 -----
+Standards, Compliance, and Enforcement Bulletin | August 31-September 7, 2026 3 
+ 
+To facilitate an efficient and orderly transition to the new process, the SC took action during its August 19, 2026 meeting to discontinue the following low 
+and medium priority standards development projects under the current process, with an intent to rec onsider them under the new standards intake and 
+prioritization process envisioned under the MSPP framework: 
+• Project 2020-06 Veriﬁcations of Models and Data for Generators 
+• Project 2022-02 Uniform Modeling Framework for IBR 
+• Project 2023-05 Modiﬁcations to FAC-001 and FAC-002 
+• Project 2023-07 Transmission System Planning Performance Requirements for Extreme Weather 
+• Project 2023-08 Modiﬁcations of MOD-031 Demand and Energy Data 
+• Project 2026-01 PRC-006 Standard Updates 
+• Project 2022-04 EMT Modeling 
+• Project 2017-01 Modiﬁcations to BAL-003 - Phase II 
+• Project 2019-04 Modiﬁcations to PRC-005-6 
+• Project 2021-01 System Model Validation with IBRs 
+• Project 2021-02 Modiﬁcations to VAR-002-4.1 
+• Project 2021-08 Modiﬁcations to FAC-008 
+ 
+Under the new process, the remaining active Standard Authorization Requests for these projects would be submitted as Standard  Initiation Requests 
+and evaluated through the MSPP framework to determine whether standards development activities should be initi ated. Impacted project drafting 
+teams will work with NERC staff to coordinate next steps.   
+ 
+Additional information on this SC action can be found on the SC event detail page linked above.
+----- PAGE 4 -----
+Standards, Compliance, and Enforcement Bulletin | August 31-September 7, 2026 4 
+NEW Final Documents Posted: Project 2025-03 Order No. 901 Operational Studies | August 25, 2026 
+The drafting team is posting the ﬁnal documents of FAC-011-5 - System Operating Limits Methodology for the Operations Horizon  and TOP-003-9 - 
+Transmission Operator and Balancing Authority Data and Information Speciﬁcation and Collection, but is not conducting a ﬁnal ballot, per the Standard 
+Processes Manual (SPM) section 4.13. 
+ 
+NEW Slides and Recording Posted: Project 2026-02 Computational Loads 
+On August 27, the Drafting Team conducted a webinar focusing on the near-term, essential actions to integrate computational loads reliably onto the Bulk-
+Power System. These essential actions address the core, building-block reliability needs for computational loads. 
+ 
+ 
+Upcoming Standards Events 
+Standard drafting team meetings and more can be found on NERC’s calendar. 
+Event Details Time  Date 
+Standards Committee Meeting (Virtual) 1:00-3:00 p.m. Eastern September 16, 2026 
+Standards Committee Meeting (In-person) 9:00 a.m.-2:00 p.m. Mountain October 21, 2026 
+Standards Committee Meeting (Virtual) 1:00-3:00 p.m. Eastern November 18, 2026 
+Standards Committee Meeting (Virtual) 1:00-3:00 p.m. Eastern December 16, 2026 
+ 
+ 
+STANDARDS SUBJECT TO FUTURE ENFORCEMENT 
+U.S. Effective Dates for Reliability Standards 
+U.S. Eﬀective Date Standard(s) Phased-In (Y/N) 
+October 1, 2026 
+PRC-024-4 – Frequency and Voltage Protection Settings for Synchronous Generators, Type 1 and Type 2 
+Wind Resources, and Synchronous Condensers | Implementation Plan No 
+PRC-029-1 – Frequency and Voltage Ride-through Requirements for Inverter-based Resources | 
+Implementation Plan Yes 
+PRC-030-1 – Unexpected Inverter-Based Resource Event Mitigation | Implementation Plan Yes 
+TOP-003-7 - Transmission Operator and Balancing Authority Data and Information Speciﬁcation and 
+Collection | Implementation Plan No 
+April 1, 2027 BAL-007-1.1 – Near-Term Energy Reliability Assessments | Implementation Plan No 
+April 1, 2028 MOD-032-2 – Data for Power System Modeling and Analysis | Implementation Plan Yes 
+July 1, 2028 CIP-002-8 – Cyber Security - BES Cyber System Categorization | Implementation Plan No 
+CIP-003-10 – Cyber Security —  Security Management Controls | Implementation Plan No
+----- PAGE 5 -----
+Standards, Compliance, and Enforcement Bulletin | August 31-September 7, 2026 5 
+ 
+ 
+ 
+REMINDER Small Group Advisory Session s on CIP Standards Addressing 
+Virtualization Effective in 2028 
+NERC, in collaboration with the Regional Entities, will host a Small Group Advisory Session 
+(SGAS) for registered entities to discuss the revised CIP Standard Requirements and 
+modiﬁed deﬁnitions addressing Virtualization developed in Standard Drafting Project 2016 
+02. In addition to reviewing the changes to CIP Reliability Standards with mandatory 
+compliance dates in 2028, the SGAS will also discuss early adoption, “per system capability” 
+reporting, and industry questions. 
+  
+The SGAS will consist of two parts: 
+1. General Session Live Webinar  – A general session will be held to discuss revisions  of the NERC CIP Reliability Standards addressing 
+Virtualization.  The General Session will be held on Monday, December 7, 2026, from 1:00– 3:00 p.m. Eastern . Registration for a one- on-one 
+session is not necessary to participate in this general session. 
+CIP-004-8 – Cyber Security —  Personnel & Training | Implementation Plan No 
+CIP-005-8 – Cyber Security —  Electronic Security Perimeter(s) | Implementation Plan No 
+CIP-006-7.1 – Cyber Security —  Physical Security of BES Cyber Systems | Implementation Plan No 
+CIP-007-7.1 – Cyber Security —  System Security Management | Implementation Plan No 
+CIP-008-7.1 – Cyber Security —  Incident Reporting and Response Planning | Implementation Plan No 
+CIP-009-7.1 – Cyber Security —  Recovery Plans for BES Cyber Systems | Implementation Plan No 
+CIP-010-5 – Cyber Security —  Conﬁguration Change Management and Vulnerability Assessments | 
+Implementation Plan No 
+CIP-011-4.1 – Cyber Security —  Information Protection | Implementation Plan No 
+CIP-013-3 – Cyber Security - Supply Chain Risk Management | Implementation Plan No 
+October 1, 2028 CIP-015-1 – Cyber Security – Internal Network Security Monitoring | Implementation Plan No 
+April 1, 2029 
+IRO-010-6 – Reliability Coordinator Data and Information Speciﬁcation and Collection | Implementation 
+Plan No 
+TOP-003-8 – Transmission Operator and Balancing Authority Data and Information Speciﬁcation and 
+Collection | Implementation Plan No 
+July 1, 2029 CIP-003-11 – Cyber Security – Security Management Controls | Implementation Plan No 
+October 1, 2029 CIP-015-2 – Cyber Security – Internal Network Security Monitoring | Implementation Plan No 
+COMPLIANCE AND ENFORCEMENT NEWS  
+Quick Links 
+Compliance Monitoring & Enforcement Program 
+Resources 
+ERO Enterprise Program Alignment Process 
+Reliability Standard Audit Worksheets 
+Enforcement & Mitigation: Enforcement Actions 
+Align and ERO SEL
+----- PAGE 6 -----
+Standards, Compliance, and Enforcement Bulletin | August 31-September 7, 2026 6 
+2. SGAS One-on-One Sessions – Closed, one-on-one discussions between a registered entity and ERO Enterprise (collectively NERC and Regional 
+Entities) staff about issues pertinent to their compliance with the CIP Reliability Standards for Virtualization. These sessions will occur between 
+Tuesday, December 8, 2026 – Friday, December 11, 2026. NERC will schedule the one -on-one sessions after registration is received and is 
+coordinated with Regional Entity staff. 
+  
+Request for Questions – To provide as much beneﬁt as possible and address topics of concern from industry during the General Session, NERC is requesting 
+industry submit any questions they may have relevant to the revised CIP Reliability Standards by **October 5, 2026**. Please use the link to submit your 
+questions, contact information, and categorization of questions (speciﬁc to CIP Standard or Requirement, Early Adoption/Implementation Plan, Per System 
+Capability, Other). Multiple questions can be submitted in one request.  
+  
+Registration  
+• General Session Live Webinar: Attendance is open to industry. 
+ Link to register for General Session. 
+ Attendees of the General Session are not required to register for a one-on-one session. 
+• SGAS One-on-One Sessions: NERC will accept SGAS one-on-one registrations on a first -come, first -serve basis; so, if the number of requests 
+exceeds the time allotted, NERC will coordinate alternative arrangements. 
+ The one-on-one sessions will be conducted virtually using Teams. 
+ NERC will notify those who request an  SGAS one-on-one session of their appointment time so the registered entity can make staff 
+arrangements accordingly. 
+ Please use the link to submit your request for a one -on-one session. Registration is free and is required by **close of business, October 5, 
+2026**, with the following information: 
+ Requestor name, title and contact information 
+ Company Name and NCR(s) 
+ Region(s) Registered 
+ If the requestor intends to represent multiple entities, provide contact information for someone at each entity represented 
+ Preferred time(s) for appointment (morning/afternoon) 
+   
+For more information or assistance, please contact Davis Jelusich.
+----- PAGE 7 -----
+Standards, Compliance, and Enforcement Bulletin | August 31-September 7, 2026 7 
+Upcoming Compliance Events 
+For a full accounting of upcoming events, please refer to NERC’s calendar. 
+Event Details Time  Date 
+Small Group Advisory Session – CIP Standards Addressing Virtualization 
+Effective in 2028 | General Session 1:00 p.m. – 3:00 p.m. ET December 7, 2026 
+ 
+ 
+ 
+There is no Align and SEL news to report for this week. 
+ 
+ 
+ 
+ 
+ 
+ 
+NEW NERC Seeks Comment on MSPP ROP Revisions 
+The formal comment period for proposed revisions to the ROP  developed as part of the Modernization of Standards Processes and Procedures (MSPP) 
+Initiative is open through October 26 . Stakeholders are invited to review the materials and provide comments on the ROP via this link. Please visit the 
+MSPP initiative page  to ﬁnd additional materials and more information on the supporting charter documents and updates to Appendix 3A (Standards 
+Processes Manual). 
+ 
+REMINDER NERC Seeks Comment on Computational Loads ROP Revisions 
+On August 19, NERC posted proposed revisions to the NERC Rules of Procedure (ROP) Appendix 2, 5A, and 5B addressing computational loads for a 30-day 
+comment period. Based on comments received from the April posting of initial proposed criteria, NERC is proposing additional revisions, including two new 
+functional entity types, called “Computational Load Owner” and “Computational Load Operator.” Details can be found on the Proposed Revisions to the 
+Rules of Procedure page. Comments are due via email on September 18, 2026. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ALIGN AND SEL NEWS 
+Quick Links 
+Align and SEL Resources 
+Align or SEL IT Support 
+Contact 
+BOARD OF TRUSTEES AND FERC ACTION
+----- PAGE 8 -----
+Standards, Compliance, and Enforcement Bulletin | August 31-September 7, 2026 8 
+ 
+Please email Kelsi Boyd with feedback on this bulletin. The current bulletin and old bulletins are available on the website under both Standards News and 
+Compliance News sections. 
+ 
+REGISTRATION: If you would like to receive this bulletin or be added to a NERC distribution list, you must ﬁrst register an account in the ERO Portal. Once 
+you have registered your ERO Portal account, authenticated your credentials with DUO, and completed your proﬁle, please subm it a ticket through the 
+Help Desk by selecting the “NERC Email Distribution List” option under the Applications menu. In the Description Box, please specify which lists you would 
+like your email address to be added to. If you are unsure of which distribution list you would like to be added to, an excellent starting point is the 
+“Committee” page. You can note the committee abbreviation, which represents the distribution list you would like to join, in the Description Box. If you 
+have other NERC-related or speciﬁc Standards projects you are interested in, you may request those as well. If you are interested in general information, 
+please request to be added to the NERC-info distribution list, which covers most NERC announcements. This bulletin is distributed to several lists, including 
+the Standards distribution list (Standards-speciﬁc announcements) and the NERC-info distribution list. 
+ABOUT THE STANDARDS, COMPLIANCE, AND ENFORCEMENT BULLETIN

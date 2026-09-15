@@ -1,0 +1,1051 @@
+<!doctype html>
+<html class="no-js" lang="en-US" >
+<head> <script>
+var gform;gform||(document.addEventListener("gform_main_scripts_loaded",function(){gform.scriptsLoaded=!0}),document.addEventListener("gform/theme/scripts_loaded",function(){gform.themeScriptsLoaded=!0}),window.addEventListener("DOMContentLoaded",function(){gform.domLoaded=!0}),gform={domLoaded:!1,scriptsLoaded:!1,themeScriptsLoaded:!1,isFormEditor:()=>"function"==typeof InitializeEditor,callIfLoaded:function(o){return!(!gform.domLoaded||!gform.scriptsLoaded||!gform.themeScriptsLoaded&&!gform.isFormEditor()||(gform.isFormEditor()&&console.warn("The use of gform.initializeOnLoaded() is deprecated in the form editor context and will be removed in Gravity Forms 3.1."),o(),0))},initializeOnLoaded:function(o){gform.callIfLoaded(o)||(document.addEventListener("gform_main_scripts_loaded",()=>{gform.scriptsLoaded=!0,gform.callIfLoaded(o)}),document.addEventListener("gform/theme/scripts_loaded",()=>{gform.themeScriptsLoaded=!0,gform.callIfLoaded(o)}),window.addEventListener("DOMContentLoaded",()=>{gform.domLoaded=!0,gform.callIfLoaded(o)}))},hooks:{action:{},filter:{}},addAction:function(o,r,e,t){gform.addHook("action",o,r,e,t)},addFilter:function(o,r,e,t){gform.addHook("filter",o,r,e,t)},doAction:function(o){gform.doHook("action",o,arguments)},applyFilters:function(o){return gform.doHook("filter",o,arguments)},removeAction:function(o,r){gform.removeHook("action",o,r)},removeFilter:function(o,r,e){gform.removeHook("filter",o,r,e)},addHook:function(o,r,e,t,n){null==gform.hooks[o][r]&&(gform.hooks[o][r]=[]);var d=gform.hooks[o][r];null==n&&(n=r+"_"+d.length),gform.hooks[o][r].push({tag:n,callable:e,priority:t=null==t?10:t})},doHook:function(r,o,e){var t;if(e=Array.prototype.slice.call(e,1),null!=gform.hooks[r][o]&&((o=gform.hooks[r][o]).sort(function(o,r){return o.priority-r.priority}),o.forEach(function(o){"function"!=typeof(t=o.callable)&&(t=window[t]),"action"==r?t.apply(null,e):e[0]=t.apply(null,e)})),"filter"==r)return e[0]},removeHook:function(o,r,t,n){var e;null!=gform.hooks[o][r]&&(e=(e=gform.hooks[o][r]).filter(function(o,r,e){return!!(null!=n&&n!=o.tag||null!=t&&t!=o.priority)}),gform.hooks[o][r]=e)}});
+</script>
+<meta charset="UTF-8"/><script>if(navigator.userAgent.match(/MSIE|Internet Explorer/i)||navigator.userAgent.match(/Trident\/7\..*?rv:11/i)){var href=document.location.href;if(!href.match(/[?&]nowprocket/)){if(href.indexOf("?")==-1){if(href.indexOf("#")==-1){document.location.href=href+"?nowprocket=1"}else{document.location.href=href.replace("#","?nowprocket=1#")}}else{if(href.indexOf("#")==-1){document.location.href=href+"&nowprocket=1"}else{document.location.href=href.replace("#","&nowprocket=1#")}}}}</script><script>(()=>{class RocketLazyLoadScripts{constructor(){this.v="2.0.5",this.userEvents=["keydown","keyup","mousedown","mouseup","mousemove","mouseover","mouseout","touchmove","touchstart","touchend","touchcancel","wheel","click","dblclick","input"],this.attributeEvents=["onblur","onclick","oncontextmenu","ondblclick","onfocus","onmousedown","onmouseenter","onmouseleave","onmousemove","onmouseout","onmouseover","onmouseup","onmousewheel","onscroll","onsubmit"]}async t(){this.i(),this.o(),/iP(ad|hone)/.test(navigator.userAgent)&&this.h(),this.u(),this.l(this),this.m(),this.k(this),this.p(this),this._(),await Promise.all([this.R(),this.L()]),this.lastBreath=Date.now(),this.S(this),this.P(),this.D(),this.O(),this.M(),await this.C(this.delayedScripts.normal),await this.C(this.delayedScripts.defer),await this.C(this.delayedScripts.async),await this.T(),await this.F(),await this.j(),await this.A(),window.dispatchEvent(new Event("rocket-allScriptsLoaded")),this.everythingLoaded=!0,this.lastTouchEnd&&await new Promise(t=>setTimeout(t,500-Date.now()+this.lastTouchEnd)),this.I(),this.H(),this.U(),this.W()}i(){this.CSPIssue=sessionStorage.getItem("rocketCSPIssue"),document.addEventListener("securitypolicyviolation",t=>{this.CSPIssue||"script-src-elem"!==t.violatedDirective||"data"!==t.blockedURI||(this.CSPIssue=!0,sessionStorage.setItem("rocketCSPIssue",!0))},{isRocket:!0})}o(){window.addEventListener("pageshow",t=>{this.persisted=t.persisted,this.realWindowLoadedFired=!0},{isRocket:!0}),window.addEventListener("pagehide",()=>{this.onFirstUserAction=null},{isRocket:!0})}h(){let t;function e(e){t=e}window.addEventListener("touchstart",e,{isRocket:!0}),window.addEventListener("touchend",function i(o){o.changedTouches[0]&&t.changedTouches[0]&&Math.abs(o.changedTouches[0].pageX-t.changedTouches[0].pageX)<10&&Math.abs(o.changedTouches[0].pageY-t.changedTouches[0].pageY)<10&&o.timeStamp-t.timeStamp<200&&(window.removeEventListener("touchstart",e,{isRocket:!0}),window.removeEventListener("touchend",i,{isRocket:!0}),"INPUT"===o.target.tagName&&"text"===o.target.type||(o.target.dispatchEvent(new TouchEvent("touchend",{target:o.target,bubbles:!0})),o.target.dispatchEvent(new MouseEvent("mouseover",{target:o.target,bubbles:!0})),o.target.dispatchEvent(new PointerEvent("click",{target:o.target,bubbles:!0,cancelable:!0,detail:1,clientX:o.changedTouches[0].clientX,clientY:o.changedTouches[0].clientY})),event.preventDefault()))},{isRocket:!0})}q(t){this.userActionTriggered||("mousemove"!==t.type||this.firstMousemoveIgnored?"keyup"===t.type||"mouseover"===t.type||"mouseout"===t.type||(this.userActionTriggered=!0,this.onFirstUserAction&&this.onFirstUserAction()):this.firstMousemoveIgnored=!0),"click"===t.type&&t.preventDefault(),t.stopPropagation(),t.stopImmediatePropagation(),"touchstart"===this.lastEvent&&"touchend"===t.type&&(this.lastTouchEnd=Date.now()),"click"===t.type&&(this.lastTouchEnd=0),this.lastEvent=t.type,t.composedPath&&t.composedPath()[0].getRootNode()instanceof ShadowRoot&&(t.rocketTarget=t.composedPath()[0]),this.savedUserEvents.push(t)}u(){this.savedUserEvents=[],this.userEventHandler=this.q.bind(this),this.userEvents.forEach(t=>window.addEventListener(t,this.userEventHandler,{passive:!1,isRocket:!0})),document.addEventListener("visibilitychange",this.userEventHandler,{isRocket:!0})}U(){this.userEvents.forEach(t=>window.removeEventListener(t,this.userEventHandler,{passive:!1,isRocket:!0})),document.removeEventListener("visibilitychange",this.userEventHandler,{isRocket:!0}),this.savedUserEvents.forEach(t=>{(t.rocketTarget||t.target).dispatchEvent(new window[t.constructor.name](t.type,t))})}m(){const t="return false",e=Array.from(this.attributeEvents,t=>"data-rocket-"+t),i="["+this.attributeEvents.join("],[")+"]",o="[data-rocket-"+this.attributeEvents.join("],[data-rocket-")+"]",s=(e,i,o)=>{o&&o!==t&&(e.setAttribute("data-rocket-"+i,o),e["rocket"+i]=new Function("event",o),e.setAttribute(i,t))};new MutationObserver(t=>{for(const n of t)"attributes"===n.type&&(n.attributeName.startsWith("data-rocket-")||this.everythingLoaded?n.attributeName.startsWith("data-rocket-")&&this.everythingLoaded&&this.N(n.target,n.attributeName.substring(12)):s(n.target,n.attributeName,n.target.getAttribute(n.attributeName))),"childList"===n.type&&n.addedNodes.forEach(t=>{if(t.nodeType===Node.ELEMENT_NODE)if(this.everythingLoaded)for(const i of[t,...t.querySelectorAll(o)])for(const t of i.getAttributeNames())e.includes(t)&&this.N(i,t.substring(12));else for(const e of[t,...t.querySelectorAll(i)])for(const t of e.getAttributeNames())this.attributeEvents.includes(t)&&s(e,t,e.getAttribute(t))})}).observe(document,{subtree:!0,childList:!0,attributeFilter:[...this.attributeEvents,...e]})}I(){this.attributeEvents.forEach(t=>{document.querySelectorAll("[data-rocket-"+t+"]").forEach(e=>{this.N(e,t)})})}N(t,e){const i=t.getAttribute("data-rocket-"+e);i&&(t.setAttribute(e,i),t.removeAttribute("data-rocket-"+e))}k(t){Object.defineProperty(HTMLElement.prototype,"onclick",{get(){return this.rocketonclick||null},set(e){this.rocketonclick=e,this.setAttribute(t.everythingLoaded?"onclick":"data-rocket-onclick","this.rocketonclick(event)")}})}S(t){function e(e,i){let o=e[i];e[i]=null,Object.defineProperty(e,i,{get:()=>o,set(s){t.everythingLoaded?o=s:e["rocket"+i]=o=s}})}e(document,"onreadystatechange"),e(window,"onload"),e(window,"onpageshow");try{Object.defineProperty(document,"readyState",{get:()=>t.rocketReadyState,set(e){t.rocketReadyState=e},configurable:!0}),document.readyState="loading"}catch(t){console.log("WPRocket DJE readyState conflict, bypassing")}}l(t){this.originalAddEventListener=EventTarget.prototype.addEventListener,this.originalRemoveEventListener=EventTarget.prototype.removeEventListener,this.savedEventListeners=[],EventTarget.prototype.addEventListener=function(e,i,o){o&&o.isRocket||!t.B(e,this)&&!t.userEvents.includes(e)||t.B(e,this)&&!t.userActionTriggered||e.startsWith("rocket-")||t.everythingLoaded?t.originalAddEventListener.call(this,e,i,o):(t.savedEventListeners.push({target:this,remove:!1,type:e,func:i,options:o}),"mouseenter"!==e&&"mouseleave"!==e||t.originalAddEventListener.call(this,e,t.savedUserEvents.push,o))},EventTarget.prototype.removeEventListener=function(e,i,o){o&&o.isRocket||!t.B(e,this)&&!t.userEvents.includes(e)||t.B(e,this)&&!t.userActionTriggered||e.startsWith("rocket-")||t.everythingLoaded?t.originalRemoveEventListener.call(this,e,i,o):t.savedEventListeners.push({target:this,remove:!0,type:e,func:i,options:o})}}J(t,e){this.savedEventListeners=this.savedEventListeners.filter(i=>{let o=i.type,s=i.target||window;return e!==o||t!==s||(this.B(o,s)&&(i.type="rocket-"+o),this.$(i),!1)})}H(){EventTarget.prototype.addEventListener=this.originalAddEventListener,EventTarget.prototype.removeEventListener=this.originalRemoveEventListener,this.savedEventListeners.forEach(t=>this.$(t))}$(t){t.remove?this.originalRemoveEventListener.call(t.target,t.type,t.func,t.options):this.originalAddEventListener.call(t.target,t.type,t.func,t.options)}p(t){let e;function i(e){return t.everythingLoaded?e:e.split(" ").map(t=>"load"===t||t.startsWith("load.")?"rocket-jquery-load":t).join(" ")}function o(o){function s(e){const s=o.fn[e];o.fn[e]=o.fn.init.prototype[e]=function(){return this[0]===window&&t.userActionTriggered&&("string"==typeof arguments[0]||arguments[0]instanceof String?arguments[0]=i(arguments[0]):"object"==typeof arguments[0]&&Object.keys(arguments[0]).forEach(t=>{const e=arguments[0][t];delete arguments[0][t],arguments[0][i(t)]=e})),s.apply(this,arguments),this}}if(o&&o.fn&&!t.allJQueries.includes(o)){const e={DOMContentLoaded:[],"rocket-DOMContentLoaded":[]};for(const t in e)document.addEventListener(t,()=>{e[t].forEach(t=>t())},{isRocket:!0});o.fn.ready=o.fn.init.prototype.ready=function(i){function s(){parseInt(o.fn.jquery)>2?setTimeout(()=>i.bind(document)(o)):i.bind(document)(o)}return"function"==typeof i&&(t.realDomReadyFired?!t.userActionTriggered||t.fauxDomReadyFired?s():e["rocket-DOMContentLoaded"].push(s):e.DOMContentLoaded.push(s)),this},s("on"),s("one"),s("off"),t.allJQueries.push(o)}e=o}t.allJQueries=[],o(window.jQuery),Object.defineProperty(window,"jQuery",{get:()=>e,set(t){o(t)}})}P(){const t=new Map;document.write=document.writeln=function(e){const i=document.currentScript,o=document.createRange(),s=i.parentElement;let n=t.get(i);void 0===n&&(n=i.nextSibling,t.set(i,n));const c=document.createDocumentFragment();o.setStart(c,0),c.appendChild(o.createContextualFragment(e)),s.insertBefore(c,n)}}async R(){return new Promise(t=>{this.userActionTriggered?t():this.onFirstUserAction=t})}async L(){return new Promise(t=>{document.addEventListener("DOMContentLoaded",()=>{this.realDomReadyFired=!0,t()},{isRocket:!0})})}async j(){return this.realWindowLoadedFired?Promise.resolve():new Promise(t=>{window.addEventListener("load",t,{isRocket:!0})})}M(){this.pendingScripts=[];this.scriptsMutationObserver=new MutationObserver(t=>{for(const e of t)e.addedNodes.forEach(t=>{"SCRIPT"!==t.tagName||!t.src||t.noModule||t.isWPRocket||this.pendingScripts.push({script:t,promise:new Promise(e=>{const i=()=>{const i=this.pendingScripts.findIndex(e=>e.script===t);i>=0&&this.pendingScripts.splice(i,1),e()};t.addEventListener("load",i,{isRocket:!0}),t.addEventListener("error",i,{isRocket:!0}),setTimeout(i,1e3)})})})}),this.scriptsMutationObserver.observe(document,{childList:!0,subtree:!0})}async F(){await this.X(),this.pendingScripts.length?(await this.pendingScripts[0].promise,await this.F()):this.scriptsMutationObserver.disconnect()}D(){this.delayedScripts={normal:[],async:[],defer:[]},document.querySelectorAll("script[type$=rocketlazyloadscript]").forEach(t=>{t.hasAttribute("data-rocket-src")?t.hasAttribute("async")&&!1!==t.async?this.delayedScripts.async.push(t):t.hasAttribute("defer")&&!1!==t.defer||"module"===t.getAttribute("data-rocket-type")?this.delayedScripts.defer.push(t):this.delayedScripts.normal.push(t):this.delayedScripts.normal.push(t)})}async _(){await this.L();let t=[];document.querySelectorAll("script[type$=rocketlazyloadscript][data-rocket-src]").forEach(e=>{let i=e.getAttribute("data-rocket-src");if(i&&!i.startsWith("data:")){i.startsWith("//")&&(i=location.protocol+i);try{const o=new URL(i).origin;o!==location.origin&&t.push({src:o,crossOrigin:e.crossOrigin||"module"===e.getAttribute("data-rocket-type")})}catch(t){}}}),t=[...new Map(t.map(t=>[JSON.stringify(t),t])).values()],this.Y(t,"preconnect")}async G(t){if(await this.K(),!0!==t.noModule||!("noModule"in HTMLScriptElement.prototype))return new Promise(e=>{let i;function o(){(i||t).setAttribute("data-rocket-status","executed"),e()}try{if(navigator.userAgent.includes("Firefox/")||""===navigator.vendor||this.CSPIssue)i=document.createElement("script"),[...t.attributes].forEach(t=>{let e=t.nodeName;"type"!==e&&("data-rocket-type"===e&&(e="type"),"data-rocket-src"===e&&(e="src"),i.setAttribute(e,t.nodeValue))}),t.text&&(i.text=t.text),t.nonce&&(i.nonce=t.nonce),i.hasAttribute("src")?(i.addEventListener("load",o,{isRocket:!0}),i.addEventListener("error",()=>{i.setAttribute("data-rocket-status","failed-network"),e()},{isRocket:!0}),setTimeout(()=>{i.isConnected||e()},1)):(i.text=t.text,o()),i.isWPRocket=!0,t.parentNode.replaceChild(i,t);else{const i=t.getAttribute("data-rocket-type"),s=t.getAttribute("data-rocket-src");i?(t.type=i,t.removeAttribute("data-rocket-type")):t.removeAttribute("type"),t.addEventListener("load",o,{isRocket:!0}),t.addEventListener("error",i=>{this.CSPIssue&&i.target.src.startsWith("data:")?(console.log("WPRocket: CSP fallback activated"),t.removeAttribute("src"),this.G(t).then(e)):(t.setAttribute("data-rocket-status","failed-network"),e())},{isRocket:!0}),s?(t.fetchPriority="high",t.removeAttribute("data-rocket-src"),t.src=s):t.src="data:text/javascript;base64,"+window.btoa(unescape(encodeURIComponent(t.text)))}}catch(i){t.setAttribute("data-rocket-status","failed-transform"),e()}});t.setAttribute("data-rocket-status","skipped")}async C(t){const e=t.shift();return e?(e.isConnected&&await this.G(e),this.C(t)):Promise.resolve()}O(){this.Y([...this.delayedScripts.normal,...this.delayedScripts.defer,...this.delayedScripts.async],"preload")}Y(t,e){this.trash=this.trash||[];let i=!0;var o=document.createDocumentFragment();t.forEach(t=>{const s=t.getAttribute&&t.getAttribute("data-rocket-src")||t.src;if(s&&!s.startsWith("data:")){const n=document.createElement("link");n.href=s,n.rel=e,"preconnect"!==e&&(n.as="script",n.fetchPriority=i?"high":"low"),t.getAttribute&&"module"===t.getAttribute("data-rocket-type")&&(n.crossOrigin=!0),t.crossOrigin&&(n.crossOrigin=t.crossOrigin),t.integrity&&(n.integrity=t.integrity),t.nonce&&(n.nonce=t.nonce),o.appendChild(n),this.trash.push(n),i=!1}}),document.head.appendChild(o)}W(){this.trash.forEach(t=>t.remove())}async T(){try{document.readyState="interactive"}catch(t){}this.fauxDomReadyFired=!0;try{await this.K(),this.J(document,"readystatechange"),document.dispatchEvent(new Event("rocket-readystatechange")),await this.K(),document.rocketonreadystatechange&&document.rocketonreadystatechange(),await this.K(),this.J(document,"DOMContentLoaded"),document.dispatchEvent(new Event("rocket-DOMContentLoaded")),await this.K(),this.J(window,"DOMContentLoaded"),window.dispatchEvent(new Event("rocket-DOMContentLoaded"))}catch(t){console.error(t)}}async A(){try{document.readyState="complete"}catch(t){}try{await this.K(),this.J(document,"readystatechange"),document.dispatchEvent(new Event("rocket-readystatechange")),await this.K(),document.rocketonreadystatechange&&document.rocketonreadystatechange(),await this.K(),this.J(window,"load"),window.dispatchEvent(new Event("rocket-load")),await this.K(),window.rocketonload&&window.rocketonload(),await this.K(),this.allJQueries.forEach(t=>t(window).trigger("rocket-jquery-load")),await this.K(),this.J(window,"pageshow");const t=new Event("rocket-pageshow");t.persisted=this.persisted,window.dispatchEvent(t),await this.K(),window.rocketonpageshow&&window.rocketonpageshow({persisted:this.persisted})}catch(t){console.error(t)}}async K(){Date.now()-this.lastBreath>45&&(await this.X(),this.lastBreath=Date.now())}async X(){return document.hidden?new Promise(t=>setTimeout(t)):new Promise(t=>requestAnimationFrame(t))}B(t,e=window){return e===document&&"readystatechange"===t||(e===document&&"DOMContentLoaded"===t||(e===window&&"DOMContentLoaded"===t||(e===window&&"load"===t||e===window&&"pageshow"===t)))}static run(){(new RocketLazyLoadScripts).t()}}RocketLazyLoadScripts.run()})();
+</script>
+	<!-- Google Tag Manager -->
+	<script type="text/rocketlazyloadscript">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-P967S9WC');</script>
+	<!-- End Google Tag Manager -->
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="msvalidate.01" content="29B99FB2D9103EBC37193C66973C1448" />
+	<meta name='robots' content='index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' />
+<script data-cfasync="false" data-cookieconsent="ignore" data-ezscrex="false" data-no-defer="1" data-pagespeed-no-defer>
+var ctPublicFunctions = {"_ajax_nonce":"62f89f818f","_rest_nonce":"a272ce178b","_ajax_url":"\/wp-admin\/admin-ajax.php","_rest_url":"https:\/\/www.delloro.com\/wp-json\/","data__cookies_type":"alternative","data__ajax_type":"rest","bot_detector_enabled":true,"data__frontend_data_log_enabled":1,"data__bot_detector_enabled":1,"cookiePrefix":"","wprocket_detected":true,"host_url":"www.delloro.com","text__ee_click_to_select":"Click to select the whole data","text__ee_original_email":"The complete one is","text__ee_got_it":"Got it","text__ee_blocked":"Blocked","text__ee_cannot_connect":"Cannot connect","text__ee_cannot_decode":"Can not decode email. Unknown reason","text__ee_email_decoder":"CleanTalk email decoder","text__ee_wait_for_decoding":"The magic is on the way!","text__ee_decoding_process":"Please wait a few seconds while we decode the contact data."}
+</script>
+<script data-cfasync="false" data-cookieconsent="ignore" data-ezscrex="false" data-no-defer="1" data-pagespeed-no-defer>
+var ctPublic = {"_ajax_nonce":"62f89f818f","settings__forms__check_internal":"0","settings__forms__check_external":"0","settings__forms__force_protection":"0","settings__forms__search_test":"1","settings__forms__wc_add_to_cart":"0","bot_detector_enabled":true,"settings__sfw__anti_crawler":0,"blog_home":"https:\/\/www.delloro.com\/","pixel__setting":"0","pixel__enabled":false,"pixel__url":null,"data__email_check_before_post":"1","data__email_check_exist_post":"0","data__cookies_type":"alternative","data__key_is_ok":true,"data__visible_fields_required":true,"wl_brandname":"Anti-Spam by CleanTalk","wl_brandname_short":"CleanTalk","ct_checkjs_key":"931ee87510dd63833384f2943c76f14556a67be501b3cfdf831a489c872f4303","emailEncoderPassKey":"a64ac159d7475f5d9ee4fb5d78f6de2e","bot_detector_forms_excluded":"W10=","advancedCacheExists":true,"varnishCacheExists":false,"wc_ajax_add_to_cart":false}
+</script>
+
+	<!-- This site is optimized with the Yoast SEO plugin v28.4 - https://yoast.com/product/yoast-seo-wordpress/ -->
+	<title>Data Center Physical Infrastructure Market Forecast to Reach $120 Billion by 2030, According to Dell’Oro Group - Dell&#039;Oro Group</title>
+<link data-rocket-prefetch href="https://fd.cleantalk.org" rel="dns-prefetch">
+<link data-rocket-prefetch href="https://diffuser-cdn.app-us1.com" rel="dns-prefetch">
+<link data-rocket-prefetch href="https://fonts.googleapis.com" rel="dns-prefetch">
+<link data-rocket-prefetch href="https://stats.wp.com" rel="dns-prefetch">
+<link data-rocket-preload as="style" href="https://fonts.googleapis.com/css?family=Open%20Sans%3A300%2C400%2C500%2C600%2C700%2C800&#038;display=swap" rel="preload">
+<link href="https://fonts.googleapis.com/css?family=Open%20Sans%3A300%2C400%2C500%2C600%2C700%2C800&#038;display=swap" media="print" onload="this.media=&#039;all&#039;" rel="stylesheet">
+<noscript data-wpr-hosted-gf-parameters=""><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open%20Sans%3A300%2C400%2C500%2C600%2C700%2C800&#038;display=swap"></noscript><link rel="preload" data-rocket-preload as="image" href="https://www.delloro.com/wp-content/uploads/2019/04/logo.svg" fetchpriority="high">
+	<meta name="description" content="Dell’Oro forecasts Data Center Physical Infrastructure revenue to reach $120 billion by 2030, driven by AI capacity expansion. Learn more" />
+	<link rel="canonical" href="https://www.delloro.com/news/data-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030/" />
+	<meta property="og:locale" content="en_US" />
+	<meta property="og:type" content="article" />
+	<meta property="og:title" content="Data Center Physical Infrastructure Market Forecast to Reach $120 Billion by 2030, According to Dell’Oro Group - Dell&#039;Oro Group" />
+	<meta property="og:description" content="Dell’Oro forecasts Data Center Physical Infrastructure revenue to reach $120 billion by 2030, driven by AI capacity expansion. Learn more" />
+	<meta property="og:url" content="https://www.delloro.com/news/data-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030/" />
+	<meta property="og:site_name" content="Dell&#039;Oro Group" />
+	<meta property="og:image" content="https://www.delloro.com/wp-content/uploads/2026/06/Modern-Data-Center-Interior-with-Rows-of-Servers-Cooling-Systems-and-Infrastructure.png" />
+	<meta property="og:image:width" content="800" />
+	<meta property="og:image:height" content="448" />
+	<meta property="og:image:type" content="image/png" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:label1" content="Est. reading time" />
+	<meta name="twitter:data1" content="4 minutes" />
+	<script type="application/ld+json" class="yoast-schema-graph">{"@context":"https:\/\/schema.org","@graph":[{"@type":"WebPage","@id":"https:\/\/www.delloro.com\/news\/data-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030\/","url":"https:\/\/www.delloro.com\/news\/data-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030\/","name":"Data Center Physical Infrastructure Market Forecast to Reach $120 Billion by 2030, According to Dell’Oro Group - Dell&#039;Oro Group","isPartOf":{"@id":"https:\/\/www.delloro.com\/#website"},"primaryImageOfPage":{"@id":"https:\/\/www.delloro.com\/news\/data-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030\/#primaryimage"},"image":{"@id":"https:\/\/www.delloro.com\/news\/data-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030\/#primaryimage"},"thumbnailUrl":"https:\/\/www.delloro.com\/wp-content\/uploads\/2026\/06\/Modern-Data-Center-Interior-with-Rows-of-Servers-Cooling-Systems-and-Infrastructure.png","datePublished":"2026-08-19T12:00:59+00:00","description":"Dell’Oro forecasts Data Center Physical Infrastructure revenue to reach $120 billion by 2030, driven by AI capacity expansion. Learn more","breadcrumb":{"@id":"https:\/\/www.delloro.com\/news\/data-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030\/#breadcrumb"},"inLanguage":"en-US","potentialAction":[{"@type":"ReadAction","target":["https:\/\/www.delloro.com\/news\/data-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030\/"]}]},{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/www.delloro.com\/news\/data-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030\/#primaryimage","url":"https:\/\/www.delloro.com\/wp-content\/uploads\/2026\/06\/Modern-Data-Center-Interior-with-Rows-of-Servers-Cooling-Systems-and-Infrastructure.png","contentUrl":"https:\/\/www.delloro.com\/wp-content\/uploads\/2026\/06\/Modern-Data-Center-Interior-with-Rows-of-Servers-Cooling-Systems-and-Infrastructure.png","width":800,"height":448},{"@type":"BreadcrumbList","@id":"https:\/\/www.delloro.com\/news\/data-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030\/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https:\/\/www.delloro.com\/"},{"@type":"ListItem","position":2,"name":"Data Center Physical Infrastructure Market Forecast to Reach $120 Billion by 2030, According to Dell’Oro Group"}]},{"@type":"WebSite","@id":"https:\/\/www.delloro.com\/#website","url":"https:\/\/www.delloro.com\/","name":"Dell&#039;Oro Group","description":"Placing the power of telecommunications, security, networks, and data center market research in your hands","publisher":{"@id":"https:\/\/www.delloro.com\/#organization"},"potentialAction":[{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https:\/\/www.delloro.com\/?s={search_term_string}"},"query-input":{"@type":"PropertyValueSpecification","valueRequired":true,"valueName":"search_term_string"}}],"inLanguage":"en-US"},{"@type":"Organization","@id":"https:\/\/www.delloro.com\/#organization","name":"Dell'Oro Group","url":"https:\/\/www.delloro.com\/","logo":{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/www.delloro.com\/#\/schema\/logo\/image\/","url":"https:\/\/www.delloro.com\/wp-content\/uploads\/2019\/04\/logo.svg","contentUrl":"https:\/\/www.delloro.com\/wp-content\/uploads\/2019\/04\/logo.svg","width":1,"height":1,"caption":"Dell'Oro Group"},"image":{"@id":"https:\/\/www.delloro.com\/#\/schema\/logo\/image\/"}}]}</script>
+	<!-- / Yoast SEO plugin. -->
+
+
+<link rel='dns-prefetch' href='//fd.cleantalk.org' />
+<link rel='dns-prefetch' href='//ajax.googleapis.com' />
+<link href='https://fonts.gstatic.com' crossorigin rel='preconnect' />
+<link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="https://www.delloro.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.delloro.com%2Fnews%2Fdata-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030%2F" />
+<link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="https://www.delloro.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.delloro.com%2Fnews%2Fdata-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030%2F&#038;format=xml" />
+<style id="wp-img-auto-sizes-contain-inline-css">
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+
+<link data-minify="1" rel='stylesheet' id='twb-global-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/form-maker/booster/assets/css/global.css?ver=1788982556' media='all' />
+<link data-minify="1" rel='stylesheet' id='pt-cv-public-style-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/content-views-query-and-display-post-page/public/assets/css/cv.css?ver=1788982556' media='all' />
+
+<link data-minify="1" rel='stylesheet' id='sdm-styles-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/simple-download-monitor/css/sdm_wp_styles.css?ver=1788982556' media='all' />
+<link data-minify="1" rel='stylesheet' id='sdm_fancy2_styles-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/simple-download-monitor/includes/templates-related/fancy2/sdm-fancy-2-styles.css?ver=1788982556' media='all' />
+
+<link rel='stylesheet' id='cleantalk-public-css-css' href='https://www.delloro.com/wp-content/plugins/cleantalk-spam-protect/css/cleantalk-public.min.css?ver=6.87_1788385478' media='all' />
+<link rel='stylesheet' id='cleantalk-email-decoder-css-css' href='https://www.delloro.com/wp-content/plugins/cleantalk-spam-protect/css/cleantalk-email-decoder.min.css?ver=6.87_1788385478' media='all' />
+<link data-minify="1" rel='stylesheet' id='ppress-frontend-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/wp-user-avatar/assets/css/frontend.min.css?ver=1788982556' media='all' />
+<link rel='stylesheet' id='ppress-flatpickr-css' href='https://www.delloro.com/wp-content/plugins/wp-user-avatar/assets/flatpickr/flatpickr.min.css?ver=4.17.3' media='all' />
+<link rel='stylesheet' id='ppress-select2-css' href='https://www.delloro.com/wp-content/plugins/wp-user-avatar/assets/select2/select2.min.css?ver=7.1' media='all' />
+<link data-minify="1" rel='stylesheet' id='megamenu-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-content/uploads/maxmegamenu/style.css?ver=1788982556' media='all' />
+<link data-minify="1" rel='stylesheet' id='dashicons-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-includes/css/dashicons.min.css?ver=1788982556' media='all' />
+<link data-minify="1" rel='stylesheet' id='megamenu-genericons-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/megamenu-pro/icons/genericons/genericons/genericons.css?ver=1788982556' media='all' />
+<link data-minify="1" rel='stylesheet' id='megamenu-fontawesome-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/megamenu-pro/icons/fontawesome/css/font-awesome.min.css?ver=1788982556' media='all' />
+<link data-minify="1" rel='stylesheet' id='megamenu-fontawesome5-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/megamenu-pro/icons/fontawesome5/css/all.min.css?ver=1788982556' media='all' />
+<link data-minify="1" rel='stylesheet' id='megamenu-fontawesome6-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/megamenu-pro/icons/fontawesome6/css/all.min.css?ver=1788982556' media='all' />
+<link rel='stylesheet' id='search-filter-plugin-styles-css' href='https://www.delloro.com/wp-content/plugins/search-filter-pro/public/assets/css/search-filter.min.css?ver=2.5.21' media='all' />
+<link data-minify="1" rel='stylesheet' id='main-stylesheet-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-content/themes/DellOro-Group/dist/assets/css/app.css?ver=1788982557' media='all' />
+<link data-minify="1" rel='stylesheet' id='wp-pagenavi-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/wp-pagenavi/pagenavi-css.css?ver=1788982557' media='all' />
+<link data-minify="1" rel='stylesheet' id='heateor_sss_frontend_css-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/sassy-social-share/public/css/sassy-social-share-public.css?ver=1788982557' media='all' />
+<style id="heateor_sss_frontend_css-inline-css">
+.heateor_sss_button_instagram span.heateor_sss_svg,a.heateor_sss_instagram span.heateor_sss_svg{background:radial-gradient(circle at 30% 107%,#fdf497 0,#fdf497 5%,#fd5949 45%,#d6249f 60%,#285aeb 90%)}div.heateor_sss_horizontal_sharing a.heateor_sss_button_instagram span{background:#000000!important;}div.heateor_sss_standard_follow_icons_container a.heateor_sss_button_instagram span{background:#000000}.heateor_sss_horizontal_sharing .heateor_sss_svg,.heateor_sss_standard_follow_icons_container .heateor_sss_svg{background-color:#000000!important;background:#000000!important;color:#fff;border-width:0px;border-style:solid;border-color:transparent}.heateor_sss_horizontal_sharing .heateorSssTCBackground{color:#666}.heateor_sss_horizontal_sharing span.heateor_sss_svg:hover,.heateor_sss_standard_follow_icons_container span.heateor_sss_svg:hover{border-color:transparent;}.heateor_sss_vertical_sharing span.heateor_sss_svg,.heateor_sss_floating_follow_icons_container span.heateor_sss_svg{color:#fff;border-width:0px;border-style:solid;border-color:transparent;}.heateor_sss_vertical_sharing .heateorSssTCBackground{color:#666;}.heateor_sss_vertical_sharing span.heateor_sss_svg:hover,.heateor_sss_floating_follow_icons_container span.heateor_sss_svg:hover{border-color:transparent;}@media screen and (max-width:783px) {.heateor_sss_vertical_sharing{display:none!important}}
+/*# sourceURL=heateor_sss_frontend_css-inline-css */
+</style>
+<link rel='stylesheet' id='tablepress-default-css' href='https://www.delloro.com/wp-content/tablepress-combined.min.css?ver=68' media='all' />
+<script data-minify="1" id="jquery-js" src="https://www.delloro.com/wp-content/cache/min/1/ajax/libs/jquery/3.2.1/jquery.min.js?ver=1785864044" data-rocket-defer defer></script>
+<script data-minify="1" id="twb-circle-js" src="https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/form-maker/booster/assets/js/circle-progress.js?ver=1785864044" data-rocket-defer defer></script>
+<script id="twb-global-js-extra">
+var twb = {"nonce":"d3fbac929c","ajax_url":"https://www.delloro.com/wp-admin/admin-ajax.php","plugin_url":"https://www.delloro.com/wp-content/plugins/form-maker/booster","href":"https://www.delloro.com/wp-admin/admin.php?page=twb_form-maker"};
+var twb = {"nonce":"d3fbac929c","ajax_url":"https://www.delloro.com/wp-admin/admin-ajax.php","plugin_url":"https://www.delloro.com/wp-content/plugins/form-maker/booster","href":"https://www.delloro.com/wp-admin/admin.php?page=twb_form-maker"};
+//# sourceURL=twb-global-js-extra
+</script>
+<script data-minify="1" id="twb-global-js" src="https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/form-maker/booster/assets/js/global.js?ver=1785864044" data-rocket-defer defer></script>
+<script id="apbct-public-bundle.min-js-js" src="https://www.delloro.com/wp-content/plugins/cleantalk-spam-protect/js/apbct-public-bundle.min.js?ver=6.87_1788385478" data-rocket-defer defer></script>
+<script data-minify="1" async data-wp-strategy="async" id="ct_bot_detector-js" src="https://www.delloro.com/wp-content/cache/min/1/ct-bot-detector-wrapper.js?ver=1785864044"></script>
+<script id="sdm-scripts-js-extra">
+var sdm_ajax_script = {"ajaxurl":"https://www.delloro.com/wp-admin/admin-ajax.php"};
+//# sourceURL=sdm-scripts-js-extra
+</script>
+<script data-minify="1" id="sdm-scripts-js" src="https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/simple-download-monitor/js/sdm_wp_scripts.js?ver=1785864044" data-rocket-defer defer></script>
+<script id="ppress-flatpickr-js" src="https://www.delloro.com/wp-content/plugins/wp-user-avatar/assets/flatpickr/flatpickr.min.js?ver=4.17.3" data-rocket-defer defer></script>
+<script id="ppress-select2-js" src="https://www.delloro.com/wp-content/plugins/wp-user-avatar/assets/select2/select2.min.js?ver=4.17.3" data-rocket-defer defer></script>
+<script id="search-filter-plugin-build-js-extra">
+var SF_LDATA = {"ajax_url":"https://www.delloro.com/wp-admin/admin-ajax.php","home_url":"https://www.delloro.com/","extensions":[]};
+//# sourceURL=search-filter-plugin-build-js-extra
+</script>
+<script id="search-filter-plugin-build-js" src="https://www.delloro.com/wp-content/plugins/search-filter-pro/public/assets/js/search-filter-build.min.js?ver=2.5.21" data-rocket-defer defer></script>
+<script id="search-filter-plugin-chosen-js" src="https://www.delloro.com/wp-content/plugins/search-filter-pro/public/assets/js/chosen.jquery.min.js?ver=2.5.21" data-rocket-defer defer></script>
+<link rel="https://api.w.org/" href="https://www.delloro.com/wp-json/" /><link rel="alternate" title="JSON" type="application/json" href="https://www.delloro.com/wp-json/wp/v2/news_room/29061" /><script type="text/rocketlazyloadscript" data-rocket-type="text/javascript">// <![CDATA[
+		!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];
+		if(!d.getElementById(id)){js=d.createElement(s);js.id=id;
+		js.async=true;
+		js.src="//platform.twitter.com/widgets.js";
+		fjs.parentNode.insertBefore(js,fjs);
+		}}(document,"script","twitter-wjs");
+		// ]]></script>
+<script data-minify="1" src="https://www.delloro.com/wp-content/cache/min/1/in.js?ver=1785864044" type="text/javascript" data-rocket-defer defer>lang: en_US</script><style>
+
+	/* write your CSS code here */
+	.wp-share-icons {
+		display: inline-flex !!mportant;
+		position: relative !!mportant;
+		bottom: -5px !!mportant
+		line-height: 0.5;
+	}
+	}
+	.wp-share-icons span:not(:last-of-type) {
+    	margin-right: 10px;
+	}
+	.printfriendly.pf-button {
+    	display: inline-flex;
+	}
+	
+</style>
+	<style>img#wpstats{display:none}</style>
+		        <link rel="shortcut icon" type="image/png" href="https://www.delloro.com/wp-content/uploads/2019/04/DellOro_Favicon_32x32-1.png">
+        <style class="wpcode-css-snippet">.page-id-19678 .heateor_sss_sharing_container.heateor_sss_horizontal_sharing {
+  display: none;
+}
+
+</style><style id="wp-custom-css">
+.heateor_sss_sharing_container.heateor_sss_horizontal_sharing {
+    display: block !important;
+}
+.mega-sub-menu ul li.menu-item-15241 {
+padding-top:10px;
+}
+
+.menu-botspace a {
+	margin-bottom:15px;
+}
+
+.page-id-128 .cell.large-5{
+width: 100%;
+display: block;
+text-align: center;
+}
+
+.hide-this, .page-id-128 .more-link{
+	display: none;
+}
+.page-id-128 .hide-this{
+	display: block !important;
+}
+
+.single .printfriendly.pf-alignright{
+	display: inline !important;
+}
+
+
+/* WP Tech #5016 
+
+.wp-share-icons{
+	display: inline;
+	top: 4px;
+	position: relative;
+}
+.wp-share-icons img{
+	width: 30px !important;
+	height: 30px;
+}
+
+.wp-share-icons .norm_row.sfsi_wDiv{
+	width: 80px !important;
+	margin-top: -5px;
+}
+.wp-share-icons .norm_row.sfsi_wDiv div{
+	margin-left: 0 !important
+}
+.wptech-share{
+	display: inline-block;	
+}
+
+span.IN-widget{
+	position: relative;
+	top: -5px;
+}
+.single-post .entry-content p a{
+	color: blue !important;
+	text-decoration: underline !important;
+} */
+/* WP Tech #5016 */
+/* WP Tech #5687 */
+.page-id-17196 #n2-ss-2 .n2-ss-slide .n2-ss-layer { padding:0px !important; }
+.page-id-17196 .main-grid, .page-id-17196 .entry-content { padding-top:0px !important; }
+.page-id-17196 #n2-ss-2 .n2-ss-slide .n2-ss-layer .gs-learn-more a:hover { background-color:#00678d; }
+
+
+.n2-ss-slider .n2-ss-section-main-content, div#n2-ss-2 .n2-ss-slider-3, .n2-ss-slider .n2-ss-layer[data-sstype=content]{
+	min-height: 70%;
+}
+div#n2-ss-2 .n-uc-15934646672e3-inner{
+	   /* background: URL("//www.delloro.com/wp-content/uploads/2019/03/home-banner.jpg") 50% 95% / cover no-repeat !important;*/
+	background: url("//www.delloro.com/wp-content/uploads/2019/03/home-banner.jpg") top center no-repeat;
+    animation: animateBg forwards 3s ease-in;
+	/*transition: all 3s !important;*/
+/*	transform: scale(1.5);
+	-webkit-animation: basic-zoom 5s;
+animation: basic-zoom 5s;
+-webkit-transform: scale(1); 
+transform: scale(1);*/
+}
+@keyframes animateBg{
+    from { background-size: 100%; }
+    to { background-size: 120%; }
+}
+/*
+@-webkit-keyframes basic-zoom {
+    100% {
+        -webkit-transform: scale(1.5); 
+    }
+}
+
+@keyframes basic-zoom {
+    100% {
+        transform: scale(1.5); 
+    }
+}
+*/
+div#n2-ss-2 .n2-font-2766b18375a90707769b28a49aebe011-hover{
+font-size:	3.5625rem !important;
+}
+div#n2-ss-2 .n2-font-590df6a2cc014a448fc4704d6dc3bc05-hover{
+font-size: 1.75rem !important;
+font-weight: 400 !important;
+}
+
+.n2-ow.n2-ow-all{
+	text-align: left !important;
+}
+.slider-heading{
+color: #ffffff;
+    margin-bottom: 1.875rem !important;
+    font-size: 3.5625rem !important;
+    font-family: "trajan-pro-3", serif !important;
+    font-weight: 600;
+    display: block;
+    text-transform: uppercase;
+    line-height: normal !important;
+    margin-bottom: 0.125rem !important;
+	}
+p.slider-text{
+font-size: 1.75rem !important;
+    line-height: 1.5 !important;
+    color: #ffffff !important;
+    font-weight: 400;
+    margin-bottom: 3.9375rem !important;
+    letter-spacing: -0.005em !important;
+    max-width: 45.25rem;
+    padding-left: 10px !important;
+}	
+.slider-button{
+	color: #ffffff !important;
+	font-size: 1.375rem !important;
+	font-family: "lato", sans-serif !important;
+	font-weight: 700 !important;
+	padding: 1.125rem 2.8125rem !important;
+	background: #881619 !important;
+}
+.slider-button:hover{
+background: #00678d !important;
+    color: #ffffff  !important;
+}
+.slider-content{
+	margin-top: -45px;
+}
+.n2-ss-slider .n2-ss-layer[data-sstype=content]{
+	overflow: hidden !important;
+}
+/* WP Tech #5687 */
+
+.single-white-paper .main-content-full-width .entry-content {
+    padding-right: 0;
+    padding-left: 0;
+}
+.single-white-paper #ez-toc-container {
+    position: initial !important;
+    float: none;
+    display: inline-block;
+    width: 33%;
+    vertical-align: top;
+}
+.single-white-paper #ez-toc-container + div {
+    float: right;
+    display: inline-block;
+    width: 64%;
+    vertical-align: top;
+}
+.single-white-paper .wp-share-icons {
+    position: initial;
+    display: block;
+    margin-bottom: 25px;
+}
+.single-white-paper .printfriendly.pf-alignright {
+    display: inline !important;
+    float: left;
+    position: absolute;
+    margin-top: -55px;
+    margin-left: 125px;
+}
+
+
+.page-id-19678 li.sf-field-taxonomy-news_type{
+	display: none;
+}
+
+.tabs-title-custom{	
+    font-size: 1.375rem;
+    letter-spacing: 0.01rem;
+    color: #555759;
+    font-weight: 300;    
+    line-height: 1.3;
+	float: left;
+	margin-bottom: 0;
+}
+
+.tabs-title-custom a{
+    font-size: 1.375rem;
+    font-family: "lato", sans-serif;
+    font-weight: 700;
+    color: #65656a;
+    min-width: 20.3125rem;
+    width: 100%;
+    text-align: center;
+    background: #b2b2b4;
+    display: block;
+    padding: 1.25rem 1.5rem;
+    line-height: 1;
+	padding-bottom: 1.3rem;
+}
+
+/* WPTS #11893 */
+.page-id-19731 #gform_4 textarea, #gform_4 select {
+	background-color: #efead7;
+}
+.page-id-19731 .main-grid {
+	padding: 0 0 0.625rem;
+}
+.page-id-19731 .entry-content {
+	padding-top: 0;
+}
+.page-id-19731 #gform_4 .gform_footer
+ {
+	text-align: center;
+}
+.page-id-19731 span.gfield_required.gfield_required_asterisk{
+	display: none;
+}
+.page-id-19731  a.ow-icon-placement-left.ow-button-hover{
+	width: 100% !important;
+}
+.page-id-19731  input#gform_submit_button_4{
+padding: 1.5625rem 8.125rem;
+}
+/* WPTS #11893 */
+
+/* WPTS #12068 start */
+@media screen and (min-width: 993px) {
+  #mega-menu-wrap-top-bar-r #mega-menu-top-bar-r > li.mega-menu-flyout.mega-menu-item-119 ul.mega-sub-menu{
+	   width:265px;
+}
+}
+/* WPTS #12068 end */
+
+header .cell.small-5.medium-4 {
+  width: 25%;
+}
+header .cell.small-7.medium-8 {
+  width: 70%;
+}
+header .cell.small-7.medium-8 .mega-navigation ul li {
+  margin-right: 0px !important;
+}
+@media only screen and (min-width: 1024px) {
+	#mega-menu-wrap-top-bar-r #mega-menu-top-bar-r li.mega-menu-megamenu > ul.mega-sub-menu > li.mega-menu-row > ul.mega-sub-menu > li.mega-menu-columns-4-of-12 {
+  width: 32%;
+}
+}
+@media print, screen and (min-width: 48em){
+	.page-template-page-templatestemplate-events-webinars-php #webinars article .grid-padding-x > a.link___uHZZX{
+		width: 41.66667%;
+	}
+}
+.mega-sub-menu li ul li div ul li {
+    margin-bottom: 5px!important;
+}
+
+.featured-hero .banner-text .entry-meta{
+	font-weight:200;
+}
+/* #25496 - request form from 3 to 4 cols */
+.request-quote-col-4 {
+	width: 25%;
+  float: left;
+  clear: none !important;
+}
+/* #25496 - end */
+.frm-request-quote_wrapper form.frm-request-quote{
+	max-width: 100%!important;
+}
+#field_2_16, #field_2_24, #field_2_15, #field_2_14{
+	padding: 0 5px!important;
+}
+.page-template-template-request-quote .frm-request-quote_wrapper .frm-request-quote ul.gform_fields {
+    margin: 0!important;
+}
+
+.blog #post-24088 {
+  display: none;
+}
+
+i.fa-brands.fa-x-twitter {
+    background-image: url(https://www.delloro.com/wp-content/uploads/2023/08/5968958.png);
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 35px;
+    height: 30px;
+    opacity: .6;
+    display: inline-block;
+}
+i.fa-brands.fa-x-twitter:hover {
+    opacity: 1;
+}
+
+/* WPTS ticket 30568 - ja - start */
+i.fa.fa-youtube:before {
+	display: none !important;
+}
+
+i.fa.fa-youtube {
+    background-image: url(https://www.delloro.com/wp-content/uploads/2023/09/YouTube-logo-gray.png);
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 45px;
+    height: 30px;
+    opacity: .6;
+    display: inline-block;
+    margin-top: 4px;
+}
+}
+/* WPTS ticket 30568 - ja - end */
+
+.page-id-19731 .gform_wrapper.gravity-theme .gfield.gfield--width-full {
+    text-align: left;
+}
+.page-id-19731 .gform_wrapper.gravity-theme .gfield_label {
+    text-align: left !important;
+    font-size: 1.3rem !important;
+    font-weight: normal;
+}
+.page-id-19731 .gform_wrapper.gravity-theme .gfield.gfield--width-full.half-col {
+    display: inline-block !important;
+    grid-column: span 6;
+		text-align: left;
+}
+.gform_wrapper.gravity-theme .gfield.gfield--width-full {
+    text-align: left;
+}
+.page-id-19731 .gform_wrapper.gravity-theme .gfield.gfield--width-full select {
+    background: transparent;
+}
+.page-id-19731 .gform_wrapper.gravity-theme .gfield_required .gfield_required_text {
+    color: #c02b0a !important;
+}
+.page-id-19731 .gform_wrapper.gravity-theme .gfield.gfield--width-full textarea {
+    background: transparent;
+}
+.heateor_sss_svg.heateor_sss_s__default.heateor_sss_s_twitter::before {
+  content: url('https://www.delloro.com/wp-content/uploads/2024/06/11053970_x_logo_twitter_new_brand_icon.svg');
+}
+.heateor_sss_svg.heateor_sss_s__default.heateor_sss_s_twitter {
+background-color: #fff!important;
+}
+.wp-share-icons {
+  display: none!important;
+}
+#feedlyFollow {
+  display: none!important;
+}
+span.wptech-share.twitter-button {
+    display: none;
+}
+span.wptech-share.linkedin-button {
+    display: none !important;
+}
+.heateor_sss_sharing_title {
+  font-size: 1rem !important;
+}
+.heateorSssClear {
+  padding-top: 10px;
+}
+body{
+	padding-top: 85px !important;
+}
+/* #40077 - hide excerpt from 
+ * DellOro in the News */
+.page-id-19678 article.news_type-in-the-news .entry-content p {
+	display: none;
+}
+/* #40077 - end */
+
+@media only screen and (max-width:600px) {
+	li#field_2_16, 
+li#field_2_15, 
+li#field_2_14 {
+    width: 100%;
+    margin-left: 40px !important;
+    float: none;
+}
+	.wp-caption>figcaption {
+    max-width: 97vw;
+}
+img {
+    max-width: 97vw;
+}
+}
+
+@media (min-width: 768px) {
+    .elementor-25 .elementor-element.elementor-element-53ea4b2a {
+        --width: auto !important;
+    }
+}
+</style>
+	<link data-minify="1" rel="stylesheet" href="https://www.delloro.com/wp-content/cache/min/1/osw1xuj.css?ver=1788982557">
+	<link rel='stylesheet' id='gforms_reset_css-css' href='https://www.delloro.com/wp-content/plugins/gravityforms/legacy/css/formreset.min.css?ver=3.1.1' media='all' />
+<link rel='stylesheet' id='gforms_formsmain_css-css' href='https://www.delloro.com/wp-content/plugins/gravityforms/legacy/css/formsmain.min.css?ver=3.1.1' media='all' />
+<link rel='stylesheet' id='gforms_ready_class_css-css' href='https://www.delloro.com/wp-content/plugins/gravityforms/legacy/css/readyclass.min.css?ver=3.1.1' media='all' />
+<link rel='stylesheet' id='gforms_browsers_css-css' href='https://www.delloro.com/wp-content/plugins/gravityforms/legacy/css/browsers.min.css?ver=3.1.1' media='all' />
+<link data-minify="1" rel='stylesheet' id='fm-style-3-css' href='https://www.delloro.com/wp-content/cache/min/1/wp-content/uploads/form-maker-frontend/css/fm-style-3.css?ver=1788982557' media='all' />
+
+<style id="rocket-lazyrender-inline-css">[data-wpr-lazyrender] {content-visibility: auto;}</style><meta name="generator" content="WP Rocket 3.23.3.3" data-wpr-features="wpr_delay_js wpr_defer_js wpr_minify_js wpr_preconnect_external_domains wpr_automatic_lazy_rendering wpr_oci wpr_image_dimensions wpr_minify_css wpr_cdn wpr_preload_links wpr_desktop" /></head>
+<body class="wp-singular news_room-template-default single single-news_room postid-29061 wp-theme-DellOro-Group mega-menu-top-bar-r mega-menu-mobile-nav offcanvas chrome group-blog no-js">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P967S9WC"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+	
+<nav class="mobile-off-canvas-menu off-canvas position-left" id="off-canvas-menu" data-off-canvas data-auto-focus="false" role="navigation">
+	<div id="mega-menu-wrap-mobile-nav" class="mega-menu-wrap"><div class="mega-menu-toggle"><div class="mega-toggle-blocks-left"></div><div class="mega-toggle-blocks-center"></div><div class="mega-toggle-blocks-right"><div class='mega-toggle-block mega-menu-toggle-block mega-toggle-block-1' id='mega-toggle-block-1'><span aria-expanded="false" aria-haspopup="true" role="button" class='mega-toggle-label'><span class='mega-toggle-label-closed'></span><span class='mega-toggle-label-open'></span></span></div></div></div><ul id="mega-menu-mobile-nav" class="mega-menu max-mega-menu mega-menu-horizontal mega-no-js" data-event="click" data-effect="fade_up" data-effect-speed="200" data-effect-mobile="disabled" data-effect-speed-mobile="0" data-mobile-force-width="false" data-second-click="go" data-document-click="collapse" data-vertical-behaviour="standard" data-breakpoint="1023" data-unbind="true" data-mobile-state="collapse_all" data-mobile-direction="vertical" data-mobile-back-text="{parent_title}"><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-has-children mega-menu-megamenu mega-menu-grid mega-align-bottom-left mega-hide-arrow mega-menu-item-53" id="mega-menu-item-53"><a class="mega-menu-link" href="https://www.delloro.com/market-research/" aria-expanded="false" aria-controls="mega-sub-menu-53">Market Research<span class="mega-indicator" aria-hidden="true"></span></a>
+<ul class="mega-sub-menu" role='presentation' id='mega-sub-menu-53'>
+<li class="mega-menu-row" id="mega-menu-53-0">
+	<ul class="mega-sub-menu" style='--columns:12' role='presentation'>
+<li class="mega-menu-column mega-menu-columns-3-of-12" style="--columns:12; --span:3" id="mega-menu-53-0-0">
+		<ul class="mega-sub-menu">
+<li class="mega-menu-item mega-menu-item-type-widget widget_nav_menu mega-menu-item-nav_menu-10" id="mega-menu-item-nav_menu-10"><div class="menu-telecommunications-infrastructure-container"><ul id="menu-telecommunications-infrastructure" class="menu"><li id="menu-item-11885" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11885"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/">Telecommunications Infrastructure</a></li>
+<li id="menu-item-25982" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-25982"><a href="https://www.delloro.com/advanced-research-report/6g/">6G</a></li>
+<li id="menu-item-26345" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-26345"><a href="https://www.delloro.com/advanced-research-report/ai-ran/">AI RAN</a></li>
+<li id="menu-item-11887" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11887"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/broadband-access/">Broadband Access &#038; Home Networking</a></li>
+<li id="menu-item-23280" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-23280"><a href="https://www.delloro.com/advanced-research-report/cable-outside-plant/">Cable Outside Plant</a></li>
+<li id="menu-item-27359" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-27359"><a href="https://www.delloro.com/advanced-research-report/data-center-interconnect-ipodwdm-and-wdm-systems/">Data Center Interconnect with IPoDWDM &#038; WDM Systems</a></li>
+<li id="menu-item-22706" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-22706"><a href="https://www.delloro.com/advanced-research-report/fixed-wireless-access-and-cpe/">Fixed Wireless Access &#038; CPE</a></li>
+<li id="menu-item-28828" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-28828"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/high-end-routing-and-aggregation/">High End Routing &#038; Aggregation</a></li>
+<li id="menu-item-11889" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11889"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/microwave-transmission-mobile-backhaul/">Microwave Transmission &#038; Mobile Backhaul</a></li>
+<li id="menu-item-15241" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-15241"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/mobile-core-network/">Mobile Core Network &#038; Multi-access Edge Computing</a></li>
+<li id="menu-item-11890" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11890"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/mobile-radio-access-network/">Mobile Radio Access Network (RAN)</a></li>
+<li id="menu-item-16351" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-16351"><a href="https://www.delloro.com/advanced-research-report/openran/">Open RAN</a></li>
+<li id="menu-item-11891" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11891"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/optical-transport/">Optical Transport</a></li>
+<li id="menu-item-28596" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-28596"><a href="https://www.delloro.com/advanced-research-report/pon-in-the-data-center-and-premise/">PON in the Data Center &#038; Premise</a></li>
+<li id="menu-item-28210" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-28210"><a href="https://www.delloro.com/advanced-research-report/pon-optical-distribution-network-odn/">PON Optical Distribution Network (ODN)</a></li>
+<li id="menu-item-19178" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-19178"><a href="https://www.delloro.com/advanced-research-report/private-wireless/">Private Wireless</a></li>
+<li id="menu-item-11893" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11893"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/telecom-capex/">Telecom Capex</a></li>
+</ul></div></li>		</ul>
+</li><li class="mega-menu-column mega-menu-columns-3-of-12" style="--columns:12; --span:3" id="mega-menu-53-0-1">
+		<ul class="mega-sub-menu">
+<li class="mega-menu-item mega-menu-item-type-widget widget_nav_menu mega-menu-item-nav_menu-12" id="mega-menu-item-nav_menu-12"><div class="menu-enterprise-networks-security-container"><ul id="menu-enterprise-networks-security" class="menu"><li id="menu-item-28598" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-28598"><a href="https://www.delloro.com/market-research/security-enterprise-network-infrastructure/">Enterprise Networks &#038; Security Infrastructure</a></li>
+<li id="menu-item-28597" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-28597"><a href="https://www.delloro.com/advanced-research-report/ai-and-cloud-native-security/">AI &#038; Cloud-native Security</a></li>
+<li id="menu-item-11902" class="menu-botspace menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11902"><a href="https://www.delloro.com/market-research/security-enterprise-network-infrastructure/campus-ethernet-switch/">Campus Ethernet Switch</a></li>
+<li id="menu-item-23656" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-23656"><a href="https://www.delloro.com/advanced-research-report/campus-naas-and-public-cloud-managed-lan/">Campus NaaS &#038; Public Cloud-managed LAN</a></li>
+<li id="menu-item-23765" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-23765"><a href="https://www.delloro.com/advanced-research-report/distributed-cloud-networking/">Distributed Cloud Networking</a></li>
+<li id="menu-item-27280" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-27280"><a href="https://www.delloro.com/advanced-research-report/hybrid-mesh-firewall-microsegmentation/">Hybrid Mesh Firewall &#038; Microsegmentation</a></li>
+<li id="menu-item-25998" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-25998"><a href="https://www.delloro.com/market-research/security-enterprise-network-infrastructure/network-security-data-center-appliance/">Network Security</a></li>
+<li id="menu-item-25997" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-25997"><a href="https://www.delloro.com/market-research/security-enterprise-network-infrastructure/sase-sdwan/">SASE &#038; SD-WAN</a></li>
+<li id="menu-item-11904" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11904"><a href="https://www.delloro.com/market-research/security-enterprise-network-infrastructure/total-ethernet-switch/">Total Ethernet Switch</a></li>
+<li id="menu-item-11907" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11907"><a href="https://www.delloro.com/market-research/security-enterprise-network-infrastructure/wireless-lan/">Wireless LAN</a></li>
+</ul></div></li>		</ul>
+</li><li class="mega-menu-column mega-menu-columns-3-of-12" style="--columns:12; --span:3" id="mega-menu-53-0-2">
+		<ul class="mega-sub-menu">
+<li class="mega-menu-item mega-menu-item-type-widget widget_nav_menu mega-menu-item-nav_menu-11" id="mega-menu-item-nav_menu-11"><div class="menu-data-center-it-infrastructure-container"><ul id="menu-data-center-it-infrastructure" class="menu"><li id="menu-item-11913" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11913"><a href="https://www.delloro.com/market-research/data-center-infrastructure/">Data Center Infrastructure</a></li>
+<li id="menu-item-27621" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-27621"><a href="https://www.delloro.com/advanced-research-report/data-center-high-density-power/">Data Center High-density Power</a></li>
+<li id="menu-item-19173" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-19173"><a href="https://www.delloro.com/market-research/data-center-infrastructure/data-center-capex/">Data Center IT Capex</a></li>
+<li id="menu-item-23206" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-23206"><a href="https://www.delloro.com/market-research/data-center-infrastructure/data-center-it-semiconductors-and-components/">Data Center IT Semiconductors &#038; Components</a></li>
+<li id="menu-item-24827" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-24827"><a href="https://www.delloro.com/advanced-research-report/data-center-liquid-cooling/">Data Center Liquid Cooling</a></li>
+<li id="menu-item-29154" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-29154"><a href="https://www.delloro.com/advanced-research-report/data-center-interconnect-ipodwdm-and-wdm-systems/">Data Center Interconnect with IPoDWDM &#038; WDM Systems</a></li>
+<li id="menu-item-20507" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-20507"><a href="https://www.delloro.com/market-research/data-center-infrastructure/data-center-physical-infrastructure/">Data Center Physical Infrastructure</a></li>
+<li id="menu-item-27282" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-27282"><a href="https://www.delloro.com/market-research/data-center-infrastructure/data-center-switch-ai-back-end-networks/">Data Center Switch – AI Back-end Networks</a></li>
+<li id="menu-item-19007" class="menu-botspace menu-item menu-item-type-post_type menu-item-object-research_program menu-item-19007"><a href="https://www.delloro.com/market-research/data-center-infrastructure/data-center-switch-front-end-networks/">Data Center Switch – Front-end Networks</a></li>
+<li id="menu-item-19006" class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-19006"><a href="https://www.delloro.com/market-research/data-center-infrastructure/ethernet-controller-adapter/">Ethernet Adapter &#038; Smart NIC</a></li>
+<li id="menu-item-28876" class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-28876"><a href="https://www.delloro.com/advanced-research-report/pon-in-the-data-center-and-premise/">PON in the Data Center &#038; Premise</a></li>
+</ul></div></li>		</ul>
+</li><li class="mega-menu-column mega-menu-columns-3-of-12" style="--columns:12; --span:3" id="mega-menu-53-0-3">
+		<ul class="mega-sub-menu">
+<li class="mega-menu-item mega-menu-item-type-widget widget_nav_menu mega-menu-item-nav_menu-13" id="mega-menu-item-nav_menu-13"><!-- widget is empty --></li>		</ul>
+</li>	</ul>
+</li></ul>
+</li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-has-children mega-align-bottom-left mega-menu-flyout mega-hide-arrow mega-menu-item-119" id="mega-menu-item-119"><a class="mega-menu-link" href="https://www.delloro.com/how-to-buy/" aria-expanded="false" aria-controls="mega-sub-menu-119">How to Buy<span class="mega-indicator" aria-hidden="true"></span></a>
+<ul class="mega-sub-menu" id='mega-sub-menu-119'>
+<li class="mega-menu-item mega-menu-item-type-custom mega-menu-item-object-custom mega-menu-item-13929" id="mega-menu-item-13929"><a class="mega-menu-link" href="https://www.delloro.com/how-to-buy/">Research Package</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-11925" id="mega-menu-item-11925"><a class="mega-menu-link" href="https://www.delloro.com/how-to-buy/request-a-quote/">Request a Quote</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-19919" id="mega-menu-item-19919"><a class="mega-menu-link" href="https://www.delloro.com/how-to-buy/custom-research-and-strategic-consulting/">Custom Research and Consulting</a></li></ul>
+</li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-has-children mega-align-bottom-left mega-menu-flyout mega-hide-arrow mega-menu-item-121" id="mega-menu-item-121"><a class="mega-menu-link" href="https://www.delloro.com/knowledge-center/" aria-expanded="false" aria-controls="mega-sub-menu-121">Knowledge Center<span class="mega-indicator" aria-hidden="true"></span></a>
+<ul class="mega-sub-menu" id='mega-sub-menu-121'>
+<li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-28071" id="mega-menu-item-28071"><a class="mega-menu-link" href="https://www.delloro.com/knowledge-center/2026-predictions/">2026 Predictions</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-current_page_parent mega-menu-item-11926" id="mega-menu-item-11926"><a class="mega-menu-link" href="https://www.delloro.com/knowledge-center/blog/">Blogs</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-11927" id="mega-menu-item-11927"><a class="mega-menu-link" href="https://www.delloro.com/knowledge-center/articles/">Articles</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-19962" id="mega-menu-item-19962"><a class="mega-menu-link" href="https://www.delloro.com/knowledge-center/videos/">Videos</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-16552" id="mega-menu-item-16552"><a class="mega-menu-link" href="https://www.delloro.com/knowledge-center/email-subscription-form/">Email Subscription Form</a></li></ul>
+</li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-11928" id="mega-menu-item-11928"><a class="mega-menu-link" href="https://www.delloro.com/knowledge-center/events-webinars/">Events</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-hide-arrow mega-menu-item-133" id="mega-menu-item-133"><a class="mega-menu-link" href="https://www.delloro.com/news/">News Room</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-has-children mega-align-bottom-left mega-menu-flyout mega-hide-arrow mega-menu-item-135" id="mega-menu-item-135"><a class="mega-menu-link" href="https://www.delloro.com/about/" aria-expanded="false" aria-controls="mega-sub-menu-135">About<span class="mega-indicator" aria-hidden="true"></span></a>
+<ul class="mega-sub-menu" id='mega-sub-menu-135'>
+<li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-11930" id="mega-menu-item-11930"><a class="mega-menu-link" href="https://www.delloro.com/about/meet-the-team/">Meet the Team</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-11931" id="mega-menu-item-11931"><a class="mega-menu-link" href="https://www.delloro.com/about/careers/">Careers</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-11932" id="mega-menu-item-11932"><a class="mega-menu-link" href="https://www.delloro.com/about/faq/">FAQ</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-11933" id="mega-menu-item-11933"><a class="mega-menu-link" href="https://www.delloro.com/about/contact/">Contact</a></li></ul>
+</li><li class="mega-client-login-mob mega-menu-item mega-menu-item-type-custom mega-menu-item-object-custom mega-menu-item-14176 client-login-mob" id="mega-menu-item-14176"><a class="mega-menu-link" href="https://client.delloro.com/Account/Login">Client Login</a></li></ul></div></nav>
+
+<div  class="off-canvas-content" data-off-canvas-content>
+
+<div  class="wrapper">
+	<header >
+		<div class="header-main">
+			<div class="grid-container">
+				<div class="grid-x grid-padding-x">
+					<div class="cell small-5 medium-4">
+						<div class="logo">
+							<a href="https://www.delloro.com" title="Dell&#039;Oro Group">
+								<img fetchpriority="high" width="247" height="37" src="https://www.delloro.com/wp-content/uploads/2019/04/logo.svg" alt="Dell&#039;Oro Group">							</a>
+						</div>
+					</div>
+					<div class="cell small-7 medium-8">
+						<div class="nav-wrapper">
+							<div class="mega-navigation">
+								<div id="mega-menu-wrap-top-bar-r" class="mega-menu-wrap"><div class="mega-menu-toggle"><div class="mega-toggle-blocks-left"></div><div class="mega-toggle-blocks-center"></div><div class="mega-toggle-blocks-right"><div class='mega-toggle-block mega-menu-toggle-block mega-toggle-block-1' id='mega-toggle-block-1'><span aria-expanded="false" aria-haspopup="true" role="button" class='mega-toggle-label'><span class='mega-toggle-label-closed'></span><span class='mega-toggle-label-open'></span></span></div></div></div><ul id="mega-menu-top-bar-r" class="mega-menu max-mega-menu mega-menu-horizontal mega-no-js" data-event="hover" data-effect="fade_up" data-effect-speed="200" data-effect-mobile="disabled" data-effect-speed-mobile="0" data-mobile-force-width="false" data-second-click="go" data-document-click="collapse" data-vertical-behaviour="standard" data-breakpoint="1023" data-unbind="true" data-mobile-state="collapse_all" data-mobile-direction="vertical" data-mobile-back-text="{parent_title}"><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-has-children mega-menu-megamenu mega-menu-grid mega-align-bottom-left mega-hide-arrow mega-menu-item-53" id="mega-menu-item-53"><a class="mega-menu-link" href="https://www.delloro.com/market-research/" aria-expanded="false" aria-controls="mega-sub-menu-53">Market Research<span class="mega-indicator" aria-hidden="true"></span></a>
+<ul class="mega-sub-menu" role='presentation' id='mega-sub-menu-53'>
+<li class="mega-menu-row" id="mega-menu-53-0">
+	<ul class="mega-sub-menu" style='--columns:12' role='presentation'>
+<li class="mega-menu-column mega-menu-columns-3-of-12" style="--columns:12; --span:3" id="mega-menu-53-0-0">
+		<ul class="mega-sub-menu">
+<li class="mega-menu-item mega-menu-item-type-widget widget_nav_menu mega-menu-item-nav_menu-10" id="mega-menu-item-nav_menu-10"><div class="menu-telecommunications-infrastructure-container"><ul id="menu-telecommunications-infrastructure-1" class="menu"><li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11885"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/">Telecommunications Infrastructure</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-25982"><a href="https://www.delloro.com/advanced-research-report/6g/">6G</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-26345"><a href="https://www.delloro.com/advanced-research-report/ai-ran/">AI RAN</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11887"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/broadband-access/">Broadband Access &#038; Home Networking</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-23280"><a href="https://www.delloro.com/advanced-research-report/cable-outside-plant/">Cable Outside Plant</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-27359"><a href="https://www.delloro.com/advanced-research-report/data-center-interconnect-ipodwdm-and-wdm-systems/">Data Center Interconnect with IPoDWDM &#038; WDM Systems</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-22706"><a href="https://www.delloro.com/advanced-research-report/fixed-wireless-access-and-cpe/">Fixed Wireless Access &#038; CPE</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-28828"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/high-end-routing-and-aggregation/">High End Routing &#038; Aggregation</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11889"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/microwave-transmission-mobile-backhaul/">Microwave Transmission &#038; Mobile Backhaul</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-15241"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/mobile-core-network/">Mobile Core Network &#038; Multi-access Edge Computing</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11890"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/mobile-radio-access-network/">Mobile Radio Access Network (RAN)</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-16351"><a href="https://www.delloro.com/advanced-research-report/openran/">Open RAN</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11891"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/optical-transport/">Optical Transport</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-28596"><a href="https://www.delloro.com/advanced-research-report/pon-in-the-data-center-and-premise/">PON in the Data Center &#038; Premise</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-28210"><a href="https://www.delloro.com/advanced-research-report/pon-optical-distribution-network-odn/">PON Optical Distribution Network (ODN)</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-19178"><a href="https://www.delloro.com/advanced-research-report/private-wireless/">Private Wireless</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11893"><a href="https://www.delloro.com/market-research/telecommunications-infrastructure/telecom-capex/">Telecom Capex</a></li>
+</ul></div></li>		</ul>
+</li><li class="mega-menu-column mega-menu-columns-3-of-12" style="--columns:12; --span:3" id="mega-menu-53-0-1">
+		<ul class="mega-sub-menu">
+<li class="mega-menu-item mega-menu-item-type-widget widget_nav_menu mega-menu-item-nav_menu-12" id="mega-menu-item-nav_menu-12"><div class="menu-enterprise-networks-security-container"><ul id="menu-enterprise-networks-security-1" class="menu"><li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-28598"><a href="https://www.delloro.com/market-research/security-enterprise-network-infrastructure/">Enterprise Networks &#038; Security Infrastructure</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-28597"><a href="https://www.delloro.com/advanced-research-report/ai-and-cloud-native-security/">AI &#038; Cloud-native Security</a></li>
+<li class="menu-botspace menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11902"><a href="https://www.delloro.com/market-research/security-enterprise-network-infrastructure/campus-ethernet-switch/">Campus Ethernet Switch</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-23656"><a href="https://www.delloro.com/advanced-research-report/campus-naas-and-public-cloud-managed-lan/">Campus NaaS &#038; Public Cloud-managed LAN</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-23765"><a href="https://www.delloro.com/advanced-research-report/distributed-cloud-networking/">Distributed Cloud Networking</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-27280"><a href="https://www.delloro.com/advanced-research-report/hybrid-mesh-firewall-microsegmentation/">Hybrid Mesh Firewall &#038; Microsegmentation</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-25998"><a href="https://www.delloro.com/market-research/security-enterprise-network-infrastructure/network-security-data-center-appliance/">Network Security</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-25997"><a href="https://www.delloro.com/market-research/security-enterprise-network-infrastructure/sase-sdwan/">SASE &#038; SD-WAN</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11904"><a href="https://www.delloro.com/market-research/security-enterprise-network-infrastructure/total-ethernet-switch/">Total Ethernet Switch</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11907"><a href="https://www.delloro.com/market-research/security-enterprise-network-infrastructure/wireless-lan/">Wireless LAN</a></li>
+</ul></div></li>		</ul>
+</li><li class="mega-menu-column mega-menu-columns-3-of-12" style="--columns:12; --span:3" id="mega-menu-53-0-2">
+		<ul class="mega-sub-menu">
+<li class="mega-menu-item mega-menu-item-type-widget widget_nav_menu mega-menu-item-nav_menu-11" id="mega-menu-item-nav_menu-11"><div class="menu-data-center-it-infrastructure-container"><ul id="menu-data-center-it-infrastructure-1" class="menu"><li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-11913"><a href="https://www.delloro.com/market-research/data-center-infrastructure/">Data Center Infrastructure</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-27621"><a href="https://www.delloro.com/advanced-research-report/data-center-high-density-power/">Data Center High-density Power</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-19173"><a href="https://www.delloro.com/market-research/data-center-infrastructure/data-center-capex/">Data Center IT Capex</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-23206"><a href="https://www.delloro.com/market-research/data-center-infrastructure/data-center-it-semiconductors-and-components/">Data Center IT Semiconductors &#038; Components</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-24827"><a href="https://www.delloro.com/advanced-research-report/data-center-liquid-cooling/">Data Center Liquid Cooling</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-29154"><a href="https://www.delloro.com/advanced-research-report/data-center-interconnect-ipodwdm-and-wdm-systems/">Data Center Interconnect with IPoDWDM &#038; WDM Systems</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-20507"><a href="https://www.delloro.com/market-research/data-center-infrastructure/data-center-physical-infrastructure/">Data Center Physical Infrastructure</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-27282"><a href="https://www.delloro.com/market-research/data-center-infrastructure/data-center-switch-ai-back-end-networks/">Data Center Switch – AI Back-end Networks</a></li>
+<li class="menu-botspace menu-item menu-item-type-post_type menu-item-object-research_program menu-item-19007"><a href="https://www.delloro.com/market-research/data-center-infrastructure/data-center-switch-front-end-networks/">Data Center Switch – Front-end Networks</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-research_program menu-item-19006"><a href="https://www.delloro.com/market-research/data-center-infrastructure/ethernet-controller-adapter/">Ethernet Adapter &#038; Smart NIC</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-advanced_report menu-item-28876"><a href="https://www.delloro.com/advanced-research-report/pon-in-the-data-center-and-premise/">PON in the Data Center &#038; Premise</a></li>
+</ul></div></li>		</ul>
+</li><li class="mega-menu-column mega-menu-columns-3-of-12" style="--columns:12; --span:3" id="mega-menu-53-0-3">
+		<ul class="mega-sub-menu">
+<li class="mega-menu-item mega-menu-item-type-widget widget_nav_menu mega-menu-item-nav_menu-13" id="mega-menu-item-nav_menu-13"><!-- widget is empty --></li>		</ul>
+</li>	</ul>
+</li></ul>
+</li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-has-children mega-align-bottom-left mega-menu-flyout mega-hide-arrow mega-menu-item-119" id="mega-menu-item-119"><a class="mega-menu-link" href="https://www.delloro.com/how-to-buy/" aria-expanded="false" aria-controls="mega-sub-menu-119">How to Buy<span class="mega-indicator" aria-hidden="true"></span></a>
+<ul class="mega-sub-menu" id='mega-sub-menu-119'>
+<li class="mega-menu-item mega-menu-item-type-custom mega-menu-item-object-custom mega-menu-item-13929" id="mega-menu-item-13929"><a class="mega-menu-link" href="https://www.delloro.com/how-to-buy/">Research Package</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-11925" id="mega-menu-item-11925"><a class="mega-menu-link" href="https://www.delloro.com/how-to-buy/request-a-quote/">Request a Quote</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-19919" id="mega-menu-item-19919"><a class="mega-menu-link" href="https://www.delloro.com/how-to-buy/custom-research-and-strategic-consulting/">Custom Research and Consulting</a></li></ul>
+</li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-has-children mega-align-bottom-left mega-menu-flyout mega-hide-arrow mega-menu-item-121" id="mega-menu-item-121"><a class="mega-menu-link" href="https://www.delloro.com/knowledge-center/" aria-expanded="false" aria-controls="mega-sub-menu-121">Knowledge Center<span class="mega-indicator" aria-hidden="true"></span></a>
+<ul class="mega-sub-menu" id='mega-sub-menu-121'>
+<li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-28071" id="mega-menu-item-28071"><a class="mega-menu-link" href="https://www.delloro.com/knowledge-center/2026-predictions/">2026 Predictions</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-current_page_parent mega-menu-item-11926" id="mega-menu-item-11926"><a class="mega-menu-link" href="https://www.delloro.com/knowledge-center/blog/">Blogs</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-11927" id="mega-menu-item-11927"><a class="mega-menu-link" href="https://www.delloro.com/knowledge-center/articles/">Articles</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-19962" id="mega-menu-item-19962"><a class="mega-menu-link" href="https://www.delloro.com/knowledge-center/videos/">Videos</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-16552" id="mega-menu-item-16552"><a class="mega-menu-link" href="https://www.delloro.com/knowledge-center/email-subscription-form/">Email Subscription Form</a></li></ul>
+</li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-11928" id="mega-menu-item-11928"><a class="mega-menu-link" href="https://www.delloro.com/knowledge-center/events-webinars/">Events</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-hide-arrow mega-menu-item-133" id="mega-menu-item-133"><a class="mega-menu-link" href="https://www.delloro.com/news/">News Room</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-has-children mega-align-bottom-left mega-menu-flyout mega-hide-arrow mega-menu-item-135" id="mega-menu-item-135"><a class="mega-menu-link" href="https://www.delloro.com/about/" aria-expanded="false" aria-controls="mega-sub-menu-135">About<span class="mega-indicator" aria-hidden="true"></span></a>
+<ul class="mega-sub-menu" id='mega-sub-menu-135'>
+<li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-11930" id="mega-menu-item-11930"><a class="mega-menu-link" href="https://www.delloro.com/about/meet-the-team/">Meet the Team</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-11931" id="mega-menu-item-11931"><a class="mega-menu-link" href="https://www.delloro.com/about/careers/">Careers</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-11932" id="mega-menu-item-11932"><a class="mega-menu-link" href="https://www.delloro.com/about/faq/">FAQ</a></li><li class="mega-menu-item mega-menu-item-type-post_type mega-menu-item-object-page mega-menu-item-11933" id="mega-menu-item-11933"><a class="mega-menu-link" href="https://www.delloro.com/about/contact/">Contact</a></li></ul>
+</li><li class="mega-client-login-mob mega-menu-item mega-menu-item-type-custom mega-menu-item-object-custom mega-menu-item-14176 client-login-mob" id="mega-menu-item-14176"><a class="mega-menu-link" href="https://client.delloro.com/Account/Login">Client Login</a></li></ul></div>							</div>
+							<div class="search-bar">
+								<ul>
+									<li>
+										<div class="search-box">
+											<span id="search-toggle" class="search-toggle">
+												<img width="28" height="33" src="https://www.delloro.com/wp-content/themes/DellOro-Group/dist/assets/images/search-icon.svg" alt="Search Icon">
+											</span>
+											<form action="https://www.delloro.com/"
+												  class="search-form cf" method="get" id="searchform">
+												<div>
+													<label for="s" class="screen-reader-text">Search</label>
+													<input id="s" class="src_box" type="text" name="s" value="" placeholder="Search …">
+													<input id="searchsubmit" type="submit" value="Search">
+												</div>
+											</form>
+										</div>
+									</li>
+									<li><a href="https://client.delloro.com/Account/Login" title="Client Login">Client Login</a></li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</header>
+
+				<section  class="page-link-tab bg-gold">
+				<div class="grid-container">
+					<div class="grid-x">
+						<div class="cell">
+							<div class="quick-enquiry-form">
+								<div class="form-arrow">
+									<h5>
+										<a href="https://www.delloro.com/about/contact/"
+										   title="Contact Us">Contact Us</a>
+									</h5>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+			<section  class="featured-hero has-bordeaux-background-color">
+		<div class="grid-container hero-container">
+			<div class="hero-content grid-x align-center-middle text-center">
+				<div class="large-10 cell">
+					<div class="banner-text">
+						<div class="entry-meta">
+							<time class="updated" datetime="2026-08-19T05:00:59-07:00">August 19, 2026</time> | <span>Press Release</span>						</div>
+						<h1 class="hero-title entry-title">Data Center Physical Infrastructure Market Forecast to Reach $120 Billion by 2030, According to Dell’Oro Group</h1>					</div>
+				</div>
+			</div>
+		</div>
+	</section> 
+ 
+	<div  class="main-container">
+		<div class="main-grid">
+			<!--<main class="main-content-full-width">-->
+			<main class="main-content">
+				
+<article id="post-29061" class="post-29061 news_room type-news_room status-publish has-post-thumbnail hentry category-cloud-data-center-infrastructure news_type-latest_report news_type-press-release">
+	<div class="entry-content">
+		<!-- WP Tech #5016 -->
+		<div class="wp-share-icons">
+		[wp_tech_share]		</div>
+		<!-- WP Tech #5016 -->
+									<!-- href='http://feeds.feedburner.com/DelloroGroup'  target='blank'><img id='feedlyFollow' src='https://www.delloro.com/wp-content/uploads/2020/07/subscribe-rss-feed-1.png' alt='follow us in feedly' width='78' height='30'></a-->
+			<a href='/feed/'  target='blank'><img id='feedlyFollow' src='https://www.delloro.com/wp-content/uploads/2020/07/subscribe-rss-feed-1.png' alt='follow us in feedly' width='78' height='30'></a>
+				<div class='heateorSssClear'></div><div  class='heateor_sss_sharing_container heateor_sss_horizontal_sharing' data-heateor-sss-href='https://www.delloro.com/news/data-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030/'><div class='heateor_sss_sharing_title' style="font-weight:bold" >Share</div><div class="heateor_sss_sharing_ul"><a aria-label="Linkedin" class="heateor_sss_button_linkedin" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fwww.delloro.com%2Fnews%2Fdata-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030%2F" title="Linkedin" rel="nofollow noopener" target="_blank" style="font-size:32px!important;box-shadow:none;display:inline-block;vertical-align:middle"><span class="heateor_sss_svg heateor_sss_s__default heateor_sss_s_linkedin" style="background-color:#0077b5;width:18px;height:18px;border-radius:999px;display:inline-block;opacity:1;float:left;font-size:32px;box-shadow:none;display:inline-block;font-size:16px;padding:0 4px;vertical-align:middle;background-repeat:repeat;overflow:hidden;padding:0;cursor:pointer;box-sizing:content-box"><svg style="display:block;border-radius:999px;" focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 32 32"><path d="M6.227 12.61h4.19v13.48h-4.19V12.61zm2.095-6.7a2.43 2.43 0 0 1 0 4.86c-1.344 0-2.428-1.09-2.428-2.43s1.084-2.43 2.428-2.43m4.72 6.7h4.02v1.84h.058c.56-1.058 1.927-2.176 3.965-2.176 4.238 0 5.02 2.792 5.02 6.42v7.395h-4.183v-6.56c0-1.564-.03-3.574-2.178-3.574-2.18 0-2.514 1.7-2.514 3.46v6.668h-4.187V12.61z" fill="#fff"></path></svg></span></a><a aria-label="RSS" class="heateor_sss_button_rss" href="https://www.delloro.com/feed" title="RSS Feed" rel="nofollow noopener" target="_blank" style="font-size:32px!important;box-shadow:none;display:inline-block;vertical-align:middle"><span class="heateor_sss_svg heateor_sss_s__default heateor_sss_s_rss" style="background-color:#e3702d;width:18px;height:18px;border-radius:999px;display:inline-block;opacity:1;float:left;font-size:32px;box-shadow:none;display:inline-block;font-size:16px;padding:0 4px;vertical-align:middle;background-repeat:repeat;overflow:hidden;padding:0;cursor:pointer;box-sizing:content-box"><svg style="display:block;border-radius:999px;" focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 40 40" width="100%" height="100%"><g fill="#fff"><ellipse cx="7.952" cy="24.056" rx="2.952" ry="2.944"></ellipse><path d="M5.153 16.625c2.73 0 5.295 1.064 7.22 2.996a10.2 10.2 0 0 1 2.996 7.255h4.2c0-7.962-6.47-14.44-14.42-14.44v4.193zm.007-7.432c9.724 0 17.636 7.932 17.636 17.682H27C27 14.812 17.203 5 5.16 5v4.193z"></path></g></svg></span></a><a aria-label="X" class="heateor_sss_button_x" href="https://twitter.com/intent/tweet?text=Data%20Center%20Physical%20Infrastructure%20Market%20Forecast%20to%20Reach%20%24120%20Billion%20by%202030%2C%20According%20to%20Dell%E2%80%99Oro%20Group&url=https%3A%2F%2Fwww.delloro.com%2Fnews%2Fdata-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030%2F" title="X" rel="nofollow noopener" target="_blank" style="font-size:32px!important;box-shadow:none;display:inline-block;vertical-align:middle"><span class="heateor_sss_svg heateor_sss_s__default heateor_sss_s_x" style="background-color:#2a2a2a;width:18px;height:18px;border-radius:999px;display:inline-block;opacity:1;float:left;font-size:32px;box-shadow:none;display:inline-block;font-size:16px;padding:0 4px;vertical-align:middle;background-repeat:repeat;overflow:hidden;padding:0;cursor:pointer;box-sizing:content-box"><svg width="100%" height="100%" style="display:block;border-radius:999px;" focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path fill="#fff" d="M21.751 7h3.067l-6.7 7.658L26 25.078h-6.172l-4.833-6.32-5.531 6.32h-3.07l7.167-8.19L6 7h6.328l4.37 5.777L21.75 7Zm-1.076 16.242h1.7L11.404 8.74H9.58l11.094 14.503Z"></path></svg></span></a><a aria-label="PrintFriendly" class="heateor_sss_button_printfriendly" href="https://www.printfriendly.com/print?url=https%3A%2F%2Fwww.delloro.com%2Fnews%2Fdata-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030%2F&partner=a2a" title="PrintFriendly" rel="nofollow noopener" target="_blank" style="font-size:32px!important;box-shadow:none;display:inline-block;vertical-align:middle"><span class="heateor_sss_svg heateor_sss_s__default heateor_sss_s_printfriendly" style="background-color:#61d1d5;width:18px;height:18px;border-radius:999px;display:inline-block;opacity:1;float:left;font-size:32px;box-shadow:none;display:inline-block;font-size:16px;padding:0 4px;vertical-align:middle;background-repeat:repeat;overflow:hidden;padding:0;cursor:pointer;box-sizing:content-box"><svg style="display:block;border-radius:999px;" focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 32 32"><g stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-miterlimit="10"><path fill="none" d="M22.562 19.588v4.373H9.438v-4.37h13.124zm-13.124 1.53H6.375c-.483 0-.875-.313-.875-.7v-7.35c0-.387.392-.7.875-.7h19.25c.482 0 .875.313.875.7v7.35c0 .387-.393.7-.876.7h-3.062"></path><path fill="#fff" d="M22.562 12.32V8.04H9.436v4.28"></path></g></svg></span></a><a class="heateor_sss_more" aria-label="More" title="More" rel="nofollow noopener" style="font-size: 32px!important;border:0;box-shadow:none;display:inline-block!important;font-size:16px;padding:0 4px;vertical-align: middle;display:inline;" href="https://www.delloro.com/news/data-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030/" onclick="event.preventDefault()"><span class="heateor_sss_svg" style="background-color:#ee8e2d;width:18px;height:18px;border-radius:999px;display:inline-block!important;opacity:1;float:left;font-size:32px!important;box-shadow:none;display:inline-block;font-size:16px;padding:0 4px;vertical-align:middle;display:inline;background-repeat:repeat;overflow:hidden;padding:0;cursor:pointer;box-sizing:content-box;" onclick="heateorSssMoreSharingPopup(this, 'https://www.delloro.com/news/data-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030/', 'Data%20Center%20Physical%20Infrastructure%20Market%20Forecast%20to%20Reach%20%24120%20Billion%20by%202030%2C%20According%20to%20Dell%E2%80%99Oro%20Group', '' )"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-.3 0 32 32" version="1.1" width="100%" height="100%" style="display:block;border-radius:999px;" xml:space="preserve"><g><path fill="#fff" d="M18 14V8h-4v6H8v4h6v6h4v-6h6v-4h-6z" fill-rule="evenodd"></path></g></svg></span></a></div><div class="heateorSssClear"></div></div><div class='heateorSssClear'></div><h2><strong>Nearly 200 GW of Data Center Capacity to Be Added Through 2030 as Thermal Management Leads Growth</strong></h2>
+<p>&nbsp;</p>
+<p><strong>REDWOOD CITY, Calif. – August 19, 2026</strong> – According to a recently published report from Dell’Oro Group, the trusted source for market information about the telecommunications, security, networks, and data center industries, worldwide Data Center Physical Infrastructure (DCPI) manufacturer revenue is projected to grow at a 22 percent compound annual growth rate (CAGR) from 2025 to 2030, reaching $120 billion by the end of the period. This growth is driven by net additions to installed IT capacity, which account for the large majority of the forecast. Additionally, the infrastructure content per megawatt will have a smaller effect as higher-density and liquid-cooled architectures redistribute spend across DCPI categories.</p>
+<p>“The AI buildout has moved past the point where it can be treated as a surge. It is now the baseline against which the rest of the market is measured,” said Alex Cordovil, Research Director at Dell’Oro Group. “What has changed in this forecast is where the risk sits. Demand is no longer the open question—delivery is. Equipment lead times, construction labor, grid interconnection, and community consent all remain constrained, especially with the first statewide data center moratorium now in force.”</p>
+<p>Additional highlights from the Data Center Physical Infrastructure 5-Year July 2026 forecast report:</p>
+<ul>
+<li><strong>Capacity Additions Peak in 2026: </strong>Annual net capacity additions peak in year-over-year growth terms in 2026 and moderate steadily thereafter, remaining in double-digit growth territory through 2030. The market is still expanding quickly, but no longer accelerating. North America leads capacity additions over the period, followed by China.</li>
+<li><strong>Thermal Management Leads Segment Growth: </strong>Thermal Management remains the fastest-growing DCPI segment, with liquid cooling the fastest-growing technology as rack densification moves the technology from an option to a precondition. Heat rejection coverage has been expanded in this edition, with water-cooled chillers expected to grow faster than air-cooled units on scalability rather than efficiency. Chillers remain a staple of data center specifications, even in warm-water designs, since free cooling loses effectiveness during the hottest days of the year.</li>
+<li><strong>UPS Growth Concentrates in Larger Systems: </strong>Growth within the UPS segment concentrates in higher power rating three-phase systems, which are expected to expand faster than smaller units as the larger building blocks of AI clusters push deployments up the capacity curve. Medium-voltage designs are gaining ground, connecting UPS systems closer to the grid and attracting new entrants alongside established suppliers. Solid-state transformers are projected to weigh meaningfully on UPS demand beginning in 2029, initially focusing on large AI factories that have largely moved away from UPS-based architectures.</li>
+<li><strong>Hyperscalers and Colocation Anchor Demand:</strong> Hyperscalers end the period as the largest single contributor to DCPI revenue, although their growth has slowed compared to the pace seen in 2025–26, as they lean more heavily on colocation partners to serve workloads, particularly outside the United States. Colocation remains central to the buildout, and the spread of powered shell development is shifting equipment procurement onto the tenant, moving revenue among customer segments without altering building occupancy. Newly separated in this forecast, AI-specialized Cloud—the neoclouds and AI model builders—becomes one of the fastest-growing lines in our coverage. Enterprise demand continues to grow, but more slowly than the rest of the market.</li>
+<li><strong>Regional Diversification Builds: </strong>North America continues to lead regional growth, with China the next largest contributor. EMEA is the only region revised downward from the January forecast, reflecting slower power availability and a more difficult permitting environment. Community opposition has become a material constraint on siting, blocking or delaying a meaningful share of announced projects. Together with the expected repricing of U.S. natural gas, are expected to support faster growth in CALA and Asia Pacific excluding China.</li>
+</ul>
+<p>&nbsp;</p>
+<p><a href="https://www.delloro.com/market-research/data-center-infrastructure/data-center-physical-infrastructure/"><strong>About the Report</strong></a></p>
+<p>Dell’Oro Group’s <a href="https://www.delloro.com/market-research/data-center-infrastructure/data-center-physical-infrastructure/">Data Center Physical Infrastructure</a> 5-Year Forecast report provides a complete overview of the Data Center Physical Infrastructure market. This covers market sizes and forecasts for uninterruptible power supplies (UPS), thermal management, cabinet power distribution and busway, rack power distribution, IT racks and containment, and software and services. Allocation of manufacturer revenues by hyperscaler, other cloud, colocation, telco, and enterprise customer segments is also provided, alongside a forecast of data center capacity additions by region. For more information about the report, please contact us at <a href="mailto:dgsales@delloro.com">dgsales@delloro.com</a>.</p>
+<p><a href="https://www.delloro.com"><strong>About Dell’Oro Group</strong></a></p>
+<p>Dell’Oro Group is a market research firm that specializes in strategic competitive analysis in the telecommunications, security, enterprise networks, and data center infrastructure markets.  Our firm provides in-depth quantitative data and qualitative analysis to facilitate critical, fact-based business decisions.  For more information, contact Dell’Oro Group at +1.650.622.9400 or visit <a href="https://www.delloro.com">www.delloro.com</a>.</p>
+<p style="text-align: center;"># # #</p>
+					</div>
+
+	<footer class="related-post">
+				
+		
+	</footer>
+</article>
+
+
+
+				<div class="blog_detail-arrows cf">
+					<div class="privious-post">
+						<a class="btn bordeaux-btn" href="https://www.delloro.com/news/">News Room</a>
+					</div>
+											<div class="next-post">
+							<a class="btn blue-btn" href="https://www.delloro.com/market-research/data-center-infrastructure/data-center-physical-infrastructure/">Buy Report</a>
+						</div>
+									</div>
+			</main>
+			<aside class="sidebar single-report">
+	<!--    <div class="btn-wrap">
+            <a class="btn bordeaux-btn expanded" href="https://www.delloro.com/how-to-buy/">Purchase Report</a>
+        </div>-->
+
+	
+
+		<section id="press-releases" class="press-releases market-press-releases">
+			<div class="text-center report-box">
+				<h3 style="font-size: 1.375rem;">Press Contact:</h3>			
+			<p style="margin-top: -20px; padding-bottom: 25px;">
+						<a href="mailto:dgmedia@delloro.com">dgmedia@delloro.com</a>
+						</p>
+			</div>
+		</section>
+		
+		
+</aside>
+		</div>
+	</div>
+	<section data-wpr-lazyrender="1" class="subscribe-form has-overlay overlay-catalina-blue" style="background-image: url(https://www.delloro.com/wp-content/uploads/2019/04/subscribe-form-bg.jpg)">
+	<div class="grid-container">
+		<div class="grid-x grid-padding-x text-center">
+			<div class="subscribe-form-wrap">
+				<h2 class="h2" id="subscribe">Get the Latest in Your Inbox</h2><p>Subscribe to Dell'Oro Group's Hot Topics news feed for the latest details on market trends in the telecommunications, data center, and enterprise networks infrastructure spaces.</p><div class="subscribe-form-inner"><script type="text/rocketlazyloadscript">
+
+</script>
+
+                <div class='gf_browser_chrome gform_wrapper gform_legacy_markup_wrapper gform-theme--no-framework' data-form-theme='legacy' data-form-index='0' id='gform_wrapper_1' ><div id='gf_1' class='gform_anchor' tabindex='-1'></div><form method='post' enctype='multipart/form-data' target='gform_ajax_frame_1' id='gform_1'  action='/news/data-center-physical-infrastructure-market-forecast-to-reach-120-billion-by-2030/#gf_1' data-formid='1' novalidate>
+                        <div class='gform-body gform_body'><ul id='gform_fields_1' class='gform_fields top_label form_sublabel_below description_below validation_below'><li id="field_1_1" class="gfield gfield--type-text gfield--input-type-text half-col gfield_contains_required field_sublabel_below gfield--no-description field_description_below field_validation_below gfield_visibility_visible"  ><label class='gfield_label gform-field-label' for='input_1_1'><span class='gform-field-label__text'>First Name</span><span class="gfield_required"><span class="gfield_required gfield_required_asterisk">*</span></span></label><div class='ginput_container ginput_container_text'><input name='input_1' id='input_1_1' type='text' value='' class='medium'   tabindex='49'  aria-required="true" aria-invalid="false"   /></div></li><li id="field_1_2" class="gfield gfield--type-text gfield--input-type-text half-col gfield_contains_required field_sublabel_below gfield--no-description field_description_below field_validation_below gfield_visibility_visible"  ><label class='gfield_label gform-field-label' for='input_1_2'><span class='gform-field-label__text'>Last Name</span><span class="gfield_required"><span class="gfield_required gfield_required_asterisk">*</span></span></label><div class='ginput_container ginput_container_text'><input name='input_2' id='input_1_2' type='text' value='' class='medium'   tabindex='50'  aria-required="true" aria-invalid="false"   /></div></li><li id="field_1_3" class="gfield gfield--type-email gfield--input-type-email full-col gfield_contains_required field_sublabel_below gfield--no-description field_description_below field_validation_below gfield_visibility_visible"  ><label class='gfield_label gform-field-label' for='input_1_3'><span class='gform-field-label__text'>Working Email</span><span class="gfield_required"><span class="gfield_required gfield_required_asterisk">*</span></span></label><div class='ginput_container ginput_container_email'>
+                            <input name='input_3' id='input_1_3' type='email' value='' class='large' tabindex='51'   aria-required="true" aria-invalid="false"  />
+                        </div></li><li id="field_1_4" class="gfield gfield--type-checkbox gfield--type-choice gfield--input-type-checkbox checkbox-wrap field_sublabel_below gfield--no-description field_description_below field_validation_below gfield_visibility_visible gfield--choice-align-vertical"  ><label class='gfield_label gform-field-label gfield_label_before_complex' ><span class='gform-field-label__text'>What Hot Topics do you want to receive?</span></label><div class='ginput_container ginput_container_checkbox'><ul class='gfield_checkbox' id='input_1_4'><li class='gchoice gchoice_1_4_1'>
+								<input class='gfield-choice-input' name='input_4.1' type='checkbox'  value='1'  id='choice_1_4_1' tabindex='52'  />
+								<label for='choice_1_4_1' id='label_1_4_1' class='gform-field-label gform-field-label--type-inline'>Telecommunications Infrastructure</label>
+							</li></ul></div></li><li id="field_1_5" class="gfield gfield--type-checkbox gfield--type-choice gfield--input-type-checkbox checkbox-wrap none-label field_sublabel_below gfield--no-description field_description_below field_validation_below gfield_visibility_visible gfield--choice-align-vertical"  ><label class='gfield_label gform-field-label screen-reader-text gfield_label_before_complex' ><span class='gform-field-label__text'></span></label><div class='ginput_container ginput_container_checkbox'><ul class='gfield_checkbox' id='input_1_5'><li class='gchoice gchoice_1_5_1'>
+								<input class='gfield-choice-input' name='input_5.1' type='checkbox'  value='1'  id='choice_1_5_1' tabindex='53'  />
+								<label for='choice_1_5_1' id='label_1_5_1' class='gform-field-label gform-field-label--type-inline'>Enterprise Networks &amp; Security Infrastructure</label>
+							</li></ul></div></li><li id="field_1_6" class="gfield gfield--type-checkbox gfield--type-choice gfield--input-type-checkbox checkbox-wrap none-label field_sublabel_below gfield--no-description field_description_below field_validation_below gfield_visibility_visible gfield--choice-align-vertical"  ><label class='gfield_label gform-field-label screen-reader-text gfield_label_before_complex' ><span class='gform-field-label__text'></span></label><div class='ginput_container ginput_container_checkbox'><ul class='gfield_checkbox' id='input_1_6'><li class='gchoice gchoice_1_6_1'>
+								<input class='gfield-choice-input' name='input_6.1' type='checkbox'  value='1'  id='choice_1_6_1' tabindex='54'  />
+								<label for='choice_1_6_1' id='label_1_6_1' class='gform-field-label gform-field-label--type-inline'>Data Center Infrastructure</label>
+							</li></ul></div></li></ul></div>
+        <div class='gform-footer gform_footer top_label'> <button type='submit' id='gform_submit_button_1' class='gform_button button' onclick='gform.submission.handleButtonClick(this);' data-submission-type='submit' tabindex='55'>Subscribe to Hot Topics</button> <input type='hidden' name='gform_ajax' value='form_id=1&amp;title=&amp;description=&amp;tabindex=49&amp;theme=legacy&amp;styles=[]&amp;hash=be124afab8b1e99340d282f97c4d7b8c' />
+            <input type='hidden' class='gform_hidden' name='gform_submission_method' data-js='gform_submission_method_1' value='iframe' />
+            <input type='hidden' class='gform_hidden' name='gform_theme' data-js='gform_theme_1' id='gform_theme_1' value='legacy' />
+            <input type='hidden' class='gform_hidden' name='gform_style_settings' data-js='gform_style_settings_1' id='gform_style_settings_1' value='[]' />
+            <input type='hidden' class='gform_hidden' name='is_submit_1' value='1' />
+            <input type='hidden' class='gform_hidden' name='gform_submit' value='1' />
+            
+            <input type='hidden' class='gform_hidden' name='gform_currency' data-currency='USD' value='W17JXYuIlgDHhEoklXJw3A4ssxM68/VG+oDlAcJnHUnvVg+iZM9KS3Pzz4CkATvlFUUrXUMTQShggrMXKAkzOqwRGtIvduAIWvMlzGJmyydLjSo=' />
+            <input type='hidden' class='gform_hidden' name='gform_unique_id' value='' />
+            <input type='hidden' class='gform_hidden' name='state_1' value='WyJ7XCJnZm9ybV9zdWJtaXNzaW9uX21ldGhvZFwiOltcIjJkMDcwZTI3Y2U2ZmM4Y2FmMDlhMjZlNzMwZjY1MzEzXCIsXCI2NTllMTI0ODQ1ZGMyY2EyOTY0N2NiYzYxYzdmZDA3ZVwiLFwiODlmZDA3YmE1ZjRiZDhkMGUzZmFmY2VlNGEwMDRkZDJcIl0sXCJnZm9ybV90aGVtZVwiOlwiNzZmY2Q0ZDAwZWVjNTE3ODI1MWJiZTg2MDViZmIxOTNcIixcImdmb3JtX3N0eWxlX3NldHRpbmdzXCI6XCJlMmJiOWE0MGE1YzZhNjA4YmUzYzMxZjIyYjJjMGZiZFwiLFwiZm9ybV9pZFwiOlwiMjBjNThhMDg2MWI0M2Y0NmY1YWUyNTA4ZmU3OTg4ZDhcIixcInVybFwiOlwiMjcxZGY5OGQ3YjRjNzYxZmFmMzYwZDEwNDcyOGU1NzVcIixcInN0YXRlX3RpbWVzdGFtcFwiOlwiYWE4YTgwYzcxM2YyM2YzNTA5Yjg0YWJmZjliZWJmNGFcIn0iLCI2YzgwMzM5NjcyZWViOWI0NWQyMGUwM2FjNGRiZDA5OCIsMTc4OTQ4Mjc3Ml0=' />
+            <input type='hidden' autocomplete='off' class='gform_hidden' name='gform_target_page_number_1' id='gform_target_page_number_1' value='0' />
+            <input type='hidden' autocomplete='off' class='gform_hidden' name='gform_source_page_number_1' id='gform_source_page_number_1' value='1' />
+            <input type='hidden' name='gform_field_values' value='' />
+            
+        </div>
+                        <input type="hidden" id="ct_checkjs_4e0cb6fb5fb446d1c92ede2ed8780188" name="ct_checkjs" value="0" /><input
+                    class="apbct_special_field apbct_email_id__gravity_form"
+                    name="apbct__email_id__gravity_form"
+                    aria-label="apbct__label_id__gravity_form"
+                    type="text" size="30" maxlength="200" autocomplete="off"
+                    value=""
+                /><p style="display: none !important;" class="akismet-fields-container" data-prefix="ak_"><label>&#916;<textarea name="ak_hp_textarea" cols="45" rows="8" maxlength="100"></textarea></label><input type="hidden" id="ak_js_1" name="ak_js" value="114"/><script type="text/rocketlazyloadscript">
+document.getElementById( "ak_js_1" ).setAttribute( "value", ( new Date() ).getTime() );
+</script>
+</p></form>
+                        </div>
+		                <iframe style='display:none;width:0px;height:0px;' src='about:blank' name='gform_ajax_frame_1' id='gform_ajax_frame_1' title='This iframe contains the logic required to handle Ajax powered Gravity Forms.'></iframe>
+		                <script type="text/rocketlazyloadscript">window.addEventListener('DOMContentLoaded', function() {
+gform.initializeOnLoaded( function() {jQuery('#gform_ajax_frame_1').on('load',function(){var contents = jQuery(this).contents().find('*').html();var is_postback = contents.indexOf('GF_AJAX_POSTBACK') >= 0;if(!is_postback){return;}var form_content = jQuery(this).contents().find('#gform_wrapper_1');var is_confirmation = jQuery(this).contents().find('#gform_confirmation_wrapper_1').length > 0;var is_redirect = contents.indexOf('gformRedirect(){') >= 0;var is_form = form_content.length > 0 && ! is_redirect && ! is_confirmation;var mt = parseInt(jQuery('html').css('margin-top'), 10) + parseInt(jQuery('body').css('margin-top'), 10) + 100;if(is_form){jQuery('#gform_wrapper_1').html(form_content.html());if(form_content.hasClass('gform_validation_error')){jQuery('#gform_wrapper_1').addClass('gform_validation_error');} else {jQuery('#gform_wrapper_1').removeClass('gform_validation_error');}setTimeout( function() { /* delay the scroll by 50 milliseconds to fix a bug in chrome */ jQuery(document).scrollTop(jQuery('#gform_wrapper_1').offset().top - mt); }, 50 );var current_page = jQuery('#gform_source_page_number_1').val();jQuery(document).trigger('gform_page_loaded', [1, current_page]);window['gf_submitting_1'] = false;}else if(!is_redirect){var confirmation_content = jQuery(this).contents().find('.GF_AJAX_POSTBACK').html();if(!confirmation_content){confirmation_content = contents;}jQuery('#gform_wrapper_1').replaceWith(confirmation_content);jQuery(document).scrollTop(jQuery('#gf_1').offset().top - mt);jQuery(document).trigger('gform_confirmation_loaded', [1]);window['gf_submitting_1'] = false;wp.a11y.speak(jQuery('#gform_confirmation_message_1').text());}else{jQuery('#gform_1').append(contents);if(window['gformRedirect']) {gformRedirect();}}jQuery(document).trigger("gform_pre_post_render", [{ formId: "1", currentPage: "current_page", abort: function() { this.preventDefault(); } }]);        if (event && event.defaultPrevented) {                return;        }        const gformWrapperDiv = document.getElementById( "gform_wrapper_1" );        if ( gformWrapperDiv ) {            const visibilitySpan = document.createElement( "span" );            visibilitySpan.id = "gform_visibility_test_1";            gformWrapperDiv.insertAdjacentElement( "afterend", visibilitySpan );        }        const visibilityTestDiv = document.getElementById( "gform_visibility_test_1" );        let postRenderFired = false;        function triggerPostRender() {            if ( postRenderFired ) {                return;            }            postRenderFired = true;            gform.core.triggerPostRenderEvents( 1, current_page );            if ( visibilityTestDiv ) {                visibilityTestDiv.parentNode.removeChild( visibilityTestDiv );            }        }        function debounce( func, wait, immediate ) {            var timeout;            return function() {                var context = this, args = arguments;                var later = function() {                    timeout = null;                    if ( !immediate ) func.apply( context, args );                };                var callNow = immediate && !timeout;                clearTimeout( timeout );                timeout = setTimeout( later, wait );                if ( callNow ) func.apply( context, args );            };        }        const debouncedTriggerPostRender = debounce( function() {            triggerPostRender();        }, 200 );        if ( visibilityTestDiv && visibilityTestDiv.offsetParent === null ) {            const observer = new MutationObserver( ( mutations ) => {                mutations.forEach( ( mutation ) => {                    if ( mutation.type === 'attributes' && visibilityTestDiv.offsetParent !== null ) {                        debouncedTriggerPostRender();                        observer.disconnect();                    }                });            });            observer.observe( document.body, {                attributes: true,                childList: false,                subtree: true,                attributeFilter: [ 'style', 'class' ],            });        } else {            triggerPostRender();        }    } );} );
+});</script>
+</div>			</div>
+		</div>
+	</div>
+</section>
+<footer data-wpr-lazyrender="1" class="footer-main">
+	<div class="grid-container">
+					<div class="grid-x">
+				<div class="cell text-center">
+					<div class="social-share">
+						<h6>Follow Us</h6>
+						<ul>
+							<li><a href="https://www.linkedin.com/company/dell%27oro-group/" title="LinkedIn" target="_blank"><i class="fa fa-linkedin"</a></i></a></li><li><a href="https://twitter.com/DellOroGroup" title="Twitter" target="_blank"><i class="fa-brands fa-x-twitter"</a></i></a></li><li><a href="https://www.youtube.com/@dellorogroupanalysttalk" title="Youtube" target="_blank"><i class="fa fa-youtube"</a></i></a></li>						</ul>
+					</div>
+				</div>
+			</div>
+		
+		<div class="grid-x">
+			<div class="cell">
+				<div class="footer-nav">
+					<ul><li id="menu-item-11701" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-11701"><a href="https://www.delloro.com/market-research/">Market Research</a></li>
+<li id="menu-item-11702" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-11702"><a href="https://www.delloro.com/how-to-buy/">How to Buy</a></li>
+<li id="menu-item-11703" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-11703"><a href="https://www.delloro.com/knowledge-center/">Knowledge Center</a></li>
+<li id="menu-item-11704" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-11704"><a href="https://www.delloro.com/news/">News Room</a></li>
+<li id="menu-item-11705" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-11705"><a href="https://www.delloro.com/about/">About</a></li>
+<li id="menu-item-11707" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-11707"><a href="https://www.delloro.com/about/contact/">Contact</a></li>
+</ul>				</div>
+			</div>
+		</div>
+
+
+		<div class="grid-x">
+			<div class="cell">
+				<div class="copyright-wrap">
+										<p>&copy;2026 Dell'Oro. All rights reserved</p>
+
+					<ul><li><a href="https://www.delloro.com/privacy-policy/" title="Privacy Policy ">Privacy Policy </a></li><li><a href="https://www.delloro.com/terms-of-use/" title="Terms of Use">Terms of Use</a></li></ul>				</div>
+			</div>
+		</div>
+	</div>
+</footer>
+<div  class="back-arrow">
+	<div class="back-top" style="display: block;">
+		<img width="26" height="24" src="https://www.delloro.com/wp-content/themes/DellOro-Group/dist/assets/images/back-to-top.svg" alt="">
+	</div>
+</div>
+	</div>
+<script type="text/rocketlazyloadscript" data-rocket-type="text/javascript">
+    (function(e,t,o,n,p,r,i){e.visitorGlobalObjectAlias=n;e[e.visitorGlobalObjectAlias]=e[e.visitorGlobalObjectAlias]||function(){(e[e.visitorGlobalObjectAlias].q=e[e.visitorGlobalObjectAlias].q||[]).push(arguments)};e[e.visitorGlobalObjectAlias].l=(new Date).getTime();r=t.createElement("script");r.src=o;r.async=true;i=t.getElementsByTagName("script")[0];i.parentNode.insertBefore(r,i)})(window,document,"https://diffuser-cdn.app-us1.com/diffuser/diffuser.js","vgo");
+    vgo('setAccount', '1000763258');
+    vgo('setTrackByDefault', true);
+
+    vgo('process');
+</script>
+<script type="text/rocketlazyloadscript">
+document.addEventListener('DOMContentLoaded', function () {
+                        setTimeout(function(){
+                            if( document.querySelectorAll('[name^=ct_checkjs]').length > 0 ) {
+                                if (typeof apbct_public_sendREST === 'function' && typeof apbct_js_keys__set_input_value === 'function') {
+                                    apbct_public_sendREST(
+                                    'js_keys__get',
+                                    { callback: apbct_js_keys__set_input_value })
+                                }
+                            }
+                        },0)
+                    })
+</script>
+<script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/DellOro-Group/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+<div  style="display:none" class="fm-form-container fm-theme3"></div><script id="site_tracking-js-extra">
+var php_data = {"ac_settings":{"tracking_actid":1000763258,"site_tracking_default":1,"site_tracking":1},"user_email":""};
+//# sourceURL=site_tracking-js-extra
+</script>
+<script data-minify="1" id="site_tracking-js" src="https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/activecampaign-subscription-forms/site_tracking.js?ver=1785864044" data-rocket-defer defer></script>
+<script id="pt-cv-content-views-script-js-extra">
+var PT_CV_PUBLIC = {"_prefix":"pt-cv-","page_to_show":"5","_nonce":"79fdcefe5f","is_admin":"","is_mobile":"","ajaxurl":"https://www.delloro.com/wp-admin/admin-ajax.php","lang":"","loading_image_src":"data:image/gif;base64,R0lGODlhDwAPALMPAMrKygwMDJOTkz09PZWVla+vr3p6euTk5M7OzuXl5TMzMwAAAJmZmWZmZszMzP///yH/C05FVFNDQVBFMi4wAwEAAAAh+QQFCgAPACwAAAAADwAPAAAEQvDJaZaZOIcV8iQK8VRX4iTYoAwZ4iCYoAjZ4RxejhVNoT+mRGP4cyF4Pp0N98sBGIBMEMOotl6YZ3S61Bmbkm4mAgAh+QQFCgAPACwAAAAADQANAAAENPDJSRSZeA418itN8QiK8BiLITVsFiyBBIoYqnoewAD4xPw9iY4XLGYSjkQR4UAUD45DLwIAIfkEBQoADwAsAAAAAA8ACQAABC/wyVlamTi3nSdgwFNdhEJgTJoNyoB9ISYoQmdjiZPcj7EYCAeCF1gEDo4Dz2eIAAAh+QQFCgAPACwCAAAADQANAAAEM/DJBxiYeLKdX3IJZT1FU0iIg2RNKx3OkZVnZ98ToRD4MyiDnkAh6BkNC0MvsAj0kMpHBAAh+QQFCgAPACwGAAAACQAPAAAEMDC59KpFDll73HkAA2wVY5KgiK5b0RRoI6MuzG6EQqCDMlSGheEhUAgqgUUAFRySIgAh+QQFCgAPACwCAAIADQANAAAEM/DJKZNLND/kkKaHc3xk+QAMYDKsiaqmZCxGVjSFFCxB1vwy2oOgIDxuucxAMTAJFAJNBAAh+QQFCgAPACwAAAYADwAJAAAEMNAs86q1yaWwwv2Ig0jUZx3OYa4XoRAfwADXoAwfo1+CIjyFRuEho60aSNYlOPxEAAAh+QQFCgAPACwAAAIADQANAAAENPA9s4y8+IUVcqaWJ4qEQozSoAzoIyhCK2NFU2SJk0hNnyEOhKR2AzAAj4Pj4GE4W0bkJQIAOw=="};
+var PT_CV_PAGINATION = {"first":"\u00ab","prev":"\u2039","next":"\u203a","last":"\u00bb","goto_first":"Go to first page","goto_prev":"Go to previous page","goto_next":"Go to next page","goto_last":"Go to last page","current_page":"Current page is","goto_page":"Go to page"};
+//# sourceURL=pt-cv-content-views-script-js-extra
+</script>
+<script data-minify="1" id="pt-cv-content-views-script-js" src="https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/content-views-query-and-display-post-page/public/assets/js/cv.js?ver=1785864044" data-rocket-defer defer></script>
+<script id="ppress-frontend-script-js-extra">
+var pp_ajax_form = {"ajaxurl":"https://www.delloro.com/wp-admin/admin-ajax.php","confirm_delete":"Are you sure?","deleting_text":"Deleting...","deleting_error":"An error occurred. Please try again.","nonce":"e53bc53b0f","disable_ajax_form":"false","is_checkout":"0","is_checkout_tax_enabled":"0","is_checkout_autoscroll_enabled":"true"};
+//# sourceURL=ppress-frontend-script-js-extra
+</script>
+<script id="ppress-frontend-script-js" src="https://www.delloro.com/wp-content/plugins/wp-user-avatar/assets/js/frontend.min.js?ver=4.17.3" data-rocket-defer defer></script>
+<script id="jquery-ui-core-js-before">window.addEventListener('DOMContentLoaded', function() {
+jQuery.uiBackCompat = true;
+//# sourceURL=jquery-ui-core-js-before
+});</script>
+<script id="jquery-ui-core-js" src="https://www.delloro.com/wp-includes/js/jquery/ui/core.min.js?ver=1.14.2" data-rocket-defer defer></script>
+<script id="jquery-ui-datepicker-js" src="https://www.delloro.com/wp-includes/js/jquery/ui/datepicker.min.js?ver=1.14.2" data-rocket-defer defer></script>
+<script id="jquery-ui-datepicker-js-after">window.addEventListener('DOMContentLoaded', function() {
+jQuery(function(jQuery){jQuery.datepicker.setDefaults({"closeText":"Close","currentText":"Today","monthNames":["January","February","March","April","May","June","July","August","September","October","November","December"],"monthNamesShort":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"nextText":"Next","prevText":"Previous","dayNames":["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],"dayNamesShort":["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],"dayNamesMin":["S","M","T","W","T","F","S"],"dateFormat":"MM d, yy","firstDay":1,"isRTL":false});});
+//# sourceURL=jquery-ui-datepicker-js-after
+});</script>
+<script id="rocket-browser-checker-js-after">
+"use strict";var _createClass=function(){function defineProperties(target,props){for(var i=0;i<props.length;i++){var descriptor=props[i];descriptor.enumerable=descriptor.enumerable||!1,descriptor.configurable=!0,"value"in descriptor&&(descriptor.writable=!0),Object.defineProperty(target,descriptor.key,descriptor)}}return function(Constructor,protoProps,staticProps){return protoProps&&defineProperties(Constructor.prototype,protoProps),staticProps&&defineProperties(Constructor,staticProps),Constructor}}();function _classCallCheck(instance,Constructor){if(!(instance instanceof Constructor))throw new TypeError("Cannot call a class as a function")}var RocketBrowserCompatibilityChecker=function(){function RocketBrowserCompatibilityChecker(options){_classCallCheck(this,RocketBrowserCompatibilityChecker),this.passiveSupported=!1,this._checkPassiveOption(this),this.options=!!this.passiveSupported&&options}return _createClass(RocketBrowserCompatibilityChecker,[{key:"_checkPassiveOption",value:function(self){try{var options={get passive(){return!(self.passiveSupported=!0)}};window.addEventListener("test",null,options),window.removeEventListener("test",null,options)}catch(err){self.passiveSupported=!1}}},{key:"initRequestIdleCallback",value:function(){!1 in window&&(window.requestIdleCallback=function(cb){var start=Date.now();return setTimeout(function(){cb({didTimeout:!1,timeRemaining:function(){return Math.max(0,50-(Date.now()-start))}})},1)}),!1 in window&&(window.cancelIdleCallback=function(id){return clearTimeout(id)})}},{key:"isDataSaverModeOn",value:function(){return"connection"in navigator&&!0===navigator.connection.saveData}},{key:"supportsLinkPrefetch",value:function(){var elem=document.createElement("link");return elem.relList&&elem.relList.supports&&elem.relList.supports("prefetch")&&window.IntersectionObserver&&"isIntersecting"in IntersectionObserverEntry.prototype}},{key:"isSlowConnection",value:function(){return"connection"in navigator&&"effectiveType"in navigator.connection&&("2g"===navigator.connection.effectiveType||"slow-2g"===navigator.connection.effectiveType)}}]),RocketBrowserCompatibilityChecker}();
+//# sourceURL=rocket-browser-checker-js-after
+</script>
+<script id="rocket-preload-links-js-extra">
+var RocketPreloadLinksConfig = {"excludeUris":"/(?:.+/)?feed(?:/(?:.+/?)?)?$|/(?:.+/)?embed/|/(index.php/)?(.*)wp-json(/.*|$)|/refer/|/go/|/recommend/|/recommends/","usesTrailingSlash":"1","imageExt":"jpg|jpeg|gif|png|tiff|bmp|webp|avif|pdf|doc|docx|xls|xlsx|php","fileExt":"jpg|jpeg|gif|png|tiff|bmp|webp|avif|pdf|doc|docx|xls|xlsx|php|html|htm","siteUrl":"https://www.delloro.com","onHoverDelay":"100","rateThrottle":"3"};
+//# sourceURL=rocket-preload-links-js-extra
+</script>
+<script id="rocket-preload-links-js-after">
+(function() {
+"use strict";var r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},e=function(){function i(e,t){for(var n=0;n<t.length;n++){var i=t[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}return function(e,t,n){return t&&i(e.prototype,t),n&&i(e,n),e}}();function i(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}var t=function(){function n(e,t){i(this,n),this.browser=e,this.config=t,this.options=this.browser.options,this.prefetched=new Set,this.eventTime=null,this.threshold=1111,this.numOnHover=0}return e(n,[{key:"init",value:function(){!this.browser.supportsLinkPrefetch()||this.browser.isDataSaverModeOn()||this.browser.isSlowConnection()||(this.regex={excludeUris:RegExp(this.config.excludeUris,"i"),images:RegExp(".("+this.config.imageExt+")$","i"),fileExt:RegExp(".("+this.config.fileExt+")$","i")},this._initListeners(this))}},{key:"_initListeners",value:function(e){-1<this.config.onHoverDelay&&document.addEventListener("mouseover",e.listener.bind(e),e.listenerOptions),document.addEventListener("mousedown",e.listener.bind(e),e.listenerOptions),document.addEventListener("touchstart",e.listener.bind(e),e.listenerOptions)}},{key:"listener",value:function(e){var t=e.target.closest("a"),n=this._prepareUrl(t);if(null!==n)switch(e.type){case"mousedown":case"touchstart":this._addPrefetchLink(n);break;case"mouseover":this._earlyPrefetch(t,n,"mouseout")}}},{key:"_earlyPrefetch",value:function(t,e,n){var i=this,r=setTimeout(function(){if(r=null,0===i.numOnHover)setTimeout(function(){return i.numOnHover=0},1e3);else if(i.numOnHover>i.config.rateThrottle)return;i.numOnHover++,i._addPrefetchLink(e)},this.config.onHoverDelay);t.addEventListener(n,function e(){t.removeEventListener(n,e,{passive:!0}),null!==r&&(clearTimeout(r),r=null)},{passive:!0})}},{key:"_addPrefetchLink",value:function(i){return this.prefetched.add(i.href),new Promise(function(e,t){var n=document.createElement("link");n.rel="prefetch",n.href=i.href,n.onload=e,n.onerror=t,document.head.appendChild(n)}).catch(function(){})}},{key:"_prepareUrl",value:function(e){if(null===e||"object"!==(void 0===e?"undefined":r(e))||!1 in e||-1===["http:","https:"].indexOf(e.protocol))return null;var t=e.href.substring(0,this.config.siteUrl.length),n=this._getPathname(e.href,t),i={original:e.href,protocol:e.protocol,origin:t,pathname:n,href:t+n};return this._isLinkOk(i)?i:null}},{key:"_getPathname",value:function(e,t){var n=t?e.substring(this.config.siteUrl.length):e;return n.startsWith("/")||(n="/"+n),this._shouldAddTrailingSlash(n)?n+"/":n}},{key:"_shouldAddTrailingSlash",value:function(e){return this.config.usesTrailingSlash&&!e.endsWith("/")&&!this.regex.fileExt.test(e)}},{key:"_isLinkOk",value:function(e){return null!==e&&"object"===(void 0===e?"undefined":r(e))&&(!this.prefetched.has(e.href)&&e.origin===this.config.siteUrl&&-1===e.href.indexOf("?")&&-1===e.href.indexOf("#")&&!this.regex.excludeUris.test(e.href)&&!this.regex.images.test(e.href))}}],[{key:"run",value:function(){"undefined"!=typeof RocketPreloadLinksConfig&&new n(new RocketBrowserCompatibilityChecker({capture:!0,passive:!0}),RocketPreloadLinksConfig).init()}}]),n}();t.run();
+}());
+
+//# sourceURL=rocket-preload-links-js-after
+</script>
+<script data-minify="1" id="foundation-js" src="https://www.delloro.com/wp-content/cache/min/1/wp-content/themes/DellOro-Group/dist/assets/js/app.js?ver=1785864045" data-rocket-defer defer></script>
+<script data-minify="1" id="page-links-to-js" src="https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/page-links-to/dist/new-tab.js?ver=1785864045" data-rocket-defer defer></script>
+<script id="heateor_sss_sharing_js-js-before">
+function heateorSssLoadEvent(e) {var t=window.onload;if (typeof window.onload!="function") {window.onload=e}else{window.onload=function() {t();e()}}};	var heateorSssSharingAjaxUrl = 'https://www.delloro.com/wp-admin/admin-ajax.php', heateorSssCloseIconPath = 'https://www.delloro.com/wp-content/plugins/sassy-social-share/public/../images/close.png', heateorSssPluginIconPath = 'https://www.delloro.com/wp-content/plugins/sassy-social-share/public/../images/logo.png', heateorSssHorizontalSharingCountEnable = 0, heateorSssVerticalSharingCountEnable = 0, heateorSssSharingOffset = -10; var heateorSssMobileStickySharingEnabled = 0;var heateorSssCopyLinkMessage = "Link copied.";var heateorSssUrlCountFetched = [], heateorSssSharesText = 'Shares', heateorSssShareText = 'Share';function heateorSssPopup(e) {window.open(e,"popUpWindow","height=400,width=600,left=400,top=100,resizable,scrollbars,toolbar=0,personalbar=0,menubar=no,location=no,directories=no,status")}
+//# sourceURL=heateor_sss_sharing_js-js-before
+</script>
+<script data-minify="1" id="heateor_sss_sharing_js-js" src="https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/sassy-social-share/public/js/sassy-social-share-public.js?ver=1785864045" data-rocket-defer defer></script>
+<script id="jetpack-stats-js-before">
+_stq = window._stq || [];
+_stq.push([ "view", {"v":"ext","blog":"178271277","post":"29061","tz":"-7","srv":"www.delloro.com","j":"1:16.1.3"} ]);
+_stq.push([ "clickTrackerInit", "178271277", "29061" ]);
+//# sourceURL=jetpack-stats-js-before
+</script>
+<script data-wp-strategy="defer" defer fetchpriority="low" id="jetpack-stats-js" src="https://stats.wp.com/e-202638.js"></script>
+<script id="hoverIntent-js" src="https://www.delloro.com/wp-includes/js/hoverIntent.min.js?ver=1.10.2" data-rocket-defer defer></script>
+<script data-minify="1" id="megamenu-js" src="https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/megamenu/js/maxmegamenu.js?ver=1785864045" data-rocket-defer defer></script>
+<script data-minify="1" id="megamenu-pro-js" src="https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/megamenu-pro/assets/public.js?ver=1785864045" data-rocket-defer defer></script>
+<script id="wp-dom-ready-js" src="https://www.delloro.com/wp-includes/js/dist/dom-ready.min.js?ver=3fe927cab37bf38d6a23" data-rocket-defer defer></script>
+<script id="wp-hooks-js" src="https://www.delloro.com/wp-includes/js/dist/hooks.min.js?ver=f0f188028580e8dc1255"></script>
+<script id="wp-i18n-js" src="https://www.delloro.com/wp-includes/js/dist/i18n.min.js?ver=1dfe7db3940c23ea9216"></script>
+<script id="wp-i18n-js-after">
+wp.i18n.setLocaleData( { 'text direction\u0004ltr': [ 'ltr' ] } );
+//# sourceURL=wp-i18n-js-after
+</script>
+<script id="wp-a11y-js" src="https://www.delloro.com/wp-includes/js/dist/a11y.min.js?ver=31c6cec5a4ff7aff483d" data-rocket-defer defer></script>
+<script id="gform_json-js" defer='defer' src="https://www.delloro.com/wp-content/plugins/gravityforms/js/jquery.json.min.js?ver=3.1.1"></script>
+<script id="gform_gravityforms-js-extra">
+var gform_i18n = {"datepicker":{"wdOffset":1,"helpTextShort":"Press F1 for help","helpText":"Press the arrow keys to navigate by day, PageUp and PageDown to navigate by month, Alt+PageUp and Alt+PageDown to navigate by year, or Escape to cancel.","openOnFocusHelpText":"Press Down arrow to browse the calendar, or Escape to close.","tooltipTxt":"Press Escape to cancel","disabledTxt":"Disabled","markedTxt":"Selected","prevTxt":"Previous","nextTxt":"Next","monthTxt":"Month","yearTxt":"Year","months":["January","February","March","April","May","June","July","August","September","October","November","December"],"days":[{"s":"S","l":"Sunday"},{"s":"M","l":"Monday"},{"s":"T","l":"Tuesday"},{"s":"W","l":"Wednesday"},{"s":"T","l":"Thursday"},{"s":"F","l":"Friday"},{"s":"S","l":"Saturday"}]}};
+var gf_legacy_multi = [];
+var gform_gravityforms = {"strings":{"invalid_file_extension":"This type of file is not allowed. Must be one of the following:","file_uploaded":"File uploaded","delete_file":"Delete this file","in_progress":"in progress","file_exceeds_limit":"File exceeds size limit","illegal_extension":"This type of file is not allowed.","max_reached":"Maximum number of files reached","unknown_error":"There was a problem while saving the file on the server","currently_uploading":"Please wait for the uploading to complete","cancel":"Cancel","cancel_upload":"Cancel this upload","cancelled":"Cancelled","error":"Error","message":"Message"},"vars":{"images_url":"https://www.delloro.com/wp-content/plugins/gravityforms/images"}};
+var gf_global = {"gf_currency_config":{"name":"U.S. Dollar","symbol_left":"$","symbol_right":"","symbol_padding":"","thousand_separator":",","decimal_separator":".","decimals":2,"code":"USD"},"base_url":"https://www.delloro.com/wp-content/plugins/gravityforms","number_formats":[],"version_hash":"b56a2ece5773f1a0e5545a7d56134c87","countries":{"AF":"Afghanistan","AX":"\u00c5land Islands","AL":"Albania","DZ":"Algeria","AS":"American Samoa","AD":"Andorra","AO":"Angola","AI":"Anguilla","AQ":"Antarctica","AG":"Antigua and Barbuda","AR":"Argentina","AM":"Armenia","AW":"Aruba","AU":"Australia","AT":"Austria","AZ":"Azerbaijan","BS":"Bahamas","BH":"Bahrain","BD":"Bangladesh","BB":"Barbados","BY":"Belarus","BE":"Belgium","BZ":"Belize","BJ":"Benin","BM":"Bermuda","BT":"Bhutan","BO":"Bolivia","BQ":"Bonaire, Sint Eustatius and Saba","BA":"Bosnia and Herzegovina","BW":"Botswana","BV":"Bouvet Island","BR":"Brazil","IO":"British Indian Ocean Territory","BN":"Brunei Darussalam","BG":"Bulgaria","BF":"Burkina Faso","BI":"Burundi","CV":"Cabo Verde","KH":"Cambodia","CM":"Cameroon","CA":"Canada","KY":"Cayman Islands","CF":"Central African Republic","TD":"Chad","CL":"Chile","CN":"China","CX":"Christmas Island","CC":"Cocos Islands","CO":"Colombia","KM":"Comoros","CD":"Congo, Democratic Republic of the","CG":"Congo","CK":"Cook Islands","CR":"Costa Rica","CI":"C\u00f4te d'Ivoire","HR":"Croatia","CU":"Cuba","CW":"Cura\u00e7ao","CY":"Cyprus","CZ":"Czechia","DK":"Denmark","DJ":"Djibouti","DM":"Dominica","DO":"Dominican Republic","EC":"Ecuador","EG":"Egypt","SV":"El Salvador","GQ":"Equatorial Guinea","ER":"Eritrea","EE":"Estonia","SZ":"Eswatini","ET":"Ethiopia","FK":"Falkland Islands","FO":"Faroe Islands","FJ":"Fiji","FI":"Finland","FR":"France","GF":"French Guiana","PF":"French Polynesia","TF":"French Southern Territories","GA":"Gabon","GM":"Gambia","GE":"Georgia","DE":"Germany","GH":"Ghana","GI":"Gibraltar","GR":"Greece","GL":"Greenland","GD":"Grenada","GP":"Guadeloupe","GU":"Guam","GT":"Guatemala","GG":"Guernsey","GN":"Guinea","GW":"Guinea-Bissau","GY":"Guyana","HT":"Haiti","HM":"Heard Island and McDonald Islands","VA":"Holy See","HN":"Honduras","HK":"Hong Kong","HU":"Hungary","IS":"Iceland","IN":"India","ID":"Indonesia","IR":"Iran","IQ":"Iraq","IE":"Ireland","IM":"Isle of Man","IL":"Israel","IT":"Italy","JM":"Jamaica","JP":"Japan","JE":"Jersey","JO":"Jordan","KZ":"Kazakhstan","KE":"Kenya","KI":"Kiribati","KP":"Korea, Democratic People's Republic of","KR":"Korea, Republic of","KW":"Kuwait","KG":"Kyrgyzstan","LA":"Lao People's Democratic Republic","LV":"Latvia","LB":"Lebanon","LS":"Lesotho","LR":"Liberia","LY":"Libya","LI":"Liechtenstein","LT":"Lithuania","LU":"Luxembourg","MO":"Macao","MG":"Madagascar","MW":"Malawi","MY":"Malaysia","MV":"Maldives","ML":"Mali","MT":"Malta","MH":"Marshall Islands","MQ":"Martinique","MR":"Mauritania","MU":"Mauritius","YT":"Mayotte","MX":"Mexico","FM":"Micronesia","MD":"Moldova","MC":"Monaco","MN":"Mongolia","ME":"Montenegro","MS":"Montserrat","MA":"Morocco","MZ":"Mozambique","MM":"Myanmar","NA":"Namibia","NR":"Nauru","NP":"Nepal","NL":"Netherlands","NC":"New Caledonia","NZ":"New Zealand","NI":"Nicaragua","NE":"Niger","NG":"Nigeria","NU":"Niue","NF":"Norfolk Island","MK":"North Macedonia","MP":"Northern Mariana Islands","NO":"Norway","OM":"Oman","PK":"Pakistan","PW":"Palau","PS":"Palestine, State of","PA":"Panama","PG":"Papua New Guinea","PY":"Paraguay","PE":"Peru","PH":"Philippines","PN":"Pitcairn","PL":"Poland","PT":"Portugal","PR":"Puerto Rico","QA":"Qatar","RE":"R\u00e9union","RO":"Romania","RU":"Russian Federation","RW":"Rwanda","BL":"Saint Barth\u00e9lemy","SH":"Saint Helena, Ascension and Tristan da Cunha","KN":"Saint Kitts and Nevis","LC":"Saint Lucia","MF":"Saint Martin","PM":"Saint Pierre and Miquelon","VC":"Saint Vincent and the Grenadines","WS":"Samoa","SM":"San Marino","ST":"Sao Tome and Principe","SA":"Saudi Arabia","SN":"Senegal","RS":"Serbia","SC":"Seychelles","SL":"Sierra Leone","SG":"Singapore","SX":"Sint Maarten","SK":"Slovakia","SI":"Slovenia","SB":"Solomon Islands","SO":"Somalia","ZA":"South Africa","GS":"South Georgia and the South Sandwich Islands","SS":"South Sudan","ES":"Spain","LK":"Sri Lanka","SD":"Sudan","SR":"Suriname","SJ":"Svalbard and Jan Mayen","SE":"Sweden","CH":"Switzerland","SY":"Syria Arab Republic","TW":"Taiwan","TJ":"Tajikistan","TZ":"Tanzania, the United Republic of","TH":"Thailand","TL":"Timor-Leste","TG":"Togo","TK":"Tokelau","TO":"Tonga","TT":"Trinidad and Tobago","TN":"Tunisia","TR":"T\u00fcrkiye","TM":"Turkmenistan","TC":"Turks and Caicos Islands","TV":"Tuvalu","UG":"Uganda","UA":"Ukraine","AE":"United Arab Emirates","GB":"United Kingdom","US":"United States","UY":"Uruguay","UM":"US Minor Outlying Islands","UZ":"Uzbekistan","VU":"Vanuatu","VE":"Venezuela","VN":"Viet Nam","VG":"Virgin Islands, British","VI":"Virgin Islands, U.S.","WF":"Wallis and Futuna","EH":"Western Sahara","YE":"Yemen","ZM":"Zambia","ZW":"Zimbabwe"},"strings":{"newRowAdded":"New row added.","rowRemoved":"Row removed","formSaved":"The form has been saved.  The content contains the link to return and complete the form."}};
+//# sourceURL=gform_gravityforms-js-extra
+</script>
+<script id="gform_gravityforms-js" defer='defer' src="https://www.delloro.com/wp-content/plugins/gravityforms/js/gravityforms.min.js?ver=3.1.1"></script>
+<script id="gform_gravityforms_utils-js" defer='defer' src="https://www.delloro.com/wp-content/plugins/gravityforms/assets/js/dist/utils.min.js?ver=69a9db57304a9f86c3d1a0bea5fd2cf9"></script>
+<script id="gform_gravityforms_theme_vendors-js" defer='defer' src="https://www.delloro.com/wp-content/plugins/gravityforms/assets/js/dist/vendor-theme.min.js?ver=0c901cb641ce64b99c20ea1a4d208cc9"></script>
+<script id="gform_gravityforms_theme-js-extra">
+var gform_theme_config = {"common":{"form":{"honeypot":{"version_hash":"b56a2ece5773f1a0e5545a7d56134c87"},"ajax":{"ajaxurl":"https://www.delloro.com/wp-admin/admin-ajax.php","ajax_submission_nonce":"722fb54c5f","i18n":{"step_announcement":"Step %1$s of %2$s, %3$s","unknown_error":"There was an unknown error processing your request. Please try again.","error_403":"The request was blocked (403 error) for unknown security reasons. Remove any code-like text (scripts or DB queries) and try again."}}}},"hmr_dev":"","public_path":"https://www.delloro.com/wp-content/plugins/gravityforms/assets/js/dist/","config_nonce":"55bd880e07"};
+//# sourceURL=gform_gravityforms_theme-js-extra
+</script>
+<script id="gform_gravityforms_theme-js" defer='defer' src="https://www.delloro.com/wp-content/plugins/gravityforms/assets/js/dist/scripts-theme.min.js?ver=e27d9712159624c99129c8c208f022ad"></script>
+<script data-minify="1" defer id="akismet-frontend-js" src="https://www.delloro.com/wp-content/cache/min/1/wp-content/plugins/akismet/_inc/akismet-frontend.js?ver=1785864045"></script>
+<script type="text/rocketlazyloadscript">window.addEventListener('DOMContentLoaded', function() {
+gform.initializeOnLoaded( function() { jQuery(document).on('gform_post_render', function(event, formId, currentPage){if(formId == 1) {} } );jQuery(document).on('gform_post_conditional_logic', function(event, formId, fields, isInit){} ) } );
+});</script>
+<script type="text/rocketlazyloadscript">window.addEventListener('DOMContentLoaded', function() {
+gform.initializeOnLoaded( function() {jQuery(document).trigger("gform_pre_post_render", [{ formId: "1", currentPage: "1", abort: function() { this.preventDefault(); } }]);        if (event && event.defaultPrevented) {                return;        }        const gformWrapperDiv = document.getElementById( "gform_wrapper_1" );        if ( gformWrapperDiv ) {            const visibilitySpan = document.createElement( "span" );            visibilitySpan.id = "gform_visibility_test_1";            gformWrapperDiv.insertAdjacentElement( "afterend", visibilitySpan );        }        const visibilityTestDiv = document.getElementById( "gform_visibility_test_1" );        let postRenderFired = false;        function triggerPostRender() {            if ( postRenderFired ) {                return;            }            postRenderFired = true;            gform.core.triggerPostRenderEvents( 1, 1 );            if ( visibilityTestDiv ) {                visibilityTestDiv.parentNode.removeChild( visibilityTestDiv );            }        }        function debounce( func, wait, immediate ) {            var timeout;            return function() {                var context = this, args = arguments;                var later = function() {                    timeout = null;                    if ( !immediate ) func.apply( context, args );                };                var callNow = immediate && !timeout;                clearTimeout( timeout );                timeout = setTimeout( later, wait );                if ( callNow ) func.apply( context, args );            };        }        const debouncedTriggerPostRender = debounce( function() {            triggerPostRender();        }, 200 );        if ( visibilityTestDiv && visibilityTestDiv.offsetParent === null ) {            const observer = new MutationObserver( ( mutations ) => {                mutations.forEach( ( mutation ) => {                    if ( mutation.type === 'attributes' && visibilityTestDiv.offsetParent !== null ) {                        debouncedTriggerPostRender();                        observer.disconnect();                    }                });            });            observer.observe( document.body, {                attributes: true,                childList: false,                subtree: true,                attributeFilter: [ 'style', 'class' ],            });        } else {            triggerPostRender();        }    } );
+});</script>
+</body>
+</html>
+
+<!-- This website is like a Rocket, isn't it? Performance optimized by WP Rocket. Learn more: https://wp-rocket.me - Debug: cached@1789482772 -->

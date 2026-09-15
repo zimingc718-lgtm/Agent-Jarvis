@@ -1,0 +1,1082 @@
+
+
+
+
+
+
+
+
+
+<script type="text/javascript">	
+	var protocol = location.protocol;
+	var host = window.location.host;
+	var port = window.location.port;
+	var ctx = "http://www.cww.net.cn/";
+	var res = "http://cww.cww.net.cn/";
+</script>
+
+<!DOCTYPE html>
+<html lang="zn">
+<head>
+<title>面向智算中心的储能备电技术研究_通信世界网</title>
+<meta name ="keywords" content="智算中心">
+<meta name="description" content="截至2026年3月底，我国智算规模已达1882 EFLOPS（FP16），算力基础设施正从通用数据中心向高性能智算中心加速演进。然而，AI负载所呈现的动态特性，对供配电系统、制冷系统及电网稳定性均构成了前所未有的挑战。">
+<meta property="og:type" content="article" />
+<meta property="og:title" content="面向智算中心的储能备电技术研究_通信世界网" />
+<meta property="og:description" content="截至2026年3月底，我国智算规模已达1882 EFLOPS（FP16），算力基础设施正从通用数据中心向高性能智算中心加速演进。然而，AI负载所呈现的动态特性，对供配电系统、制冷系统及电网稳定性均构成了前所未有的挑战。" />
+<base href="https://www.cww.net.cn/" />
+<meta http-equiv="pragma" content="no-cache" />
+<meta http-equiv="cache-control" content="no-cache" />
+<meta http-equiv="expires" content="0" />    
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<link rel="icon" href="assets/img/ico.png" type="image/x-icon">
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<meta charset="utf-8">
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="format-detection" content="telephone=no" />
+
+<script src="http://cww.cww.net.cn/assets/js/jquery.js"></script>
+<link href="http://cww.cww.net.cn/assets/css/bootstrap.css" rel="stylesheet">
+<link rel="stylesheet" href="http://cww.cww.net.cn/assets/css/themify-icons.css">
+<link rel="stylesheet" href="http://cww.cww.net.cn/assets/css/font-awesome.css">
+<link href="http://cww.cww.net.cn/assets/css/style.css" rel="stylesheet" >
+<link href="http://cww.cww.net.cn/assets/css/base.css" rel="stylesheet" >
+<link href="http://cww.cww.net.cn/assets/css/bg_white.css" rel="stylesheet" >
+<link href="http://cww.cww.net.cn/assets/plugins/simplePagination-master/lib/pagination.css" rel="stylesheet" ><!-- 分页插件 -->
+<link href="http://cww.cww.net.cn/assets/plugins/bootstrap-toastr/toastr.min.css" rel="stylesheet" type="text/css"/><!-- 提示框插件 -->
+<link href="http://cww.cww.net.cn/assets/css/unslider.css" rel="stylesheet" >
+<link href="http://cww.cww.net.cn/assets/css/bootstrap-tagsinput.css" rel="stylesheet" >
+<!--焦点图--> 
+<script type="text/javascript" src="http://cww.cww.net.cn/assets/js/jdt.js"></script> 
+<!-- 页面底部百度分享自定义 -->
+<style>
+#share a{width:23px; height:23px; padding:0; margin:10px 2px;}
+#share a.popup_sqq{background: url(http://cww.cww.net.cn/assets/img/share_02_01_small.png) no-repeat;}
+#share a.bds_qzone{background: url(http://cww.cww.net.cn/assets/img/share_02_02_small.png) no-repeat;}
+#share a.bds_weixin{background: url(http://cww.cww.net.cn/assets/img/share_02_03_small.png) no-repeat;}
+#share a.bds_tsina{background: url(http://cww.cww.net.cn/assets/img/share_02_04_small.png) no-repeat;}
+
+/* #share_news a{width:25px; height:25px;}
+#share_news a.popup_sqq{background: url(http://cww.cww.net.cn/assets/img/share_02_01_h.png) no-repeat;  background-size: cover;}
+#share_news a.bds_qzone{background: url(http://cww.cww.net.cn/assets/img/share_02_02_h.png) no-repeat;  background-size: cover;}
+#share_news a.bds_weixin{background: url(http://cww.cww.net.cn/assets/img/share_02_03_h.png) no-repeat; background-size: cover;}
+#share_news a.bds_tsina{background: url(http://cww.cww.net.cn/assets/img/share_02_04_h.png) no-repeat;  background-size: cover;} */
+</style>
+<!-- 页面底部百度分享自定义 -->
+<!--[if lt IE 9]>
+<div style=' clear: both; text-align:center; position: relative;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/..">
+        <img src="http://img.t.felink.com/felinkcn/201604/images/ie8-panel/warning_bar_0000_us_cn.jpg" border="0" height="42" width="820"
+             alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today."/>
+    </a>
+</div>
+<script src="http://img.t.felink.com/felinkcn/201604/js/html5shiv.js"></script>
+<![endif]-->
+<script type="text/javascript">
+function MM_swapImgRestore() { //v3.0
+  var i,x,a=document.MM_sr; for(i=0;a&&i<a.length&&(x=a[i])&&x.oSrc;i++) x.src=x.oSrc;
+}
+function MM_preloadImages() { //v3.0
+  var d=document; if(d.images){ if(!d.MM_p) d.MM_p=new Array();
+    var i,j=d.MM_p.length,a=MM_preloadImages.arguments; for(i=0; i<a.length; i++)
+    if (a[i].indexOf("#")!=0){ d.MM_p[j]=new Image; d.MM_p[j++].src=a[i];}}
+}
+
+function MM_findObj(n, d) { //v4.01
+  var p,i,x;  if(!d) d=document; if((p=n.indexOf("?"))>0&&parent.frames.length) {
+    d=parent.frames[n.substring(p+1)].document; n=n.substring(0,p);}
+  if(!(x=d[n])&&d.all) x=d.all[n]; for (i=0;!x&&i<d.forms.length;i++) x=d.forms[i][n];
+  for(i=0;!x&&d.layers&&i<d.layers.length;i++) x=MM_findObj(n,d.layers[i].document);
+  if(!x && d.getElementById) x=d.getElementById(n); return x;
+}
+
+function MM_swapImage() { //v3.0
+  var i,j=0,x,a=MM_swapImage.arguments; document.MM_sr=new Array; for(i=0;i<(a.length-2);i+=3)
+   if ((x=MM_findObj(a[i]))!=null){document.MM_sr[j++]=x; if(!x.oSrc) x.oSrc=x.src; x.src=a[i+2];}
+}
+</script>
+<style>
+	.text iframe{overflow:hidden;overflow-x : hidden;overflow-y : hidden;width:95%;}
+	.floatAD{width:313px;height:216pxp;float:left;border:1px solid #f0f0f0;margin:8px 8px 8px 0;}
+	.floatAD img{margin:2px;}
+	.list-unstyled a{line-height:180%;}
+	video{width:720px;height:405px;text-align:center;}
+	@media(max-width:1200px){
+		video{width:100%;height:auto;text-indent:0;}
+	}
+</style>
+<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+</head>
+<body>
+	<!--header-->
+	
+
+	<header class="pos_r">
+		<!--顶部登陆注册-->
+		<div class="nav-top hidden-xs">
+			<div class="container">
+				<div class="row">
+					<!--登录后-->
+					
+					<!--登录后//-->
+					<!--登录前-->
+					
+					<div class=" ml15 pt-sm fr">
+						<a href="http://www.cww.net.cn/jsp/login.jsp">登录</a> &nbsp;&nbsp;|&nbsp;&nbsp; <a href="http://www.cww.net.cn/jsp/register.jsp">注册</a>
+					</div>
+					
+					<!--登录前//-->
+
+					<!--搜索-->
+					<div class="col-sm-3 col-sm-5  fr">
+						<div class="qingchu">
+							<div class="search " style="margin-top: 4px;">
+									<input id='topSearchWord' value="热词：新闻 | 直播 " onfocus="this.value = '';"
+									onblur="if (this.value == '') {this.value = '热词：新闻 | 直播  ';}"
+									type="text" class="texter"onKeyUp="showBtn();" onkeydown='if(event.keyCode==13){search();}' > 
+									<input type="submit2" class="clearer" id="clearBtn" onClick="clearText();" >
+									<input value="" type="submit" onclick="search()">
+							</div>
+						</div>
+					</div>
+					<!--搜索//-->
+					<div class=" topnav">
+						<ul class="list-unstyled list-inline">
+							<li><a href="http://www.cww.net.cn/web/homepage/index.action">首页</a></li>
+							<!--<li><a href="/web/magazines/issueslist.action?magazineId=2910" target="_blank">《通信世界》</a></li>-->
+							<li><a href="/web/magazines/index.action" target="_blank">图书推荐</a></li>
+							<li><a href="/subjects/cha/download/DCDDC3E188434ACE979EA14091C562B3" target="_blank">下载专区</a></li>
+							<li><a href="/subjects/nav/rollList/B49F9B4F2BE14170A5509153CADDB036" target="_blank">沙龙●会议</a></li>
+							<li class="tgIndex" style="margin-left:155px;"><a href="http://www.cww.net.cn/web/personalcenter/contribute.action" target="_blank"><img src="/images2020/tg.jpg" style="margin-top:-10px;"></a></li>
+						</ul>
+					</div>
+				</div>
+
+			</div>
+		</div>
+		<!--顶部登陆注册//-->
+		<!-- 泰山压顶广告 -->
+		<!-- <div class="box gg_container" style="position: relative; margin: 0 auto;">
+			<div class="gg_full">
+				<div class="gg_fbtn">
+					<a style="display:none;" class="gg_freplay" onclick="gg_freplay()" title="重播" href="javascript:;"></a>
+					<a class="gg_fclose" onclick="gg_fclose()" title="关闭" href="javascript:;"></a>
+				</div>
+				<div class="gg_fcon">
+				<a href="javascript:void(0);"><img  src="http://cww.cww.net.cn/images/20170710/44901499672287661.jpg"/></a>
+				</div>
+			</div>
+		</div> -->
+		<!-- 泰山压顶广告 //-->
+		<!--主导航-->
+		<nav class="navbar navbar-default navbar-static-top border-b clearfix">
+			<div class="container ">
+			    <!--广告栏-->
+                <!--
+		        <div class="row ggbar hidden-sm hidden-xs mt-lg " >
+		           <div class="col-md-12 img100 jianj-r gg_2 gg_h70" style="margin-bottom:3px;">
+		          		<a href="http://zhuanti.cww.net.cn/zhuanti/CWW20/" target="_blank"><img src="http://cww.cww.net.cn/assets/gg/20200113143512.jpg" style="width:970px;height:70px;"></a>
+		          </div>
+		        </div>
+                -->
+				<!--
+		        <div class="row ggbar hidden-sm hidden-xs mt-lg " >
+		          <div class="col-md-8 img100 jianj-r gg_2 gg_h70" style="margin-bottom:3px;" id="A0001">
+		          		
+		          </div>
+		           <div class="col-md-4 img100 gg_2 gg_h70" style="margin-bottom:3px;" id="A0002">
+		           		
+		           </div>
+		        </div>
+				-->
+			    <!--广告栏//--> 
+				<div class="row" style="padding: 20px 0px;">
+					<div class="navbar-right">
+						<ul class="navbar-nav  list-unstyled" data-type="navbar" id="channelList">
+							<li class="visible-xs tc" style="padding-top: 0">
+							
+							</li>
+							<li class="channelList1 channelListA">
+							<dd><a href="/subjects/nav/rollList/2603" target="_blank">监管</a></dd>
+							<dd><a href="/subjects/cha/channel/7E54960B6D8840A29525A5FC8534FDCC" target="_blank">运营</a></dd>
+							<dd><a href="/subjects/nav/rollList/4278" target="_blank">企业</a></dd>
+							<dd><a href="/subjects/nav/rollList/12372" target="_blank">产业</a></dd>
+							<dd><a href="/subjects/cha/channel/40E70A79BC864B60895472F8A85572D9" target="_blank">技术</a></dd>
+							<dd><a href="/subjects/cha/channel/1B52A8F9D69947B0B483383723E4B456" target="_blank">终端</a></dd>
+							<dd><a href="/subjects/nav/rollList/6553" target="_blank">视点</a></dd>
+							<dd><a href="/subjects/nav/rollList/CE2A0A3F766E4F3E8D2F3399AB3D570D" target="_blank">访谈</a></dd>
+							<dd><a href="/subjects/nav/topic/6CDF472D12EF4ECD9D6ED97320BB0C25" target="_blank">专题</a></dd>
+							<dd><a href="/subjects/cha/rollAllList" target="_blank">滚动</a></dd>
+							</li>
+							<li class="channelList2 channelListA">
+							<dd><a href="/subjects/cha/5G/9F1282077F8C43CBB90A83F4630703E7" target="_blank">5G•6G</a></dd>
+							<dd style="margin-left:-10px;"><a href="/subjects/nav/rollList/3004" target="_blank">无线</a></dd>
+							<dd style="margin-left:-10px;"><a href="/subjects/cha/channel/4D5DDD5AE49349B999171EBDA7EA383D" target="_blank">光通信</a></dd>
+							<dd><a href="/subjects/nav/rollList/8102" target="_blank">算力</a></dd>
+							<dd><a href="/subjects/nav/rollList/3009" target="_blank">人工智能</a></dd>
+							<dd style="margin-left:-10px;"><a href="/subjects/nav/rollList/3008" target="_blank">大数据</a></dd>
+							<dd style="margin-left:-10px;"><a href="/subjects/cha/video/C6ABC58F8191490EB1A1A69DAB313E3C" target="_blank">视频•直播</a></dd>
+							</li>
+							<li class="channelList3 channelListA">
+							<dd><a href="/subjects/nav/rollList/2633" target="_blank">互联网</a></dd>
+							<dd><a href="/subjects/nav/rollList/3007" target="_blank">工联网</a></dd>
+							<dd><a href="/subjects/nav/rollList/3006" target="_blank">芯片</a></dd>
+							<dd><a href="/subjects/cha/channel/E67BA656D31F435D91E72601AE1E2DC7" target="_blank">物联网</a></dd>
+							<dd><a href="/subjects/nav/rollList/8639" target="_blank">安全</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</dd>
+							<dd><a href="https://book.cww.net.cn/" target="_blank">图书</a></dd>
+							</li>
+						</ul>
+					</div>
+					<div class="navbar-header">
+						<div class="navbar-brand">&nbsp;</div>
+					</div>
+
+				</div>
+			</div>
+
+		</nav>
+		<!--主导航//-->
+		<div class=" topnav visible-xs mt-lg">
+						<ul class="list-unstyled list-inline">
+							<li>
+								<a href="http://www.cww.net.cn/web/homepage/index.action">首页</a>
+							</li>
+							<li class="dropdown" id="accountmenu"><a class="dropdown-toggle" data-toggle="dropdown" href="/web/magazines/issueslist.action?magazineId=2910">《通信世界》</a></li>
+							<li class="dropdown"><a href="/subjects/cha/download/DCDDC3E188434ACE979EA14091C562B3">下载专区</a></li>
+							<li class="dropdown"><a href="http://www.cww.net.cn/web/homepage/getPageRollNewsPage?columnsId=B49F9B4F2BE14170A5509153CADDB036">沙龙●会展</a></li>
+
+						</ul>
+		</div>
+	</header>
+<form id="searchForm" method="post"action="web/search/index.action" style=" height:0; line-height:0;">
+<input id="keyWord" name="keyWord" type="hidden">
+</form>
+<script type="text/javascript">
+var userId=$('#userId').val();
+var userImg=$('#userImg').val();
+var webPower=$('#webPower').val();
+if(userId==undefined){
+	userId="";
+}
+if(webPower==undefined){
+	webPower="";
+}
+if(userId!=""){
+	if(isContains('10000002'))
+		$('#tgBut').attr("disabled", false); 
+}
+function isContains(substr) {
+    return webPower.indexOf(substr) >= 0;
+}
+if(userId!=null&&userId!='')
+	setTimeout("getNoticeCount()",1000); 
+if(userImg==undefined || userImg==null || userImg=='' || userImg=='null'){
+	$("#userIco").attr("src","http://cww.cww.net.cn/assets/img/user-none.png");
+	$("#userIcoSm").attr("src","http://cww.cww.net.cn/assets/img/user-none.png");
+}
+//yxw add 通用的js判断
+function isloginJs(){
+	if(""==userId||null==userId||undefined==userId){
+		window.open("jsp/login.jsp");
+		return false;
+	}
+	return true;
+}
+function showBtn(){
+	if(document.getElementById('topSearchWord').value.length > 0){
+	document.getElementById('clearBtn').style.display = 'block';
+	}else{
+	document.getElementById('clearBtn').style.display = 'none';
+	}
+	}
+	function clearText(){
+	document.getElementById('topSearchWord').value = '热词：新闻 | 直播 ';
+	document.getElementById('clearBtn').style.display = 'none';
+	}
+//搜索
+function search(){
+	var keyWord=$('#topSearchWord').val();
+	if(keyWord==null||keyWord==''||keyWord=='热词：新闻 | 直播  '){
+		window.open("web/search/index.action");		
+	}else{
+		$('#keyWord').val(keyWord);
+		$('#searchForm').submit();
+	}
+}
+//去用户的消息数量
+function getNoticeCount(){
+	$.ajax({
+		url : ctx + 'web/personalcenter/getNoticeCount.json',
+		type : 'get',
+		dataType : 'json',
+		async : false,
+		success : function(data) {
+			// 操作成功
+			if (data['statusCode'] == '200') {
+				var jsonData=data['data'];
+				if(jsonData<10)
+					jsonData="&nbsp;"+jsonData+"&nbsp;";
+				$('#noticeCount').empty();
+				$('#noticeCount').append(jsonData);
+			}
+		}
+	});	
+}
+
+window._bd_share_config = {
+		"common" : {
+			"bdSnsKey" : {},
+			"bdText" : "",
+			"bdMini" : "2",
+			"bdMiniList" : false,
+			"bdPic" : 'http://www.cww.net.cn/assets/img/logo.png',
+			"bdStyle" : "1",
+			"bdSize" : "16"
+		}, 
+		"share" : {},
+		"image" : {
+			"viewList" : [ "tsina", "weixin", "qzone", "sqq" ],
+			"viewText" : "分享到：",
+			"viewSize" : "16"
+		},
+		"selectShare" : {
+			"bdContainerClass" : null,
+			"bdSelectMiniList" : [ "tsina", "weixin", "qzone", "sqq" ]
+		}
+	};
+</script>
+	<!--header//-->
+	<!--main-->
+<!--header//-->
+<!--面包屑导航-->
+	<div class="container">
+	<div class="navbread container">
+	<a href="http://www.cww.net.cn/web/homepage/index.action"><span>首页</span></a>
+	<span>></span>
+	
+	<span>资讯详情</span>
+	</div>
+	</div>
+<!--面包屑导航//-->
+	<!--main-->
+	<main>
+	<section class="container">
+		<div style="margin-bottom:10px;"><table width="100%"><tr><td><a href="https://k.weidian.com/EtdQWr5x" target="_blank"><img src="http://cww.cww.net.cn/assets/gg/20260113083449.jpg" style="width:100%" ></a></td></tr></table></div><!---->
+		<!--通栏广告--
+		<div class="row gg_01">
+			<div class="col-md-12 img100" id="ad3001">
+				
+			</div>
+		</div>
+		<div class="row gg_01">
+			<div class="col-md-12 img100">
+				<a href="#" target="_blank"><img src=""></a>
+			</div>
+		</div>
+        -->
+		<!--通栏广告//-->
+		<div class="row row2">
+			<!--左-->
+			<div class="col-md-8 ht-wz">
+				<div class="title">
+				
+					 
+					  
+						<h1>
+							<!-- <script type="text/javascript">
+								var articleTitle='面向智算中心的储能备电技术研究';
+								articleTitle=articleTitle.replace(/®/, "<sup>®</sup>");
+								document.write(articleTitle);
+							</script> -->
+							面向智算中心的储能备电技术研究
+						</h1>					 
+					 
+				
+				</div>
+				<div class="subtitle">
+							<!-- <script type="text/javascript">
+								var subTitle='';
+								subTitle=subTitle.replace(/®/, "<sup>®</sup>");
+								document.write(subTitle);
+							</script> -->
+					
+				</div>
+				<div class="col-md-12">
+					
+	            		<span class="introtit_fl"><em class="icon-circle listdot"></em>作者：中国信息通信研究院 王月 邱惠怿</span>
+	            	
+	            	
+	                	<span class="introtit_fl"><em class="icon-circle listdot"></em>责任编辑：孙天</span>
+	                
+	            	<span class="introtit_fl"><em class="icon-circle listdot"></em>2026.06.23 11:37</span>
+	            	
+	            		<span class="introtit_fl"><em class="icon-circle listdot text-info"></em>来源：通信世界网</span>
+	            	
+	            </div>
+	            <div class="clearfix"></div>
+	            <div class="col-md-12  mt-sm ">
+	             	<div class="newsbq fl ">
+		           		
+						
+			            	
+				            	 
+							      
+							      
+							      <div><a href="javascript:void(0);">智算中心</a></div>
+							     
+							    
+							
+			            
+		            </div>
+		            <div class="cl320"></div> 
+		            <div class="share_02" id="share_news">		      
+		       			<div class="bdsharebuttonbox" id="bdshare"  style="margin: 0 auto;width:130px">
+		       				<span><a href="#" class="popup_sqq" data-cmd="sqq" title="分享到QQ好友"></a></span>
+							<span><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a></span>
+							<span><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></span>
+							<span><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a></span>						
+						</div>	          
+					</div>
+					<input type="hidden" id="arcticleSummary" value="截至2026年3月底，我国智算规模已达1882 EFLOPS（FP16），算力基础设施正从通用数据中心向高性能智算中心加速演进。然而，AI负载所呈现的动态特性，对供配电系统、制冷系统及电网稳定性均构成了前所未有的挑战。">
+					<script type="text/javascript">
+					var arcticleSummary=$('#arcticleSummary').val().replace(/\n/g, '');
+					if(arcticleSummary==''||arcticleSummary=='null'||arcticleSummary==null)
+						arcticleSummary='面向智算中心的储能备电技术研究';
+					var bdPic='';
+					if(bdPic==''||bdPic=='null'||bdPic==null)
+						bdPic="http://www.cww.net.cn/assets/img/logo.png";
+					else
+						bdPic=ctx+bdPic;
+					window._bd_share_config = {
+								"common" : {
+									"bdSnsKey" : {},
+									"bdText" : "",
+									'bdComment':arcticleSummary,
+									"bdMini" : "2",
+									"bdMiniList" : false,
+									"bdPic" : bdPic,
+									"bdStyle" : "1",
+									"bdSize" : "16"
+								}, 
+								"share" : {},
+								"image" : {
+									"viewList" : [ "tsina", "weixin", "qzone", "sqq" ],
+									"viewText" : "分享到：",
+									"viewSize" : "16"
+								}/*,
+								"selectShare" : {
+									"bdContainerClass" : null,
+									"bdSelectMiniList" : [ "tsina", "weixin", "qzone", "sqq" ]
+								}*/
+							};
+					</script>
+	            </div>				
+				<!-- 新闻内容 -->
+				<div class="clearfix"></div>
+				<div class="borderbtm"></div>
+					<div id="divContentDiv" class="text">
+					<div class="p-lg"><a href="https://zhuanti.cww.net.cn/zhuanti/2026kdrh/" target="_blank"><img src="http://cww.cww.net.cn/assets/gg/202607211404361124.jpg" width="780" alt=""/></a></div>
+					<p style="text-indent:2em;"><strong>通信世界网消息</strong>（CWW）<span style="text-indent: 2em;">截至2026年3月底，我国智算规模已达1882 EFLOPS（FP16），算力基础设施正从通用数据中心向高性能智算中心加速演进。然而，AI负载所呈现的动态特性，对供配电系统、制冷系统及电网稳定性均构成了前所未有的挑战。传统数据中心基于负载相对平稳、断电属于低频突发事件的假设，配置了以“不间断电源（UPS）+铅酸蓄电池+柴油发电机”为核心的应急备电架构。面对智算中心机柜功率密度增加、功率波动冲击与备电容量扩大的挑战，该架构暴露出空间、成本与灵活性等局限。本文从功率波动、长时备电与资源共享三个维度，探讨适应下一代智算基础设施的新型储能备电技术体系。</span></p><p style="text-indent:2em;"><strong>1 </strong><strong>功率型储能：</strong><strong>应对高密度智算功率剧烈波动</strong></p><p style="text-indent:2em;"><strong>1.1 负载功率波动的成因与危害</strong></p><p style="text-indent:2em;">Jensen、Ko等相关研究表明，在大规模AI训练与推理期间，数万个图形处理单元（GPU）以高度同步方式执行大规模分布式训练任务，GPU功耗可在毫秒级尺度内从峰值跌至空闲状态。个体GPU的功率变化通过集群级同步被瞬时放大，形成可在机架、算力中心乃至电网层面被观测到的剧烈功率波动。传统UPS为稳定负载设计，逆变器若不能及时响应陡增负载，输出电压下降可能触发欠压保护并导致服务器宕机。为弥补功率缺口，算力中心被迫增大蓄电池设计容量并频繁进行大电流充放电，不仅增加了备电设施占地面积，远超铅酸电池设计的工况还会导致设备寿命锐减。</p><p style="text-indent:2em;"><strong>1.2 </strong><strong>功率型储能的技术路径与应用价值</strong></p><p style="text-indent:2em;">超级电容、飞轮等功率型储能设备具有功率密度极高、响应速度极快、循环寿命极长等特点，是应对高频瞬时冲击的理想选择。部署于服务器侧或UPS侧时，功率型储能可在UPS逆变器响应延迟期间瞬时释放电能，有效填补芯片瞬时高功耗缺口，将供电可靠性提升至新高度，并为高端用户提供低纹波、低瞬变的优质电能。面向AI数据中心的多时间尺度功率波动特征，混合储能架构通过功率型与能量型设备的协同配置，可在不同时间尺度上分层平抑功率冲击，成为提升供电质量与延长电池寿命的重要技术路径，对于保障“数字生命线”安全、支撑人工智能产业高质量发展具有重要战略意义。</p><p style="text-indent:2em;"><strong>2 </strong><strong>长时储能：</strong><strong>满足超大型算力中心的</strong><strong>备电</strong><strong>需求</strong></p><p style="text-indent:2em;"><strong>2.1 传统备电架构的局限性与适应性问题</strong></p><p style="text-indent:2em;">算力中心应急备电基于最大负载与极端故障场景的一次性容量方法设计，铅酸蓄电池仅提供15分钟左右短时支撑，服务于柴油发电机启动及服务器有序关机，柴油发电机及配套储油设施则作为后备电源接管全部负载。该方案在通用算力中心时代基本满足业务连续性需求，已成为行业通行的工程范式。随着单体智算中心规模扩大、机柜功率密度攀升，该架构缺陷日益凸显：首先是建筑空间约束，UPS主机、铅酸蓄电池组、柴油发电机组及储油设施体量庞大，挤占宝贵机房空间；其次是运维负担沉重，铅酸电池设计寿命仅3～5年，在UPS系统15年生命周期内需更换3～4次，显著增加物料与人工成本；最后是供应链压力加剧，智算中心建设潮导致铅酸电池与柴发机组供需失衡、价格上涨，传统方案的经济可持续性面临挑战。</p><p style="text-indent:2em;"><strong>2.2 </strong><strong>长时储能的技术路径与系统价值</strong></p><p style="text-indent:2em;">长时储能（Long-Duration Energy Storage，LDES）利用钠/锂离子电池、全钒液流电池、压缩空气等新型储能技术，将备电时长延伸至数小时乃至更长，成为突破传统架构瓶颈的关键。基于电池循环寿命等特性，长时储能在非备电工况下可参与电价套利、提升新能源消纳水平、缓解电网容量约束，推动储能系统从“成本中心”向“价值创造单元”转变。户外长时储能系统可大幅压缩乃至替代柴油发电机与地下储油设施，通过能量管理系统（Energy Management System，EMS）实现负载、储能与外部电网的统一调度，可显著提升运行效率与灵活性。智算中心作为高能耗新型基础设施，若与风电、光伏等新能源特性曲线耦合，将有效降低用能成本与碳排放，助力绿色算力发展[9]。</p><p style="text-indent:2em;"><strong>3 </strong><strong>共享备电：</strong><strong>算力集群集约化</strong><strong>发展的优化路径</strong></p><p style="text-indent:2em;"><strong>3.1 独立备电模式的资源错配与效率问题</strong></p><p style="text-indent:2em;">当前，算力集群备电的建设思路仍停留在单体建筑内，“N+1”或“2N”的冗余标准也只在单建筑内实施。各楼宇只按自身峰值负荷独立配置UPS、铅酸电池及柴油发电机组，楼栋之间则形成备电资源互不联通的局面。这种“重冗余、轻共享”的配置逻辑导致相当一部分备电容量长期处于闲置状态，设备利用率偏低。同时，每栋楼宇重复建设完整柴发与储油设施，设备投资成倍叠加。</p><p style="text-indent:2em;"><strong>3.2 </strong><strong>共享备电的模式设计与集群效益</strong></p><p style="text-indent:2em;">共享备电的核心思路，在于打破楼栋边界，将分散的备电需求向上收敛到园区层面统一解决。园区通过建设集中式备电站，并以统一的中压配电网络为多栋楼宇提供备用电源，可有效减少柴油发电机和地下储能设施数量，降低初始投资与折旧成本。从运行模式的角度出发，通过对不同楼宇的业务类型和调度策略进行规划，将负荷峰谷在时间上错开排列，并借助规模系数进行调整，可以实现备电容量的集约化配置。在满足同等可靠性要求的前提下，显著降低总体备电容量[11]。</p><p style="text-indent:2em;">集中部署后，备电系统可统一采用长时储能、大功率柴发或两者混合的技术路线，实现规模化、专业化运营；充分释放各楼栋原本用于柴发机房、储油设施及电池室的建筑空间，将其转化为算力部署空间，从而提升园区单位土地面积的算力产出密度。</p><p style="text-indent:2em;"><strong>4 结论与展望</strong></p><p style="text-indent:2em;">本文围绕智算中心发展趋势，对功率型储能、长时储能与共享备电三项关键技术进行了分析。AI训练与推理负荷带来的周期性、瞬时性功率冲击，已使传统“UPS+铅酸电池+柴油发电机”的备电架构难以为继，功率型储能凭借毫秒级响应速度与超长循环寿命，在服务器侧功率波动平抑方面具有重要的价值。长时储能不仅能够逐步压缩柴油发电机和铅酸电池的配额甚至完全取代，还在全生命周期成本、机房空间释放、新能源就地消纳等维度具有显著优势。园区级共享备电可大幅降低算力集群整体备电冗余与投资成本，让备电运维更加集约化。</p><p style="text-indent:2em;">需要强调的是，功率型储能、长时储能与共享备电并非相互独立，而是呈现协同融合趋势。三者的有机融合，有望构建起覆盖“瞬时—短时—长时”多层次、“单体—园区—区域”多尺度的新型储能备电体系。后续研究应重点关注多类储能系统的协调控制策略、多能互补优化调度算法，以及相应的标准规范、商业模式与政策机制设计，为我国算力基础设施的高质量、可持续发展提供系统性技术支撑。</p><p style="text-indent:2em;"><br/></p></div>
+					<script language="javascript">
+					var articlePicUrl = "";
+					var articleVideo = $(".text video");
+					var content = $(".text").html();
+					var re = /text-indent:[\s]*0em;/ig;
+					
+					$(".text").html(content.replace(re,""));
+					re = /http:\/\/221\.179\.172\.81\:8080/ig;
+					$(".text").html(content.replace(re,"https://images.cww.net.cn"));
+					
+					
+					if(articlePicUrl!="" && articleVideo.length>0)
+					{
+						$(".text video").attr("poster","" + ctx + articlePicUrl + "");
+						$(".text video").parent().css("text-indent","0");
+						$(".text video").parent().css("padding","0");
+						$(".text video").parent().css("margin","0");
+						//$(".text video").css("width","720");
+						//$(".text video").css("height","405px");
+						//$(".text video").css("width","100%");
+						//$(".text video").css("height","405px");
+					}
+					</script>
+					<div id="PaginationContent" class="pagination pull-right mr10" style="display: none;"><!-- 这里显示分页 --></div>
+					<div class=" clearfix"></div>
+					
+				<!--								
+				<div class="img100 p-lg"><a href="https://www.cww.net.cn/article?id=603664" target="_blank"><img src="http://cww.cww.net.cn/assets/gg/20250905165510.jpg" width="650" alt=""/></a></div>
+				-->
+				<div style="font-size:12px;line-height:18px;color:#555;padding:15px;">
+				<div style="font-size:16px;line-height:18px;color:#333;padding-bottom:10px;font-weight:bold;padding:15px 0px;border-top:1px dashed #ccc;">通信世界网版权及免责声明:</div>
+1、凡本网注明“来源：通信世界全媒体”及标有原创的所有作品，版权均属于通信世界网。未经允许禁止转载、摘编及镜像，违者必究。对于经过授权可以转载我方内容的单位，也必须保持转载文章、图像、音视频的完整性，并完整标注作者信息和本站来源。<br>
+2、凡本网注明“来源：XXX（非通信世界网）”的作品，均转载自其它媒体，转载目的在于传递更多信息，并不代表本网赞同其观点和对其真实性负责。<br>
+3、如因作品内容、版权和其它问题需要同本网联系的，请在相关作品刊发之日起30日内进行。<br>
+				</div>
+				      
+				<!-- <div class=" border-b">&nbsp;</div> -->
+				<!-- 新闻内容 -->
+				
+				<div class="col-md-12" ><div id="_uluct"></div></div>
+				<script>
+					function setIframeHeight(iframe) {
+						if (iframe) {
+							var iframeWin = iframe.contentWindow
+							|| iframe.contentDocument.parentWindow;
+							if (iframeWin.document.body) {
+							var co=iframeWin.document.documentElement.scrollHeight;
+							var ff=iframeWin.document.body.scrollHeight;
+							if(co<ff)
+							iframe.height = iframeWin.document.documentElement.scrollHeight+30;
+							else
+							iframe.height = iframeWin.document.body.scrollHeight+30;
+							}
+						}
+					};
+					window.onload = function () {
+						$(".text iframe").css("height",parseInt($(".text iframe").css("width").replace("px",""))*9/16+"px");
+						setIframeHeight(document.getElementById('likenews'));
+					};
+				    (function () {
+				        //var cnt=document.getElementById("_uluct");
+				        if(!cnt)
+				            return;
+				        // urcmd.html?_usiteId=预先分配的siteId&_unum=请求推荐的条数&_uitemId="+当前文章id+"&_uuid=用户的id
+				        var url= "urcmd.html?_usiteId=5024&_unum=8&_uitemId=610893&_uuid="+userId+"&_v="+parseInt(Math.random()*10000);
+				        cnt.innerHTML='<iframe id="likenews"  width="100%" height="auto"  marginwidth="0" marginheight="0" frameborder="0" scrolling="no" src="'+url+'"></iframe>';
+				    })()				
+				</script>
+				<div class="clearfix"></div>
+				<div id="commentDiv" class="optioncon mt-xl">
+					<div id="commentloginDiv" class="inputarea_l p">
+						发表评论请先<a href="http://www.cww.net.cn/jsp/login.jsp" style="color: blue">登录</a>
+					</div>
+					<!--评价输入 开始-->
+					<div id="commentFormDiv" class="inputarea_l ">
+						<div>
+							<textarea cols="" rows="3" id="comment"></textarea>
+						</div>
+						<div class="fr margin_top_10"
+							style="margin-top: 10px; margin-right: 20px; margin-bottom: 10px;">
+
+							<span class="btn_submit ml-xl fr"><a
+								href="javascript:void(0)" onClick="addComment()">发表评论</a></span>
+							<!--点赞-->
+							<div id="likeBut" class=" ft28 textgray fr" onClick="likeFun()" style="cursor:pointer">
+								<i class="icon-thumbs-up"></i>
+							</div>
+							<!--点赞//-->
+							<!--已赞-->
+<!-- 							<div class=" ft28 text-info fr">
+								<i class="icon-thumbs-up"></i>
+							</div> -->
+							<!--已赞//-->
+						</div>
+
+						<!-- <div class="fr margin_top_10" style="margin-top:10px; margin-right:20px;"><span class="btn_submit"><a href="javascript:void(0);">评论</a></span></div>-->
+						<div class="fl p">
+							
+						</div>
+						<div class="v_text"></div>
+						<div class=" clearfix"></div>
+					</div>
+					<!--评价输入 结束-->
+					<div class="pingjia">
+						<ul id="myTab" class="nav nav-tabs">
+							<li class="active "><a href="#home" data-toggle="tab">
+									评价</a></li>
+							<div class=" ml-lg mr-lg  fr" >
+								<i class="icon-thumbs-up text-info ft16 "></i> <span id="likeCount">0</span>
+							</div>
+							<div class="fr">共<span id="commentCount">0</span>条评论</div>
+
+
+
+						</ul>
+						<div id="myTabContent" class="tab-content">
+							<div class="tab-pane fade in active" id="commentList">
+							
+							
+
+
+							</div>
+
+
+						</div>
+						<div class="tc">
+						<div id="Pagination" class="pagination pull-right mr10"><!-- 这里显示分页 --></div>
+<!-- 							<ul class="pagination  ">
+								<li><a href="javascript:void(0);">&laquo;</a></li>
+								<li class="active"><a href="javascript:void(0);">1</a></li>
+								<li class="disabled"><a href="javascript:void(0);">2</a></li>
+								<li><a href="javascript:void(0);">3</a></li>
+								<li><a href="javascript:void(0);">4</a></li>
+								<li><a href="javascript:void(0);">5</a></li>
+								<li><a href="javascript:void(0);">&raquo;</a></li>
+							</ul> -->
+						</div>
+					</div>
+
+
+				</div>
+			</div>
+			<!--左//-->
+			<div class="clearfix visible-xs"></div>
+			<!--右-->
+			<div class="col-md-4 leftbar4">
+				<!--热点文章-->
+				<div class="rightbar bgcolor-white ">
+					<div class="more">
+						<a id="1026MoreUrl" href="javascript:void(0);" title="更多" target="_blank">...</a>
+					</div>
+					<div class="title">
+						<span id="1026title">热点文章</span>
+					</div>
+					<div class="">
+						<ul class="list-unstyled" id="1026NewsList">
+							<center>
+								<img alt="暂无内容" src="http://cww.cww.net.cn/assets/img/none/zwxw.png">
+							</center>
+						</ul>
+
+					</div>
+				</div>
+				<!--热点文章//-->
+				<!--技术文章-->
+				<div class="rightbar bgcolor-white hidden-xs">
+					<div class="more">
+						<a id="1027MoreUrl" href="javascript:void(0);" title="更多" target="_blank">...</a>
+					</div>
+					<div class="title">
+						<span id="1027title">技术文章</span>
+					</div>
+					<div class="">
+						<ul class="list-unstyled" id="1027NewsList">
+							<center>
+								<img alt="暂无内容" src="http://cww.cww.net.cn/assets/img/none/zwxw.png">
+							</center>
+						</ul>
+
+					</div>
+				</div>
+				<!--技术文章//-->
+				<!--活动预告-->
+				<div class="rightbar bgcolor-white hidden-xs">
+					<div class="more">
+						<a id="1028MoreUrl" href="javascript:void(0);" title="更多" target="_blank">...</a>
+					</div>
+					<div class="title">
+						<span id="1028title">会议活动</span>
+					</div>
+					<div class="tuwen" id='1028top'>
+												
+					</div>
+					<div class="">
+						<ul class="list-unstyled" id="1028NewsList">
+							<center>
+								<img alt="暂无内容" src="http://cww.cww.net.cn/assets/img/none/zwxw.png">
+							</center>
+						</ul>
+
+					</div>
+				</div>
+				<!--活动预告//-->
+				<!--通信世界电子刊
+				
+<style>
+.wqhg_t{text-align:center;color:#000;font-size:40px;font-weight:600;margin-bottom:20px;letter-spacing:2px;}
+.wqhg_per{width:45%;float:left;}
+.wqhg_fengmianPic img{width:142px;height:178px;border:0;}
+.wqhg_list{padding:0px 0px 10px 0px;}
+.wqhg_per{margin-left:15px;margin-top:10px;}
+.wqhg_list div:nth-child(2n+1){margin-left:0;}
+.wqhg_title{text-align:center;padding:20px 0;}
+.wqhg_title div,.wqhg_title a:link,.wqhg_title a:visited,.wqhg_title a:hover,.wqhg_title a:active{font-size:18px;color:#444;text-decoration:none;}
+</style>
+				<div class="rightbar bgcolor-white hidden-xs">
+					<div class="more">
+						<a href="http://www.cww.net.cn/web/magazines/issueslist.action?magazineId=2910" title="更多" target="_blank">...</a>
+					</div>
+					<div class="title">
+						<span>通信世界电子刊</span>
+					</div>
+					<div class="dzk"></div>
+					<div style="clear:both;"></div>
+				</div>
+	
+	<script language="javascript">
+	console.log("aaa")
+	var page = 1;
+	var wqhg = function(){
+		page = page<1?1:page
+		$.ajax({
+			url:"http://zhuanti.cww.net.cn/cwwweizhan/wjhg.asp?pgNum=2&page=" + page,
+			success:function(data){
+				console.log("data")
+				$(".dzk").html(data)
+			}
+		})
+	}
+	console.log("bbb")
+	wqhg()
+	</script>
+	
+				<!--通信世界电子刊//-->
+			</div>
+			<!--右//-->
+		</div>
+	</section>
+	</main>
+	<!--main//-->
+<!--成功提示框-->
+ <div class="jf-bg"></div>
+ 	<div class="jf-box" >
+		
+	</div> 
+
+<!--成功提示框//-->
+
+	<!--main//-->
+	<!--footer-->
+	
+
+
+
+<div class="footer clear hidden-xs">
+	<div class="footer-wrapper">
+		<div class="apus-link row">
+			<ul class="col-lg-2 col-xs-12 pr-xl btm_share">
+				<li class=""><img src="http://cww.cww.net.cn/assets/img/btm_logo.jpg" alt="" /></li>
+				<div id="share">
+					<div class="bdsharebuttonbox">
+						
+						<span><a href="#" class="popup_sqq" data-cmd="sqq" title="分享到QQ好友"></a></span>
+						<span><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a></span>
+						<span><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></span>
+						<span><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a></span>
+					</div>
+				</div>
+			</ul>
+                <ul class="col-lg-3 col-sm-4 col-xs-6 jianj-r " style="border-left:1px #ececec solid">
+                    <li><a href="http://www.miit.gov.cn/" target="_blank">工业和信息化部</a></li>
+                    <li><a href="https://www.ciitp.com.cn/" target="_blank">中国工信出版传媒集团</a></li>
+                    <li><a href="http://www.ptpress.com.cn/" target="_blank">人民邮电出版社</a></li>
+                    <li><a href="http://www.bjxintong.com.cn/" target="_blank">北京信通传媒有限责任公司</a></li>
+                    <li><a href="http://www.cace.org.cn/" target="_blank">中国通信企业协会</a></li>
+                    <li><a href="http://www.china-cic.org.cn/" target="_blank">中国通信学会</a></li>
+                    <li><a href="http://www.ccsa.org.cn/" target="_blank">中国通信标准化协会</a></li>
+                    <li><a href="https://home.isc.org.cn/default/index" target="_blank">互联网协会</a></li>  
+                    <li><a href="http://www.catr.cn/" target="_blank">中国信息通信研究院</a></li>
+                </ul>
+            	<ul class="col-lg-2 col-sm-4 col-xs-6 jianj-r jianj-l" >
+                 <li><a href="http://www.srrc.org.cn/" target="_blank">无线电频谱管理中心</a></li>
+                    <li><a href="http://www.ptac.com.cn/" target="_blank">中国邮电器材公司</a></li>
+                    <li><a href="http://www.chinatelecom.com.cn/" target="_blank">中国电信</a></li>
+                    <li><a href="http://www.chinamobile.com/" target="_blank">中国移动</a></li>
+                    <li><a href="http://www.chinaunicom.com/" target="_blank">中国联通</a></li>  
+                    <li><a href="https://www.china-tower.com/" target="_blank">中国铁塔</a></li>
+                    <li><a href="https://www.cbn.cn/" target="_blank">中国广电</a></li>
+              </ul>
+            	<ul class="col-lg-2 col-sm-4 col-xs-6 jianj-r"  style="border-left:1px #ececec solid">
+                <li><a href="http://www.iitime.com.cn/" target="_blank">工联网</a></li>
+                <li><a href="https://www.iisci.net/" target="_blank">信息通信学术期刊网</a></li>
+                <li><a href="http://tech.ifeng.com/" target="_blank">凤凰网科技</a></li>
+                 <li><a href="http://tech.sina.com.cn/" target="_blank">新浪科技</a></li>
+                 <li><a href="http://it.sohu.com/" target="_blank">搜狐IT</a></li>
+                    <li><a href="http://tech.qq.com/" target="_blank">腾讯科技</a></li>
+                    <li><a href="http://tech.hexun.com/" target="_blank">和讯科技</a></li>
+                 
+                 
+                    
+              </ul>
+              <ul class="col-lg-2 col-sm-4 col-xs-6 jianj-r">
+                  <li><a href="http://scitech.people.com.cn" target="_blank">人民网科技频道</a></li> 
+                  <li><a href="http://www.c114.com.cn/" target="_blank">C114通信网</a></li>
+                  <li><a href="http://www.ccidcom.com/" target="_blank">通信产业网</a></li>
+                  <li><a href="http://www.idcquan.com/" target="_blank">中国IDC圈</a></li>
+                  <li><a href="http://www.d1net.com/" target="_blank">企业网D1net</a></li> 
+                  <li><a href="https://www.e-works.net.cn/" target="_blank">e-works</a></li> 
+              </ul>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+</div>
+<div class="footer_btm">
+	<div class="footer-wrapper">
+        	<div class="text-center">
+            	<a href="http://zhuanti.cww.net.cn/management/" target="_blank">关于我们</a> | <a href="http://zhuanti.cww.net.cn/management/?surl=guanggbaojia.htm" target="_blank">广告服务</a> | <a href="http://www.cww.net.cn/web/magazines/issueslist.action?magazineId=2910" target="_blank">在线阅读</a>  | <a href="http://zhuanti.cww.net.cn/management/?surl=main.asp?artid=79481" target="_blank">工作机会</a> | <a href="http://zhuanti.cww.net.cn/management/?surl=main.asp?artid=78851" target="_blank">联系我们</a>  | <a href="http://zhuanti.cww.net.cn/siteMap.html" target="_blank">本站导航</a>
+            </div>
+        	<div class="text-center">Copyright ©1999-2026 By cww.net.cn.  <a href="https://beian.miit.gov.cn/" target="_blank" style="color:#fff;">京ICP备09082226号-10</a>  <a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=11010602203012" target="_blank">京公网安备11010602203012号</a></div>
+        	<div class="text-center">公司名称：北京信通传媒有限责任公司&nbsp;&nbsp; 法律顾问：北京市蓝石律师事务所</div>
+	</div>
+</div>
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+<script>
+	$(function() {
+		//列表自适应
+		var ptListWrp = $('.jQ_ptLst'); //列表容器
+		var valLstLiWth = $('.jQ_ptLst li').width(); //图片宽度（图片可能包括边框样式等，取Li宽度参与可视图片计算避免误差）
+		var valImgLth = 1; //可见图数变量*
+		var valpLstMg = 0; //边距变量*
+		var pLstLesMg = 5; //临界间距
+		//列表滚动
+		var pLstRoLt = $('.jQ_plstRoLt'); //左滚动元素
+		var pLstRoRt = $('.jQ_plstRoRt'); //右滚动元素
+		var pLstImgLth = ptListWrp.find('img').length; //获取图片总数
+		//宽度自适应方法
+		function fnAutoWth() {
+			//重置滚动
+			$('.jQ_ptLst ul').css({
+				'marginLeft' : '0'
+			});
+			pLstRoLt.hide();
+			pLstRoRt.show();
+			var pLstWrpWth = ptListWrp.width(); //获取当前可视区域宽度
+			valImgLth = Math.floor(pLstWrpWth / valLstLiWth); ///当前可视图片数计算*
+			//图片间距算法
+			function fnpLstMg() {
+				//间距 = 除去图片的宽度 /（图片数 + 1），并向上取整（避免小数误差）
+				valpLstMg = Math.ceil((pLstWrpWth - valImgLth * valLstLiWth)
+						/ (valImgLth + 1));
+			}
+			;
+			//执行计算
+			fnpLstMg();
+			//间距临界值
+			if (valpLstMg < pLstLesMg) {
+				valImgLth = valImgLth - 1; //当间距达到临界值，图片数-1
+				fnpLstMg(); //重新计算间距
+			}
+			;
+			//可视图片数 >= 总图片数时，总图片数即可视图片数
+			if (valImgLth >= pLstImgLth) {
+				valImgLth = pLstImgLth;
+				fnpLstMg(); //重新计算间距
+				pLstRoRt.hide();
+			}
+			;
+			//使可视图不为0
+			// if(valImgLth == 0){
+			// valpLstMg = 5;
+			// };
+			//设置间距
+			//ptListWrp.find('li').css('margin-left', valpLstMg);
+			ptListWrp.find('li').css('margin-left', 20);
+		}
+		;
+		//初始执行宽度自适应方法
+		fnAutoWth();
+		//动态变化宽度时执行方法
+		$(window).resize(function() {
+			fnAutoWth(); //宽度自适应方法
+		});
+		//滚动方法
+		function fnPlstArr($this) {
+			var pLstRoWrp = ptListWrp.find('ul');
+			var ptLstCssMg = parseInt(pLstRoWrp.css('margin-left')); //获取当前已滚动宽度
+			var ptLstImgMg = parseInt(pLstRoWrp.find('li:first').css(
+					'margin-left')); //获取当前图片间距
+			//向右滚动
+			if ($this.hasClass('jQ_plstRoRt')) {
+				//当点击右箭头时，列表向左滚动。需滚动的宽度 = 当前图片间距 + 图片宽度（取Li宽度）
+				pLstRoWrp.not(':animated').animate(
+						{
+							marginLeft : ptLstCssMg
+									- (ptLstImgMg + valLstLiWth)
+						},
+						200,
+						function() {
+							//回调函数判断滚动之后的箭头状态
+							var ptLstCurMg = parseInt(pLstRoWrp
+									.css('margin-left')); //获取当前已滚动宽度
+							var ptLstRoWth = (pLstImgLth - valImgLth)
+									* (ptLstImgMg + valLstLiWth);//计算非可视区域宽度
+							//当已滚动宽度 = 非可视区宽度，即已滚动至最后一图
+							if (ptLstCurMg + ptLstRoWth == 0) {
+								$this.hide(); //隐藏右箭头
+							}
+							;
+							pLstRoLt.show(); //一旦向右滚动，左箭头即显示
+						});
+			}
+			;
+			//向左滚动
+			if ($this.hasClass('jQ_plstRoLt')) {
+				pLstRoWrp.not(':animated').animate(
+						{
+							marginLeft : ptLstCssMg
+									+ (ptLstImgMg + valLstLiWth)
+						},
+						200,
+						function() {
+							//回调函数判断滚动之后的箭头状态
+							var ptLstCurMg = parseInt(pLstRoWrp
+									.css('margin-left')); //获取当前已滚动宽度
+							var ptLstRoWth = (pLstImgLth - valImgLth - 1)
+									* (ptLstImgMg + valLstLiWth);//计算非可视区域宽度
+							//当已滚动宽度 = 0，即已滚动至最前一图
+							if (ptLstCurMg == 0) {
+								$this.hide(); //隐藏左箭头
+							}
+							;
+							pLstRoRt.show(); //一旦向左滚动，右箭头即显示
+						});
+			}
+			;
+		}
+		;
+		//滚动事件绑定
+		$('.jQ_plstRoLt, .jQ_plstRoRt').click(function() {
+			fnPlstArr($(this));
+		})
+		//..
+	});
+</script>
+<!--滚动//-->
+ <script>
+	with (document)
+		0[(getElementsByTagName('head')[0] || body)
+				.appendChild(createElement('script')).src = 'http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='
+				+ ~(-new Date() / 36e5)];
+	
+	if(userImg==undefined || userImg==null || userImg=='' || userImg=='null'){
+		$("#userIMG").attr("src","http://cww.cww.net.cn/assets/img/user-none.png");
+	}
+</script>
+<script src="assets/js/img404.js"></script>
+	<!--footer//-->
+	
+<script src='http://cww.cww.net.cn/assets/js/device.min.js'></script>
+<script src="http://cww.cww.net.cn/assets/js/bootstrap.min.js"></script>
+<script src="http://cww.cww.net.cn/assets/js/tm-scripts.js"></script>  
+<script src="http://cww.cww.net.cn/assets/plugins/simplePagination-master/lib/jquery.pagination.js"></script><!-- 分页插件 -->
+<script src="http://cww.cww.net.cn/assets/plugins/bootstrap-toastr/toastr.min.js" type="text/javascript"></script><!-- 提示框插件 -->
+<script src="http://cww.cww.net.cn/assets/js/index.js" type="text/javascript"></script><!-- 公共调用侧边栏加载数据 -->
+<script src="js/adspaces.js" type="text/javascript"></script><!-- 公共调用广告加载数据 -->
+<script src="http://cww.cww.net.cn/assets/plugins/bootbox/bootbox.min.js"></script><!-- 弹出框插件 -->
+<script src="http://cww.cww.net.cn/assets/js/unslider.min.js"></script>
+<script src="http://cww.cww.net.cn/assets/js/bootstrap-tagsinput.min.js"></script>
+<script type="text/javascript">
+toastr.options = {
+        closeButton: true,
+        debug: false,
+        positionClass: 'toast-top-center',
+        onclick: null
+    };
+var contextPath = 'http://www.cww.net.cn/';
+var resPath = 'http://cww.cww.net.cn/';
+/**
+ * 时间出转换函数
+ * alert(format(new Date().getTime(), 'yyyy-MM-dd HH:mm:ss'));
+ **/
+var format = function(time, format){
+    var t = new Date(time);
+    var tf = function(i){return (i < 10 ? '0' : '') + i};
+    return format.replace(/yyyy|MM|dd|HH|mm|ss/g, function(a){
+        switch(a){
+            case 'yyyy':
+                return tf(t.getFullYear());
+                break;
+            case 'MM':
+                return tf(t.getMonth() + 1);
+                break;
+            case 'mm':
+                return tf(t.getMinutes());
+                break;
+            case 'dd':
+                return tf(t.getDate());
+                break;
+            case 'HH':
+                return tf(t.getHours());
+                break;
+            case 'ss':
+                return tf(t.getSeconds());
+                break;
+        }
+    })
+}
+ //金额格式化函数--调用：fmoney("12345.675910", 3)，返回12,345.676 
+function fmoney(s, n) {
+		n = n > 0 && n <= 20 ? n : 2;
+		s = parseFloat((s + "").replace(/[^\d\.-]/g, "")).toFixed(n) + "";
+		var l = s.split(".")[0].split("").reverse(), r = s.split(".")[1];
+		t = "";
+		for (i = 0; i < l.length; i++) {
+			t += l[i] + ((i + 1) % 3 == 0 && (i + 1) != l.length ? "," : "");
+		}
+		return t.split("").reverse().join("") + "." + r;
+	}
+//金额格式化还原函数
+function rmoney(s) {  
+    return parseFloat(s.replace(/[^\d\.-]/g, ""));  
+}  
+//乘法函数
+function accMul(arg1,arg2){
+	var m=0,s1=arg1.toString(),s2=arg2.toString();
+	try{m+=s1.split(".")[1].length}catch(e){}
+	try{m+=s2.split(".")[1].length}catch(e){}
+	return Number(s1.replace(".",""))*Number(s2.replace(".",""))/Math.pow(10,m)
+}
+//加法函数
+function accAdd(arg1,arg2){
+	var r1,r2,m;
+	try{r1=arg1.toString().split(".")[1].length}catch(e){r1=0}
+	try{r2=arg2.toString().split(".")[1].length}catch(e){r2=0}
+	m=Math.pow(10,Math.max(r1,r2))
+	return (arg1*m+arg2*m)/m
+}
+//评论内容处理
+function LRtrim(str){
+	var string=str.replace(/^\s+|\s+$/g,"");//去除两端的空格
+	string=string.replace(/<[^>]+>/g,"");//去除html标签
+	return string;
+} 
+//百度主动链接推送
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+	<script type="text/javascript">
+		var pagebreak = "<hr/>";
+		$("#nav1").attr("class", "sfHover");
+		var id="AE69667852494A87BD5654C5A625F1B6";
+		var articleTitle="面向智算中心的储能备电技术研究_通信世界网";
+		var arcticleSummary=$('#arcticleSummary').val().replace(/\n/g, '');
+		var comment_type="0";
+		initSideInfo();//初始化侧边栏
+		initAd3001();//内页顶部通栏
+		//------ 文章页顶部新增广告位 --------//
+		initAdA0001();   // 
+		initAdA0002();   //
+		// !-- //
+	</script>
+	<script src="js/news/articleinfo.js?v=2023122001"></script>
+	<script src="http://zhuanti.cww.net.cn/js/ads_news.js?v=2026051901" type="text/javascript"></script>
+	<script language="javascript">
+	</script>
+</body>
+</html>

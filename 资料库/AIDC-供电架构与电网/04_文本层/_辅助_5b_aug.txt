@@ -1,0 +1,394 @@
+----- PAGE 1 -----
+RELIABILITY | RESILIENCE | SECURITY 
+ 
+ 
+NERC | Report Title | Report Date 
+I 
+Public 
+Public 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Appendix 5B 
+Statement of Compliance Registry Criteria 
+Revision 9 
+ 
+Effective: TBD
+----- PAGE 2 -----
+NERC | Appendix 5B – Statement of Compliance Registry Criteria (Revision 8) |, 202X 
+ii 
+Public 
+Public 
+Table of Contents 
+Statement of Compliance Registry Criteria (Revision 9) ................................................................................................. 1 
+Summary...................................................................................................................................................................... 1 
+Background .................................................................................................................................................................. 2 
+Statement of Issue ....................................................................................................................................................... 2 
+Resolution .................................................................................................................................................................... 2 
+Registry Criteria ........................................................................................................................................................... 2 
+Determination of Material Impact .............................................................................................................................. 6 
+Limitation of responsibilities to a sub-set of Reliability Standards ............................................................................. 7
+----- PAGE 3 -----
+Public 
+Public 
+Statement of Compliance Registry Criteria (Revision 9)  
+ 
+Summary 
+This document describes how the North American Electric Reliability Corporation (NERC) will identify organizations 
+that may be candidates for Registration and assign them to the Compliance Registry. 
+ 
+NERC and the Regional Entities
+1 have the obligation to identify and register all entities that meet the criteria for 
+inclusion in the Compliance Registry, as further explained in the balance of this document. 
+ 
+Organizations will be responsible to register and to comply with approved Reliability Standards to the extent that 
+they are owners, operators, and users of the Bulk Power System (BPS), perform a function listed in the functional 
+types identified in Section II of this document, and are material to the Reliable Operation of the interconnected BPS 
+as defined by the criteria and sections set forth in this document. NERC will apply the following principles to the 
+Compliance Registry: 
+ 
+• In order to carry out its responsibilities related to enforcement of Reliability Standards, NERC must identify 
+the owners, operators, and users of the BPS who have a material impact 2 on the BPS through a Compliance 
+Registry. NERC and the Regional Entities will make their best efforts to identify all owners, users and 
+operators who have a material impact on the BPS in order to  develop a complete and current Compliance 
+Registry list. The Compliance Registry will be updated as required and maintained on an on-going basis. 
+• Organizations listed in the Compliance Registry are responsible and will be monitored for compliance with 
+applicable mandatory Reliability Standards. They will be subject to NERC's and the Regional Entities’  
+Compliance Monitoring and Enforcement Programs. 
+• NERC and Regional Entities will not monitor nor hold those not in the Compliance Registry responsible for 
+compliance with the Reliability Standards. An entity which is not initially placed on the Compliance Registry, 
+but which is identified subsequently as having a material impact on the BPS, will be added to the Compliance 
+Registry. Such entity will not be subject to a sanction or Penalty by NERC or the Regional Entity for actions or 
+inactions prior to being placed on the Compliance Registry, but  may be required to comply with a Remedial 
+Action Directive or Mitigation Plan in order to become compliant with applicable Reliability Standards. After 
+such entity has been placed on the Compliance Registry, it shall be responsible for complying with Reliability 
+Standards and may be subject to sanctions or Penalties as well as any Remedial Act ion Directives and 
+Mitigation Plans required by the Regional Entities or NERC for future violations, including any failure to follow 
+a Remedial Action Directive or Mitigation Plan to become compliant with Reliability Standards. 
+• Required compliance by a given organization with the Reliability Standards will begin the later of (i) inclusion 
+of that organization in the Compliance Registry and (ii) approval by the Applicable Governmental Authority 
+of mandatory Reliability Standards applicable to the registered entity. 
+ 
+Entities responsible for funding NERC and the Regional Entities have been identified in the bu dget documents filed 
+with FERC.
+3 Presence on or absence from the Compliance Registry has no bearing on an entity’s independent 
+responsibility for funding NERC and the Regional Entities. 
+ 
+1 The term “Regional Entities” includes Cross-Border Regional Entities that have footprints in the U.S., Canada, and Mexico, as applicable. 
+Applicable Governmental Authorities in Canadian jurisdictions may have adopted their own Rules of Procedure and Compliance Registry 
+requirements. Registered Entities may be subject to the Compliance Monitoring and Enforcement Programs (CMEP) in their respective 
+jurisdictions, in accordance with applicable laws and regulations. 
+2 The criteria for determining whether an entity will be placed on the Compliance Registry are set forth in the balance of this document. At 
+any time a person may recommend in writing, with supporting reasons, to the Director of Compliance (or an equivalent position) that an 
+organization be added to or removed from the Compliance Registry, pursuant to NERC Rules of Procedure Section 501.1.3.5. 
+3 Budget documents are submitted to Applicable Governmental Authorities in Canada for information.
+----- PAGE 4 -----
+Statement of Compliance Registry Criteria (Revision 9) 
+ 
+ 
+Public 
+Public 
+Background 
+The initial Registration process began in January of 2006. Registration of new entities is an ongoing process. If a 
+Registered Entity’s information changes, these changes must be submitted to the applicable Regional Entity(ies). 
+Based on selection as the ERO, NERC’s Organization Registration program4 is the means by which NERC and the 
+Regional Entities plan, manage, and execute Reliability Standard compliance oversight of owners, operators, and 
+users of the BPS. Organizations listed in the Compliance Registry are subject to NERC’s and the Regional Entities’ 
+Compliance Monitoring and Enforcement Programs. 
+ 
+Statement of Issue 
+As the ERO, NERC intends to comprehensively and thoroughly protect the reliability of the grid. To support this goal 
+NERC will include in its Compliance Registry each entity that NERC concludes can materially impact the reliability of the 
+BPS. 
+ 
+NERC will identify those entities that may need to be listed in its Compliance Registry. Identifying these organizations 
+is necessary and prudent for the purpose of determining resource needs, both at the NERC and Regional Entity level, 
+and for communicating with t hese entities regarding their potential responsibilities and obligations. Candidate 
+entities can be identified at any time, as and when needed. The Compliance Registry is available on NERC’s website. 
+ 
+Resolution 
+The potential costs and effort of registering every organization potentially within the scope of “owner, operator, and 
+user of the BPS,” while ignoring their impact upon reliability, would be disproportionate to the improvement in 
+reliability that would reasonably be anticipated from doing so. 
+ 
+NERC and the Regional Entities have identified two principles they believe are key t o the entity selection process. 
+These are: 
+1. There needs to be consistency between Regions and across the continent with respect to which entities are 
+registered; and 
+2. Any entity reasonably deemed material to the reliability of the BPS will be registered, irrespective of other 
+considerations. 
+ 
+To address the second principle the Regional Entities, working with NERC, will identify and register any entity they 
+deem material to the reliability of the BPS. 
+ 
+Registry Criteria 
+In order to promote consistency, NERC and the Regional Entities use the following criteria as the basis for determining 
+whether particular entities should be identified as candidates for Registration. All organizations meeting or exceeding 
+the criteria will be identified as candidates. 
+ 
+The following criteria (Sections I -V) plus the statement in Section V I will provide guidance regarding an entity’s 
+Registration status: 
+I. Owners, operators, or users of the BPS are candidates for Registration.5   
+ 
+4 See NERC ERO Application; Exhibit C; Section 500 – Organization Registration and Certification. 
+5 See NERC Rules of Procedure Section 501.1 NERC Compliance Registry —  NERC shall establish and maintain the NCR of the BPS  owners, 
+operators, and users that are subject to approved Reliability Standards.  For purposes of this Section I, users, owners, and operators of the BPS 
+includes: 1) entities that use, own, or operate Elements of the Bulk Electric System (BES) as defined in Appendix 2 of the NERC Rules of Procedure 
+and NERC Glossary of Terms; as well as 2) entities otherwise defined in the Registry Criteria in this Appendix 5B.
+----- PAGE 5 -----
+Statement of Compliance Registry Criteria (Revision 9) 
+ 
+ 
+Public 
+Public 
+II. Entities identified in Section I above will be categorized as Registration candidates who may be subject to 
+Registration under one or more appropriate Functional Entity types based on a comparison of the functions the 
+entity normally performs against the following function type definitions.6 
+ 
+Function 
+Type Acronym Definition/Discussion 
+Balancing 
+Authority 
+BA The responsible entity that integrates resource plans ahead  of time, maintains 
+Load-interchange-generation balance within a Balancing Authority Area, and 
+supports Interconnection frequency in real-time. 
+Computational 
+Load Operator 
+CLOP The entity that operates a Computational Load Site. 
+ 
+Computational 
+Load Owner 
+CLO The entity that owns and maintains a Computational Load Site. 
+Distribution 
+Provider 
+DP Provides and operates the “wires” between the transmission system and the end-
+use customer. For those end- use customers who are served at transmission 
+voltages, the Transmission Owner also serves as the Distribution Provider. Thus, 
+the Distribution Provide
+r is not defined by a specific voltage, but rather as 
+performing the distribution function at any voltage. 
+Note: As provided in Section III.b.1 below, a Distribution Provider entity shall be 
+an Underfrequency Load Shedding (UFLS) -Only Distribution Provider if it is the 
+responsible entity that owns, controls or operates UFLS Protection System(s) 
+needed to implement a required UFLS program designed for the protection of the 
+BES, but does not meet any of the other registration criteria for a Distribution 
+Provider. 
+Frequency 
+Response 
+Sharing Group 
+FRSG A group whose members consist of two or more Balancing Authorities that 
+collectively maintain, allocate, and supply operating resources required to jointly 
+meet the sum of the Frequency Response Obligations of its members. 
+Generator 
+Operator 
+GOP The entity that: 1) operates generating Facility(ies) and performs the functions of 
+supplying energy and Interconnected Operations Services (Category 1 GOP); or 2) 
+operates non -BES inverter based generating resources that  either have or 
+contribute to  an aggregate nameplate capacity of greater than or equal to 20 
+MVA, connected through a system designed primarily for delivering such capacity 
+to a common point of connection at a voltage greater than or equal to 60 kV  
+ 
+(Category 2 GOP). 
+ 
+6 Exclusion: An entity will not be registered based on these criteria if responsibilities for compliance with approved NERC Reliability Standards 
+or associated Requirements including reporting have been transferred by written agreement to another entity that has registered for the 
+appropriate function for the transferred responsibilities, including bilateral agreements and Sections 501, 507, and 508 of the NERC Rules of 
+Procedure.
+----- PAGE 6 -----
+Statement of Compliance Registry Criteria (Revision 9) 
+ 
+ 
+Public 
+Public 
+Function 
+Type Acronym Definition/Discussion 
+Generator 
+Owner 
+GO The entity that: 1) owns and maintains generating Facility(ies) (Category 1 GO); or 
+2) owns and maintains non-BES inverter based generating resources that either 
+have or contribute to an aggregate nameplate capacity of greater than or equal to 
+20 MVA, connected through a system designed primarily for delivering such 
+capacity to a common point of connection at a voltage greater than or equal to 60 
+kV (Category 2 GO). 
+Planning 
+Authority/ 
+Planning 
+Coordinator 
+PA/PC The responsible entity that coordinates and integrates transmission Facilities and 
+service plans, resource plans, and Protection Systems. 
+Reliability 
+Coordinator 
+RC The entity that is the highest level of authority who is responsible for the Reliable 
+Operation of the BES, has the Wide Area view of the BES, and has the operating 
+tools, processes and procedures, including the authority to prevent or mitigate 
+emergency o perating situations in both next -day analysis and real -time 
+operations. The Reliability Coordinator has the purview that is broad enough to 
+enable the calculation of Interconnection Reliability Operating Limits, which may 
+be based on the operating paramete
+rs of transmission systems beyond any 
+Transmission Operator’s vision. 
+Regulation 
+Reserve Sharing 
+Group 
+RRSG A group whose members consist of two or more Balancing Authorities that 
+collectively maintain, allocate, and supply the Regulating Reserve required for all 
+member Balancing Authorities to use in meeting applicable regulating standards. 
+Reserve Sharing 
+Group 
+RSG A group whose members consist of two or more Balancing Authorities that 
+collectively maintain, allocate, and supply O perating Reserves required for each 
+Balancing Authority’s use in recovering from contingencies within the group. 
+Scheduling energy from an Adjacent Balancing Authority to aid recovery need not 
+constitute reserve sharing provided the transaction is ramped in over a period the 
+supplying party could reasonably be expected to load generation in (e.g., ten 
+minutes). If the transaction is ramped in more quickly (e.g., between zero and ten 
+minutes), then, for the purposes of recovery from a Reportable  Balancing 
+Contingency Event, the areas become a Reserve Sharing Group. 
+Resource 
+Planner 
+RP The entity that develops a long-term (generally one year and beyond) plan for the 
+resource adequacy of specific Loads (customer demand and energy requirements) 
+within a Planning Authority area. 
+Transmission 
+Owner 
+TO The entity that owns and maintains transmission Facilities. 
+Transmission 
+Operator 
+TOP The entity responsible  for the reliability of its local transmission system and 
+operates or directs the operations of the transmission Facilities.
+----- PAGE 7 -----
+Statement of Compliance Registry Criteria (Revision 9) 
+ 
+ 
+Public 
+Public 
+Function 
+Type Acronym Definition/Discussion 
+Transmission 
+Planner 
+TP The entity that develops a long-term (generally one year and beyond) plan for the 
+reliability (adequacy) of the interconnected bulk electric transmission systems 
+within its portion of the Planning Authority area. 
+Transmission 
+Service Provider 
+TSP The entity that administers the transmission tariff and provides Transmission 
+Service to Transmission Customers under applicable Transmission Service 
+agreements. 
+ 
+III. Entities identified in Section II above as being subject to Registration as a Distribution Provider , Computational 
+Load Operator, or Computational Load Owner should be included in the Compliance Registry for these functions 
+only if they meet any of the criteria listed below: 
+III(a)   Distribution Provider: 
+III.a.1 Distribution Provider system serving >75 MW of peak Load that is directly connected to the BES;7 or 
+III.a.2 Distribution Provider is the responsible entity that owns, controls, or operates Facilities that are part 
+of any of the following Protection Systems or programs designed, installed, and operated for the 
+protection of the BES:
+8 
+• a required Undervoltage Load Shedding (UVLS) program and/or 
+• a required Special Protection System or Remedial Action Scheme and/or 
+• a required transmission Protection System; or 
+III.a.3 Distribution Provider that is responsible for providing services related to Nuclear Plant Interface 
+Requirements (NPIRs) pursuant to an executed agreement; or 
+III.a.4 Distribution Provider with field switching personnel identified as performing unique tasks associated 
+with the Transmission Operator’s restoration plan that are outside of their normal tasks. 
+III(b)   Distribution Provider with UFLS-Only assets (referred to as “UFLS-Only Distribution Provider”) 
+III.b.1 UFLS- Only Distribution Provider does not meet any of the other registration criteria in Sections 
+III(a)(1)-(4) for a Distribution Provider; and 
+III.b.2 UFLS- Only Distribution Provider is the responsible entity that owns, controls, or operates UFLS 
+Protection System(s) needed to implement a required UFLS Program designed for the protection of 
+the BES. 
+The Reliability Standards applicable to UFLS-Only Distribution Providers are: (1) any version of PRC-005 and 
+PRC-006 applicable to UFLS-Only Distribution Providers, (2) any regional Reliability Standard whose purpose 
+is to develop or establish a UFLS Program, and (3) any Reliability Standard that lists UFLS -Only Distribution 
+Provider in the applicability section. Reliability Standards that apply to Distribution Providers will not apply 
+to UFLS-Only Distribution Providers, unless explicitly stated in the applicability section of these Reliability 
+Standards and in future revisions and/or versions. 
+ 
+7 Ownership, control or operation of UFLS Protection System(s) needed to implement a required UFLS Program designed for the protection of 
+the BES does not affect an entity’s eligibility for registration pursuant to III.a.1. 
+8 As used in Section III.a.2, “protection of the Bulk Electric System” means protection to prevent instability, Cascading, or uncontrolled 
+separation of the BES and not for local voltage issues (UVLS) or local line loading management (Special Protection System) that are 
+demonstrated to be contained within a local area.
+----- PAGE 8 -----
+Statement of Compliance Registry Criteria (Revision 9) 
+ 
+ 
+Public 
+Public 
+III(c) Computational Load Owner or Operator: 
+III.c.1  Computational Load Owner of a Computational Load Site with a total connected Load greater than 
+or equal to 50 MW that is supplied through electrical equipment connected at a voltage level greater 
+than or equal to 100 kV from one or more points of connection. 
+III.c.2 Computational Load Operator of a Computational Load Site with a total connected Load greater 
+than or equal to 50 MW that is supplied through electrical equipment connected at a voltage level 
+greater than or equal to 100 kV from one or more points of connection. 
+ 
+IV. Joint Registration Organization, Coordinated Functional Registration and applicable Member Registration. 
+Pursuant to FERC’s directive in paragraph 107 of Order No. 693, NERC’s rules pertaining to joint Registrations and 
+Joint Registration Organizations, as well as Coordinated Functional Registrations, are now found in Section 501, 
+507, and 508 of the NERC Rules of Procedure. 
+V. If NERC or a Regional Entity encounters an organization that is not listed in the Compliance Registry, but which 
+should be subject to the Reliability Standards, NERC or the Regional Entity is obligated and will initiate actions to 
+add that organization to the Compliance Registry, subject to that organization’s right to challenge as provided in 
+Section 500 of NERC’s Rules of Procedure. 
+ 
+Determination of Material Impact9 
+An entity that does not meet (i.e., falls below) the criteria may nevertheless be registered if it can be demonstrated 
+that the entity has a material impact on the reliability of the BPS . Similarly, an entity that meets the criteria may be 
+excluded if it can be demonstrated to NERC that the entity does not have a material impact on the reliability of the 
+BPS. Such Registration decisions regarding materiality must be made by the NERC -led Registration Review Panel in 
+accordance with Section III(D) of Appendix 5A to the NERC Rules of Procedure. In order to  ensure a consistent 
+approach to assessing materiality, a non -exclusive set of factors (“materiality test”) for consideration is identified 
+below; however, only a sub -set of these factors, or other additional factors, may be applicable to a particular 
+functional registration category or specific entity, as appropriate: 
+1. Is the entity specifically identified in the emergency operation plans and/or restoration plans of an associated 
+Reliability Coordinator, Balancing Authority, Generator Operator or Transmission Operator? 
+2. Will intentional or inadvertent removal of an Element owned or operated by the entity, or a common mode 
+failure of two Elements as identified in the Reliability Standards (for example, loss of two Elements as a result 
+of a breaker failure), lead to a relia bility issue on another entity’s system (such as a neighboring entity’s 
+Element exceeding an applicable rating, or loss of non-consequential load due to a single contingency)? 
+Conversely, will such contingencies on a neighboring entity’s system result in issues for Reliability Standards 
+compliance on the system of the entity in question? 
+3. Can the normal operation, misoperation or malicious use of the entity’s cyber assets cause a detrimental 
+impact (e.g., by limiting the operational alternatives) on the operational reliability of an associated Balancing 
+Authority, Generator Operator or Transmission Operator? 
+4. Can the normal operation, misoperation, or malicious use of the entity’s Protection Systems (including UFLS, 
+UVLS, Special Protection System, Remedial Action Schemes and other Protection Systems protecting BES 
+Facilities) cause an adverse impact on the operational reliability of any associated Balancing Authority, 
+ 
+9 The Determination of Material Impact applies when an entity seeks a NERC-led Registration Review Panel to review its request for examination 
+of registration based on material impact.  As stated in Appendix 5A, “[t]he Panel shall also include a review of individual and aggregate system-
+wide risks to, and considerations of, reliability of the BPS, as well as the BES Definition, as applicable .” Appendix 5A, Section III(D). A ny such 
+request will be reviewed on a case by case basis in accordance with the Panel procedures set forth in Appendix 5A.
+----- PAGE 9 -----
+Statement of Compliance Registry Criteria (Revision 9) 
+ 
+ 
+Public 
+Public 
+Generator Operator or Transmission Operator, or the automatic load shedding programs of a PC or TP (UFLS, 
+UVLS)? 
+ 
+Limitation of responsibilities to a sub-set of Reliability Standards 
+NERC may limit the compliance obligations of (1) a given entity registered for a particular function or (2) a similarly 
+situated class of entities, as warranted based on the particular facts and circumstances, to a sub-set list of Reliability 
+Standards (wh ich may specify Requirements/sub -Requirements). If NERC establishes a sub -set list for similarly 
+situated class of entities, NERC will post the eligibility criteria and sub-set list of applicable Reliability Standards to the 
+Registration and Certification page of the NERC Website.

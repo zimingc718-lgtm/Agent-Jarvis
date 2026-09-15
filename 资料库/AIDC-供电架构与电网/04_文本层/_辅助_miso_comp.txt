@@ -1,0 +1,1017 @@
+--- PAGE 1 ---
+June 2026 
+Interconnection Reliability 
+Requirements for Large Load 
+ 
+Highlights 
+• Establishes clear, consistent reliability interconnection requirements for rapidly growing Large Loads. 
+• Improves system visibility and operational readiness through data, modeling, and telemetry 
+requirements 
+• Enhances grid stability with ramp, ride-through, and dynamic performance requirements. 
+• Aligns with emerging NERC guidance to support safe, resilient large-load integration across the 
+footprint. 
+misoenergy.org
+--- PAGE 2 ---
+MISO Large Load Interconnection Reliability Requirements 
+Table of Contents 
+Executive Summary ....................................................................................................................................................................... 1 
+Background and Reliability Need ............................................................................................................................................. 2 
+Growth of Emerging Large Loads ............................................................................................................................ 2 
+Reliability Considerations ......................................................................................................................................... 3 
+NERC Guidance and Industry Direction .................................................................................................................. 3 
+MISO Reliability Need .............................................................................................................................................. 3 
+Scope and Applicability ................................................................................................................................................................ 4 
+Scope of the Whitepaper ......................................................................................................................................... 4 
+Applicability of Requirements ................................................................................................................................... 4 
+Requirement Applicability Overview ........................................................................................................................ 5 
+Roles and Responsibilities .......................................................................................................................................................... 5 
+Definitions .......................................................................................................................................................................................... 7 
+Telemetry and PMU Requirements ......................................................................................................................................... 8 
+Reliability Objective .................................................................................................................................................. 8 
+Applicable Requirements ......................................................................................................................................... 9 
+Data and Modeling Requirements............................................................................................................................................ 9 
+Reliability Objective .................................................................................................................................................. 9 
+Applicable Requirements ....................................................................................................................................... 10 
+Basic Facility Data ............................................................................................................................................................... 10 
+Modeling Data ....................................................................................................................................................................... 10 
+Load Forecasting Requirements ............................................................................................................................................. 11 
+Reliability Objective ................................................................................................................................................ 11 
+Applicable Requirements ....................................................................................................................................... 11 
+Short-term Large Load Forecast ................................................................................................................................... 11 
+Ramp Requirements .................................................................................................................................................................... 11 
+Reliability Objective ................................................................................................................................................ 11 
+Applicable Requirements ....................................................................................................................................... 12 
+Ride-through Requirements...................................................................................................................................................... 12 
+Reliability Objective ................................................................................................................................................ 12 
+Applicable Requirements ....................................................................................................................................... 12 
+General Principles ............................................................................................................................................................... 12 
+Voltage Ride-Through (VRT) .......................................................................................................................................... 12
+--- PAGE 3 ---
+MISO Large Load Interconnection Reliability Requirements 
+Frequency Ride-Through (FRT) .................................................................................................................................... 15 
+Stability Assessment Requirements ...................................................................................................................................... 16 
+Reliability Objective ................................................................................................................................................ 16 
+Applicable Requirements ....................................................................................................................................... 17 
+Transient Stability Assessment ...................................................................................................................................... 17 
+Forced Oscillation Assessment ...................................................................................................................................... 19 
+System Strength Screening and EMT Study ............................................................................................................ 20 
+Sub-Synchronous Oscillation Screening and Study .............................................................................................. 21 
+References ...................................................................................................................................................................................... 22 
+Appendices ...................................................................................................................................................................................... 22 
+Mapping to tariff/BPM ............................................................................................................................................ 22 
+Stakeholder Engagement ...................................................................................................................................... 23
+--- PAGE 4 ---
+1 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+Executive Summary 
+MISO is experiencing rapid growth in large transmission-connected loads, including data centers, artificial 
+intelligence computing facilities, cloud computing infrastructure, supercomputing facilities, cryptocurrency mining 
+operations, and other electronically controlled or computational loads. Many of these facilities represent large 
+concentrations of demand and may exhibit operating characteristics that differ from traditional industrial load, 
+including rapid changes in power consumption, power-electronic interfaces, fast control response, and increased 
+sensitivity to grid disturbances. 
+Recent whitepapers and Alerts published by the North American Electric Reliability Corporation (NERC) Large 
+Loads Task Force and Large Loads Working Group identifies emerging large loads as an increasing reliability 
+consideration for the Bulk Electric System. NERC guidance highlights that traditional planning and operational 
+assumptions developed for conventional load may not fully capture the behavior or reliability impacts of emerging 
+large loads, particularly as load facilities become larger, more dynamic, and increasingly interconnected with 
+power-electronic equipment and behind-the-meter resources. 
+As large load growth accelerates across the MISO footprint (Figure 1), additional reliability considerations may be 
+necessary to support transmission planning, operational preparedness, disturbance performance, and system 
+stability. Large loads may materially affect planning assumptions, load forecasting, balancing, outage coordination, 
+voltage and frequency performance, and system dynamics. In certain conditions, rapid changes in load behavior or 
+sudden loss of load during disturbances may contribute to degraded system performance, increased operational 
+uncertainty, or reduced system stability margins. 
+   
+Figure 1: EPR and Load Project Growth Projection 
+This whitepaper complements MISO’s Large Load Interconnection Tariff by describing a reliability-based 
+framework to support the interconnection and operation of Large Loads within the MISO footprint. The objective is 
+to establish scalable, technically justified, and risk-informed expectations that improve visibility into large load 
+behavior, support planning and operational readiness, and preserve reliable operation of the Transmission System 
+and Bulk Electric System. The proposed framework is intended to complement existing MISO planning, 
+interconnection, and operational processes and align, to the extent practical, with emerging NERC guidance and 
+industry practices.
+--- PAGE 5 ---
+2 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+The framework consists of four categories of reliability requirements: 
+Data, Modeling, Telemetry, Forecasting, and Outage Coordination Requirements 
+Establish expectations for facility information, electrical models, real-time telemetry, monitoring, short-term and 
+long-term forecasting, outage coordination, and other operational visibility necessary to support planning studies, 
+operational assessments, commissioning, model validation, post-event analysis, and accurate representation of 
+Large Loads behavior and system impacts. 
+Ramp Requirements 
+Establish expectations for managing rapid changes in load behavior that may materially affect balancing, 
+operational reliability, reserve deployment, or outage coordination. 
+Ride-Through Requirements 
+Establish minimum disturbance performance expectations during voltage and frequency disturbances to reduce the 
+risk of unnecessary disconnection or sudden loss of demand during credible system events. 
+Stability Assessment Requirements 
+Establish expectations for evaluating reliability impacts associated with large load integration, including transient 
+stability, forced oscillations, system strength, and electromagnetic transient interactions where appropriate. 
+MISO recognizes that not all large loads exhibit the same operational or electrical characteristics and that reliability 
+risks may vary by facility type, operating behavior, and system conditions. Consistent with NERC guidance, the 
+proposed framework is intended to be scalable and risk-informed, allowing requirements to be applied in a manner 
+proportional to demonstrated reliability risk while supporting efficient interconnection and reliable operation of the 
+Transmission System. 
+ 
+Background and Reliability Need 
+Growth of Emerging Large Loads 
+MISO is experiencing rapid growth in transmission-connected large loads, including data centers, artificial 
+intelligence computing facilities, cloud computing infrastructure, supercomputing facilities, cryptocurrency mining 
+operations, and other electronically controlled or computational loads. Many of these facilities represent large 
+concentrations of demand and may exhibit operational and electrical characteristics that differ from traditional 
+industrial load. 
+Historically, transmission planning and operations have relied on assumptions that load behavior is relatively 
+predictable, geographically diverse, and sufficiently represented through historical demand profiles, weather-based 
+forecasting, and conventional planning assumptions. Traditional industrial facilities generally exhibit slower-
+changing operating behavior and are represented through established planning and operational practices. 
+Emerging large loads may exhibit characteristics that differ materially from conventional demand, including: 
+ High concentrations of demand at a single location or campus;  
+ Rapid changes in real and reactive power consumption;  
+ Fast-acting controls and power-electronic interfaces;
+--- PAGE 6 ---
+3 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+ Increased interaction with uninterruptible power supply systems, inverter-based devices, and co-located 
+resources;  
+ Sensitivity to voltage, frequency, and transient disturbances; and  
+ Operating behavior that may not be fully represented using traditional forecasting and planning 
+assumptions.  
+As the size and concentration of these facilities increase, additional visibility into load behavior and system 
+interactions may be necessary to support reliable operation of the Transmission System. 
+Reliability Considerations 
+Emerging large loads may introduce reliability considerations that are not fully captured through traditional planning 
+and operational approaches. Large load behavior can materially affect transmission planning assumptions, 
+operational balancing, outage coordination, voltage and frequency performance, and system dynamics. 
+Rapid changes in load behavior, sudden loss of demand, or dynamic interactions between power-electronic 
+equipment and the transmission system may affect system performance during both normal operations and 
+contingency conditions. In certain conditions, these behaviors may contribute to increased operational uncertainty, 
+reduced stability margins, oscillatory behavior, degraded post-disturbance recovery, or increased stress on 
+transmission facilities and balancing resources. 
+These considerations do not imply that all large loads create the same reliability risk. Reliability impacts may vary 
+depending on facility type, operating characteristics, electrical design, system strength, and local transmission 
+conditions. Accordingly, a scalable and risk-informed approach is necessary to ensure reliability requirements 
+remain proportional to demonstrated system risk. 
+NERC Guidance and Industry Direction 
+The North American Electric Reliability Corporation (NERC), through the Large Loads Task Force and Large Loads 
+Working Group, has identified emerging large loads as an increasing reliability consideration for the Bulk Power 
+System. NERC publications identify several characteristics that distinguish emerging large loads from conventional 
+demand, including concentrated power consumption, fast control response, uncertainty in operating profiles, 
+power-electronic interfaces, and sensitivity to grid disturbances. 
+NERC’s 2026 assessment of emerging large load reliability gaps concluded that existing planning practices, 
+interconnection processes, operational procedures, and Reliability Standards may not fully address risks 
+associated with emerging large loads. The assessment identified areas for improvement related to facility visibility, 
+dynamic modeling, telemetry, forecasting, disturbance performance expectations, operational coordination, and 
+post-event performance validation. 
+NERC’s reliability guidance further recommends scalable and risk-informed mitigation approaches focused on 
+improving observability, planning assumptions, operational preparedness, disturbance performance, and system 
+modeling to preserve reliable operation of the Bulk Power System as emerging large load growth accelerates. 
+MISO Reliability Need 
+Within the MISO footprint, large load growth is increasingly occurring through transmission planning, Expedited 
+Project Review (EPR), and other interconnection-related processes. Existing MISO planning and operational 
+processes provide a strong foundation for evaluating reliability impacts; however, additional consistency and 
+reliability expectations may be necessary to improve visibility into facility behavior, strengthen planning and
+--- PAGE 7 ---
+4 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+operational assumptions, support system preparedness, and preserve reliable system performance as large load 
+penetration increases. 
+Accordingly, this whitepaper proposes a reliability-based framework for Large Loads that complements existing 
+MISO planning, interconnection, and operational processes. The framework is intended to improve visibility into 
+large load characteristics and behavior, support reliable planning and operational decision-making, and establish 
+scalable and technically justified expectations proportional to demonstrated reliability risk. 
+The proposed framework focuses on four categories of reliability requirements: 
+ Data, Modeling, Telemetry, Forecasting, and Outage Coordination Requirements to establish 
+expectations for facility data, modeling, real-time telemetry, short-term and long-term forecasting, outage 
+coordination, and other information necessary to support accurate representation of Large Loads behavior 
+and system impacts in planning and operations;;  
+ Ramp Requirements to manage rapid changes in load behavior that may affect operational reliability;  
+ Ride-through Requirements to establish disturbance performance expectations during voltage and 
+frequency events; and  
+ Stability Assessment Requirements to evaluate dynamic and stability impacts associated with large load 
+integration. 
+ 
+Scope and Applicability 
+Scope of the Whitepaper 
+This whitepaper establishes a reliability-based framework for evaluating and integrating Large Loads within the 
+MISO footprint. The framework is intended to support reliable planning, interconnection, commissioning, and 
+operation of transmission-connected large loads that may materially affect the Transmission System or Bulk 
+Electric System due to their size, operating behavior, electrical characteristics, or dynamic performance. 
+The whitepaper focuses on reliability considerations associated with emerging large loads and proposes a 
+consistent framework for evaluating facility characteristics, operational behavior, disturbance performance, 
+telemetry, system visibility, and stability impacts during planning and operational timeframes. 
+The recommendations contained in this whitepaper are intended to complement existing MISO planning, 
+interconnection, operational, and reliability processes, including the MISO Transmission Expansion Plan (MTEP), 
+Expedited Project Review (EPR), transmission planning studies, operational assessments, commissioning 
+activities, and applicable North American Electric Reliability Corporation (NERC) Reliability Standards. The 
+proposed framework is intended to establish scalable and risk-informed expectations and does not replace existing 
+Transmission Owner, Local Balancing Authority, or reliability obligations. 
+ 
+Applicability of Requirements 
+The applicable requirements in this whitepaper apply to Large Loads as defined by MISO tariff provisions and 
+associated Business Practice Manuals. 
+Large Loads associated with data centers, artificial intelligence computing facilities, cloud computing, 
+supercomputing centers, cryptocurrency mining operations, and other electronically controlled or computational
+--- PAGE 8 ---
+5 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+uses may be subject to all requirements described in this whitepaper due to their operating characteristics, power-
+electronic interfaces, dynamic behavior, and potential reliability impacts. 
+Large Loads associated with other facility types may be subject to selected requirements where MISO determines 
+that facility operating characteristics, electrical design, load behavior, system conditions, or demonstrated reliability 
+risk warrant additional reliability expectations. Examples may include facilities exhibiting rapid changes in demand, 
+dynamic disturbance sensitivity, power-electronic interfaces, or other characteristics that may materially affect 
+reliable system performance. 
+MISO recognizes that not all large loads present the same reliability risks. Accordingly, requirements are intended 
+to be scalable and risk-informed and may be applied in a manner proportional to demonstrated reliability need, 
+system conditions, and facility characteristics. 
+ 
+Requirement Applicability Overview 
+The proposed framework consists of four categories of reliability requirements intended to address planning, 
+operational, disturbance performance, and system stability considerations associated with Large Loads. 
+Requirement Category General Applicability 
+Data, Modeling, Telemetry, 
+Forecasting, and Outage 
+Coordination 
+Requirements 
+Generally applicable to Large Loads subject to MISO reliability requirements to 
+support planning and operational studies, electrical modeling, telemetry, 
+forecasting, commissioning, outage coordination, operational visibility, and 
+accurate representation of Large Loads behavior and system impacts. Certain 
+requirements (e.g., PERC1-equivalent modeling, EMT models, and PMU 
+capability) may apply specifically to the Computational Load portion of a Large 
+Load, as defined by NERC. 
+Ramp Requirements Applicable to the Computational Load portion of Large Loads whose owner, 
+operator, controller, end-user, or hosting entity meets applicable NERC 
+registration criteria for a Computational Load Entity, regardless of registration 
+status, where rapid changes in load behavior may materially affect system 
+operations or reliability. 
+Ride-Through 
+Requirements 
+Applicable to the Computational Load portion of Large Loads whose owner, 
+operator, controller, end-user, or hosting entity meets applicable NERC 
+registration criteria for a Computational Load Entity, regardless of registration 
+status, where disturbance performance may materially affect reliability. 
+Stability Assessment 
+Requirements 
+Applicable based on demonstrated reliability need, system characteristics, 
+planning requirements, screening results, or facility operating behavior. 
+ 
+The applicability of individual requirements, study expectations, implementation details, exemptions, and 
+compliance approaches may be further defined in applicable tariff provisions and Business Practice Manuals. 
+Roles and Responsibilities
+--- PAGE 9 ---
+6 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+Reliable integration of Large Loads requires coordination among MISO, Transmission Owners, Load Serving 
+Entities, Large Load Customers, Local Balancing Authorities, Transmission Operators, and other applicable 
+reliability entities. Responsibilities associated with large load interconnection, planning, operations, telemetry, and 
+disturbance performance may vary depending on facility characteristics, system conditions, and applicable tariff or 
+operational requirements. 
+The responsibilities described below provide a high-level overview of expected roles associated with the proposed 
+Large Load reliability framework. Additional implementation details, study expectations, and compliance obligations 
+may be further defined in applicable tariff provisions, Business Practice Manuals, operating agreements, and 
+reliability requirements. 
+Entity General Responsibilities 
+MISO 
+Establish reliability frameworks, review reliability impacts associated with Large Loads, 
+coordinate planning and operational assessments, establish applicable reliability 
+requirements, perform screening where applicable, review study results, and support 
+reliable operation of the Transmission System. 
+Transmission Owner 
+(TO) 
+Coordinate interconnection activities, provide local transmission planning input, 
+perform or support applicable studies consistent with local planning criteria, coordinate 
+telemetry and interconnection facilities, and support commissioning and operational 
+readiness activities. 
+Load Serving Entity 
+(LSE) 
+Coordinate load service arrangements, support planning and operational coordination 
+as applicable, and facilitate information exchange associated with Large Load service 
+obligations. 
+Large Load Customer 
+(LLC) 
+Provide facility information, electrical characteristics, models, telemetry, forecasts, 
+operational data, and other information necessary to support planning, 
+interconnection, commissioning, operations, and reliability assessments; coordinate 
+operational requirements and maintain compliance with applicable reliability 
+expectations. 
+Local Balancing 
+Authority (LBA) / 
+Balancing Authority 
+(BA) 
+Coordinate operational reliability activities associated with balancing, outage 
+coordination, operational communications, and reliability preparedness as applicable. 
+Transmission Operator 
+(TOP) 
+Support reliable operation of the transmission system through operational 
+coordination, outage management, system awareness, disturbance response, and 
+implementation of applicable operating procedures. 
+ 
+Responsibilities associated with individual requirement categories may vary. For example, data and modeling 
+requirements may primarily involve information submission and validation by the Large Load Customer, while
+--- PAGE 10 ---
+7 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+stability assessments may require coordination among MISO, Transmission Owners, and other applicable entities 
+depending on study scope, local planning criteria, and system conditions. 
+MISO recognizes that reliability responsibilities may differ depending on facility configuration, applicable service 
+arrangements, system conditions, and demonstrated reliability risk. Accordingly, implementation details and 
+associated responsibilities may be tailored through applicable tariff provisions, Business Practice Manuals, 
+operating agreements, and planning or operational processes. 
+Definitions 
+The following definitions are provided to support consistent interpretation of the reliability framework described in 
+this whitepaper. These definitions are directly adopted from the proposed MISO Large Load Tariff provisions 
+developed to support Large Load interconnection, registration, planning, operational, and reliability requirements. 
+The definitions are included here for readability and consistency and are intended to align with applicable MISO 
+tariff provisions and associated Business Practice Manuals. 
+Large Loads 
+The Load associated with any facility or aggregation of facilities located at a single site behind one or more Point(s) 
+of Withdrawal from the Transmission System that is owned, operated, or controlled by: (a) a single entity or (b) 
+group of entities that will coordinate with respect to the profile of the Load, and that:  
+(1) results for the first time after September 1, 2026, in any new Load, or any modification, expansion, or 
+addition to existing Load, at a single site and resulting in an aggregate Demand equal to or greater than 50 
+MW behind one or more Points of Withdrawal from the Transmission System; or  
+(2) for Load that already exceeds 50 MW of Demand as of September 1, 2026, any increase in the Demand of 
+such Load by 25 MW or more above the value documented as of September 1, 2026, at a single site 
+behind one or more Points of Withdrawal from the Transmission System. 
+A Large Loads may have one or more Points of Withdrawal from the Transmission System and includes all Large 
+Load Equipment.  Additional details regarding configurations that constitute a single site and degree of 
+coordination in Load Demand profile that constitute an aggregation for purposes of this definition may be specified 
+by the Transmission Provider in the Business Practices Manual for Large Load. 
+Large Load Customer 
+A Tariff Customer that seeks Transmission Service on behalf of, or in order to provide Energy to, a Large Loads. 
+Large Load Customers include Load Serving Entities procuring new or additional Network Integration Transmission 
+Service to serve a Large Loads. 
+Large Load Equipment 
+Any of the facilities, devices, or equipment that constitutes a part of a Large Load, or are used to interconnect the 
+Large Loads to the Transmission System. 
+Point of Withdrawal 
+The point where a non-transmission facility used to withdraw Energy from the Transmission System to serve a 
+Large Loads connects to the Transmission System. 
+Service Commencement Date
+--- PAGE 11 ---
+8 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+The date the Transmission Provider or ITC begins to provide service pursuant to the terms of an executed Service 
+Agreement, or the date the Transmission Provider or ITC begins to provide service in accordance with Section 
+15.3 or Section 29.1 under MISO Tariff. 
+ 
+Telemetry and PMU Requirements 
+Reliability Objective 
+The objective of telemetry requirements is to ensure that MISO and Transmission Owners maintain continuous, 
+high‑resolution visibility into Large Load behavior through accurate SCADA/ICCP data and time‑synchronized 
+phasor measurements. Because emerging large loads can change real and reactive power rapidly and exhibit 
+power‑electronic‑driven dynamic responses during disturbances, enhanced telemetry and PMU live streaming (or 
+better) enable operators to identify abnormal voltage, frequency, or oscillatory conditions early, validate and refine 
+modeling assumptions, support balancing and contingency analysis, and respond effectively before issues 
+propagate across the Bulk Electric System. Reliable, real‑time telemetry strengthens MISO’s ability to manage 
+system stability, operational uncertainty, and disturbance performance under both normal and stressed conditions, 
+ensuring that large loads integrate safely and predictably into the grid. 
+ 
+ 
+Figure 2: Differences between SCADA and PMU 
+Considerations to support the telemetry reliability objective include:  
+ Sampling Rate and Data Quality: High‑resolution sampling (e.g., PMU‑level >60 samples per second) is 
+necessary to capture fast voltage, frequency, and real/reactive power changes characteristic of 
+power‑electronic large loads. 
+ SCADA/ICCP Update Frequency: SCADA telemetry should provide sufficiently frequent updates (typically 
+2–4 seconds or faster) to support operational situational awareness and real‑time reliability assessments. 
+ Phasor Measurement Unit (PMU) Integration: PMUs, or better phasor‑quality devices, should be installed 
+at the Transmission Owner side of the Point of Withdrawal to capture time‑synchronized voltage/current 
+phasors and event signatures that SCADA cannot detect. 
+ Digital Fault Recorder (DFR) or High‑Speed Recording: Access to high‑speed oscillography (DFR, event 
+recorders) enhances disturbance analysis, post‑event model validation, and assessment of protection 
+interactions
+--- PAGE 12 ---
+9 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+ Location of Telemetry Measurement Devices: Telemetry equipment should be installed at Point of 
+Withdrawal. 
+ Communications Infrastructure & Latency: Sufficient bandwidth, redundant communication paths, and low 
+latency data streaming are essential for ensuring real‑time visibility, especially for PMU data that should 
+remain tightly time‑aligned. 
+ Time Synchronization Requirements: PMUs, DFRs, and related devices should maintain GPS‑quality time 
+synchronization to support system‑wide correlation of events and dynamic monitoring. 
+ Cybersecurity and Data Integrity: Telemetry and PMU data should comply with NERC CIP expectations for 
+secure communications, integrity checks, and protection from data corruption or unauthorized access. 
+ Model Validation Integration: Telemetry should support continuous model validation workflows, ensuring 
+that planning and EMS models accurately reflect operational behavior and remain aligned with NERC 
+MOD standards 
+ Event Detection and Alarming Configuration: Alarms for abnormal voltage, frequency, oscillations, loss of 
+communication, and PMU quality metrics should be configured to ensure rapid operator response. 
+ Compatibility with MISO Telemetry Specifications: All telemetry should align with MISO’s ICCP, PMU 
+streaming, and EMS data validation requirements as documented in relevant BPMs and LLWG guidance. 
+Applicable Requirements 
+A Large Load Customer should provide real-time telemetry for all Large Load Equipment, including Computational 
+Load and non-Computational Loads, either directly, through the applicable Transmission Owner or Load Serving 
+Entity, or another Transmission Provider-approved communication path, in the form and manner described in the 
+Business Practices Manual for Large Load. Individual metering should be provided for Large Load Equipment and 
+generation resources meeting thresholds described in the Business Practices Manual for Large Load. Telemetry 
+should be provided via ICCP, where applicable, and should satisfy Transmission Provider update requirements 
+described in the Business Practices Manual for Large Load. 
+A Large Load Customer should use commercially reasonable efforts to maintain telemetry availability and accuracy 
+for the Large Load and should promptly correct erroneous data, bad mappings, and ICCP modeling issues. 
+Disturbance monitoring and event recording capability should be provided sufficiently to support post-event 
+analysis, model validation, and reliability assessment. 
+For the Computational Loads, as defined by NERC, phasor measurement recording and communications 
+equipment should be installed prior to the Service Commencement Date and should be capable of gathering 
+phasor measurements as described in the Business Practices Manual for Large Load. To the extent similar-quality 
+equipment is added or already exists, such as relays or digital fault recorders capable of collecting synchronized 
+data at a rate comparable to a Phasor Measurement Unit (PMU), such equipment may be used to satisfy this 
+capability if located on the Transmission Owner side of the Point of Withdrawal. 
+Phasor measurement capability for Computational Load should be installed on the Transmission Owner side of the 
+Point of Withdrawal and become part of the Transmission Owner interconnection facilities. Phasor measurements 
+should be streamed in IEEE C37.118 or equivalent format and provided to the Transmission Provider. 
+ 
+Data and Modeling Requirements 
+Reliability Objective
+--- PAGE 13 ---
+10 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+The objective of data and modeling requirements is to ensure sufficient visibility into the characteristics, operating 
+behavior, and electrical performance of large loads necessary to support reliable planning, interconnection, 
+commissioning, operations, and post-event analysis. As emerging large loads increasingly exhibit dynamic 
+operating characteristics, power-electronic interfaces, and concentrated demand, additional facility information, 
+telemetry, and modeling detail may be necessary to evaluate reliability impacts under both normal and contingency 
+conditions. Data and modeling requirements are intended to support reliable operation of the Transmission System 
+by improving the accuracy of planning assumptions, strengthening operational awareness, supporting disturbance 
+analysis and model validation, and enabling more consistent evaluation of system performance associated with 
+Large Load integration. These requirements provide a framework for obtaining facility information, electrical 
+models, telemetry, monitoring data, and operational visibility necessary to support planning studies, operational 
+assessments, commissioning activities, and reliability evaluations. 
+Consistent with emerging industry practices and North American Electric Reliability Corporation (NERC) guidance, 
+data and modeling expectations are intended to be scalable and risk-informed and may vary based on facility 
+characteristics, operating behavior, system conditions, and demonstrated reliability need. 
+Applicable Requirements 
+Basic Facility Data 
+A Large Load Customer shall be responsible for providing the Transmission Provider with basic information, one-
+line diagrams, and a description of the electrical characteristics of the Large Load for all Large Load Equipment, in 
+the format and consistent with the timelines specified in the Business Practice Manual for Large Load. Any 
+changes to the characteristics of a Large Load and/or Large Load Equipment, including any changes to the 
+modeling details for the Large Load, shall be provided to the Transmission Provider in a timely manner, consistent 
+with the Business Practices Manual for Large Load. Such changes may include, but are not limited to, Load MW 
+amounts, firm and non-firm MW amounts, any dispatchable Load MWs, power factor, metering, telemetry, and 
+breaker configuration, as further set forth in the Business Practices Manual for Large Load.  
+A Large Load Customer must coordinate with the Transmission Owner where the Large Load Point of Withdrawal 
+is located pursuant to the Transmission Provider’s load interconnection guidance and applicable NERC standards. 
+Modeling Data 
+A Large Load Customer should provide the Transmission Provider with validated and complete electrical models of 
+the large load, as well as detailed Load profiles for modeled Loads. Such model information should include 
+sufficient detail for the Transmission Provider to evaluate system performance under contingency conditions in 
+accordance with currently effective Transmission System Planning Performance Standards. 
+For the Computational Load portion of a Large Load, as defined by NERC, the Large Load Customer should 
+provide a positive-sequence power system dynamic model capable of representing power-electronic load behavior, 
+including a Power Electronic Reconnecting and Ceasing (PERC1) model, or an equivalent model with comparable 
+capability, consistent with applicable NERC guidance.  
+For non-Computational Loads, the Large Load Customer should provide appropriate positive-sequence power 
+system dynamic models representative of the expected electrical behavior of such Loads. 
+Following completion of applicable studies and prior to its Service Commencement Date, final validated models 
+should reflect the as-built configuration and actual operating characteristics of the Large Load and should be 
+maintained and updated as required by the Transmission Provider.
+--- PAGE 14 ---
+11 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+ 
+Load Forecasting Requirements 
+Reliability Objective 
+Large Loads can change system conditions rapidly, and unlike traditional demand, their behavior cannot be 
+forecasted accurately using historical load patterns, even when modeled with weather and calendar data in MISO’s 
+short-term forecasting system. 
+Applicable Requirements 
+Short-term Large Load Forecast 
+The Large Load Customer should provide day(s) ahead and real-time Load Forecasts for a Large Loads directly to 
+the Transmission Provider, to support the Reliability Assessment Commitment (RAC) and Security Constrained 
+Economic Dispatch (SCED) processes, along with other reliability studies.  Given the sizable reliability impact a 
+Large Load may have on the Transmission System, the Load Forecasts should be updated to reflect the most 
+current information on the expected Demand, in accordance with the Business Practices Manual for Operations 
+Forecasting.  
+ 
+Ramp Requirements 
+Reliability Objective 
+The objective of ramp requirements is to manage rapid changes in large load behavior that may materially affect 
+balancing, operational reliability, reserve deployment, and system performance. As emerging large loads 
+increasingly include fast controls, automated operations, and concentrated demand, rapid increases or decreases 
+in power consumption may introduce operational uncertainty or create challenges for maintaining reliable system 
+conditions. 
+Ramp requirements are intended to support reliable operation of the Transmission System by improving 
+predictability of load behavior, reducing operational uncertainty associated with sudden changes in demand, and 
+supporting coordination among Large Load Customers, Transmission Owners, Local Balancing Authorities, and 
+MISO during changing operating conditions. These requirements establish expectations for managing load 
+transitions in a manner that supports operational preparedness and reliable system performance. 
+MISO’s Balancing Authority Obligation 
+• Regulation will be primarily used to balance load changes inside the UDS interval (5 min). Dynamic 
+regulation reserves range from 600 MW – 1,000 MW for system wide. 
+• No single Large Load consumes more than 15% of MISO’s total regulation requirement 
+• Ramp limit  
+= 15% x Max(Dynamic regulation reserves)/UDS interval  
+= 15% x 1,000MW/5min  
+= 30MW/min
+--- PAGE 15 ---
+12 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+Applicable Requirements 
+A Large Loads should be subject to up-ramp and down-ramp limits established by the Transmission Provider 
+consistent with the process set forth in the Business Practices Manual for Large Load. The process to establish up-
+ramp and down-ramp limits for a Large Loads will consider local planning criteria and will include a procedure for 
+the Transmission Provider to authorize or instruct deviations as may be needed to preserve reliability. 
+ 
+Ride-through Requirements 
+Reliability Objective 
+The objective of ride-through requirements is to reduce the risk of unnecessary large load disconnection or rapid 
+changes in demand during voltage and frequency disturbances and support predictable disturbance performance 
+during credible system events. As emerging large loads increasingly include power-electronic interfaces, fast 
+controls, and dynamic operating behavior, disturbance response may materially affect system performance, 
+operational reliability, and post-contingency recovery. 
+Ride-through requirements are intended to support reliable operation of the Transmission System by improving 
+disturbance resilience, reducing operational uncertainty associated with sudden changes in large load demand, 
+and promoting more predictable facility behavior during transmission disturbances. These requirements establish 
+minimum performance expectations for maintaining connection and stable operation during voltage and frequency 
+excursions, while supporting system voltage recovery, frequency performance, and overall system stability. 
+Consistent with emerging industry practices and North American Electric Reliability Corporation (NERC) guidance, 
+ride-through expectations are intended to establish scalable and reliability-based performance criteria proportional 
+to demonstrated system risk and facility operating characteristics. 
+ 
+Applicable Requirements 
+General Principles 
+Ride-through requirements apply at the facility’s Point(s) of Withdrawal (PoW(s)) and establish the voltage and 
+frequency conditions under which a Large Loads is expected to remain connected to the Transmission System 
+during disturbances. When system conditions remain within the specified ride-through performance limits, the 
+Large Loads is expected to remain connected and maintain stable operation without unnecessary interruption of 
+service. Protection and control systems should be coordinated to avoid unnecessary tripping, and momentary 
+cessation is not permitted unless explicitly allowed. Following disturbance clearance, the Large Loads is expected 
+to recover toward pre-disturbance operating conditions in a controlled manner consistent with established 
+performance expectations. 
+Voltage Ride-Through (VRT) 
+Large Loads should remain connected to the Transmission System and maintain stable operation during voltage 
+disturbances measured at the Point(s) of Withdrawal (PoW(s)) when system voltage remains within the defined no-
+trip region of the voltage ride-through envelope. Voltage ride-through requirements should establish the magnitude 
+and duration of voltage deviations that a Large Loads should tolerate without unnecessary disconnection from the 
+Transmission System.
+--- PAGE 16 ---
+13 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+When voltage remains within the specified ride-through performance limits, the Large Loads should remain 
+connected and maintain stable operation consistent with established performance expectations. Protection 
+systems and facility controls should be coordinated to avoid unnecessary tripping and support stable operation 
+during and following transmission disturbances. 
+These requirements should reduce the risk of sudden changes in large load demand during credible system events 
+and support reliable operation of the Transmission System by improving disturbance resilience and predictable 
+system response. 
+Voltage Ride-Through Envelope 
+Voltage ride-through performance at the Point(s) of Withdrawal (PoW(s)) should be defined by the minimum 
+voltage magnitude and duration that a Large Loads should tolerate without unnecessary disconnection from the 
+Transmission System. Large Loads should remain connected to the Transmission System when voltage conditions 
+remain within the ride-through envelope shown in Table 1. 
+Large Load Customers should ensure that the design, protection systems, and operating characteristics of the 
+Large Loads support compliance with applicable ride-through performance expectations and maintain stable 
+operation during and following transmission disturbances. 
+Table 1. Voltage Ride-Through Requirements at PoW  
+Root Mean Square Voltage (p .u. of 
+nominal) 
+Minimum ride-through 
+time (s) 
+V > 1.20 May ride-through or trip 
+1.10 < V ≤ 1.20 0.50 
+0.90 ≤ V ≤ 1.10 Continuous 
+0.80 ≤ V < 0.90 2.00 
+0.50 ≤ V < 0.80 0.50 
+V < 0.50 0.15 
+ 
+Within the voltage-duration limits defined by the ride-through envelope, the Large Loads should remain connected 
+to the Transmission System and maintain stable operation consistent with established performance expectations. 
+Disconnection should not occur unless voltage conditions exceed the ride-through envelope or otherwise permitted 
+under applicable ride-through provisions. 
+The ride-through envelope establishes the expected no-trip region for Large Loads and is intended to support 
+predictable disturbance performance during credible voltage events and reliable operation of the Transmission 
+System. 
+The specified durations of the no-trip regions in Table 1 should be cumulative over one or more disturbance events 
+occurring within any 10-second period. Large Loads should be capable of remaining connected during consecutive
+--- PAGE 17 ---
+14 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+voltage disturbance events, including at least three disturbance events occurring within any 10-second period, 
+provided cumulative voltage-duration limits remain within the applicable ride-through envelope. 
+Performance Requirements During Voltage Disturbances 
+Large Loads should comply with the following performance requirements while operating within the voltage ride-
+through envelope: 
+ Voltage between 0.90 pu and 1.20 pu: 
+o The Large Loads should remain connected to the Transmission System and maintain pre-
+disturbance active power consumption. 
+o Temporary reduction of active power should not occur. 
+o Protection systems, converter protections, and control logic should not initiate unnecessary 
+tripping, interruption of service, or curtailment. 
+ Voltage between 0.50 pu and 0.90 pu: 
+o The Large Loads should remain connected to the Transmission System within the ride-through 
+envelope. 
+o Temporary reduction of active power may occur in proportion to the voltage reduction to support 
+continued operation during the disturbance. 
+o Following voltage recovery above 0.90 pu, the Large Loads should restore at least 90% of pre-
+disturbance active power within one second. 
+ Voltage below 0.50 pu: 
+o The Large Loads should remain connected to the Transmission System within the ride-through 
+envelope. 
+o Temporary reduction of active power may occur as necessary to maintain connection and support 
+ride-through performance during the disturbance. 
+o Following voltage recovery above 0.90 pu, the Large Loads should restore at least 90% of pre-
+disturbance active power within one second. 
+Protection systems, converter protections, and control logic should be coordinated to avoid unnecessary 
+disconnection during voltage disturbances occurring within the ride-through envelope. Control systems should 
+maintain stable operation during and following disturbances and should avoid oscillatory or unstable behavior that 
+could adversely affect reliable operation of the Transmission System. 
+Transient Overvoltage (TOV) Ride-Through 
+Large Loads should remain connected to the Transmission System and avoid unnecessary disconnection during 
+short-duration transient overvoltage conditions associated with normal system events, including faults, 
+transmission energization, switching operations, or other credible system disturbances. 
+Protection systems, converter protections, and facility controls should be coordinated to avoid unnecessary 
+interruption of service resulting from instantaneous or short-duration transient voltage excursions that do not 
+represent sustained abnormal system conditions. These requirements are intended to support predictable 
+disturbance performance and reduce the risk of unnecessary changes in large load demand during credible 
+transmission events.
+--- PAGE 18 ---
+15 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+Phase Jump Ride-Through Requirement 
+Large Loads should remain connected to the Transmission System and maintain stable operation during 
+instantaneous positive-sequence voltage phase angle changes of up to 25 electrical degrees resulting from non-
+fault switching events on the Transmission System, provided system voltage remains within the voltage ride-
+through limits specified in Table 1. 
+Protection systems, converter protections, and facility controls should be coordinated to avoid unnecessary 
+disconnection or unstable operation resulting from allowable phase angle changes during credible transmission 
+system events. 
+Volts per Hz (V/Hz) Ride-Through 
+Large Loads should remain connected to the Transmission System and maintain stable operation during abnormal 
+voltage-frequency conditions, provided the Volts per Hertz (V/Hz) measured at the Point(s) of Withdrawal (PoW(s)) 
+does not exceed 1.10 per unit for more than 45 seconds or exceed 1.18 per unit for more than 2 seconds. 
+Protection systems, converter protections, and facility controls should be coordinated to avoid unnecessary 
+disconnection during V/Hz excursions within these limits and support stable operation during and following 
+transmission disturbances. 
+ 
+Frequency Ride-Through (FRT) 
+Large Loads should remain connected to the Transmission System and maintain stable operation during system 
+frequency deviations within the limits specified in Table 2. The ride-through envelope should establish the 
+frequency ranges and associated durations over which a Large Loads should remain connected without 
+unnecessary disconnection. 
+Large Load Customers should ensure that the design, protection systems, facility controls, and operating 
+characteristics of the Large Loads support compliance with applicable ride-through performance expectations 
+during frequency excursions. 
+Protection systems and facility controls should be coordinated to avoid unnecessary disconnection during 
+frequency excursions within the defined limits and support predictable disturbance performance and reliable 
+operation of the Transmission System. 
+Frequency Ride-Through Envelope 
+Large Loads should remain connected to the Transmission System and maintain stable operation when system 
+frequency remains within the continuous operating range of 58.8–61.2 Hz. For frequency deviations outside this 
+range, Large Loads should remain connected for the minimum durations specified in Table 2. Disconnection may 
+occur when frequency excursions exceed the applicable limits of the ride-through envelope. 
+The specified durations of the no-trip regions in Table 2 should be cumulative over one or more disturbance events 
+occurring within any 10-minute period. 
+Table 2. Frequency Ride-Through Requirements at POI  
+System Frequency (Hz) Minimum Ride Through Time (Seconds)
+--- PAGE 19 ---
+16 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+f>61.8 May Trip 
+f>61.2 299 
+f≤ 61.2 and f≥ 58.8 Continuous 
+f< 58.8 299 
+f< 57.0 May trip 
+ 
+Performance During Frequency Excursions 
+During frequency deviations within the ride-through envelope, Large Loads should: 
+ Remain connected to the Transmission System; and 
+ Maintain stable operation consistent with established performance expectations. 
+Large Loads should maintain pre-disturbance active power consumption while system frequency remains within 
+the continuous operating range of 58.8 Hz to 61.2 Hz. 
+For frequency excursions outside the continuous operating range but within 57.0 Hz to 58.8 Hz or 61.2 Hz to 61.8 
+Hz, Large Loads should remain connected and maintain active power consumption within ±10% of pre-disturbance 
+levels while maintaining stable operation. 
+Rate of Change of Frequency (RoCoF) Ride-Through 
+Large Loads should remain connected to the Transmission System and maintain stable operation during frequency 
+excursions within the ride-through limits specified in Table 2, provided the absolute Rate of Change of Frequency 
+(RoCoF) measured at the Point(s) of Withdrawal (PoW(s)) does not exceed 5.0 Hz/s. 
+For purposes of evaluating ride-through performance, RoCoF should be calculated as the average rate of change 
+of multiple calculated system frequency measurements over a time interval greater than or equal to 0.1 second. 
+Consistent with North American Electric Reliability Corporation (NERC) PRC-029 guidance, RoCoF should not be 
+calculated during fault occurrence or fault clearance. 
+Any RoCoF protection installed should be coordinated with applicable Transmission System reliability requirements 
+and configured to avoid unnecessary disconnection during credible frequency disturbances. Protection settings 
+and control behavior should support ride-through performance during transient system conditions while avoiding 
+inappropriate operation resulting from temporary fault-induced frequency measurement behavior. 
+ 
+Stability Assessment Requirements 
+Reliability Objective 
+The objective of stability assessment requirements is to identify and assess potential reliability impacts associated 
+with Large Loads integration that may not be fully represented through conventional steady-state planning 
+assumptions or historical load representations. As emerging large loads increasingly incorporate power-electronic 
+interfaces, fast controls, dynamic operating behavior, and concentrated demand, additional assessment may be
+--- PAGE 20 ---
+17 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+necessary to understand system dynamic performance and stability during disturbances and changing system 
+conditions. 
+Stability assessment requirements are intended to support reliable operation of the Transmission System by 
+improving visibility into Large Loads dynamic behavior, identifying potential impacts to voltage performance, 
+frequency performance, oscillatory behavior, and overall system stability, and supporting timely mitigation of 
+reliability risks where necessary. These assessments provide a framework for understanding interactions between 
+Large Loads and the Transmission System under planning and operating conditions, including credible 
+contingencies and disturbance events. 
+Consistent with emerging industry practices and North American Electric Reliability Corporation (NERC) guidance, 
+stability assessment expectations are intended to be scalable and risk-informed and may include transient stability 
+assessment, forced oscillation assessment, system strength screening, electromagnetic transient assessment, 
+sub-synchronous oscillation assessment, and other evaluations as appropriate based on facility characteristics, 
+system conditions, and demonstrated reliability need. 
+Applicable Requirements 
+Large Loads should complete a comprehensive planning assessment consistent with applicable MISO Business 
+Practice Manuals, including BPM-020 (Transmission Planning), as supplemented by additional stability 
+assessment requirements described in this whitepaper and further developed through the Business Practice 
+Manual for Large Load. 
+Assessments should use validated models, appropriate study assumptions, and applicable contingencies and 
+should demonstrate that Large Loads integration does not result in unacceptable system performance or material 
+reliability concerns, as determined through applicable MISO planning processes and Transmission Owner local 
+planning criteria. 
+Large Load Customers should coordinate with applicable Transmission Owners during development of study 
+assumptions, model validation, and assessment activities and prior to submission of study results to the 
+Transmission Provider through the MISO Transmission Expansion Planning (MTEP) process. 
+The Transmission Provider should review study submittals and coordinate with Transmission Owners, as 
+appropriate, to evaluate potential reliability impacts associated with Large Loads integration. Where assessments 
+identify system limitations, mitigation measures, or transmission reinforcements necessary to maintain reliable 
+operation of the Transmission System, such upgrades should continue to be developed and reviewed through the 
+MISO Transmission Expansion Planning (MTEP) process consistent with BPM-020. 
+Transient Stability Assessment 
+Large Loads may be subject to transient stability assessment consistent with existing MISO transmission planning 
+processes and applicable Transmission Owner local planning criteria, with targeted enhancements to evaluate 
+reliability risks associated with Large Loads integration. 
+This assessment is intended to build upon — not replace — the existing MISO transmission planning framework 
+described in BPM-020, which evaluates system stability across near-, mid-, and long-term planning horizons using 
+established planning assumptions, North American Electric Reliability Corporation (NERC) transmission planning 
+contingencies, and applicable planning criteria. 
+To support evaluation of Large Loads integration, targeted enhancements may include: 
+1. Large Load Dynamic Representation
+--- PAGE 21 ---
+18 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+Explicit representation of Large Loads dynamic behavior within planning models, including ride-through 
+performance, dynamic load characteristics, load composition, and other operating characteristics 
+necessary to assess system response during disturbances. 
+2. Targeted Large Load Contingency Analysis 
+Evaluation of credible large-load-related contingencies, including sudden loss or rapid reduction of large 
+load demand where system conditions or facility characteristics indicate additional assessment is 
+warranted. These assessments may consider impacts to system frequency, voltage performance, angular 
+stability, oscillatory response, and post-contingency system performance. 
+This assessment is not intended to replace or supersede Transmission Owner local planning criteria, MISO 
+planning assumptions, or existing transmission planning requirements. Rather, it establishes a minimum reliability 
+expectation intended to support consistent evaluation of reliability risks associated with Large Loads integration 
+within existing planning processes. 
+Where applicable, Transmission Owner local planning criteria, MISO planning assessments, and other study 
+requirements should continue to apply. 
+Implementation Considerations 
+The existing MISO transmission planning process described in BPM-020 already evaluates transient and dynamic 
+system performance using established North American Electric Reliability Corporation (NERC) transmission 
+planning contingencies and applicable planning criteria across multiple planning horizons. This framework provides 
+a strong foundation for evaluating reliability impacts associated with changing system conditions and evolving 
+resource characteristics. 
+Emerging large loads may introduce operational and electrical characteristics not fully represented through 
+conventional static load assumptions. In particular, facilities incorporating power-electronic interfaces, motor-driven 
+equipment, uninterruptible power supply systems, ride-through controls, or rapidly changing operating behavior 
+may exhibit dynamic responses during disturbances that materially affect post-contingency system performance. 
+Accordingly, targeted enhancements to transient stability assessment may improve visibility into Large Loads 
+behavior during disturbances and strengthen evaluation of system performance under evolving grid conditions. 
+Explicit representation of dynamic load characteristics may improve modeling accuracy, while targeted contingency 
+analysis involving credible loss-of-large-load events may improve understanding of system response to sudden 
+changes in demand. 
+Implementation may include enhanced transient stability assessment performed by the Large Load Customer 
+using validated models, applicable planning assumptions, and expanded study scope intended to represent Large 
+Loads dynamic behavior and credible large-load-related contingencies. Study enhancements may include detailed 
+representation of ride-through behavior, dynamic load composition, power-electronic response, and targeted loss-
+of-large-load scenarios, as appropriate based on facility characteristics and system conditions. 
+Large Load Customers should coordinate with applicable Transmission Owners during development of study 
+assumptions and performance of transient stability assessment and should submit study results to MISO for review 
+through existing transmission planning processes, including the MISO Transmission Expansion Planning (MTEP) 
+process and, where applicable, the Expedited Project Review (EPR) process. 
+MISO may enhance existing MTEP and EPR planning processes to incorporate targeted transient stability 
+assessment considerations associated with Large Loads integration, including enhanced review of dynamic load 
+representation, disturbance performance, and large-load-related contingency impacts. These enhancements are
+--- PAGE 22 ---
+19 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+intended to supplement — not replace — existing transmission planning requirements and applicable Transmission 
+Owner local planning criteria. 
+Where applicable, Transmission Owner local planning criteria, MISO planning assessments, and other study 
+requirements should continue to apply. 
+Forced Oscillation Assessment 
+Large Loads may be subject to evaluation of potential forced oscillation impacts associated with repetitive changes 
+in real power demand that could adversely affect reliable operation of the Transmission System or connected 
+generating resources. 
+As a minimum reliability expectation, MISO proposes a guideline whereby repetitive load power variations should 
+generally not exceed a 10 MW change within a five-second sliding window unless otherwise justified through 
+technical evaluation. This guideline is intended to provide a consistent reference for evaluating potential forced 
+oscillation impacts associated with Large Loads operation. 
+This assessment is not intended to replace or supersede Transmission Owner local planning criteria or detailed 
+sub-synchronous oscillation assessments performed pursuant to Transmission Owner planning practices. Rather, 
+it establishes a minimum reliability expectation to support consistent screening and evaluation of forced oscillation 
+concerns associated with Large Loads. Where applicable, existing Transmission Owner local planning criteria and 
+study requirements should continue to apply. 
+Large Load Customers may demonstrate compliance with this expectation through one or more of the following 
+approaches: 
+ Demonstration that Large Loads operating characteristics satisfy the applicable power fluctuation guideline 
+under expected operating conditions; 
+ Detailed technical assessment demonstrating that facility operation does not adversely affect reliable 
+system performance or connected generating resources; or 
+ Identification and implementation of mitigation measures necessary to address identified reliability 
+concerns. 
+Where detailed studies are performed, assessments may consider impacts to synchronous generators, damping 
+performance, sub-synchronous oscillation susceptibility, generator endurance limits, and system-wide oscillatory 
+performance. 
+Implementation Considerations 
+North American Electric Reliability Corporation (NERC) guidance on emerging large loads identifies that certain 
+large loads — particularly those incorporating power-electronic interfaces, repetitive operating patterns, or fast 
+control systems — may interact with existing oscillatory modes of the power system. Under certain conditions, 
+these loads may reduce damping of natural system oscillations or contribute to repetitive oscillatory behavior 
+through real power or voltage fluctuations. 
+Sustained oscillations near existing system modes may increase reliability risks by increasing mechanical stress on 
+synchronous generators, accelerating equipment wear, amplifying network oscillations, or contributing to protection 
+system operations. Accordingly, MISO proposes evaluation of repetitive load power variations as a practical and 
+scalable approach to support early identification and mitigation of potential forced oscillation concerns associated 
+with Large Loads.
+--- PAGE 23 ---
+20 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+To support implementation, MISO reviewed industry practices and screening approaches used by utilities and 
+system operators, including Southern Company (SOCO), ERCOT, American Transmission Company (ATC), 
+AESO, and Long Island Power Authority (LIPA). These practices provide reference thresholds for evaluating 
+acceptable load variability and oscillatory behavior across local, inter-area, and subsynchronous frequency ranges. 
+Examples of industry approaches include: 
+ SOCO — Power oscillation screening criteria for inter-area and subsynchronous frequency ranges, 
+including limits on repetitive power variation and volatility bands; 
+ ERCOT — Screening guidance limiting repetitive load power variation to approximately 10 MW within a 
+five-second sliding window; 
+ ATC — Local planning criteria evaluating repetitive load changes and detailed PSCAD studies including 
+synchronous generator shaft models; 
+ AESO — Variability and oscillatory performance thresholds intended to limit rapid power fluctuations and 
+subsynchronous behavior; and 
+ LIPA — Oscillatory active power limits across local and aggregate frequency bands intended to reduce 
+adverse impacts to system oscillations. 
+The proposed 10 MW within a five-second sliding window guideline reflects an initial reliability reference informed 
+by industry practices and is intended to support a scalable, risk-informed approach for evaluating forced oscillation 
+concerns associated with Large Loads. MISO may perform additional studies to evaluate footprint-specific impacts 
+of emerging large loads on rotor-angle stability, generator stress, oscillatory performance, and overall system 
+reliability to further inform future expectations or mitigation approaches. 
+System Strength Screening and EMT Study 
+Large Loads may be subject to system strength screening and, where screening results indicate additional 
+assessment is needed, electromagnetic transient (EMT) assessment to evaluate potential reliability concerns 
+associated with weak system conditions, power-electronic interactions, and dynamic behavior that may not be fully 
+represented through conventional positive-sequence dynamic simulation methods. 
+This assessment focuses on identifying reliability concerns associated with weak grid conditions and related 
+electromagnetic transient interactions involving Large Loads and the Transmission System. Examples may include 
+control interactions, fast voltage response, inverter behavior, or other power-electronic performance characteristics 
+requiring detailed time-domain assessment. 
+This assessment is intended to supplement — not replace — Transmission Owner local planning criteria governing 
+system strength evaluation or determination of when EMT studies are warranted. Rather, it establishes a 
+consistent reliability enhancement intended to improve screening consistency across the MISO footprint while 
+preserving existing Transmission Owner planning practices. 
+Where both MISO and applicable Transmission Owner screening criteria are used to determine the need for 
+detailed assessment, the more restrictive screening outcome should apply. 
+Implementation Considerations 
+Implementation may include: 
+ MISO-conducted system strength screening to identify weak system conditions or elevated reliability 
+concerns and determine whether additional EMT assessment may be necessary;
+--- PAGE 24 ---
+21 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+ Performance of electromagnetic transient studies by the Large Load Customer where MISO screening 
+results, applicable Transmission Owner local planning criteria, or other study requirements indicate 
+additional assessment is needed; or 
+ Demonstration through technical analysis by the Large Load Customer that Large Loads operation does 
+not present material reliability concerns requiring further EMT assessment. 
+ MISO system strength screening is intended to supplement — not replace — applicable Transmission 
+Owner local planning criteria governing EMT study requirements. Transmission Owners may continue to 
+apply local planning criteria to determine the need for EMT assessment, and where both MISO and 
+Transmission Owner screening criteria apply, the more restrictive screening outcome should govern. 
+Large Load Customers should support EMT assessment, where applicable, through validated models, study 
+assumptions, and technical analysis sufficient to demonstrate acceptable system performance and identify 
+mitigation measures where necessary. 
+ 
+Sub-Synchronous Oscillation Screening and Study 
+Large Loads may be subject to sub-synchronous oscillation (SSO) screening and, where applicable Transmission 
+Owner local planning criteria or system conditions indicate additional assessment is needed, detailed SSO 
+assessment. 
+This assessment focuses on topology-related or equipment-related conditions that may introduce elevated SSO 
+risk and is intended to identify potential interactions between Large Loads and nearby transmission or generation 
+facilities. The need for assessment may be determined based on facility characteristics, electrical topology, local 
+system conditions, and applicable Transmission Owner planning practices. 
+Examples of conditions that may indicate additional assessment is needed include proximity to: 
+ Series-compensated transmission facilities; 
+ High-voltage direct current (HVDC) transmission facilities; 
+ Large power-electronic devices, including inverter-based resources and static reactive power devices; 
+ Large electric arc furnaces or other rapidly varying industrial facilities; or 
+ Large steam, gas, hydroelectric, or other synchronous turbine-generators susceptible to torsional 
+interaction. 
+This assessment is intended to supplement — not replace — Transmission Owner local planning criteria or 
+existing SSO study practices. Rather, it establishes a minimum reliability expectation to support identification and 
+evaluation of topology-related SSO concerns associated with Large Loads interconnection and operation. Existing 
+Transmission Owner screening criteria and study requirements should continue to apply, where applicable. 
+Where SSO screening or detailed studies are performed, study results may be coordinated with MISO to support 
+broader transmission planning and reliability evaluation. 
+Implementation Considerations 
+Series-compensated transmission facilities and other power-electronic or dynamic system components may 
+increase the risk of sub-synchronous oscillation when interacting with large, dynamic loads. Large Loads — 
+particularly those incorporating power-electronic interfaces or rapidly varying demand — may interact with 
+oscillatory behavior of nearby transmission networks or generating resources. Under certain conditions, these
+--- PAGE 25 ---
+22 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+interactions may reduce damping, excite electrical oscillations, or contribute to torsional interactions affecting 
+nearby synchronous generators. 
+Unlike system strength screening and electromagnetic transient assessment, which primarily focus on weak grid 
+conditions and control interactions, SSO assessment is intended to address topology-related reliability concerns 
+arising from transmission configuration, nearby equipment, or electrical interactions not necessarily associated with 
+weak system conditions. 
+Evaluation of these concerns may require detailed technical assessment, including electromagnetic transient 
+modeling of Large Loads, nearby transmission facilities, and affected generating resources to identify resonance 
+conditions, oscillatory interactions, and potential mitigation measures. 
+Within the MISO footprint, series-compensated transmission facilities are limited, and Transmission Owners 
+maintain established screening and study procedures to determine when SSO assessment is needed. MISO 
+intends to continue relying on applicable Transmission Owner local planning criteria to identify and evaluate SSO 
+concerns associated with Large Loads interconnection while coordinating study outcomes, as appropriate, to 
+support reliable operation of the Transmission System. 
+ 
+References 
+[1]. “Characteristics and Risks of Emerging Large Loads” – NERC Large Loads Task Force White Paper 
+(July 2025) 
+[2]. “Assessment of Gaps in Existing Practices… for Emerging Large Loads” – NERC LLTF White Paper 
+(March 2026) 
+[3]. Alert: Large Load Interconnection, Study, Commissioning, and Operations – NERC alert addressing 
+unexpected load reductions and emerging reliability risks (Jan 2026) 
+[4]. “Large Load Interconnection Performance Requirements” – ESIG Large Loads Task Force report 
+(Feb 2026) 
+[5]. “Large Load Disturbance Events” – ESIG report documenting ride-through failures and load-driven 
+oscillations (Mar 2026) 
+[6]. “Large Load Modeling for Dynamic Studies: Current Practices and Recommendations” – ESIG modeling 
+report (2026 update) 
+[7]. “Forecasting for Large Loads: Current Practices and Recommendations” – ESIG forecasting report 
+(Dec 2025) 
+ 
+Appendices 
+Mapping to tariff/BPM 
+Requirement MISO BPM NERC Standard* 
+Basic Facility Data 
+Network: BPM-010  
+Commercial: BPM-010 
+Transmission Planning: BPM-020 
+MOD-032-1 (Data 
+collection & reporting for 
+planning cases)
+--- PAGE 26 ---
+23 
+ 
+MISO Large Load Interconnection Reliability Requirements 
+Modeling Data Package Transmission Planning: BPM-020 
+Planning Modeling Manual  
+MOD-032-1 (Data 
+collection & reporting for 
+planning cases) 
+MOD-033-3 (Model 
+validation; steady 
+state & dynamic) 
+MOD-026-2 (Verification of 
+dynamic models across all 
+applicable facilities) 
+IRO/RTO Spec 
+Telemetry/Metering BPM-031/005 
+BPM-010 RTO Spec 
+Long-term forecast BPM-011  
+Short-term Forecast BPM-025  
+Outage Coordination BPM-008  
+Ramp BPM-020  
+Stability BPM-020  
+Ride-Through   
+  
+ 
+Stakeholder Engagement 
+[1]. 20260225 PAC Item 05 Large Load Interconnection Requirements.pdf 
+[2]. 20260422 PAC Item 07 Large Load Definition (PAC-2024-1).pdf 
+[3]. 20260527 PAC Item 10 Large Load Definition.pdf 
+[4]. Large Load Working Group (LLWG)

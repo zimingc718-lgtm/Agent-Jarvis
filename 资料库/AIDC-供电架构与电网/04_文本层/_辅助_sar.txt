@@ -1,0 +1,307 @@
+Standard Authorization Request (SAR)
+
+Complete and submit this form, with attachment(s)    The North American Electric Reliability Corporation
+to the NERC Help Desk. Upon entering the Captcha,    (NERC) welcomes suggestions to improve the reliability
+please type in your contact information, and attach  of the bulk power system through improved Reliability
+the SAR to your ticket. Once submitted, you will     Standards.
+receive a confirmation number which you can use to
+track your request.
+
+                                   Requested information
+
+SAR Title:                   Reliability Standards to Address Computational Load - Phase I
+
+Date Submitted:              February 20, 2026
+
+SAR Requester
+
+Name:            Jamie Calderon, Sandhya Madan
+
+Organization: NERC
+
+Telephone:       404-960-0568                        Email:  Jamie.Calderon@nerc.net
+                 470-698-8827                                Sandhya.Madan@nerc.net
+
+SAR Type (Check as many as apply)
+
+New Standard                                         Imminent Action/ Confidential Issue (SPM
+
+Revision to Existing Standard                                Section 10)
+
+Add, Modify or Retire a Glossary Term                Variance development or revision
+
+Withdraw/retire an Existing Standard                 Other (Please specify)
+
+Justification for this proposed standard development project (Check all that apply to help NERC
+
+prioritize development)
+
+       Regulatory Initiation                         NERC Standing Committee Identified
+       Emerging Risk (Reliability Issues Steering    Enhanced Periodic Review Initiated
+Committee) Identified                                Industry Stakeholder Identified
+       Reliability Standard Development Plan
+
+What is the risk to the Bulk Electric System (What Bulk Electric System (BES) reliability benefit does the
+
+proposed project provide?):
+
+This project will address the risks posed to the Bulk-Power System (BPS) due to the emergence of new
+large loads (e.g., data centers, crypto mining) that are connecting to the grid at an unprecedented scale
+and speed.
+
+As discussed within the 2025 ERO Reliability Risk Priorities Report, these large loads change the landscape
+of customer demand from organic population-driven growth to rapid investment-based deployment of
+data centers (including hyperscalers, artificial intelligence (AI), and cryptocurrency), onshoring of
+manufacturing activities, electrification of industrial processes, and commercial and residential
+electrification. Some of these loads are asynchronous to the grid, creating system conditions and ride-
+through challenges during system events. Integrating these large loads and viewing them as BPS resources
+for flexibility and reliability contribution, when possible, will be challenging but crucial.
+
+Other aspects of BPS security and reliability, such as growing uncertainties with global supply chains and
+development, are similarly impacted. Demand growth from data centers will exacerbate the need for
+
+RELIABILITY | RESILIENCE | SECURITY
+
+POWERING TODAY. PROTECTING TOMORROW.
+                                              Requested information
+network upgrades and new resources, and uncertainty around supply chains, international trade, import
+tariffs, and country restriction issues are disruptive to plans and schedules.
+
+To better understand the reliability impact(s) of emerging large loads, NERC's Reliability and Security
+Technical Committee (RSTC) established the Large Load Task Force (LLTF) and developed a work plan. The
+Member Representatives Committee provided written input to this work plan and hosted a technical
+panel session at the February 2025 Board meeting. NERC's Board also issued a resolution in February 2025
+directing NERC staff to develop an action plan, which will complement the work of the LLTF and provide
+additional structure to NERC's efforts related to large load integration.
+
+The LLTF released their Characteristics and Risks of Emerging Large Loads white paper and summary report
+of the white paper in July of 2025. This whitepaper similarly identified the impacts that BPS is currently
+experiencing from large loads and the anticipated increased impacts that large loads will have.
+
+Due to the scale and pace of integrating large loads, NERC is proposing changes to its regulatory
+framework to have visibility of these impactful BPS users and to enable mitigation of these increasing risks.
+These changes include: (1) revisions to the Rules of Procedure (ROP) registry criteria, including the
+development of new NERC registered entity classification consistent with the functional entity
+classification being developed through registration efforts that include "Computational Loads "; (2)
+corresponding revisions to the Glossary of Terms used in NERC Reliability Standards (NERC Glossary); and
+(3) the development of new or modified Reliability Standards.
+
+NERC is also developing a Level 3 Alert containing specific actions that NERC has determined are
+essential for owners, operators, or users of the BPS to take to ensure the reliability of the BPS. NERC
+expects to take the proposed Level 3 Alert to the NERC Board of Trustees for action in May 2026.
+Purpose or Goal (What are the reliability gap(s) or risk(s) to the Bulk Electric System being addressed,
+and how does this proposed project provide the reliability-related benefit described above?):
+The goal of this project will be twofold and require developing: (1) changes to the NERC Glossary to
+include large load entities, consistent with the proposed modifications for registration criteria in NERC's
+Rules of Procedure; and (2) a Reliability Standard addressing reliability issues associated with integrating
+these large loads onto the BPS.
+Project Scope (Define the parameters of the proposed project):
+
+The drafting team assigned to this project will coordinate closely with the NERC Staff developing
+proposed revisions to the NERC Rules of Procedure registry criteria to address the impacts of large loads
+affecting the reliability of the BPS.
+
+The scope of this project will include:
+
+    1. Coordinating with the NERC ROP revisions team to develop new terms and definitions for
+         inclusion in the NERC Glossary that align with the proposed changes to the Rules of Procedure
+         registry criteria, to support the development of Reliability Standards applicable to and relating to
+         large loads affecting the reliability of the BPS.
+
+    2. Considering the Level 3 Alert Essential Actions (to be issued May 2025), the July 2025 LLTF white
+         paper, and other information and stakeholder feedback, to develop one or more Reliability
+
+Standard Authorization Request (SAR)                                                                           2
+                                              Requested information
+         Standard(s) to address the most critical reliability issues associated with integrating these large
+         loads onto the BPS in the near-term.
+    3. Considering along with NERC staff and the NERC Large Load Working Group, a Phase 2 Standard
+         Authorization Request to address the development of other new or revised Reliability Standards
+         to address computational load needs.
+Detailed Description (Describe the proposed deliverable(s) with sufficient detail for a drafting team to
+execute the project. If you propose a new or substantially revised Reliability Standard or definition,
+provide: (1) a technical justification1 of developing a new or revised Reliability Standard or definition,
+which includes a discussion of the risk and impact to reliability-of the BES, and (2) a technical foundation
+document (e.g., research paper) to guide development of the Standard or definition):
+
+This drafting team will coordinate with the NERC ROP revisions team to develop Glossary definitions
+corresponding to proposed revisions to the NERC registry criteria under development, including:
+
+     a. "Computational Load": tentatively defined as Load comprised of power demand from
+         information technology equipment, such as servers, storage, and networking hardware.
+
+     b. "Computational Load Entity": tentatively defined as Entity with Load that includes
+         Computational Load.
+
+     c. Other defined terms for inclusion in the Glossary, as identified as needed during this project.
+
+This drafting team will develop one or more Reliability Standard(s) to address in the near-term essential
+actions entities must take to assure the reliable integration of large loads into the BPS.
+
+This drafting team will also work with NERC Staff and the NERC LLWG to consider if revisions to
+currently effective or NERC Board of Trustees adopted standards are needed, including existing
+standards in the MOD, PRC, TOP/IRO, and COM standards families. In the interest of time, these
+revisions may be pursued as part of a Phase II project.
+
+Recommended Approach
+
+Due to the urgent nature of the reliability risks to be addressed, NERC Staff recommends the drafting
+team pursue the development of a new Reliability Standard addressing, in one place, the essential
+actions that must be addressed in the near term. This approach would allow for a timelier path to
+mitigation for the most critical issues and present the fewest conflicts with existing and recently
+completed projects addressing other reliability issues in the Reliability Standards most likely to be
+implicated (e.g., MOD, TOP/IRO, PRC). Subsequent phase(s) could incorporate and expand upon
+consensus approaches for addressing large load issues into the existing Reliability Standards, phasing
+out the initial standard over time as work completes.
+
+The drafting team is not bound to Staff's recommended approach and may revise or develop an
+alternative approach to addressing the most urgent issues as informed by its expertise, technical
+information or analysis, or stakeholder feedback.
+
+1 The NERC Rules of Procedure require a technical justification for new or substantially revised Reliability Standards. Please attach pertinent
+information to this form before submittal to NERC.
+
+Standard Authorization Request (SAR)                                                                          3
+                                              Requested information
+Cost Impact Assessment, if known (Provide a paragraph describing the potential cost impacts associated
+with the proposed project):
+Cost impacts are unknown currently. NERC Staff anticipates there may be significant cost impacts,
+although the costs for implementing specific requirements are likely to vary by entity and region.
+Please describe any unique characteristics of the BES facilities that may be impacted by this proposed
+standard development project (e.g., Dispersed Generation Resources):
+This project proposes to establish requirements applicable to users of the BPS who are impactful to BPS
+reliability, and entities who interface with such users.
+To assist the NERC Standards Committee in appointing a drafting team with the appropriate members,
+please indicate to which Functional Entities the proposed standard(s) should apply (e.g., Transmission
+Operator, Reliability Coordinator, etc. See the NERC Rules of Procedure Appendix 5A:
+Members should have experience in operating large load facilities, interfacing with large load facilities,
+or studying large load facilities in the operations or planning time horizons. Members should also include
+representatives with experience in compliance or registration matters due to the overlap with the NERC
+registry criteria revision process.
+Do you know of any consensus building activities2 in connection with this SAR? If so, please provide any
+recommendations or findings resulting from the consensus building activity.
+
+NERC's Reliability and Security Technical Committee established the LLTF to analyze the reliability impacts
+related to emerging large loads (e.g., data centers (including cryptocurrency mining and AI), industrial
+facilities, and hydrogen production facilities).
+
+The LLTF was also tasked with defining large loads, and is currently working on a reliability gap analysis
+white paper to provide more insight on where the most significant risks exist.
+Are there any related standards or SARs that should be assessed for impact as a result of this proposed
+project? If so, which standard(s) or project number(s)?
+No.
+Are there alternatives (e.g., guidelines, white paper, alerts, etc.) that have been considered or could
+meet the objectives? If so, please list the alternatives with the benefits of using them.
+
+A large loads white paper was prepared in July 2025. A Level 2 Alert was issued in September 2025 to
+address reliability concerns related to rapid, major load swings. The alert assessed industry readiness and
+provided recommendations to help mitigate risks to BPS reliability resulting from integrating Large Loads
+to the BPS. A Level 3 ­ Essential Actions Alert is being prepared for NERC Board of Trustees consideration
+in April 2026.
+
+Given the breadth and extent of the reliability issues, these measures represent an important start but
+are insufficient to fully address the risks. Full mitigation requires updating the NERC Rules of Procedure
+registry criteria and developing targeted Reliability Standards to require risk mitigating action.
+
+2 Consensus building activities are occasionally conducted by NERC and/or project review teams. They typically are conducted to obtain industry
+inputs prior to proposing any standard development project to revise, or develop a standard or definition.
+
+Standard Authorization Request (SAR)                                                                         4
+                                                Reliability Principles
+Does this proposed standard development project support at least one of the following Reliability
+Principles? Please check all those that apply.
+
+       1. Interconnected bulk power systems shall be planned and operated in a coordinated manner
+            to perform reliably under normal and abnormal conditions as defined in the NERC Standards.
+
+       2. The frequency and voltage of interconnected bulk power systems shall be controlled within
+            defined limits through the balancing of real and reactive power supply and demand.
+
+       3. Information necessary for the planning and operation of interconnected bulk power systems
+            shall be made available to those entities responsible for planning and operating the systems
+            reliably.
+
+       4. Plans for emergency operation and system restoration of interconnected bulk power systems
+            shall be developed, coordinated, maintained and implemented.
+
+       5. Facilities for communication, monitoring and control shall be provided, used and maintained
+            for the reliability of interconnected bulk power systems.
+
+       6. Personnel responsible for planning and operating interconnected bulk power systems shall be
+            trained, qualified, and have the responsibility and authority to implement actions.
+
+       7. The security of the interconnected bulk power systems shall be assessed, monitored and
+            maintained on a wide area basis.
+
+       8. Bulk power systems shall be protected from malicious physical or cyber attacks.
+
+                                           Market Interface Principles                         Enter
+Does the proposed standard development project comply with all of the following               (yes/no)
+Market Interface Principles?                                                               Y
+                                                                                           Y
+    1. A reliability standard shall not give any market participant an unfair competitive  Y
+         advantage.
+                                                                                           Y
+    2. A reliability standard shall neither mandate nor prohibit any specific market
+         structure.
+
+    3. A reliability standard shall not preclude market solutions to achieving compliance
+         with that standard.
+
+    4. A reliability standard shall not require the public disclosure of commercially
+         sensitive information. All market participants shall have equal opportunity to
+         access commercially non-sensitive information that is required for compliance
+         with reliability standards.
+
+     Identified Existing or Potential Regional or Interconnection Variances
+
+Region(s)/                            Explanation
+
+Interconnection
+
+n/a              n/a
+
+Standard Authorization Request (SAR)                                                                      5
+                                      For Use by NERC Only
+
+Risk Tracking
+
+Grid Transformation                          Energy Policy
+Resilience to Extreme Events                 Critical Infrastructure Interdependencies
+Security
+
+CMEP Feedback
+
+Yes              No
+
+Version History
+
+Version        Date                   Owner                  Change Tracking
+
+      1        June 3, 2013                                  Revised
+      1        August 29, 2014
+      2        January 18, 2017       Standards Information Staff Updated template
+      2        June 28, 2017
+      3        February 22, 2019      Standards Information Staff Revised
+
+      4        February 25, 2020      Standards Information Staff Updated template
+      5        August 14, 2023
+                                      Standards Information Staff Added instructions to submit via Help
+      6        June 4, 2024                                                Desk
+
+      7        July 14, 2025          Standards Information Staff Updated template footer
+      8        July 28, 2025
+                                      Standards Development  Updated template as part of
+                                      Staff                  Standards Process Stakeholder
+                                                             Engagement Group
+
+                                      Standards Information Staff Updated link to the NERC Reliability
+                                                                           Principles
+
+                                      Standards Information Staff Minor edits to template
+
+                                      Standards Information Staff Updated NERC Only section to match
+                                                                           2025 RISC report.
+
+Standard Authorization Request (SAR)                                                                     6
+

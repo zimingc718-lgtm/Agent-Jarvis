@@ -1,0 +1,416 @@
+--- PAGE 1 ---
+RELIABILITY | RESILIENCE | SECURITY 
+POWERING TODAY.  PROTECTING TOMORROW.  
+ Standard Authorization Request (SAR) 
+ 
+The North American Electric Reliability Corporation 
+(NERC) welcomes suggestions to improve the reliability 
+of the bulk power system through improved Reliability 
+Standards.  
+ 
+ 
+Requested information 
+SAR Title: Reliability Standards to Address Computational Load Disturbance 
+Performance 
+Date Submitted:   
+SAR Requester  
+Name: 
+Eric Meier, ERCOT (NERC LLWG Chair) 
+Sudip Manandhar, Southern Company (NERC LLWG Vice Chair) 
+Rahul Anilkumar (Danovo Energy Solutions) 
+Evan Mickelson, NERC (NERC LLWG Secretary) 
+Jack Gibfried, NERC (NERC LLWG Secretary) 
+Submitted on behalf of the NERC Large Loads Working Group (LLWG) 
+Organization: NERC Large Loads Working Group (LLWG) 
+Telephone: 
+Eric Meier: 512-248-6770 
+Sudip Manandhar: 404-416-3176 
+Rahul Anilkumar: 510-309-8654 
+Evan Mickelson: 770-843-8815  
+Jack Gibfried: 470-432-8484 
+Email: 
+eric.meier@ercot.com 
+smanandh@southernco.com  
+RAnilkumar@danovoenergy.com 
+Evan.Mickelson@nerc.net 
+Jack.Gibfried@nerc.net 
+SAR Type (Check as many as apply) 
+     New Standard 
+     Revision to Existing Standard 
+     Add, Modify or Retire a Glossary Term 
+     Withdraw/retire an Existing Standard 
+     Imminent Action/ Confidential Issue (SPM 
+Section 10) 
+     Variance development or revision 
+     Other (Please specify) 
+ Justification for this proposed standard development project (Check all that apply to help NERC prioritize 
+development) 
+     Regulatory Initiation 
+     Emerging Risk (Reliability Issues Steering 
+Committee) Identified 
+     Reliability Standard Development Plan  
+     NERC Standing Committee Identified 
+     Enhanced Periodic Review Initiated 
+     Industry Stakeholder Identified 
+What is the risk to the Bulk Electric System (What Bulk Electric System (BES) reliability benefit does the 
+proposed project provide?): 
+This project will help address the risks posed to the Bulk Power System (BPS) by the disturbance response 
+of computational loads, which have reduced or interrupted demand in response to transmission faults.  
+ 
+Complete and submit this form, with attachment(s) 
+to the NERC Help Desk. Upon entering the Captcha, 
+please type in your contact information, and attach 
+the SAR to your ticket. Once submitted, you will 
+receive a confirmation number which you can use to 
+track your request.
+--- PAGE 2 ---
+Standard Authorization Request (SAR) 2 
+Requested information 
+NERC's Reliability and Security Technical Committee (RSTC) established the Large Load Task Force (LLTF), 
+now the Large Loads Working Group (LLWG), to analyze the reliability impacts of emerging large loads. The 
+LLWG identified the lack of predictable ride -through performance for large loads as a gap in the current 
+NERC Reliability Standards in its Assessment of Gaps in Existing Practices, Requirements, and Reliability 
+Standards for Emerging Large Loads white paper (March 2026). NERC issued a Level 2 Alert  in September 
+2025 addressing rapid, major load swings  and suggesting changes to interconnection requirements, 
+modeling practices, and operation readiness. NERC also issued  a Level 3 Alert  in May 2026 containing 
+essential actions for the reliable integration of computational loads. Project 2026-02 Computational Loads 
+was initiated in March 2026 to address in the near term the most critical issues associated with integrating 
+computational loads.  
+ 
+Project 2026- 02 scope addresses computational load interconnection and modeling, operational 
+coordination and information , protection and control systems , and event analysis information . Ride -
+through and post -fault active power recovery (PFAPR ) performance requirements are technically distinct 
+from that near -term scope and rest on the event analysis and dynamic simulation basis set out in the 
+preliminary LLWG and Event Analysis Subcommittee (EAS) white paper Large Load Disturbance Performance 
+- Impact Analysis and Ride -Through Recommendations . The Project 2026 -02 project is also facing a 
+regulatory deadline of December 31, 2026 for filing with the Federal Energy Regulatory Commission.  This 
+SAR is submitted so that the needs associated with disturbance performance, as the next most high-priority 
+issue associated with computational load integration, receive a dedicated drafting effort. 
+ 
+The following event records establish the BPS impact of these loads and the technical justification for a SAR 
+on this matter.  
+ 
+- On July 10, 2024, the failure of a lightning arrestor on a 230 kV line in the Dominion Energy Virginia 
+(DEV) service territory produced a single -line-to-ground fault, that ultimately led to a line lockout 
+after a staggered 3-attempt automatic reclosing sequence at each terminal (i.e., 6 fault applications 
+within approximately 82 seconds). While, n o data center was disconnected by the fault itself  or by 
+the reclosing sequence , approximately 1,500 MW of data center load nevertheless transferred to 
+backup generation through customer -side controls and protection and remained off the BPS for 
+several hours, producing a measurable frequency deviation, a change in area control error, and a 
+localized overvoltage condition that persisted at several substations until DEV system operators 
+energized shunt reactors and removed capacitor banks from service. This load transfer is considered 
+to be customer-initiated load reduction (CILR).
+1 A subsequent event in the same area on February 
+17, 2025 produced approximately 1,800 MW of CILR across 18 substations and 44 transformers.  
+Recently on July 22, 2026, an event resulted in approximately 3, 800 MW of CILR across Northern 
+Virginia, and more than double the CILR observed during the July 10, 2024, event.2 
+ 
+ 
+1 See Possible Misunderstandings of the Term “Load Loss" 
+2 https://www.pjm.com/-/media/DotCom/committees-groups/subcommittees/sos/2026/20260730/20260730-item-06---july-22-dominion-load-
+transfer-event---presentation.pdf
+--- PAGE 3 ---
+Standard Authorization Request (SAR) 3 
+Requested information 
+- In the Texas Interconnection, ERCOT has analyzed 32 large load ride-through events with CILR of 100 
+MW or greater between January 2023 and April 2026 and  has indicated that the simultaneous loss 
+of 3,200 GW of load under certain system conditions may pose significant risk to Interconnection 
+frequency and voltage stability and may require ERCOT to lower system operating limits on 
+transmission interfaces in affected areas.  
+ 
+- AEP has experienced two significant data center CILR events. In February 2025, a 428 MW CILR event 
+occurred. In March 2025, a 227 MW CILR event occurred. More information on the ERCOT events , 
+the AEP events, and the DEV events can be found in the preliminary white paper Large Load 
+Disturbance Performance – Impact Analysis and Ride-Through Recommendations. 
+ 
+Moreover, the observed response is not consistent between computational load sites or between events at 
+the same site. Sites connected to the same substation and exposed to nearly identical voltage depressions 
+have behaved differently. For example, a single site reduced approximately 20% of its load at a minimum 
+phase voltage of 0.7205 pu during one event and its full load at a shallower minimum phase voltage of 
+0.7538 pu during another. Planning Coordinators (PC), Transmission Planners (TP), and Balancing 
+Authorities (BA) therefore cannot presently predict how much load a credible fault will remove from service. 
+ 
+PRC-024-4 establishes frequency and voltage protection settings for synchronous generators, Type 1 and 
+Type 2 wind resources, and synchronous condensers, and PRC-029-1 establishes ride-through requirements 
+for inverter-based resources (IBR). Neither applies to load, and no NERC Reliability Standard establishes a 
+minimum voltage ride-through (VRT), frequency ride-through (FRT), or PFAPR performance requirement for 
+computational load. 
+Purpose or Goal (What are the reliability gap(s) or risk(s) to the Bulk Electric System being addressed, and 
+how does this proposed project provide the reliability-related benefit described above?): 
+The goal of this project is to address the reliability risk posed by the computational loads performing CILR 
+by defining minimum ride -through, rate -of-change-of-frequency (RoCoF) withstand, and PFAPR 
+performance requirements to ensure the stability of the BPS. When the evidentiary record of BPS CILR 
+disturbances is considered in light of the growing queues of computational loads seeking interconnection, 
+it highlights that it is essential to address  issues associated with disturbance performance to support 
+integration of computational loads in a way that avoids placing the reliability of the BPS at risk.  
+ 
+To mitigate the risks, two actions are needed: (1) revisions to the NERC Glossary of Terms Used in NERC 
+Reliability Standards (NERC Glossary of Terms) to define load ride-through and PFAPR, consistent with the 
+computational load and Computational Load Entity definitions under development in Project 2026-02; and 
+(2) the development of one or more Reliability Standards establishing minimum voltage ride-through (VRT), 
+frequency ride-through (FRT), RoCoF withstand, and PFAPR performance requirements for computational 
+loads. 
+ 
+Establishing these disturbance performance requirements will ensure that applicable computational loads 
+have clear performance requirements to meet or exceed, while preserving the ability of the T ransmission 
+Owner, D istribution Provider , and Generator Owner , in coordination with other applicable entities as 
+needed, to establish more stringent performance requirements through their interconnection
+--- PAGE 4 ---
+Standard Authorization Request (SAR) 4 
+Requested information 
+requirements. Minimum disturbance performance requirements will also give  equipment manufacturers 
+and computational load site developers a clear, consistent and upfront design target in place of the regional 
+and utility -specific requirements now in development. The clear and consistent design targets reduce 
+configuration risk.  
+Project Scope (Define the parameters of the proposed project): 
+The scope of this project shall include: 
+• Develop new or modified Reliability Standards addressing computational load ride-through, PFAPR, 
+RoCoF withstand, and current consumption during disturbances. 
+• Developing terms and definitions for inclusion in the NERC Glossary of Terms that support Reliability 
+Standards addressing computational load ride-through and PFAPR. 
+• Considering the LLWG and EAS white paper Large Load Disturbance Performance: Impact Analysis 
+and Ride-Through Recommendations (preliminary version available on the NERC website); the Level 
+3 Alert Essential Actions; the requirements published or proposed by ERCOT, SPP, MISO, Southern 
+Company, DEV, AESO, and Fingrid; and other information and stakeholder feedback; develop one or 
+more Reliability Standards establishing minimum VRT, FRT, RoCoF withstand, PFAPR , and 
+disturbance current consumption requirements for computational loads. 
+• Determining applicability, including the point of measurement, the treatment of cooling load, the 
+performance verification and disturbance monitoring data required to demonstrate compliance, 
+and a tiered applicability and effective date structure addressing sites that are already operational 
+or that hold executed interconnection agreements. 
+• Addressing the coordination of computational load ride -through obligations with the generation 
+ride-through obligations applicable to co -located generation sharing a point of common coupling 
+(PCC). Determining if single net PCC  performance region should replace separate load and 
+generation ride-through obligations at sites where load and generation are tightly integrated. 
+ 
+Detailed Description (Describe the proposed deliverable(s) with sufficient detail for a drafting team to 
+execute the project. If you propose a new or substantially revised Reliability Standard or definition, provide: 
+(1) a technical justification3 of developing a new or revised Reliability Standard or definition, which includes 
+a discussion of the risk and impact to reliability -of the BES, and (2) a technical foundation document ( e.g., 
+research paper) to guide development of the Standard or definition): 
+This drafting team will develop definitions for inclusion in the NERC Glossary of Terms  supporting the 
+requirements described below, including a term for load ride -through and a term for PFAPR. The  drafting 
+team should consider whether  the development of a new load- specific ride -through term is necessary 
+rather than modification of the existing Ride -through definition approved with PRC-024-4 and PRC-029-1. 
+In addition, the drafting team should modify or develop  one or more Reliability Standards to address the 
+following disturbance performance and mitigation requirements. 
+ 
+3 The NERC Rules of Procedure require a technical justification for new or substantially revised Reliability Standards. Please attach pertinent 
+information to this form before submittal to NERC.
+--- PAGE 5 ---
+Standard Authorization Request (SAR) 5 
+Requested information 
+• Voltage Ride -Through: Establish minimum VRT performance requirements  applicable to 
+computational loads, including requirements for  low-voltage and high -voltage conditions. 
+Requirements should define the voltage -time performance envelope ( e.g., expressed as a table of 
+voltage magnitudes and corresponding minimum ride -through durations ) applicable to 
+computational loads to support BPS reliability during system disturbances. The LLWG recommends 
+consideration of the materials above, and recommends  drafting team consideration of the ERCOT 
+Voltage Ride-Through Requirements for Large Computational Loads from ERCOT NOGRR 282 as the 
+minimum baseline, modified to extend the obligation across the full duration of credible events and 
+fault clearing times , and modified to reduce the number of discrete voltage -time steps . Table 1 
+provides a recommended starting point for these modifications.  The drafting team should also 
+address the applicability of VRT requirements to cooling load providing some flexibility where a site 
+demonstrates through study that its cooling configuration cannot practically meet the requirements 
+and the residual risk is acceptable for BPS reliability. 
+ 
+Table 1 – Suggested Voltage Ride-Through Requirements for Computational Loads 
+Voltage (per unit) Operation Region* Minimum Ride-Through Time (sec) 
+≥1.15 May Ride Through or Trip N/A 
+< 1.15 and ≥ 0.90 Continuous operation region Continuous 
+0.80 < V ≤ 0.90 Mandatory operation region 2.00 
+0.50 ≤ V ≤ 0.80 Mandatory operation region 0.50 
+V < 0.50 Mandatory operation region 0.25 
+*Mandatory operation region would need to clarify if the computational load would need to stay 
+connected, but may reduce active power proportional to voltage drop. 
+ 
+• Multi-Disturbance Ride-Through: Establish requirements that address the survivability of successive 
+voltage depressions rather than a single fault application. Where a site uses protection logic that 
+counts voltage dips within a predetermined window, the counter threshold should accommodate 
+the automatic reclosing sequence expected on the tra nsmission system serving the site, provided 
+each individual event falls inside the applicable ride-through region. 
+• Frequency Ride -Through and RoCoF Withstand:  Establish minimum FRT and RoCoF withstand 
+performance requirements at the Interconnection level, considering the IEEE 2800-2022 and PRC-
+029-1 criteria. The drafting team should consider whether the duration associated with the high-
+frequency requirement requires adjustment so that generation and load do not disconnect 
+simultaneously during an over-frequency excursion. The drafting team should also consider existing 
+under-frequency load shedding (UFLS) schemes to ensure that FRT requirements do not interfere 
+with UFLS schemes. 
+• Post-Fault Active Power Recovery:  Establish requirements related to the restoration of load 
+following a system disturbance , including restoration magnitude  and recovery timing. The LLWG
+--- PAGE 6 ---
+Standard Authorization Request (SAR) 6 
+Requested information 
+recommends a default recovery level of at least 90% of pre -disturbance consumption with entities 
+being able to modify the recovery level and time based on system studies considering issues such as 
+system strength, stability studies, and fault- induced delayed voltage recovery and other local area 
+load dynamics. The LLWG also recommends that the requirement only appl ies to a site whose PCC 
+voltage remained inside the ride-through region, and not a site whose PCC voltage fell outside that 
+region and that consequently disconnected. 
+• Current Consumption:  Establish requirements for the maximum current consumption of the 
+computational load site during a disturbance.  
+• Applicability and Effective Dates: Develop criteria for applicability and implementation timelines, 
+including consideration of both new and existing computational load sites. For comparison, ERCOT 
+NOGRR 282 provides a tiered model, in that it establishes a grandfathering date associated with 
+operational status or execution of an interconnection agreement and then applies a mandatory 
+compliance date to sites satisfying interconnection requirements after a later date.  Computational 
+load sites built before the grandfathering date  must conform to the performance requirements 
+unless they provide documentation of the technical inability to comply with said  performance 
+requirements. Every documented CILR event to date involved sites that were already operational, 
+and a framework applicable only to sites entering the interconnection queue after the effective date 
+would leave the identified risk unaddressed for the service life of the existing fleet. 
+ 
+Recommended Approach 
+The LLWG recommends the drafting team pursue the development of new or modified Reliability 
+Standard(s) (with associated Glossary updates)  addressing the disturbance performance requirements for 
+computational loads, in the manner of PRC-029-1 for IBRs. 
+ 
+The drafting team is not bound to the LLWG's recommended approach and may revise it or develop an 
+alternative approach as informed by its expertise, technical information or analysis, or stakeholder 
+feedback. 
+ 
+Technical Foundation and Justification 
+The technical foundation document for this project is the LLWG  and EAS white paper Large Load 
+Disturbance Performance: Impact Analysis and Ride-Through Recommendations. The preliminary version of 
+this document is posted on the NERC website. This white paper is planned to be finalized and published in 
+December 2026  and is intended to help inform next steps (including any drafting team efforts) . This 
+document provides the event analysis, the review of published and proposed requirements across North 
+American and international jurisdictions, and the recommendations on which the deliverables above are 
+based. 
+ 
+Additional technical justification can be found in the LLWG Characteristics and Risks of Emerging Large Loads 
+and Assessment of Gaps in Existing Practices, Requirements, and Reliability Standards for Emerging Large 
+Loads white papers, as well as the LLWG Computational Loads Standard Authorization Request Roadmap.
+--- PAGE 7 ---
+Standard Authorization Request (SAR) 7 
+Requested information 
+Cost Impact Assessment, if known (Provide a paragraph describing the potential cost impacts associated 
+with the proposed project):  
+Exact costs for this project are unknown and are expected to vary by entity, by region, and by site design 
+and vintage. Near-term costs are likely to be modest for sites designed after the requirements are known, 
+as ride -through capability is largely a fun ction of uninterruptible power supply (UPS) configuration, 
+protection and control settings, disturbance counter logic, and transformer winding configuration, all of 
+which are established during site engineering rather than through retrofit. Costs are expected to be higher 
+for sites already in operation and for cooling infrastructure, which is typically not supported by the UPS and 
+may require extension of that capability to pumps, fans, and chillers.  
+Please describe any unique characteristics of the BES facilities that may be impacted by this proposed 
+standard development project (e.g., Dispersed Generation Resources): 
+This project proposes establish ing performance requirements applicable to computational loads , and 
+coordination obligations for entities who interface with such users. Other equipment at the computational 
+load site may also be affected.  
+To assist the NERC Standards Committee in appointing a drafting team with the appropriate members, 
+please indicate to which Functional Entities the proposed standard(s) should apply (e.g., Transmission 
+Operator, Reliability Coordinator, etc. See the NERC Rules of Procedure Appendix 5A: 
+The requirements are expected to apply to the registered entity class under development for computational 
+loads, with coordination obligations for the TO, TOP, TP, PC, BA, and RC. 
+Drafting team members should have experience in computational load site electrical design with knowledge 
+of facility characteristics that affect its disturbance performance, transmission protection and control (e.g., 
+automatic reclosing practice, relay operating times), dynamic simulation and load modeling of power 
+electronic load, and BA operations. Members should also include equipment manufacturer and 
+computational load developer/owner representation so that the achievability of proposed requirements is 
+represented during drafting.   
+Do you know of any consensus building activities4 in connection with this SAR?  If so, please provide any 
+recommendations or findings resulting from the consensus building activity. 
+This SAR was developed by the NERC LLWG . The LLWG  has issued two white  papers and a Reliability 
+Guideline analyzing the reliability impacts of emerging large loads, and NERC Event Analysis has published 
+two incident reviews addressing voltage-sensitive load reductions in the DEV service territory and in the 
+Texas Interconnection. The need for the SAR  has also been widely discussed in Project 2026 -02 drafting 
+team meetings and associated outreach efforts. 
+ 
+The preliminary white paper Large Load Disturbance Performance  - Impact Analysis and Ride -Through 
+Recommendations reflects consensus building already conducted and its recommendations are reflected in 
+the deliverables described above. 
+Are there any related standards or SARs that should be assessed for impact as a result of this proposed 
+project?  If so, which standard(s) or project number(s)? 
+ 
+4 Consensus building activities are occasionally conducted by NERC and/or project review teams.  They typically are conducted to obtain industry 
+inputs prior to proposing any standard development project to revise, or develop a standard or definition.
+--- PAGE 8 ---
+Standard Authorization Request (SAR) 8 
+Requested information 
+Yes. Identification of a Reliability Standard below does not propose its revision; the purpose is to confirm 
+that the requirements developed under this SAR coordinate with the Reliability Standards already in place. 
+• PRC-024-4, as the colocation of computational load and generation could impact generator ride -
+through requirements if the drafting team determines that a single net PCC  performance region 
+should replace separate load and generation ride-through obligations. 
+• PRC-029-1, as the colocation of computational load and generation could impact generator ride -
+through requirements if the drafting team determines that a single net PCC  performance region 
+should replace separate load and generation ride-through obligations. 
+Are there alternatives (e.g., guidelines, white paper, alerts, etc.) that have been considered or could meet 
+the objectives? If so, please list the alternatives with the benefits of using them. 
+The LLWG has published two white papers and a Reliability Guideline addressing emerging large loads, NERC 
+Event Analysis has published two incident reviews, and NERC issued a Level 2 Alert in September 2025 and 
+a Level 3 Alert  in May 2026. Requirements published or proposed outside NERC  are already producing 
+design change, including ERCOT NOGRR 282, the SPP High Impact Large Load framework , the MISO large 
+load proposal , and the Southern Company  and DEV interconnection requirements . T he ERCOT 
+requirements in particular have given equipment manufacturers a target to design toward. IEEE 2800-2022 
+provides the FRT and RoCoF withstand basis adopted here but addresses IBRs rather than load. Grid- side 
+mitigations (e.g., dynamic reactive support, faster protection, modified reclosing practice) reduce the 
+severity of the disturbances that trigger CILR and remain necessary for residual risk. 
+Collectively these measures represent an important start, but they are voluntary or partial in coverage, the 
+envelopes and recovery windows differ between regions, and none establishes an enduring performance 
+requirement applicable to sites interconnecting  in future years. Full mitigation requires a Reliability 
+Standard establishing minimum ride-through and PFAPR performance. 
+ 
+Reliability Principles 
+Does this proposed standard development project support at least one of the following Reliability 
+Principles? Please check all those that apply. 
+ 1. Interconnected bulk power systems shall be planned and operated in a coordinated manner to 
+perform reliably under normal and abnormal conditions as defined in the NERC Standards. 
+ 2. The frequency and voltage of interconnected bulk power systems shall be controlled within 
+defined limits through the balancing of real and reactive power supply and demand. 
+ 
+3. Information necessary for the planning and operation of interconnected bulk power systems 
+shall be made available to those entities responsible for planning and operating the systems 
+reliably. 
+ 4. Plans for emergency operation and system restoration of interconnected bulk power systems 
+shall be developed, coordinated, maintained and implemented. 
+ 5. Facilities for communication, monitoring and control shall be provided, used and maintained for 
+the reliability of interconnected bulk power systems. 
+ 6. Personnel responsible for planning and operating interconnected bulk power systems shall be 
+trained, qualified, and have the responsibility and authority to implement actions.
+--- PAGE 9 ---
+Standard Authorization Request (SAR) 9 
+Reliability Principles 
+ 7. The security of the interconnected bulk power systems shall be assessed, monitored and 
+maintained on a wide area basis. 
+ 8. Bulk power systems shall be protected from malicious physical or cyber attacks. 
+ 
+Market Interface Principles 
+Does the proposed standard development project comply with all of the following 
+Market Interface Principles? 
+Enter 
+(yes/no) 
+1. A reliability standard shall not give any market participant an unfair competitive 
+advantage. 
+Y 
+2. A reliability standard shall neither mandate nor prohibit any specific market 
+structure. 
+Y 
+3. A reliability standard shall not preclude market solutions to achieving compliance 
+with that standard. 
+Y 
+4. A reliability standard shall not require the public disclosure of commercially 
+sensitive information.  All market participants shall have equal opportunity to 
+access commercially non-sensitive information that is required for compliance 
+with reliability standards. 
+Y 
+ 
+Identified Existing or Potential Regional or Interconnection Variances 
+Region(s)/ 
+Interconnection 
+Explanation 
+ None 
+ 
+ 
+For Use by NERC Only  
+ 
+Risk Tracking 
+     Grid Transformation 
+     Resilience to Extreme Events 
+     Security 
+     Energy Policy 
+     Critical Infrastructure Interdependencies 
+ 
+CMEP Feedback 
+     Yes                    No

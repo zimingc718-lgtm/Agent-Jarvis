@@ -1,0 +1,701 @@
+----- PAGE 1 -----
+RELIABILITY | RESILIENCE | SECURITY   
+POWERING TODAY.  PROTECTING TOMORROW.  
+POWERING TODAY.  PROTECTING TOMORROW.  
+Frequently Asked Questions 
+Computational Loads: Registry Criteria and Project 2026-02 Standards  
+ 
+An increasing number of large commercial and industrial loads are rapidly connecting to the Bulk-Power System 
+(BPS). Computational loads, such as data centers (including cryptocurrency and artiﬁcial intelligence), present 
+unique challenges in forecasting and planning for increased demand. Through extensive analysis, report 
+development, and ongoing engagement, NERC det ermined that it must act now to  integrate computational 
+loads and mitigate the risks associated with them. To achieve this, NERC developed its Large Loads Action Plan. 
+Through a three-pronged approach of technical insights, registration criteria for computational loads, and new 
+Reliability Standards, NERC and stakeholders can ensure new computational loads operate reliably and securely 
+when connected to the grid.  
+ 
+This Frequently Asked Questions (FAQ) document is intended to help stakeholders understand the proposed 
+Reliability Standards CLO-001-1, CL O-002-1, and CL O-003-1 being developed under Project 2026- 02 
+Computational Loads, as well as the proposed updates to registry criteria as outlined in the Rules of Procedure 
+(ROP). The FAQ summarizes the purpose of the project, the current standards framework, key process 
+questions, and topics that may be addressed through future standards development work. 
+ 
+In addition, this document addresses some commonly asked questions regarding the proposed registry criteria 
+in the NERC ROP and the registration process to help stakeholders understand the relationship between the 
+development of Reliability Standards in Project 2026-02 and the NERC registry criteria for Computational Load 
+Owners (CLOs) and Computational Load Operators (CLOPs). However, the Project 2026-02 drafting team (DT) 
+emphasizes that this information is provided for general understanding of the application of the registry 
+criteria, and that all registration determinations for individual entities that may meet the new registry criteria 
+(once eﬀective) will occur through the regist ration process conducted in coordination with the appropriate 
+Regional Entity(ies), NERC, and the entity, based on its individual facts and circumstances. 
+ 
+Reliability Standards and Registration 
+What Are Reliability Standards? 
+Reliability Standards deﬁne reliability requirements for planning and operating the North American Bulk-
+Power System, as required under  Section 215 of the Federal Power Act . As the Electric Reliability 
+Organization (ERO), NERC develops standards that are subject to review and approval by the Federal Energy 
+Regulatory Commission (FERC). Once approved, standards are mandatory and enforceable for registered 
+entities. 
+ 
+NERC develops Reliability Standards using an industry-driven development process that is open to everyone 
+aﬀected by grid reliability. This public process is transparent, demonstrates a consensus for each standard, 
+fairly balances the interests of all stakeholders, provides reasonable notice and opportunity for comment, 
+and enables timely standards development.
+----- PAGE 2 -----
+FAQ for Project 2026-02 2 
+What is Registration? 
+Registration identiﬁes and registers BPS owners, operators, and users that are responsible for performing 
+speciﬁed reliability functions to which mandatory NERC Reliability Standards apply. The requirements and 
+activities for organization registration are detailed in Section 500 (Organization Registration and 
+Certiﬁcation) and Appendices 5A and 5B of the FERC-approved NERC ROP. 
+ 
+The registration process evaluates candidate organizations (entities) to determine what reliability function 
+they perform. When this analysis results in the candidate being added to the  NERC Compliance Registry, 
+the candidate is also matched to their associated reliability function (s). Once placed on the Compliance 
+Registry, the entity is responsible for complying with the approved mandatory Reliability Standard(s) 
+associated with their registered function(s). 
+ 
+Project Scope and Purpose 
+What Are Computational Loads? 
+Computational loads generally refer s to loads , such as data centers , that primarily contain information 
+technology infrastructure supporting computational activities like cryptocurrency mining, artiﬁcial 
+intelligence training or inference, and cloud-based computing and storage. A “Computational Load Site” is 
+oﬃcially being deﬁned as a new term in the NERC Glossary of Terms used in Reliability Standards as part of 
+Project 2026-02, and in parallel, NERC is proposing the term for inclusion in  Appendix 2A of the ROP in 
+support of the  registry criteria and alignment with the project work.  This proposed deﬁnition of 
+Computational Load Site is “One or more buildings, structures, or installations at a single location that: 
+1) primarily contains information technology infrastructure used for: 
+• creating, executing, and delivering software applications and services; 
+• artiﬁcial intelligence training, deployment, and delivery; 
+• cryptocurrency mining; or 
+• other computational activities at a data center; and 
+2) is supplied through electrical equipment that is connected to the BPS.” 
+ 
+What is the purpose of Project 2026-02 on computational loads? 
+Project 2026- 02 is developing NERC Reliability Standard requirements to address near-term essential 
+actions needed to support the  reliable integration of Computational Load Sites onto the BPS. This 
+foundational project will support computational load integration while maintaining a resilient and reliable 
+BPS.
+----- PAGE 3 -----
+FAQ for Project 2026-02 3 
+Why are new Reliability Standards needed? 
+Computational Load Sites can be large and have unique operating characteristics, growth patterns, controls, 
+and disturbance response behaviors. These characteristics can pose unique risks to the BPS, as detailed in 
+the Large Loads Task Force “Characteristics and Risks of Emerging Large Loads” white paper in July of 2025. 
+Existing Reliability Standards  applicable to owners, operators, and users of the BPS, provide important 
+precedents and framework for maintaining the reliability of the BPS, but were not developed speciﬁcally 
+for this type of large load user with its unique characteristics. 
+ 
+The NERC Large Load s Working Group (LLWG) then identiﬁed gaps in existing Reliability Standards in the 
+“Assessment of Gaps in Existing Practices, Requirements, and Reliability Standards for Emerging Large 
+Loads” white paper and recommended development of new and/or updated Reliability Standards to 
+address the unmitigated risks to the BPS. This need was also underscored in NERC’s Aggregated Report on 
+NERC Level 2 Industry Recommendation: Large Load Interconnection, Study, Commissioning, and 
+Operations. 
+ 
+Lastly, on July 16, 2026,  FERC issued order in Docket No. RD26- 7-000 directing NERC to ﬁle Reliability 
+Standard updates, any associated NERC Glossary of Terms,  and registry criteria updates pertaining to 
+computational load integration by December 31, 2026.
+1 NERC previously ﬁled its Action Plan reﬂecting its 
+intent to submit these by the end of 2026, for FERC consideration. The successful completion of NERC 
+Reliability Standards being developed under  Project 2026- 02 is intended to satisfy the December 31 
+deadline in FERC’s order. 
+ 
+What is the standard development timeframe for Project 2026-02? 
+Project 2026-02 is being developed on an expedited timeline. As discussed in NERC’s ﬁlings with FERC, the 
+timeline posted at NERC’s Large Load s Action Plan  webpage is consistent with FERC’s July 16, 2026 
+directive.2 Speciﬁcally, the DT is targeting the development of highly eﬀective, industry -supported, and 
+foundational Reliability Standards that are ready to be submitted to the NERC Board of Trustees (Board) for 
+approval by the end of 2026 . In addition, the Order also directed NERC to develop revisions to its ROP , 
+which is necessary for the registration of computational load entities, and to submit the proposed revisions 
+by December 31, 2026. 
+ 
+As part of this timeline, NERC is expected to propose draft Reliability Standards and registration criteria for 
+public comment on August 19, 2026. In December 2026, NERC will seek Board approval of the registry 
+criteria, glossary terms, Reliability Standards and submit them to FERC by December 31. 
+ 
+It is important to note that this expedited schedule leverages existing authority under the NERC standards 
+development process. The project  has, and is expected to continue, to proceed through the applicable 
+standards process steps, including Standard Authorization Request (SAR) development which occurred 
+ 
+1 Reliability Standard(s) Pertaining to Computational Load Integration, 196 FERC ¶ 61,031 (2026) (directing “an informational filing containing a 
+workplan detailing the next steps in the standards development process for additional Reliability Standards pertaining to computational load 
+integration.” by March 1, 2027). 
+2 FERC Docket No. RM26-4-000 and Docket No. EL25-49-000.
+----- PAGE 4 -----
+FAQ for Project 2026-02 4 
+early in 2026 , formal development, extensive industry outreach, stakeholder comment, consideration of 
+comments, balloting, Board, and applicable regulatory approvals. NERC will also seek waivers to shorten 
+comment periods to meet the timeline. 
+ 
+What is the Drafting Team’s strategy in developing highly-eﬀective and industry-supported Reliability 
+Standards? 
+In addition to focusing on the Ten Benchmarks of an Excellent Reliability Standard, the DT quickly aligned 
+on a three-pillar strategy to deliver highly-eﬀective and industry-supported Reliability Standards for Project 
+2026-02. These entail: 1) setting the foundation to support computational load integration with the BPS in 
+a manner that supports reliability; 2) leveraging existing Reliability Standards with essential actions  
+applicable to integrating comparable facilities , such as transmission and generation facilities; and 3) 
+focusing on immediate needs to allow ﬂexibility at a time where NERC, stakeholders, and policy makers are 
+continuing to ascertain the full scope of needs to reliably integrate computational loads interconnected 
+with the BPS.  
+1. Set the Foundation  
+While computational load users are new to NERC and Reliability Standards, their power electronic-
+based equipment has similar attributes and characteristics to other facilities operating 
+interconnected to the BPS. Additionally, many of the essential, process -related reliability actions 
+used by existing NERC entities to reliably integrate other types of comparable facilities onto the BPS, 
+such as transmission and generation facilities, are translatable to the reliable integration of 
+Computational Load Sites. These existing entities, such as operators and planners, have extensive 
+experience applying NERC Reliability Standard requirements in areas like data exchange, modeling, 
+protection setting coordination, and real-time communication, which will provide support to new 
+computational load user entities.  The DT’s strategy seeks to leverage these existing , translatable 
+processes to set a foundation of essential initial Reliability Standards to integrate computational 
+loads. 
+2. Leverage Existing Frameworks - Do not Start from Scratch 
+The DT has performed extensive industry outreach over the last several months and stakeholders 
+have consistently underscored the importance of establishing clear implementation and 
+expectations with purposeful wording used within the reliability requirements, applicability, 
+severity levels, and compliance measures.  
+ 
+Therefore, the DT pursued an approach to leverage existing Reliability Standard requirement 
+language as a framework for computational load integration that relies on time-tested, compliance-
+vetted, and industry -supported Reliability Standard requirement language . This  not only gives 
+industry clearer understanding of expectations with the new Reliability Standard requirements but 
+also helps ensure that DT’s incremental changes to existing standard language tie directly to the 
+unique risks and reliability considerations associated with computational loads. Furthermore, given 
+the new functional CLO and CLOP entities , the DT strategy  ensures terminology is used clearly  to 
+both the new Functional Entities as well as existing entities.
+----- PAGE 5 -----
+FAQ for Project 2026-02 5 
+3. Focus on Immediate Needs - Enable Industry Flexibility in an Evolving Time 
+The DT recognizes that this is a rapidly evolving time in the industry for integrating computational 
+loads, from computational load types, equipment and behavior; grid equipment, monitoring and 
+capabilities; and unique interconnection, regional, and local considerations. Therefore, the industry 
+needs ﬂexibility and agility now more than ever, balanced with the right Reliability Standard 
+requirements to ensure that the aggregate risks to the BPS are mitigated. This strategy is tailored to 
+address the immediate reliability needs before moving on to additional work already pending with 
+stakeholders, such as those involved with the LLWG, to address longer-term needs.  
+ 
+NERC anticipates initiating  Phase 2 of Reliability Standards development  subsequent to these 
+Project 2026- 02 foundational standards . Therefore, NERC is not pursuing highly technical 
+requirements that are still evolving or require additional technical work and industry alignment. In 
+addition, the LLWG published a SAR Roadmap document on July 30, 2026 that proposes one or 
+more other SARs ranging from high to low priority. The LLWG recommends various Reliability and 
+Security Technical Committee (RSTC) subgroups to produce that technical work, including white 
+papers, to support those proposed SARs. The SAR Roadmap will be subject to continued review as 
+risks, needs, and priorities are further examined. 
+ 
+What does it mean to develop “foundational” standards? 
+Project 2026-02 focuses on the near-term, essential actions to integrate computational loads reliably onto 
+the BPS. These essential actions address the core, building-block reliability needs for computational loads 
+that can be readily layered into existing Reliability Standards and built upon in future reliability 
+requirements.  
+ 
+Project 2026-02 is creating, within the NERC body of Reliability Standards, a new family of standards called 
+“Computational Load Ownership & Operations” (CLO) that focuses on the initial essential needs for moving 
+the reliability needle quickly while anticipating additional longer-term work in 2027. The essential elements 
+Project 2026-02 addresses include the following six attributes—identiﬁed within the SAR —under three 
+draft foundational Reliability Standards: 
+1. Data Sharing—Planning & Operational  
+2. Interconnection Process & Requirements 
+3. Interconnection Studies & Modeling 
+4. Protection Coordination & High-Resolution Monitoring 
+5. Commissioning 
+6. Operations Communications & Response
+----- PAGE 6 -----
+FAQ for Project 2026-02 6 
+Industry Engagement 
+How is the Drafting Team engaging industry? 
+The DT continues to pursue one of the most robust outreach strategies for any standard development 
+project in order to raise awareness and obtain meaningful industry input early  in and throughout the 
+process. This is consistent with NERC’s extensive outreach program under the Large Loads Action Plan. 
+The DT has been frequently engaging stakeholders through bi-weekly public DT meetings, industry-wide 
+forums, individual meetings with trade organizations, regionally -focused venues, direct stakeholder 
+outreach, and Short -Term Advisory Group  input. Engagement has provided opportunities for early and 
+recurring feedback, allowing the DT to consider the perspectives of industry well before initial balloting and 
+formal commenting.  
+ 
+What is the Short-Term Advisory Group? 
+The Short-Term Advisory Group is a new concept leveraging opportunities identiﬁed from the 
+Modernization of Standards Processes and Procedures (MSPP) initiative applied to Project 2026-02 to 
+provide focused stakeholder input to the DT.  
+ 
+The group is comprised of over 100 industry volunteers and subject matter experts that can help identify 
+practical, technical, and implementation considerations early in the drafting process.  
+ 
+The Short -Term Advisory Group supplements, not replace s, the formal NERC standards development 
+process, including broader observer engagement, public comment, and ballot.  
+ 
+New Functional Entities & Rules of Procedure Modifications 
+Will Project 2026-02 work and ROP modiﬁcations apply to any new Functional Entities related to 
+computational loads? 
+Yes, the Project 2026-02 Reliability Standards work will include requirements applicable to new Functional 
+Entities related to computational loads and their interconnecting Computational Load S ites (e.g., data  
+centers). The latest ROP modiﬁcations will be posting for industry comment on August 19, 2026 and will 
+include the addition of two new Functional Entities: Computational Load Owner and Computational Load 
+Operator. 
+ 
+Who determines the Registry Criteria for Computational Load Owners and Computational Load 
+Operators? 
+NERC Registration staﬀ are developing the draft registry criteria and associated revisions to the NERC ROP 
+in accordance with the process laid out in the ROP . That process includes a stakeholder comment period, 
+and the ﬁrst set of comments were submitted from April 2 -May 15, 2026. NERC has proposed registry 
+criteria based on its analysis and  in coordination with the DT and other stakeholders that are material to 
+BPS reliability. While highly coordinated, the registry criteria development is a separate process from the
+----- PAGE 7 -----
+FAQ for Project 2026-02 7 
+Project 2026-02 standard development process. The latest ROP modiﬁcations will be posted for industry 
+comment on August 19, 2026.  
+ 
+Due to the criticality of ensuring Reliability Standards with the new and existing Functional Entities are fully 
+aligned, the Project 2026-02 DT and NERC Registration staﬀ have engaged in frequent coordination. One of 
+the primary objectives of Project 2026-02 has been to ensure that the NERC Glossary of Terms is updated 
+to include deﬁned terms that fully align with the expected new Functional Entities and corresponding 
+deﬁnitions to be reﬂected in the  NERC Glossary of Terms and deﬁnitions within the  modiﬁed ROP (e.g., 
+Appendix 2A). 
+ 
+What happens if the Rules of Procedure deﬁnitions are modiﬁed after Project 2026-02 balloting? 
+Project 2026-02 is being balloted with proposed new deﬁnitions within the NERC Glossary of Terms  that 
+are fully aligned with the proposed modiﬁcations to the ROP. This provides industry with full transparency 
+in the stakeholder commenting and balloting process.  
+ 
+However, if a material change occur s in the proposed ROP modiﬁcations aﬀecting Project 2026- 02, the 
+change(s) would need to be reﬂected in the Project 2026-02 work; therefore, another ballot would be 
+expected to be pursued. Out of an abundance of caution, the Project 2026- 02 schedule reﬂects this 
+possibility. 
+ 
+Rules of Procedure & Standard Applicability Considerations 
+How was greater than or equal to 50 Megawatts (MW) selected for the Computational Load Owner and 
+Operator criteria and applicability of the Project 2026-02 Standards? 
+NERC Registration staﬀ selected a threshold criterion of greater than or equal to 50 MW based upon 
+extensive technical review of existing and planned interconnection data across the BPS, as well as industry 
+feedback.  
+ 
+Project 2026-02 Reliability Standard applicability fully  aligns with the same 50 MW threshold criterion 
+included in the registry criteria for CLOs and CLOPs. Project 2026-02 foundational Reliability Standards are 
+focused on the essential actions  needed to support reliability of the BPS and therefore apply  to all 
+Computational Load Sites and their CLOs and CLOPs that meet the NERC registry criteria. 
+ 
+For purposes of the Computational Load Owner and Computational Load Operator criteria, is the 100 
+kilo-Volts ( kV) threshold determined by the common point of connection or by the voltage of the 
+equipment supplying the Computational Load Site? 
+Both Project 2026- 02 and the proposed NERC registry criteria include the Computational Load Site 
+deﬁnition reference to “supplied through electrical equipment connected at a voltage level greater than or 
+equal to 100 kV.” The focus of the criterion is not on the common point of connection, as may be typically 
+deﬁned in the interconnection Agreement, but rather the kV level to which the electrical equipment 
+supplying the Computational Load Site is connected to the BPS. In other words, this would typically be the
+----- PAGE 8 -----
+FAQ for Project 2026-02 8 
+high-side voltage level of the electrical equipment connected to the BPS that is supplying the 
+Computational Load Site. 
+ 
+Figures3 1 and 2  illustrate potential conﬁgurations where the Computational Load Sites have identical 
+electrical interconnection conﬁgurations, but the point of common connection(s) may vary. In both Figures 
+1 and 2, the Computational Load Site is supplied through electrical equipment that is connected to the BPS 
+at a voltage level equal to or greater than 100 kV from one or more points of connection. Therefore, the 
+CLOs and CLOPs of both Computational Load Sites would be subject to registration and be applicable to 
+one or more NERC Reliability Standards being developed under Project 2026-02. 
+ 
+ 
+ 
+ 
+Figure 1: Common point of connection is the same as BPS connection. 
+ 
+ 
+3 It is important to note that Figures included in this FAQ are not representative of the comprehensive set of electrical or ownership configuration 
+possibilities of Computational Load Sites but are included to facilitate understanding of the applicability of the Registry and Standard Criteria. For 
+example, there may be many other interconnection configurations or an intermediate entity such as the Distribution Provider (DP) or Transmission 
+Owner (TO).
+----- PAGE 9 -----
+FAQ for Project 2026-02 9 
+ 
+ 
+Figure 2: Common point of connection is diﬀerent than the BPS connection. 
+ 
+Figure 3 illustrates a potential conﬁguration where the Computational Load Site is supplied through electrical 
+equipment that is connected to the BPS at a voltage level less than 100 kV. Therefore, in this case, the owners 
+and operators of the Computational Load Site would not be subject to registration nor be applicable to NERC 
+Reliability Standards at this location. 
+ 
+ 
+ 
+Figure 3: BPS connection is less than 100 kV.
+----- PAGE 10 -----
+FAQ for Project 2026-02 10 
+What deﬁnes the boundary of a Computational Load S ite? Can you have multiple Computational Load 
+Sites connected to the same source equipment  or a single Computational Load Site be supplied from 
+diﬀerent source equipment? 
+Computational Load Site is proposed to be deﬁned as part of the ROP modiﬁcations, as well as a new term 
+in the NERC Glossary of Terms used in Reliability Standards. The new term proposes to include the phrase 
+“one or more buildings, structures, or installations at a single location.” This accounts for the many diﬀerent 
+conﬁgurations and constructs that may exist for Computational Load Sites. As part of the NERC registration 
+process for CLOs and CLOPs, each Computational Load Site will be reviewed based on its speciﬁc factors to 
+determine applicability. The registration process may consider many factors  pertaining to the buildings, 
+structures, or installations; including, but not limited to ownership, shared or common infrastructure (e.g., 
+auxiliary or cooling load), or coordinated use across the information technology infrastructure to perform 
+its computational activities. 
+ 
+Therefore, it is possible to have two or more  Computational Load Sites connected to the same source 
+equipment because they represent distinct sets of buildings, structures, or installations at a single location. 
+Figure 4 illustrates this potential conﬁguration, and both owners and operators of Computational Load Sites 
+A and B would be subject to registration and be applicable to one or more NERC Reliability Standards. 
+ 
+Conversely, it is possible to have a single Computational Load Site supplied from diﬀerent source equipment 
+or buses. This is consistent with the CLO and CLOP registry criteria that speciﬁes that the connection to the 
+BPS may be “from one or more points of connection.” Figure 5 illustrates a single set of buildings, structures, 
+or installations at a single location that is served from two diﬀerent stations or buses, and the owner and 
+operator of the Computational Load Site would be subject to registration and be applicable to one or more 
+NERC Reliability Standards being developed under Project 2026-02.  
+ 
+ 
+ 
+ 
+Figure 4: Two Computational Load Sites served from the same supply equipment.
+----- PAGE 11 -----
+FAQ for Project 2026-02 11 
+ 
+ 
+ 
+Figure 5: A single Computational Load Site served from separate stations or buses. 
+ 
+Can there be more than one  Computational Load Owner and Computational Load Operator of a single 
+Computational Load Site? 
+Yes, it is possible for there to be more than one  CLO and CLOP of a single Computational Load Site based 
+on the ownership and operational responsibility of the equipment at the site. Each qualifying CLO and CLOP 
+would be reviewed as part of the registration process. 
+ 
+At a Computational Load Site with many equipment operators or tenants, can a centralized or shared 
+operating function serve as a single, accountable point of contact for such a site? 
+ 
+Yes, at a site with multiple tenants, it would be acceptable for a centralized or shared operating function to 
+serve as a single, accountable Computational Load Operator responsible for the CLO -002-1 reliability 
+requirements for the Computational Load Site. 
+ 
+Does the inclusion of a Computational Load Site that meets the Registry Criteria of a Computational Load 
+Owner and Computational Load Operator bring equipment into the Bulk Electric System or Facility 
+deﬁnitions? 
+No, the Bulk Electric System (BES) and Facility deﬁnitions are not being modiﬁed by the Project 2026 -02 
+Reliability Standards or the proposed ROP modiﬁcations. The deﬁnition of Computational Load Sites and 
+corresponding registry criteria for CLO and CLOP are intentionally distinct from the BES and Facility 
+deﬁnitions. Therefore, any BPS or Computational Load Site equipment that does not explicitly meet the 
+existing BES or Facility deﬁnitions would not be subject to NERC Reliability Standard requirements that 
+refer to the BES or Facility deﬁned terms.
+4 
+ 
+ 
+4 Please note that it is possible that a Computational Load Site might have assets which fall within the definition of BES or B PS. Nothing in the 
+proposals would alter that.
+----- PAGE 12 -----
+FAQ for Project 2026-02 12 
+CLOs and CLOPs that own or operate large amounts of power electronic -based equipment such as those 
+found in Computational Load Sites have been found to reduce reliability  of the BPS and will be required, 
+based upon draft registry criteria and Reliability Standards, to have facilities and control systems necessary 
+for connecting to and operating reliably and securely while interconnected with the BPS . Project 2026-02 
+work is developing continent-wide Reliability Standards that apply speciﬁcally to these Computational Load 
+Sites, CLOs, and CLOPs.  
+ 
+Will a Computational Load Site that interconnects to an entity that is not currently registered as a 
+Distribution Provider automatically require that entity to become registered as a Distribution Provider? 
+No. Neither the ROP modiﬁcations nor the new NERC Reliability Standards being developed under Project 
+2026-02 are modifying the registry criteria that exists for registering Distribution Providers (DPs). Therefore, 
+the interconnection to an entity not registered as a DP does not inherently require that entity to become 
+registered as a DP on the basis that a CLO and CLOP are required to register with NERC. Potential registration 
+of an entity as a DP will continue to be assessed against existing, established NERC registry criteria. Any 
+future changes to the criteria, if needed, would be subject to a separate ROP modiﬁcations eﬀort and would 
+not be included in the proposed ROP modiﬁcation and NERC Reliability Standards being developed under 
+Project 2026-02 development initiatives. 
+  
+Will a Computational Load Site that has onsite generation or inverter -based equipment like Battery 
+Energy Storage Systems ( BESS) automatically require Generator Owner & Generator Operator 
+registrations? 
+Not necessarily. There are many potential conﬁgurations and operation scenarios for Computational Load 
+Sites that have on-site generation or other inverter-based equipment like BESS. For example, in some cases, 
+the onsite generation can operate in parallel with the BPS, while in others this parallel operation is designed 
+not to occur. Additionally, there may be situations where the inverter-based equipment, like BESS, operates 
+solely to support interconnection requirements and load smoothing and does not export Real Power to the 
+BPS, while in others it can. It is important to note that neither the ROP modiﬁcations nor the new NERC 
+Reliability Standards being developed under Project 2026-02 are modifying the registry criteria that exists 
+for Generator Owners (GOs) or Generator Operators (GOPs). Potential registration of an entity as a GO or 
+GOP will continue to be assessed against this existing, established NERC registry criteria.  
+ 
+Furthermore, it is recognized that there may need to be additional NERC reliability standard development 
+regarding co-located generation with Computational Load Sites after Project 2026- 02. For example, the 
+Large Load Working Group’s SAR Priority Roadmap recommended a potential SAR in 2027 pertaining to co-
+located Computational Load Sites and generation. 
+ 
+Why are Distribution Providers applicable to the NERC Reliability Standards being developed under 
+Project 2026-02? 
+By deﬁnition, a “Distribution Provider” means the entity that provides and operates the “wires” between 
+the transmission system and the end-use customer. For those end-use customers (e.g., CLO/CLOP) who are 
+served at transmission voltages, the Transmission Owner (TO) also serves as the Distribution Provider. Thus,
+----- PAGE 13 -----
+FAQ for Project 2026-02 13 
+the DP is not deﬁned by a speciﬁc voltage, but rather as performing the distribution function at any voltage. 
+Therefore, it is important when a Computational Load Site is connected to the D P, that the DP fulﬁlls the 
+requirements being established in the new NERC Reliability Standards (CLO-001-1 and CLO -003-1) being 
+developed under Project 2026 -02. For example, requirements for establishing interconnection 
+requirements in coordination with other reliability Functional Entities, supporting any studies required by 
+the Transmission Planner (TP) or Planning Coordinator  (PC), and ensuring appropriate disturbance 
+monitoring equipment in interconnection conﬁgurations where the DP may own the equipment applicable 
+to the NERC Reliability Standards being developed under Project 2026-02 (e.g., main power transformers).  
+ 
+Figures 6 and 7 illustrate potential conﬁgurations where a Computational Load Site satisﬁes the equal to or 
+greater than 100 kV connection criterion and is interconnecting to a DP. In Figure 6 , the Computational 
+Load Site is through a DP’s electrical equipment to the BPS at a high- side voltage above 100 kV owned by 
+the TO. In Figure 7, in contrast, the Computational Load Site is interconnected through a DP’s electrical 
+equipment to the BPS at a high-side voltage above 100 kV. The owners and operators of the Computational 
+Load Sites shown in Figure 6 and Figure 7 would be subject to registration and be applicable to the NERC 
+Reliability Standards being developed under Project 2026-02. 
+ 
+ 
+ 
+Figure 6: DP interconnecting a Computational Load Site served from TO facilities.
+----- PAGE 14 -----
+FAQ for Project 2026-02 14 
+ 
+ 
+Figure 7: DP interconnecting a Computational Load Site in the absence of a TO 
+ 
+Why are Generator Owners applicable to some of the requirements in the proposed NERC Reliability 
+Standards being developed under Project 2026-02? 
+While Computational Load Sites may typically interconnect to TOs  and DPs, there is the potential for a 
+Computational Load Site to interconnect to facilities owned by a GO. Therefore, it is important in these 
+situations for the GO to establish interconnection requirements that are coordinated with its TO, and for 
+the GO to support any studies required by the TP or PC. This concept is similar to existing requirements in 
+Reliability Standard FAC-001 for GOs with other types of interconnections to their facilities. 
+ 
+Are all Transmission Owners, Distribution Providers, and Generator Owners required to have 
+interconnection requirements for Computational Load Sites, even if no Computational Load Sites are 
+expected to interconnect to their facilities? 
+Feedback suggests that there are many DPs, GOs, and some TOs that do not have Computational Load Sites 
+interconnecting to their facilities , nor do they have any expected in the foreseeable future. There was 
+concern about creating compliance obligations associated with the establishment of interconnection 
+requirements for Computational Load Sites that were not needed or applicable. 
+ 
+Therefore, the DT developed a structure that only applies requirements on  a TO, DP, and GO that “has a 
+Computational Load Site interconnection or has a fully executed Agreement to conduct a study on the 
+reliability impact of interconnecting a Computational Load Site.”  
+ 
+This approach avoids applying new obligations to every TO, GO,  or DP regardless of whether it has 
+computational load interconnection activity. Similar, NERC applicability structures have been used across
+----- PAGE 15 -----
+FAQ for Project 2026-02 15 
+other Reliability Standards (e.g., FAC-001, PRC-019) that limit applicable Functional Entities to a subset  
+depending on whether an entity owns, operates, interconnects, studies, or otherwise has responsibility for 
+relevant facilities or activities contained within a standard. 
+ 
+Will Project 2026-02 apply to existing Functional Entities as well? 
+Yes. The proposed Reliability Standards developed for Project 2026-02 apply to new Functional Entities – 
+CLOs and CLOPs – in addition to the listed applicable Functional Entities.  
+ 
+These existing Functional Entities that are applicable include the TO, DP, GO, TP, PC, Transmission Operator 
+(TOP), Balancing Authority (BA), and Reliability Coordinator (RC) functions. This is consistent with the NERC 
+Level 3 Computational Load Alert (as discussed in the next question).  
+ 
+This is because CLOs and CLOPs alone cannot mitigate the potential risk to the BPS. The essential actions 
+being included in the Project 2026-02 foundational Reliability Standards also require actions from existing 
+Functional Entities for the reliable integration of computational loads. For example, for a Computational 
+Load Owner to provide the appropriate modeling or operational data. Likewise, entities like the TP , PC, BA, 
+RC, and TOP must provide the necessary data speciﬁcations to CLOs and CLOPs . Similarly, for CLOs to 
+properly coordinate and collaborate to support interconnection requirements, study processes, and 
+commissioning. Interconnecting entities like TOs and some DPs and GO s must provide CLOs with those 
+requirements. 
+ 
+How do the proposed Reliability Standards under development through Project 2026-02 relate to the 
+May 2026 NERC Level 3 Alert? 
+The May 2026 NERC Level 3 Alert  is an important and timely step  toward improving reliability because it 
+appropriately provides near-term essential actions entities should take to mitigate risks associated with 
+integration of computational loads and reinforces the need for immediate industry attention. The alert 
+helps identify practical actions that existing registered entities can take now to mitigate these risks while 
+Reliability Standards are being developed. 
+ 
+However, the alert should be understood as a bridge to Reliability Standards, not a replacement for them. 
+While the Level 3 Alert is limited to, and applicable to, existing registered entities, the work under Project 
+2026-02 regarding the new CLO and CLOP Functional Entities may alter recent near-term essential actions 
+and change who is responsible for speciﬁc actions. As a result, the particular assignment of responsibilities 
+in what will be the ﬁnal approved NERC Reliability Standards may diﬀer from the practical actions identiﬁed 
+in the NERC alert, particularly where a responsibility is more appropriately placed on, coordinated with, or 
+shared with the anticipated registration of the CLO and CLOP entities. 
+ 
+Further, the ﬁnal Reliability Standards may not address every aspect of the NERC alert in the same way or 
+at the same level of speciﬁcity. Some alert concepts may be incorporated directly, some may be modiﬁed 
+to ﬁt a more appropriate framework, and others may be deferred or addressed through a future standard 
+development eﬀort if additional technical work, industry alignment, or a diﬀerent standards structure is 
+needed.
+----- PAGE 16 -----
+FAQ for Project 2026-02 16 
+ 
+New Standards Versus Existing Standards 
+What are the proposed new Reliability Standards (CLO-001-1, CLO-002-1, and CLO-003-1) being 
+developed? 
+The DT has developed three new Reliability Standards to be part of a new NERC Reliability Standard family 
+(CLO). The three foundational Reliability Standards collectively represent the  high-priority and essential 
+actions needed to reliably integrate computational loads onto the BPS. These actions are grouped into 
+separate standards that center around the major phases of computational load integration.  
+• CLO-001-1 addresses the planning-facing integration work: interconnection requirements, studies, 
+commissioning, qualiﬁed changes, and modeling data.  
+• CLO-002-1 addresses the operating -facing integration work: operational data, interpersonal 
+communications, Operating Instructions, and response to Operating Instructions.  
+• CLO-003-1 addresses protection  and monitoring equipment integration work:  protection 
+coordination and disturbance monitoring data needed for event analysis. 
+ 
+Why not simply modify Reliability Standards such as IRO, TOP , FAC, COM, MOD, or PRC? 
+The development of new Reliability Standards provides several distinct advantages related to the 
+uniqueness of computational loads.  
+• First, the creation of new Reliability Standards facilitates the expedited schedule  to meet FERC’s 
+December 31, 2026 deadline by reducing the complexity of on-going interactions with other NERC 
+Reliability Standards development  projects. Many of the existing Reliability Standards that have 
+comparable actions (e.g., MOD -032, TOP-003, IRO- 010) to those requirements being developed 
+have active projects that would signiﬁcantly compound complexity and risk confusion in delivering 
+the key objectives of Project 2026-02 in a timely manner. 
+• Second, centralizing many of the essential actions in a new Reliability Standard family (i.e., CLO) 
+provides a focused and centralized grouping for computational load reliability obligations. This can 
+be especially important for clarity as new Functional Entities (e.g., CLOs and CLOPs) enter the NERC 
+regulatory space. 
+ 
+At the same time, for clarity, the proposal includes a narrow update to the applicability section of FAC-001 
+and FAC-002 that the requirements in those Standards are not intended to apply to end user Facilities 
+subject to proposed CLO -001 and CLO-002.5 The DT received feedback that it should avoid inadvertently 
+creating duplicative compliance obligations in FAC -001 and FAC -002. This should help support 
+implementation and clear understanding of compliance obligations. Please note that there is no ongoing 
+project to modify Reliability Standards FAC-001 and FAC-002. 
+ 
+ 
+5 End user and third-party Facilities outside the scope of CLO-001 and CLO-002 would still fall within the scope of FAC-001 and FAC-002.
+----- PAGE 17 -----
+FAQ for Project 2026-02 17 
+Will Reliability Standards CLO-001-1, CLO-002-1, and CLO-003-1 requirements eventually be moved to 
+existing standards? 
+Project 2026-02 foundational Reliability Standards are being developed as building blocks that can remain 
+self-contained Reliability Standards with their own applicability, requirements, measures, evidence 
+retention needs, and implementation structure. This design supports longevity and allows the standards to 
+operate without depending on later integration into other existing standards. At the same time, the CLO 
+and CLOP requirements are being developed to align with comparable requirements and measures used 
+for other types of BPS facilities and entities. That alignment could support future integration, conforming 
+revisions, or targeted modiﬁcations if it is  later determine d that such changes would improve clarity, 
+eﬃciency, or long-term organization goals of the body of Reliability Standards. 
+ 
+Implementation Plan Development 
+Will the Project 2026-02 foundational Reliability Standards be implemented for existing and future 
+owners and operators of Computational Load Sites? 
+Yes, the Project 2026-02 foundational Reliability Standards include the essential actions needed to support 
+reliability of the BPS and apply to existing and future CLO and CLOP entities of Computational Load Sites. 
+The speciﬁc timing and applicability of these proposed Reliability Standards is included in the corresponding 
+implementation plans, which were developed with extensive industry input. 
+ 
+Will implementation be phased in and what is the expected timing? 
+The implementation plan s are an incredibly important part of Project 2026- 02. They address Reliability 
+Standard eﬀective dates, applicability transitions, deﬁnition(s), and compliance expectations during the 
+initial implementation period. Each implementation plan for proposed Reliability Standards CLO-001-1, 
+CLO-002-1, and CLO -003-1 also distinguish es implementation timing on a requirement -by-requirement 
+basis, as determined by the DT and stakeholder input. 
+ 
+The near-term essential actions included in these high-priority foundational Reliability Standards are to be 
+implemented as soon as practical (in advance of any applicable eﬀective dates) to mitigate risk to the BPS. 
+Many of these requirements are process-related and, therefore, may have a shorter implementation period 
+than those requirements that require equipment procurement and installation, such as disturbance 
+monitoring equipment. The implementation plans have been developed with industry feedback, including 
+input from the Short-Term Advisory Group. 
+ 
+How will implementation be coordinated with the registration of Computational Load Owners and 
+Computational Load Operators? 
+The Project 2026-02 DT is closely coordinating with NERC Registration staﬀ to ensure implementation of 
+the new Reliability Standards will align with the registration of the CLO and CLOP Functional Entity 
+candidates.
+----- PAGE 18 -----
+FAQ for Project 2026-02 18 
+Technical Topics 
+Why are interconnection requirements included in the foundational standards? 
+Project 2026-02 plans to provide the foundational performance expectation that spans the connection 
+between the BPS and the Computational Load Sites, meaning that interconnection requirements between 
+these two electrical facilities are the foundation. Establishing interconnection requirements that consider 
+the needs of grid planners and operators  is foundational to this relationship. This includes  ensuring the 
+necessary interconnection studies are performed using accurate modeling data, ensuring operational 
+readiness when onboarding facilities onto the grid, and supporting on-going operational stewardship with 
+proper communication protocols.  
+ 
+Additionally, establishing interconnection requirements is consistent with the NERC Level 3 Computational 
+Load Alert  and was identiﬁed in in LLWG “Assessment of Gaps in Existing Practices, Requirements, and 
+Reliability Standards for Emerging Large Loads” white paper.  
+ 
+Why isn’t Qualiﬁed Change explicitly deﬁned as a common continent-wide basis? 
+The Project 2026- 02 standards require Planning Coordinator (PC) to determine, and publicly post, the 
+deﬁnition of Qualiﬁed Change for the purposes of interconnection of Computational Load Sites. PCs are the 
+Functional Entities that have the compliance obligation and technical responsibility to reliably plan the 
+transmission system. A common single continent-wide deﬁnition is not practical because planning systems, 
+interconnection processes, technologies, and markets diﬀer. Since the reliability impact to the BPS may vary 
+by system, the PC is the entity best suited to determine what represents a Qualiﬁed Change for their system. 
+This is an identical approach already used for generation, transmission, and other end -user 
+interconnections in NERC reliability standards. However, the Qualiﬁed Change deﬁnitions should consider 
+changes that materially impact the expected behavior of the Computational Load Site that can pose 
+potential risk to the BPS. Therefore, the Technical Rationale for the CLO-001-1 reliability standard includes 
+examples of qualiﬁed changes for Computational Load Sites that PCs should consider. 
+ 
+How does Project 2026-02 address voltage and frequency ride-through? 
+Project 2026- 02 proposed foundational Reliability Standards  address the  essential actions needed to 
+mitigate the risk to the BPS related to disturbance behavior of computational loads (e.g., voltage and 
+frequency ride-through). Speciﬁcally, the Reliability Standards ensure the provision of accurate dynamic 
+modeling data that enable TPs or PCs to do the necessary planning studies to ensure the BPS is expected 
+to operate within acceptable performance criteria. Additionally, it requires the establishment of 
+interconnection requirements that consider any unique needs of TPs and PCs, which can include ride -
+through criteria based on an assessment of needed grid performance. 
+ 
+While Project 2026-02 is not addressing any industry-wide, minimum voltage and frequency ride-through 
+performance requirements, work is actively progressing in the LLWG to further the technical work and 
+industry alignment needed to begin developing requirements . In the SAR Priority Roadmap document,
+----- PAGE 19 -----
+FAQ for Project 2026-02 19 
+voltage and frequency ride -through is recognized as a high priority for the development of an additional 
+SAR to be submitted in 2026. 
+ 
+Why are Sequence of Events Recording, Fault Recording, and Dynamic Disturbance Recording required 
+for computational loads? 
+High-resolution monitoring equipment such as Sequence of Events Recording (SER), Fault Recording (FR), 
+and Dynamic Disturbance Recording ( DDR) equipment are essential to support activities such as event 
+analysis, model validation, and understanding of computational load response during BPS disturbances. 
+Computational loads often include fast load behaviors and protection and control interactions that are not 
+fully captured through ordinary telemetry. Similar to NERC Reliability Standard PRC-028-1 for Inverter--
+Based Resources (IBRs), it is critical to have all three types of capability not only on the grid, but also at and 
+within Computational Load Sites . The Technical Rationale for Reliability Standard CLO-003-1 provides 
+additional information on the background, reasoning, and applicability of SER, FR, and DDR data.  
+ 
+Who is responsible for disturbance monitoring equipment like Sequence of Event Recording (SER), Fault 
+Recording (FR), and Dynamic Disturbance Recording (DDR)? 
+The CLO-003-1 standard, and its Technical Rationale, provides additional detail on the entity responsible 
+for the required monitoring data. For FR and DDR data, it helps engineers understand the Computational 
+Load Site’s contribution to system events on the BPS, the data measurement is required at the high-side of 
+the main power transformer(s) or common point of connection(s). The entity who owns the main power 
+transformer(s) is the one responsible for obtaining and providing the data as they are typically best suited 
+to install any disturbance monitoring equipment based on this ownership. However, the CLO -003-1 
+standard does not preclude separate agreements for other entities to install and maintain the equipment. 
+For SER data, which is required for Computational Load Site circuit breakers , helps engineers understand 
+Computational Load Site breaker order of operation during events to support event analysis. This approach 
+is comparable to requirements for Inverter-Based Resources in PRC-029.  
+ 
+By requiring Computational Load Operators to respond to Operating Instructions, could this eﬀectively 
+change a Computational Load Site to interruptible, ﬂexible, or non-ﬁrm service? What if a Computational 
+Load is unable to implement an Operating Instruction? 
+The foundational CLO-002-1 standard establishes essential interpersonal communications and operational 
+response processes for Computational Load Sites. These interpersonal communication requirements are 
+comparable to (and follow the same NERC requirement framework for) all other operators of equipment 
+that can me aningfully impact BPS reliability. The requirements explicitly denote that responding to 
+Operating Instructions is not required when such action cannot be physically implemented or it would 
+violate safety, equipment, regulatory, or statutory requirements. Furthermore, nothing in the Project 2026-
+02 standards changes the service priority agreed upon for Computational Load Sites. Generator Operators 
+and Transmission Operators today may similarly operate a variety of facilities, some with “ﬁrm” 
+transmission service, and others with lower priority service. RCs, BAs, and TOPs issue Operating Instructions 
+consistent with their Operating Processes and market and regulatory requirements to reliably manage the 
+system in normal and emergency conditions.
+----- PAGE 20 -----
+FAQ for Project 2026-02 20 
+ 
+Why include modeling and model veriﬁcation, but not model validation? 
+Reliable integration of computational loads depends on TPs and PC s having information that reasonably 
+represents how the load is expected to behave under normal and disturbance conditions. It is critical that 
+the data provided be veriﬁed as representative of the actual equipment installation and conﬁguration  
+(model veriﬁcation). 
+ 
+Model validation ( comparing simulation results with measurements to assess how closely a model’s 
+behavior matches the measured behavior) is much more complex. Furthermore, methods, capabilities, and 
+best practices are still evolving for model validation for computational loads. The Load Modeling Working 
+Group is currently developing a white paper, targeting completion in 2027, that will provide better insight 
+into model validation approaches.
