@@ -319,6 +319,52 @@ export function DisplayScreen({
     );
   }
 
+  if (view.kind === "document" && view.refId) {
+    const refId = view.refId;
+    const filename = refId.split("/").pop() || refId;
+    const dot = filename.lastIndexOf(".");
+    const ext = dot >= 0 ? filename.slice(dot).toLowerCase() : "";
+    const rawUrl = `/api/documents/raw?id=${encodeURIComponent(refId)}`;
+    // 浏览器原生能内嵌渲染的格式才走 iframe；docx 等没有原生查看器的格式给一个新标签页
+    // 链接——那也是「原件」，只是这台浏览器打不开，不该假装能预览。故意不从
+    // `@/lib/documents` 导入同名常量：那个模块顶部 `import "node:fs/promises"`，混进客户端
+    // 组件会把整条服务端依赖链一起打进浏览器包。
+    const inline = [".pdf", ".html", ".htm", ".txt", ".md", ".markdown", ".csv", ".json", ".log", ".xml", ".yaml", ".yml"].includes(ext);
+    return (
+      <section
+        className="display-screen display-screen--document fixed inset-x-0 top-0 z-0 flex flex-col bg-background"
+        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
+        aria-label="本机文档"
+      >
+        <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2">
+          <h2 className="min-w-0 flex-1 truncate text-sm font-medium">{filename}</h2>
+          <a
+            className="display-screen__document-open shrink-0 rounded border border-border px-2 py-1 text-xs text-muted-foreground"
+            href={rawUrl}
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            新标签页打开
+          </a>
+        </div>
+        {inline ? (
+          <iframe
+            className="display-screen__frame min-h-0 w-full flex-1 border-0 bg-background"
+            sandbox=""
+            src={rawUrl}
+            title={filename}
+          />
+        ) : (
+          <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-muted-foreground">
+            <p>
+              「{ext ? ext.slice(1).toUpperCase() : "该"}」格式浏览器无法直接预览，点右上角「新标签页打开」查看或下载原文件。
+            </p>
+          </div>
+        )}
+      </section>
+    );
+  }
+
   // Work has started: the board is the working surface (出口义务 1).
   if (stage === "board") {
     // A plain container, not a landmark: the board inside already IS the 「知识看板」

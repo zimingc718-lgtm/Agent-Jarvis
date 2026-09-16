@@ -64,7 +64,8 @@
     "CR-20260915-process-hardening-flow",
     "CR-20260915-console-menu-consolidation",
     "CR-20260915-sweep-interval-edit",
-    "CR-20260915-board-card-lifecycle"
+    "CR-20260915-board-card-lifecycle",
+    "CR-20260915-document-display"
   ],
   "tests": [
     {
@@ -1348,6 +1349,24 @@
       "date": "2026-09-16",
       "entry": "user",
       "notes": "新增改为同形 + 卡片（REQ-F-070 ⑨，机器（UI））。默认收拢、点开展开同一套表单、提交后自动收回、取消按钮收回不留输入、空名不发请求，均 fireEvent 驱动。真实入口：node scripts/probe-board-card-lifecycle.mjs 对生产构建、真实 Chromium——+ 卡片默认收拢、提交后新卡片出现且自动收回，见 EV §3。"
+    },
+    {
+      "id": "TEST-445",
+      "result": "PASS",
+      "command": "npx vitest run tests/document-tools.test.ts tests/library-gate.test.ts tests/document-raw-route.test.ts",
+      "real_entry": true,
+      "date": "2026-09-16",
+      "entry": "user",
+      "notes": "show_document 工具 + 原件字节路由（REQ-F-032 ⑤）。工具走与 read_document 同一条校验路径，成功时只改 display_state；路由未登录 401、原样字节+正确 Content-Type、越界/不存在 404、不可读扩展名 400、资料库未采纳 403/采纳后 200。真实入口：node scripts/probe-document-display.mjs 对生产构建、真实浏览器、真实 DeepSeek API——已采纳 PDF 直接取到 %PDF- 开头字节，未采纳 403，见 EV §3。"
+    },
+    {
+      "id": "TEST-446",
+      "result": "PASS",
+      "command": "npx vitest run tests/display-screen.test.tsx",
+      "real_entry": true,
+      "date": "2026-09-16",
+      "entry": "user",
+      "notes": "展示屏渲染文档原件（REQ-F-032 ⑤）。可内嵌格式走 iframe 空 sandbox，不可内嵌格式给回退说明与新标签页链接。真实入口：模型真实调用 show_document 后展示屏切到 document 视图，iframe 的 src 能真实取到 PDF 字节（非空白/错误），见 EV §3。"
     }
   ],
   "executed_commands": [

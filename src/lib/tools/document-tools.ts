@@ -33,7 +33,10 @@ const NOT_CONFIGURED =
  * 资料库在仓库里、随版本走，不该要求用户再去「本地文档」里手工添加一遍——那是一步只会
  * 被忘掉的配置。它与用户自己配的目录有一处不同：里面的文件默认**不可见**，见下面的闸。
  */
-function rootsOf(store: Store): DocumentRoot[] {
+/** Exported so `/api/documents/raw` (CR-20260915-document-display) resolves the exact same
+ * root set the model's own tools see — a raw-byte route computing its own roots would risk
+ * silently drifting from what search_documents/read_document consider reachable. */
+export function rootsOf(store: Store): DocumentRoot[] {
   const configured = parseRoots(store.getSetting(SETTING_DOCUMENT_ROOTS));
   const library = libraryRoot();
   if (!library || configured.some((root) => root.label === library.label || root.path === library.path)) {
@@ -242,5 +245,60 @@ export function createDocumentTools(store: Store): ToolDescriptor[] {
     },
   };
 
-  return [search, read, list];
+  const show: ToolDescriptor = {
+    name: "show_document",
+    priority: TOOL_PRIORITY.normal,
+    description:
+      "把展示屏切到一份本机原文档（资料库或本地文档目录），展示屏渲染的是原件而不是提取出来的文本。参数 id 为 search_documents / list_documents 返回的文档标识。",
+    parameters: {
+      type: "object",
+      properties: { id: { type: "string", description: "文档标识" } },
+      required: ["id"],
+    },
+    available: () => true,
+    async execute(args, _context, raw) {
+      const roots = rootsOf(store);
+      if (roots.length === 0) {
+        return { ok: false, content: NOT_CONFIGURED, summary: "未配置文档目录" };
+      }
+      const id = typeof args.id === "string" ? args.id.trim() : "";
+      if (!id) {
+        const problem = describeArgsProblem(raw ?? "", args, ["id"]) ?? "缺少参数 id。";
+        return { ok: false, content: problem, summary: "参数缺失" };
+      }
+      try {
+        // 存在性、越界、目录-vs-文件全部由它一次判完——与 read_document 同一条校验路径，
+        // 不能展示的和不能读的是同一批文件。
+        const { relPath, root } = await resolveWithinRoots(id, roots);
+        if (root.label === LIBRARY_LABEL) {
+          const ledger = await readLedger();
+          if (ledger[relPath]?.status !== "adopted") {
+            const state = ledger[relPath]?.status === "rejected" ? "已被拒绝" : "还在待采纳区";
+            return {
+              ok: false,
+              content: `「${relPath}」${state}，按约定审批通过后才能展示。你可以在动态屏的「资料库」面板里处理它。`,
+              summary: "资料库：未采纳",
+            };
+          }
+        }
+        store.setDisplayState({ kind: "document", refId: id });
+        return {
+          ok: true,
+          content: `展示屏已切到「${relPath}」。`,
+          summary: `展示屏 → 文档：${relPath}`,
+        };
+      } catch (error) {
+        if (error instanceof DocumentPathError) {
+          return { ok: false, content: error.message, summary: "文档不可展示" };
+        }
+        return {
+          ok: false,
+          content: `展示「${id}」失败：${error instanceof Error ? error.message : "未知错误"}。`,
+          summary: "展示失败",
+        };
+      }
+    },
+  };
+
+  return [search, read, list, show];
 }

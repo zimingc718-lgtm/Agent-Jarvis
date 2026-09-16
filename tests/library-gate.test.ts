@@ -114,6 +114,19 @@ describe("TEST-420 资料库的采纳闸 (REQ-F-230)", () => {
     expect(read.content).not.toContain("p{}");
   });
 
+  it("⑥ show_document 同一道闸：未采纳挡在展示状态改动之前，采纳后能展示（CR-20260915-document-display）", async () => {
+    const blocked = await toolNamed("show_document").execute({ id: `资料库/${SOURCE}` }, context);
+    expect(blocked.ok).toBe(false);
+    expect(blocked.summary).toBe("资料库：未采纳");
+    expect(store.getDisplayState()).toMatchObject({ kind: "home" });
+
+    await decideLibrary([SOURCE], "adopted", options());
+    clearDocumentCache();
+    const shown = await toolNamed("show_document").execute({ id: `资料库/${SOURCE}` }, context);
+    expect(shown.ok).toBe(true);
+    expect(store.getDisplayState()).toMatchObject({ kind: "document", refId: `资料库/${SOURCE}` });
+  });
+
   it("⑤ 撤回采纳后立刻又读不到了——闸是活的，不是一次性的", async () => {
     await decideLibrary([REPORT], "adopted", options());
     clearDocumentCache();

@@ -60,7 +60,12 @@ afterEach(() => {
 describe("TEST-171 本地文档工具 (REQ-F-110)", () => {
   it("① 未配置目录时三个工具仍然注册，并说清楚去哪配——不是从工具表里消失", async () => {
     const tools = createDocumentTools(store);
-    expect(tools.map((tool) => tool.name).sort()).toEqual(["list_documents", "read_document", "search_documents"]);
+    expect(tools.map((tool) => tool.name).sort()).toEqual([
+      "list_documents",
+      "read_document",
+      "search_documents",
+      "show_document",
+    ]);
     // available() must not depend on configuration: a tool that vanishes cannot explain
     // its own absence, which is exactly how search_knowledge became invisible.
     for (const tool of tools) {
@@ -85,6 +90,24 @@ describe("TEST-171 本地文档工具 (REQ-F-110)", () => {
     expect(read.content).toContain("额定容量 1200 kW");
     // The reply states where it came from and that it is read-only.
     expect(read.content).toContain("只读");
+  });
+
+  it("②b show_document 把展示屏切到该文档；越界标识按 read_document 同一套说法拒绝（CR-20260915-document-display）", async () => {
+    writeFileSync(join(docsRoot, "规格", "整流柜.md"), "# 整流柜\n本机柜采用液冷方案。", "utf8");
+    configureRoot();
+
+    expect(store.getDisplayState()).toMatchObject({ kind: "home" });
+    const shown = await toolNamed("show_document").execute({ id: "资料/规格/整流柜.md" }, context);
+    expect(shown.ok).toBe(true);
+    expect(shown.content).toContain("规格/整流柜.md");
+    // 只改展示状态本身，不预先读正文塞进去——大文件不该被逼着经过这条状态。
+    expect(store.getDisplayState()).toMatchObject({ kind: "document", refId: "资料/规格/整流柜.md" });
+
+    const escaped = await toolNamed("show_document").execute({ id: "../evil" }, context);
+    expect(escaped.ok).toBe(false);
+    expect(escaped.summary).toBe("文档不可展示");
+    // 展示状态没有被越界请求改动。
+    expect(store.getDisplayState()).toMatchObject({ kind: "document", refId: "资料/规格/整流柜.md" });
   });
 
   it("③ 越界标识被拒，且不回显真实路径", async () => {
@@ -143,11 +166,13 @@ describe("TEST-171 本地文档工具 (REQ-F-110)", () => {
     }
   });
 
-  it("⑤ 这一层没有写入口：三个工具都只读，模块也不导出任何写函数", async () => {
+  it("⑤ 这一层没有写入口：四个工具都只读，模块也不导出任何写函数", async () => {
     writeFileSync(join(docsRoot, "规格", "整流柜.md"), "原文", "utf8");
     configureRoot();
     await toolNamed("read_document").execute({ id: "资料/规格/整流柜.md" }, context);
     await toolNamed("list_documents").execute({}, context);
+    // show_document 改的是 display_state（UI 焦点），不是文档层本身的数据。
+    await toolNamed("show_document").execute({ id: "资料/规格/整流柜.md" }, context);
 
     const documents = await import("@/lib/documents");
     const writers = Object.keys(documents).filter((name) => /^(save|write|delete|remove|update|create)/i.test(name));

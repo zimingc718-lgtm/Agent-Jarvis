@@ -54,4 +54,27 @@ describe("TEST-093 DisplayScreen 外壳与主题 (REQ-F-052)", () => {
     expect(container.querySelector("iframe")).toBeNull();
     expect(container.querySelector(".display-screen--home h1")?.textContent).toBe("Agent-Jarvis");
   });
+
+  it("⑥ document 视图：可内嵌格式走 iframe，src 指向原件路由，sandbox 全锁（CR-20260915-document-display）", () => {
+    const doc = { kind: "document", refId: "资料库/AIDC/01_报告/整流柜.html", html: null };
+    const { container, getByText } = render(<DisplayScreen initial={doc} fetchView={async () => doc} />);
+    const frame = container.querySelector("iframe.display-screen__frame") as HTMLIFrameElement;
+    expect(frame).toBeTruthy();
+    expect(frame.getAttribute("src")).toBe(`/api/documents/raw?id=${encodeURIComponent(doc.refId)}`);
+    // 空 sandbox：连 allow-same-origin 都不给——这是纯展示，不需要同源访问。
+    expect(frame.getAttribute("sandbox")).toBe("");
+    expect(getByText("整流柜.html")).toBeInTheDocument();
+    const open = container.querySelector(".display-screen__document-open") as HTMLAnchorElement;
+    expect(open.getAttribute("href")).toBe(`/api/documents/raw?id=${encodeURIComponent(doc.refId)}`);
+    expect(open.getAttribute("target")).toBe("_blank");
+  });
+
+  it("⑦ document 视图：浏览器无原生查看器的格式不渲染 iframe，给出新标签页打开的回退说明", () => {
+    const doc = { kind: "document", refId: "资料/规格/技术协议.docx", html: null };
+    const { container, getByText } = render(<DisplayScreen initial={doc} fetchView={async () => doc} />);
+    expect(container.querySelector("iframe.display-screen__frame")).toBeNull();
+    expect(getByText(/DOCX.*无法直接预览/)).toBeInTheDocument();
+    const open = container.querySelector(".display-screen__document-open") as HTMLAnchorElement;
+    expect(open.getAttribute("href")).toBe(`/api/documents/raw?id=${encodeURIComponent(doc.refId)}`);
+  });
 });
