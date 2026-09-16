@@ -17,7 +17,7 @@
  * edit this script and run `npm run docs:index`.
  */
 
-import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, statSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -673,17 +673,6 @@ function buildModuleDirectorySection(tasks) {
 // header + assembly
 // ---------------------------------------------------------------------------
 
-function inputFreshness() {
-  const inputs = [
-    "project/01_specification/产品需求说明书.md",
-    "project/04_tests/测试说明书.md",
-    "project/03_modules/模块任务开发说明书.md",
-    "package.json",
-  ];
-  const maxMs = Math.max(...inputs.map((p) => statSync(path.join(ROOT, p)).mtimeMs));
-  return new Date(maxMs).toISOString();
-}
-
 function buildDocument() {
   const scripts = JSON.parse(readText("package.json")).scripts ?? {};
   const testFiles = walkFiles("tests").filter((f) => /\.test\.tsx?$/.test(f)).sort();
@@ -710,9 +699,10 @@ function buildDocument() {
   parts.push("| | |");
   parts.push("|---|---|");
   parts.push("| 生成命令 | `npm run docs:index` |");
-  parts.push(
-    `| 依据的输入文件最后修改时间 | ${inputFreshness()}（产品需求说明书.md / 测试说明书.md / 模块任务开发说明书.md / package.json 四者 mtime 的最大值） |`,
-  );
+  // 不记「最后修改时间」：mtime 不是内容——git checkout/merge 会把它重置成检出那一刻，
+  // 于是任何一次合并都会让这个数字变、但内容一个字都没变，check-index 因此会在每次
+  // 合并后误报「过期」。本文件要做到「同样的输入内容 -> 同样的字节」，混进 mtime 就破了
+  // 这条承诺（2026-09-15 合并 CR-20260915-process-hardening-flow 自身时当场撞见）。
   parts.push(`| 规模 | REQ ${reqs.length} 条 · TEST ${tests.length} 条（主矩阵） · TASK ${tasks.length} 条 · tests/**/*.test.ts(x) ${testFiles.length} 个 |`);
   parts.push("");
   parts.push("---");

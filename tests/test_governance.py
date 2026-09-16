@@ -2536,6 +2536,26 @@ class GeneratedIndexTests(unittest.TestCase):
         self.assertEqual(code, 0, output)
         self.assertIn("INDEX_PASS", output)
 
+    def test_435_1b_survives_a_simulated_checkout(self) -> None:
+        """TEST-435（CR-20260915-index-mtime-flake CP-1）。
+
+        `git merge`/`checkout` 把被检出文件的 mtime 重置为操作发生那一刻——内容一个字节
+        没变。`docs/INDEX.md` 曾经嵌入过输入文件 mtime 的最大值，于是**每一次涉及那几个
+        文件的合并都会让这条检查误报一次**：本 CR 自己合并进 main 后，`check release` 当场
+        复现过这个故障。这条用例把「touch 之后仍然 PASS」钉死，防止那一行再长回来。
+        """
+        for rel_path in (
+            "project/01_specification/产品需求说明书.md",
+            "project/04_tests/测试说明书.md",
+            "project/03_modules/模块任务开发说明书.md",
+            "package.json",
+        ):
+            path = REPO_ROOT / rel_path
+            os.utime(path, None)  # 等价于 touch：内容不动，只把 mtime 拨到现在
+        code, output = governance.run(["check-index", "--root", str(REPO_ROOT)])
+        self.assertEqual(code, 0, output)
+        self.assertIn("INDEX_PASS", output)
+
     def _stub_generator(self, root: Path, output: str) -> None:
         (root / "scripts").mkdir(parents=True, exist_ok=True)
         (root / "scripts/gen-index.mjs").write_text(
