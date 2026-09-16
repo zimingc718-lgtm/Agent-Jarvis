@@ -109,6 +109,31 @@ describe("entity storage", () => {
     await updateEntity("客户-z", { field: "summary", value: "刚改过" }, root);
     expect((await listEntities(root)).map((e) => e.name)).toEqual(["友商-a", "友商-b", "tso-c", "客户-z"]);
   });
+
+  it("⑥ 删除是归档，不是硬删：文件搬进 archive/ 且内容原样保留（CR-20260915-board-card-lifecycle）", async () => {
+    await saveEntity({ kind: "competitor", title: "友商 G", summary: "误删也能找回来" }, root);
+    expect(await deleteEntity("友商-g", root)).toBe(true);
+    expect(await readEntity("友商-g", root)).toBeNull();
+    expect((await listEntities(root)).map((e) => e.name)).not.toContain("友商-g");
+    expect(readdirSync(root)).not.toContain("友商-g.md");
+    const archived = readFileSync(join(root, "archive", "友商-g.md"), "utf8");
+    expect(archived).toContain("误删也能找回来");
+  });
+
+  it("⑦ 归档路径撞名不覆盖，跟保存时的去重加序号是同一逻辑", async () => {
+    await saveEntity({ kind: "competitor", title: "友商 H", summary: "第一次" }, root);
+    await deleteEntity("友商-h", root);
+    await saveEntity({ kind: "competitor", title: "友商 H", summary: "第二次" }, root);
+    await deleteEntity("友商-h", root);
+    const files = readdirSync(join(root, "archive")).sort();
+    expect(files).toEqual(["友商-h-2.md", "友商-h.md"]);
+    expect(readFileSync(join(root, "archive", "友商-h.md"), "utf8")).toContain("第一次");
+    expect(readFileSync(join(root, "archive", "友商-h-2.md"), "utf8")).toContain("第二次");
+  });
+
+  it("⑧ 不存在的名字返回 false，不创建 archive 目录之外的任何东西", async () => {
+    expect(await deleteEntity("从没存在过", root)).toBe(false);
+  });
 });
 
 describe("采集健康度与未读，两个独立的指示", () => {

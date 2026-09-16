@@ -156,7 +156,7 @@ describe("KnowledgeDashboard", () => {
       />
     );
     await waitFor(() =>
-      expect(screen.getByText("还没有友商。可以在下面直接添加，也可以在对话里让 Jarvis 提议。")).toBeInTheDocument()
+      expect(screen.getByText("还没有友商。可以点 + 直接添加，也可以在对话里让 Jarvis 提议。")).toBeInTheDocument()
     );
     expect(screen.getByText(/还没有查不到的检索/)).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "待采纳的提议" })).not.toBeInTheDocument();
@@ -213,7 +213,7 @@ describe("KnowledgeDashboard", () => {
     expect(runSweepRound).not.toHaveBeenCalled();
   });
 
-  it("⑫ 三条泳道各自能直接新增对象，kind 由泳道决定，不需要用户选", async () => {
+  it("⑫ 三条泳道各自能直接新增对象，kind 由泳道决定，不需要用户选；新增卡片默认收拢成 +", async () => {
     const act = vi.fn(async () => ({ ok: true }));
     render(
       <KnowledgeDashboard
@@ -225,20 +225,26 @@ describe("KnowledgeDashboard", () => {
       />
     );
     const lane = await screen.findByRole("region", { name: "客户" });
+    // Collapsed by default: no text input until the + tile is clicked.
+    expect(within(lane).queryByRole("textbox", { name: "新增客户" })).not.toBeInTheDocument();
+    fireEvent.click(within(lane).getByRole("button", { name: "新增客户" }));
     const input = within(lane).getByLabelText("新增客户");
     fireEvent.change(input, { target: { value: "客户 D" } });
     fireEvent.click(within(lane).getByRole("button", { name: "添加" }));
     await waitFor(() => expect(act).toHaveBeenCalledWith("POST", "/api/entities", { kind: "customer", title: "客户 D" }));
+    // Submitting collapses the tile back to +.
+    await waitFor(() => expect(within(lane).queryByRole("textbox", { name: "新增客户" })).not.toBeInTheDocument());
 
     // The model's path still goes through the pending queue; this one is the user's own
     // action, so it lands directly — the same split the API already makes.
     const rules = screen.getByRole("region", { name: "规则与准入方" });
+    fireEvent.click(within(rules).getByRole("button", { name: "新增规则与准入方" }));
     fireEvent.change(within(rules).getByLabelText("新增规则与准入方"), { target: { value: "TSO B" } });
     fireEvent.click(within(rules).getByRole("button", { name: "添加" }));
     await waitFor(() => expect(act).toHaveBeenLastCalledWith("POST", "/api/entities", { kind: "authority", title: "TSO B" }));
   });
 
-  it("⑬ 空名不发请求", async () => {
+  it("⑬ 空名不发请求；取消按钮收回卡片不留输入", async () => {
     const act = vi.fn(async () => ({ ok: true }));
     render(
       <KnowledgeDashboard
@@ -250,8 +256,14 @@ describe("KnowledgeDashboard", () => {
       />
     );
     const lane = await screen.findByRole("region", { name: "友商" });
+    fireEvent.click(within(lane).getByRole("button", { name: "新增友商" }));
     fireEvent.click(within(lane).getByRole("button", { name: "添加" }));
     await waitFor(() => expect(screen.getByRole("region", { name: "友商" })).toBeInTheDocument());
+    expect(act).not.toHaveBeenCalled();
+
+    fireEvent.change(within(lane).getByLabelText("新增友商"), { target: { value: "还没提交就反悔" } });
+    fireEvent.click(within(lane).getByRole("button", { name: "取消新增友商" }));
+    expect(within(lane).queryByRole("textbox", { name: "新增友商" })).not.toBeInTheDocument();
     expect(act).not.toHaveBeenCalled();
   });
 
@@ -653,5 +665,34 @@ describe("KnowledgeDashboard", () => {
     fireEvent.keyDown(input, { key: "Enter" });
 
     expect(await screen.findByText("巡检间隔需在 30–1440 分钟之间。")).toBeInTheDocument();
+  });
+
+  it("㉖ 删除整张卡片要先确认，确认后走已有的 DELETE 路由（CR-20260915-board-card-lifecycle）", async () => {
+    const act = vi.fn(async () => ({ ok: true }));
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    render(<KnowledgeDashboard loadBoard={async () => board} loadOverview={async () => overview} act={act} />);
+    await waitFor(() => expect(screen.getByText("友商 A")).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText("友商 A").closest("button")!);
+    const deleteButton = await screen.findByRole("button", { name: "删除跟踪对象「友商 A」" });
+    fireEvent.click(deleteButton);
+    expect(confirm).toHaveBeenCalled();
+    await waitFor(() => expect(act).toHaveBeenCalledWith("DELETE", "/api/entities/%E5%8F%8B%E5%95%86-a", undefined));
+    expect(await screen.findByText("已删除「友商 A」。")).toBeInTheDocument();
+    confirm.mockRestore();
+  });
+
+  it("㉗ 取消确认框时不发请求，卡片原样留着", async () => {
+    const act = vi.fn(async () => ({ ok: true }));
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<KnowledgeDashboard loadBoard={async () => board} loadOverview={async () => overview} act={act} />);
+    await waitFor(() => expect(screen.getByText("友商 A")).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText("友商 A").closest("button")!);
+    fireEvent.click(await screen.findByRole("button", { name: "删除跟踪对象「友商 A」" }));
+    expect(confirm).toHaveBeenCalled();
+    expect(act).not.toHaveBeenCalledWith("DELETE", expect.anything(), expect.anything());
+    expect(screen.getByText("友商 A")).toBeInTheDocument();
+    confirm.mockRestore();
   });
 });

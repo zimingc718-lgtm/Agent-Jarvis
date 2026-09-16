@@ -244,6 +244,8 @@ export function KnowledgeDashboard({
   const [openName, setOpenName] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  /** Per-kind: is that lane's `+` tile expanded into the new-entity form right now. */
+  const [addOpenKind, setAddOpenKind] = useState<Partial<Record<DashboardEntity["kind"], boolean>>>({});
   const [sweep, setSweep] = useState<SweepState>(EMPTY_SWEEP);
   /**
    * Whether the interval field currently has the user's attention. While true, a
@@ -617,8 +619,87 @@ export function KnowledgeDashboard({
                 问 Jarvis 关于这个对象
               </button>
             ) : null}
+            {/* Deleting the whole card is heavier than removing one param or source, so it
+                sits behind the same expand step as those, plus a confirm — not on the
+                collapsed header where a stray click could reach it. */}
+            <button
+              aria-label={`删除跟踪对象「${entity.title}」`}
+              className="knowledge-dashboard__delete-entity self-start rounded px-1 text-xs text-destructive underline underline-offset-2 disabled:opacity-50"
+              disabled={busy === `delete:${entity.name}`}
+              onClick={() => {
+                if (!window.confirm(`删除「${entity.title}」？会移出看板，仍留一份归档可以找回。`)) {
+                  return;
+                }
+                void run(`delete:${entity.name}`, `已删除「${entity.title}」。`, "DELETE", `/api/entities/${encodeURIComponent(entity.name)}`);
+              }}
+              type="button"
+            >
+              删除这张卡片
+            </button>
           </div>
         ) : null}
+      </li>
+    );
+  };
+
+  /** New-entity form lives inside a card shaped like the others, not a permanent row below
+   * the list (CR-20260915-board-card-lifecycle) — collapsed to a `+` tile by default, one
+   * open state per kind so opening one lane's tile does not affect the others. */
+  const addCard = (title: string, kind: DashboardEntity["kind"]) => {
+    const open = addOpenKind[kind] === true;
+    const setOpen = (value: boolean) => setAddOpenKind((current) => ({ ...current, [kind]: value }));
+    return (
+      <li
+        className="knowledge-dashboard__add-card flex min-h-24 items-center justify-center rounded-md border border-dashed border-border p-3"
+        key="__add__"
+      >
+        {open ? (
+          <form
+            className="knowledge-dashboard__add flex w-full items-center gap-2 text-xs"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const input = event.currentTarget.elements.namedItem("title") as HTMLInputElement | null;
+              const value = input?.value.trim();
+              if (!value) {
+                return;
+              }
+              void run(`new:${kind}`, `已添加「${value}」。`, "POST", "/api/entities", { kind, title: value });
+              setOpen(false);
+            }}
+          >
+            <input
+              aria-label={`新增${title}`}
+              autoFocus
+              className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1"
+              name="title"
+              placeholder={`新增${title}，填名称`}
+            />
+            <button
+              className="shrink-0 rounded px-1 underline underline-offset-2 disabled:opacity-50"
+              disabled={busy === `new:${kind}`}
+              type="submit"
+            >
+              添加
+            </button>
+            <button
+              aria-label={`取消新增${title}`}
+              className="shrink-0 rounded px-1 text-muted-foreground underline underline-offset-2"
+              onClick={() => setOpen(false)}
+              type="button"
+            >
+              取消
+            </button>
+          </form>
+        ) : (
+          <button
+            aria-label={`新增${title}`}
+            className="knowledge-dashboard__add-toggle text-lg text-muted-foreground hover:text-foreground"
+            onClick={() => setOpen(true)}
+            type="button"
+          >
+            +
+          </button>
+        )}
       </li>
     );
   };
@@ -632,40 +713,12 @@ export function KnowledgeDashboard({
       {rows.length === 0 ? (
         // The chat is one way in, not the only one: proposing through the model needs a
         // configured provider, and an empty board should not depend on that.
-        <p className="text-xs text-muted-foreground">还没有{title}。可以在下面直接添加，也可以在对话里让 Jarvis 提议。</p>
-      ) : (
-        <ul className={grid ? "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" : "flex flex-col gap-2"}>
-          {rows.map(card)}
-        </ul>
-      )}
-      {/* The kind comes from the lane, so there is nothing to choose and nothing to get wrong. */}
-      <form
-        className="knowledge-dashboard__add flex items-center gap-2 text-xs"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const input = event.currentTarget.elements.namedItem("title") as HTMLInputElement | null;
-          const value = input?.value.trim();
-          if (!value) {
-            return;
-          }
-          void run(`new:${kind}`, `已添加「${value}」。`, "POST", "/api/entities", { kind, title: value });
-          input!.value = "";
-        }}
-      >
-        <input
-          aria-label={`新增${title}`}
-          className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1"
-          name="title"
-          placeholder={`新增${title}，填名称`}
-        />
-        <button
-          className="shrink-0 rounded px-1 underline underline-offset-2 disabled:opacity-50"
-          disabled={busy === `new:${kind}`}
-          type="submit"
-        >
-          添加
-        </button>
-      </form>
+        <p className="text-xs text-muted-foreground">还没有{title}。可以点 + 直接添加，也可以在对话里让 Jarvis 提议。</p>
+      ) : null}
+      <ul className={grid ? "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" : "flex flex-col gap-2"}>
+        {rows.map(card)}
+        {addCard(title, kind)}
+      </ul>
     </section>
   );
 
