@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-15",
+  "generated_at": "2026-09-16",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
@@ -62,7 +62,8 @@
     "CR-20260915-library-adoption",
     "CR-20260915-library-ignore",
     "CR-20260915-process-hardening-flow",
-    "CR-20260915-console-menu-consolidation"
+    "CR-20260915-console-menu-consolidation",
+    "CR-20260915-sweep-interval-edit"
   ],
   "tests": [
     {
@@ -1319,6 +1320,15 @@
       "date": "2026-09-15",
       "entry": "user",
       "notes": "菜单待采纳默认收拢（REQ-F-241，机器（UI））。默认收拢断言（条目/按钮不在文档里）、点徽标展开同一套控件、采纳/忽略行为与改前一致，均用 fireEvent 驱动。真实入口：node scripts/probe-menu-pending-collapse.mjs 对生产构建，用真实待采纳数据 4 条——收拢态 0 条目、展开后 4 条目各配一对采纳/忽略按钮，见 EV §3。"
+    },
+    {
+      "id": "TEST-442",
+      "result": "PASS",
+      "command": "npx vitest run tests/knowledge-dashboard.test.tsx",
+      "real_entry": true,
+      "date": "2026-09-16",
+      "entry": "user",
+      "notes": "巡检间隔编辑不丢字（REQ-F-070 ⑦，机器（UI））。26/26 用例全绿：Enter 立即保存、500ms 防抖（假计时器）、编辑中不被后台刷新覆盖、范围提示常驻、保存失败原文显示，均 fireEvent 驱动。真实入口：node scripts/probe-sweep-interval-edit.mjs 对生产构建、真实 Chromium——range 提示常驻可见，Enter 提交后端点持久化写入且刷新页面仍在，核对完把值改回原样（服务端另行 curl 确认），见 EV §3。"
     }
   ],
   "executed_commands": [
