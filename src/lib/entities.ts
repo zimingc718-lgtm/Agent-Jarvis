@@ -17,6 +17,7 @@ import { join, resolve, sep } from "node:path";
 
 export const ENTITIES_ROOT = process.env.JARVIS_ENTITIES_PATH ?? join(process.cwd(), ".data", "entities");
 export const PENDING_DIR = "pending";
+export const ARCHIVE_DIR = "archive";
 
 /** `authority` is deliberately not called `industry`: a wide label becomes a dumping ground. */
 export const ENTITY_KINDS = ["competitor", "authority", "customer"] as const;
@@ -674,12 +675,24 @@ export async function removeSource(name: string, url: string, root: string = ENT
   return summarize(next);
 }
 
+/**
+ * A card on the board is one click away from a user's thumb. `rm` on a click target with
+ * no confirmation-by-undo is a data-loss trap — this moves the file to `archive/` instead
+ * (same rename-and-`uniqueName` shape as `adoptPendingEntity`), so a mis-click leaves a
+ * file to recover by hand rather than nothing at all (CR-20260915-board-card-lifecycle).
+ * `listEntities` never descends into subdirectories, so an archived entity disappears from
+ * the board exactly like it did before — nothing downstream needed to change.
+ */
 export async function deleteEntity(name: string, root: string = ENTITIES_ROOT): Promise<boolean> {
   if (!isSafeName(name)) {
     return false;
   }
+  const from = entityPath(root, name);
+  const archiveDir = join(root, ARCHIVE_DIR);
   try {
-    await rm(entityPath(root, name));
+    await mkdir(archiveDir, { recursive: true });
+    const target = await uniqueName(archiveDir, name);
+    await rename(from, join(archiveDir, `${target}.md`));
     return true;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
