@@ -60,7 +60,8 @@
     "CR-20260912-skill-report-bridge",
     "CR-20260912-skill-paging",
     "CR-20260915-library-adoption",
-    "CR-20260915-library-ignore"
+    "CR-20260915-library-ignore",
+    "CR-20260915-process-hardening-flow"
   ],
   "tests": [
     {
@@ -1251,6 +1252,54 @@
       "entry": "user",
       "date": "2026-09-15",
       "notes": "采纳闸与网页存档（REQ-F-230）。单测 5 条：待采纳一份不露出**且报数**、采纳后可见可检索、未采纳读不了但说清去处、网页存档读得出正文、撤回后立刻又读不到。 **真实入口**（用户自己那台 + 真实 Provider）：同一个问题，采纳前模型答「待采纳……在动态屏的『资料库』面板里把它采纳」，采纳后读出原文头两行（`_辅助_bulletin.txt`）；同一对照在 165 KB 的网页存档 `aidc-grid.html` 上再跑一遍，采纳后读出「AI 数据中心与电网 / 七项核心判断」——CP-6 同此验毕。"
+    },
+    {
+      "id": "TEST-430",
+      "result": "PASS",
+      "command": "python -m unittest tests.test_governance",
+      "real_entry": false,
+      "date": "2026-09-15",
+      "notes": "源码字节卫生（DEC-330 ①）。改前对 sweep.ts、tests/sweep.test.ts 两个已知字面 NUL 文件报 FAIL，改后全绿；构造夹具验证控制字符/BOM/资料库范围外三种情形。"
+    },
+    {
+      "id": "TEST-431",
+      "result": "PASS",
+      "command": "npx vitest run tests/module-graph.test.ts",
+      "real_entry": false,
+      "date": "2026-09-15",
+      "notes": "模块依赖图（DEC-330 ②）。真实仓库 0 环 0 分层越界 0 客户端泄漏；23 条断言覆盖 type-only 边在环检测中计入、在客户端闭包检测中排除两个相反方向，含 2026-09-15 library.ts→documents.ts 近失事故的复现夹具。"
+    },
+    {
+      "id": "TEST-432",
+      "result": "PASS",
+      "command": "python -m unittest tests.test_governance",
+      "real_entry": false,
+      "date": "2026-09-15",
+      "notes": "测试命令解析（DEC-331 ①）。改前对真实仓库精确抓到审计发现的全部 5 条破损命令 （TEST-037/065/066/070/072），6 处修正（含 TEST-011 编号漂移）后全绿。"
+    },
+    {
+      "id": "TEST-433",
+      "result": "PASS",
+      "command": "python -m unittest tests.test_governance",
+      "real_entry": false,
+      "date": "2026-09-15",
+      "notes": "真实入口声明登记（DEC-331 ②）。真实仓库报出 advisory（机器口径 43 条，比人工审计的 25 条更多——已核实差额来自 CR-20260910-agent-tooling 一类只在散文里提过、从未写成 结构化行的老 CR）；构造「有登记/无登记」两组夹具验证判定方向不反。"
+    },
+    {
+      "id": "TEST-434",
+      "result": "PASS",
+      "command": "python -m unittest tests.test_governance",
+      "real_entry": false,
+      "date": "2026-09-15",
+      "notes": "机器（UI）标记核验（DEC-331 ③）。真实仓库今天 0 处使用该标记，必过；构造真 UI / 假 UI / 未点名 / 未打标四组夹具验证四个判定方向。取代了关键词猜测方案——那条路线已被证伪（45 命中 18 误伤，40% 假阳性）。"
+    },
+    {
+      "id": "TEST-435",
+      "result": "PASS",
+      "command": "python -m unittest tests.test_governance",
+      "real_entry": false,
+      "date": "2026-09-15",
+      "notes": "生成式索引一致性（DEC-332）。手改 docs/INDEX.md 一个字符触发 FAIL INDEX_STALE，复原后 OK INDEX_PASS；用桩生成器验证比对逻辑本身，不依赖真生成器的输出形状。"
     }
   ],
   "executed_commands": [
@@ -1498,7 +1547,11 @@
     "npm run build:local  →  npm run serve:local  (生产构建重启，按需编译路由 /api/knowledge 与 /api/entities 均 200)",
     "npm run verify:all  (87 files / 764 tests passed)",
     "node scripts/probe-library-panel.mjs  (PASS 审批在真实入口上生效，且刷新后仍在)",
-    "node scripts/probe-library-chat.mjs  (PASS 采纳前后对话里的答案确实不同；文本层与网页存档各跑一遍)"
+    "node scripts/probe-library-chat.mjs  (PASS 采纳前后对话里的答案确实不同；文本层与网页存档各跑一遍)",
+    "npx vitest run  (88 files / 788 tests passed)",
+    "python -m unittest tests.test_governance  (139 tests / 25 subtests passed)",
+    "node scripts/check-module-graph.mjs  (OK MODULE_GRAPH_PASS 109 files, 0 cycle, 0 layering, 0 client leak)",
+    "python tools/governance.py check-index  (OK INDEX_PASS)"
   ],
   "known_warnings": [
     {
