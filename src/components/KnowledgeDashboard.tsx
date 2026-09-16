@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { KNOWLEDGE_CHANGED_EVENT } from "@/lib/ui-events";
 
 /**
@@ -138,6 +138,8 @@ const EMPTY_SWEEP: SweepState = { enabled: false, intervalMinutes: 180, maxPerRo
 const SWEEP_TICK_MS = 60_000;
 const SWEEP_INTERVAL_MIN = 30;
 const SWEEP_INTERVAL_MAX = 24 * 60;
+/** Auto-save waits for a pause in typing; Enter and blur bypass it and commit at once. */
+const SWEEP_INTERVAL_SAVE_DEBOUNCE_MS = 500;
 
 function formatWhen(iso: string): string {
   const at = new Date(iso);
@@ -243,6 +245,21 @@ export function KnowledgeDashboard({
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [sweep, setSweep] = useState<SweepState>(EMPTY_SWEEP);
+  /**
+   * Whether the interval field currently has the user's attention. While true, a
+   * server-driven refresh of `sweep` (background tick, checkbox save, "run now", or
+   * this field's own save landing after a newer keystroke) must not clobber the
+   * `intervalMinutes` the user is mid-editing — every other field still updates. A ref
+   * (not state) so the tick effect below always reads the live value instead of the
+   * one captured when the effect last re-subscribed.
+   */
+  const editingIntervalRef = useRef(false);
+  const intervalSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** Merge a server-fresh `SweepState` in, keeping the local interval while it is being edited. */
+  const applySweep = useCallback((next: SweepState) => {
+    setSweep((current) => (editingIntervalRef.current ? { ...next, intervalMinutes: current.intervalMinutes } : next));
+  }, []);
 
   const reload = useCallback(() => {
     loadBoard()
@@ -265,11 +282,11 @@ export function KnowledgeDashboard({
 
   useEffect(() => {
     loadSweep()
-      .then(setSweep)
+      .then(applySweep)
       .catch(() => {
         /* the board still works without a schedule */
       });
-  }, [loadSweep]);
+  }, [loadSweep, applySweep]);
 
   /**
    * The schedule ticks only while this board is on screen.
@@ -294,7 +311,7 @@ export function KnowledgeDashboard({
           }
           setNotice(outcome.remaining > 0 ? `${outcome.reason}还有 ${outcome.remaining} 个源排队。` : outcome.reason);
           reload();
-          return loadSweep().then(setSweep);
+          return loadSweep().then(applySweep);
         })
         .catch(() => {
           /* a failed round is not worth interrupting the user over */
@@ -306,7 +323,46 @@ export function KnowledgeDashboard({
       cancelled = true;
       clearInterval(timer);
     };
-  }, [sweep.enabled, isVisible, runSweepRound, reload, loadSweep]);
+  }, [sweep.enabled, isVisible, runSweepRound, reload, loadSweep, applySweep]);
+
+  /** Cancel any pending interval-save debounce on unmount so it cannot fire (or setState) after. */
+  useEffect(
+    () => () => {
+      if (intervalSaveTimerRef.current) {
+        clearTimeout(intervalSaveTimerRef.current);
+      }
+    },
+    []
+  );
+
+  /**
+   * Commit the interval now: cancel any pending debounce and save. Blur, Enter, and the
+   * debounce timeout itself all funnel through here, so there is exactly one save path
+   * and one notice for all three triggers.
+   */
+  const commitInterval = (value: number) => {
+    if (intervalSaveTimerRef.current) {
+      clearTimeout(intervalSaveTimerRef.current);
+      intervalSaveTimerRef.current = null;
+    }
+    void saveSweep({ intervalMinutes: value })
+      .then((result) => {
+        applySweep(result);
+        setNotice(`巡检间隔已保存为 ${result.intervalMinutes} 分钟。`);
+      })
+      .catch((error: Error) => setNotice(error.message));
+  };
+
+  /** Auto-save after a pause in typing — the number input's own version of 改即存. */
+  const scheduleIntervalSave = (value: number) => {
+    if (intervalSaveTimerRef.current) {
+      clearTimeout(intervalSaveTimerRef.current);
+    }
+    intervalSaveTimerRef.current = setTimeout(() => {
+      intervalSaveTimerRef.current = null;
+      commitInterval(value);
+    }, SWEEP_INTERVAL_SAVE_DEBOUNCE_MS);
+  };
 
   const run = async (key: string, label: string, method: "POST" | "DELETE" | "PATCH", url: string, body?: unknown) => {
     setBusy(key);
@@ -643,7 +699,7 @@ export function KnowledgeDashboard({
               const enabled = event.target.checked;
               setSweep((current) => ({ ...current, enabled }));
               void saveSweep({ enabled })
-                .then(setSweep)
+                .then(applySweep)
                 .catch(() => setNotice("巡检开关保存失败。"));
             }}
             type="checkbox"
@@ -658,15 +714,27 @@ export function KnowledgeDashboard({
             max={SWEEP_INTERVAL_MAX}
             min={SWEEP_INTERVAL_MIN}
             onBlur={(event) => {
-              void saveSweep({ intervalMinutes: Number(event.target.value) })
-                .then(setSweep)
-                .catch((error: Error) => setNotice(error.message));
+              editingIntervalRef.current = false;
+              commitInterval(Number(event.target.value));
             }}
-            onChange={(event) => setSweep((current) => ({ ...current, intervalMinutes: Number(event.target.value) }))}
+            onChange={(event) => {
+              const value = Number(event.target.value);
+              editingIntervalRef.current = true;
+              setSweep((current) => ({ ...current, intervalMinutes: value }));
+              scheduleIntervalSave(value);
+            }}
+            onFocus={() => {
+              editingIntervalRef.current = true;
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                commitInterval(Number(event.currentTarget.value));
+              }
+            }}
             type="number"
             value={sweep.intervalMinutes}
           />
-          分钟，一轮最多 {sweep.maxPerRound} 个源
+          分钟（{SWEEP_INTERVAL_MIN}–{SWEEP_INTERVAL_MAX}），一轮最多 {sweep.maxPerRound} 个源
         </label>
         <button
           className="knowledge-dashboard__sweep-now rounded px-1 underline underline-offset-2 disabled:opacity-50"
@@ -678,7 +746,7 @@ export function KnowledgeDashboard({
               .then((outcome) => {
                 setNotice(outcome.remaining > 0 ? `${outcome.reason}还有 ${outcome.remaining} 个源排队。` : outcome.reason);
                 reload();
-                return loadSweep().then(setSweep);
+                return loadSweep().then(applySweep);
               })
               .catch(() => setNotice("巡检失败：网络错误。"))
               .finally(() => setBusy(null));

@@ -497,4 +497,161 @@ describe("KnowledgeDashboard", () => {
       vi.unstubAllGlobals();
     }
   });
+  it("㉑ 巡检间隔：Enter 立即保存（不等防抖），保存成功有明确回执", async () => {
+    const saveSweep = vi.fn(async (patch: Record<string, unknown>) => ({
+      enabled: false,
+      intervalMinutes: Number(patch.intervalMinutes),
+      maxPerRound: 6,
+      lastRun: "",
+    }));
+    render(
+      <KnowledgeDashboard
+        act={noop}
+        isVisible={() => true}
+        loadBoard={async () => board}
+        loadOverview={async () => overview}
+        loadSweep={async () => ({ enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" })}
+        saveSweep={saveSweep}
+      />
+    );
+    const bar = await screen.findByRole("region", { name: "定时巡检" });
+    const input = within(bar).getByLabelText("巡检间隔（分钟）");
+
+    fireEvent.change(input, { target: { value: "45" } });
+    expect(saveSweep).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(input, { key: "Enter" });
+    // Enter must not wait for the debounce timer — the call lands synchronously,
+    // with no `waitFor`/timer advance needed to observe it.
+    expect(saveSweep).toHaveBeenCalledWith({ intervalMinutes: 45 });
+
+    expect(await screen.findByText("巡检间隔已保存为 45 分钟。")).toBeInTheDocument();
+  });
+
+  it("㉒ 巡检间隔：不按 Enter 时，停顿约 500ms 后自动保存（防抖）", async () => {
+    const saveSweep = vi.fn(async (patch: Record<string, unknown>) => ({
+      enabled: false,
+      intervalMinutes: Number(patch.intervalMinutes),
+      maxPerRound: 6,
+      lastRun: "",
+    }));
+    render(
+      <KnowledgeDashboard
+        act={noop}
+        isVisible={() => true}
+        loadBoard={async () => board}
+        loadOverview={async () => overview}
+        loadSweep={async () => ({ enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" })}
+        saveSweep={saveSweep}
+      />
+    );
+    const bar = await screen.findByRole("region", { name: "定时巡检" });
+    const input = within(bar).getByLabelText("巡检间隔（分钟）");
+
+    // Fake timers only around the debounce window itself — render and the initial
+    // findByRole above already settled under real timers, and real timers come back
+    // before this test ends (`finally`) so later tests in this file are unaffected.
+    vi.useFakeTimers();
+    try {
+      fireEvent.change(input, { target: { value: "45" } });
+      expect(saveSweep).not.toHaveBeenCalled();
+      await act(async () => {
+        vi.advanceTimersByTime(499);
+      });
+      expect(saveSweep).not.toHaveBeenCalled();
+      // The debounce fires here and `commitInterval` immediately calls the (async)
+      // `saveSweep` — awaiting the async act() lets its `.then` (applySweep + setNotice)
+      // flush too, instead of landing outside any act() boundary.
+      await act(async () => {
+        vi.advanceTimersByTime(1);
+      });
+      expect(saveSweep).toHaveBeenCalledWith({ intervalMinutes: 45 });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("㉓ 巡检间隔编辑中时，后台巡检刷新不覆盖输入框里还没提交的值", async () => {
+    let loadSweepCalls = 0;
+    const loadSweep = vi.fn(async () => {
+      loadSweepCalls += 1;
+      return loadSweepCalls === 1
+        ? { enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" }
+        : { enabled: true, intervalMinutes: 999, maxPerRound: 6, lastRun: "2026-09-15T00:00:00Z" };
+    });
+    const saveSweep = vi.fn(async (patch: Record<string, unknown>) => ({
+      enabled: patch.enabled === true,
+      intervalMinutes: 180,
+      maxPerRound: 6,
+      lastRun: "",
+    }));
+    const runSweepRound = vi.fn(async () => ({ ran: true, reason: "采集 1 个源，没有变化。", remaining: 0 }));
+    render(
+      <KnowledgeDashboard
+        act={noop}
+        isVisible={() => true}
+        loadBoard={async () => board}
+        loadOverview={async () => overview}
+        loadSweep={loadSweep}
+        runSweepRound={runSweepRound}
+        saveSweep={saveSweep}
+      />
+    );
+    const bar = await screen.findByRole("region", { name: "定时巡检" });
+    const input = within(bar).getByLabelText("巡检间隔（分钟）") as HTMLInputElement;
+    await waitFor(() => expect(loadSweep).toHaveBeenCalledTimes(1));
+
+    // Start editing: focus + type a new value, but do not commit it.
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "45" } });
+    expect(input.value).toBe("45");
+
+    // Turning the schedule on makes the tick effect fire once immediately — standing in
+    // for "a background round landed while the user was mid-edit", without waiting on
+    // the real 60s tick interval.
+    fireEvent.click(within(bar).getByRole("checkbox"));
+    await waitFor(() => expect(runSweepRound).toHaveBeenCalledWith(false));
+    // `lastRun` is not guarded, so its update is proof the tick's refresh (which carries
+    // intervalMinutes: 999) has actually landed in state — not just been requested.
+    await waitFor(() => expect(within(bar).getByText(/上次巡检/)).toBeInTheDocument());
+
+    expect(input.value).toBe("45");
+  });
+
+  it("㉔ 巡检间隔的取值范围常驻显示在输入框旁边，不必等报错才看到", async () => {
+    render(
+      <KnowledgeDashboard
+        act={noop}
+        isVisible={() => true}
+        loadBoard={async () => board}
+        loadOverview={async () => overview}
+        loadSweep={async () => ({ enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" })}
+      />
+    );
+    const bar = await screen.findByRole("region", { name: "定时巡检" });
+    expect(within(bar).getByText(/30–1440/)).toBeInTheDocument();
+  });
+
+  it("㉕ 巡检间隔保存失败时，错误原文原样显示，不被吞掉", async () => {
+    const saveSweep = vi.fn(async () => {
+      throw new Error("巡检间隔需在 30–1440 分钟之间。");
+    });
+    render(
+      <KnowledgeDashboard
+        act={noop}
+        isVisible={() => true}
+        loadBoard={async () => board}
+        loadOverview={async () => overview}
+        loadSweep={async () => ({ enabled: false, intervalMinutes: 180, maxPerRound: 6, lastRun: "" })}
+        saveSweep={saveSweep}
+      />
+    );
+    const bar = await screen.findByRole("region", { name: "定时巡检" });
+    const input = within(bar).getByLabelText("巡检间隔（分钟）");
+
+    fireEvent.change(input, { target: { value: "1" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(await screen.findByText("巡检间隔需在 30–1440 分钟之间。")).toBeInTheDocument();
+  });
 });
