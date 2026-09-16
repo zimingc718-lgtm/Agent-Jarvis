@@ -27,7 +27,26 @@
 
 ## 3. 真实入口（用户自己那台，端口 3000）
 
-<!-- 待补：npm run build:local && npm run serve:local 后，用 scripts/probe-document-display.mjs 跑一遍，把结果贴在这里。 -->
+`npm run build:local` 重建 `.next-prod`，重启 `serve:local`（第 4 次退避 10s 后稳定），
+`curl http://localhost:3000/api/knowledge` 确认 200 后开始。用真实资料库里已采纳的一份 PDF
+（Open Compute Project 的 Diablo 400 规格书，4.97 MB，用户之前审批通过的真实数据，未新建任何
+夹具）：
+
+```
+待采纳文档直接访问原件路由：状态码=403，被拦=true
+已采纳 PDF 直接访问原件路由：状态码=200，Content-Type 正确=true，字节以 %PDF- 开头=true
+模型调用后展示屏切到 document 视图=true，iframe src=/api/documents/raw?id=...P1_ocp-specification-diablo-400-v0p5p2-2025-05-30-pdf.pdf，src 能取到 PDF 字节=true
+PASS 未采纳文档被拦；已采纳 PDF 原件路由能取到真实字节；模型调用 show_document 后展示屏切换，iframe 指向的地址能取到同一份 PDF
+```
+
+第三项是本 CR 真正的新证据：探针在真实对话框里发了一句话让模型调用 `show_document`
+（DeepSeek，真实 API 调用），观察到——① 模型确实发起了工具调用；② 展示屏确实从其它视图
+切到了 `document` 视图；③ 切换后 `iframe` 的 `src` 确实能被真实取到 PDF 字节，不是空链接或
+错误页。这一条链路（模型决策 → 工具执行 → 状态改变 → 前端渲染 → 浏览器取字节）是 jsdom
+单测完全证不了的，也是本 CR 与此前几条 CR（用户点击驱动）性质不同的地方——这里没有按钮可点，
+真实入口就是「让模型真的调一次」。
+
+采集时间 2026-09-16（本地服务器，端口 3000），采集者：助手（claude-sonnet-5）。
 
 ## 4. 局限（如实登记）
 
