@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { KNOWLEDGE_CHANGED_EVENT } from "@/lib/ui-events";
 
 export type KnowledgeListEntry = { name: string; title: string; source: string; createdAt: string; bytes: number };
@@ -37,12 +39,17 @@ const SOURCE_LABEL: Record<string, string> = {
 };
 
 /**
- * The ☰ menu's knowledge base (REQ-F-044 ③④, REQ-F-046 ③; TASK-085).
+ * The ☰ menu's knowledge base (REQ-F-044 ③④, REQ-F-046 ③, REQ-F-241; TASK-085, TASK-441).
  *
  * Two sections. 「待采纳」 is the approval queue for what the model proposed with
  * `save_knowledge`: nothing there is searchable until 采纳 moves it down into the base.
- * That queue is the whole approval mechanism, so it has to be impossible to miss —
- * hence it renders first, with a count, whenever it is non-empty.
+ *
+ * The count badge renders first and is never collapsible — missing that a queue exists
+ * is the failure this mechanism exists to prevent. The queue's *contents* default to
+ * collapsed (REQ-F-241 ①): 抽屉本就是收纳，打开菜单不该像打开另一个要处理的收件箱。
+ * Clicking the badge expands the same adopt/discard controls in place — not a second
+ * surface, not a re-routed "go elsewhere" link to a board section that (as of this CR)
+ * does not actually list knowledge proposals at all.
  */
 export function KnowledgeList({
   initial = { entries: [], pending: [] },
@@ -52,6 +59,9 @@ export function KnowledgeList({
   const [data, setData] = useState<KnowledgeListData>(initial);
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // REQ-F-241：菜单默认不显示待采纳内容本体，只给计数——折叠而不是搬走，复用同一套
+  // 采纳/忽略逻辑，不用另起一个「去哪里处理」的新入口。
+  const [pendingOpen, setPendingOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,35 +118,48 @@ export function KnowledgeList({
       <h3 className="knowledge-list__title text-xs font-semibold uppercase tracking-wide text-muted-foreground">知识库</h3>
 
       {data.pending.length > 0 ? (
-        <div className="knowledge-list__pending flex flex-col gap-1 rounded border border-amber-500/40 bg-amber-500/5 p-1.5" role="region" aria-label="待采纳的知识提议">
-          <p className="text-xs font-medium">待采纳（{data.pending.length}）— 模型提议，采纳后才会被检索</p>
-          <ul className="flex flex-col gap-1">
-            {data.pending.map((entry) => (
-              <li key={entry.name} className="knowledge-list__pending-item flex flex-col">
-                <span className="text-sm">{entry.title}</span>
-                <span className="mt-0.5 flex gap-2">
-                  <button
-                    type="button"
-                    className="knowledge-list__adopt rounded px-1 text-xs underline underline-offset-2 disabled:opacity-50"
-                    aria-label={`采纳知识提议「${entry.title}」`}
-                    disabled={busy === `p:${entry.name}`}
-                    onClick={() => void adopt(entry)}
-                  >
-                    采纳
-                  </button>
-                  <button
-                    type="button"
-                    className="knowledge-list__discard rounded px-1 text-xs text-muted-foreground underline underline-offset-2 disabled:opacity-50"
-                    aria-label={`忽略知识提议「${entry.title}」`}
-                    disabled={busy === `p:${entry.name}`}
-                    onClick={() => void discard(entry)}
-                  >
-                    忽略
-                  </button>
-                </span>
-              </li>
-            ))}
-          </ul>
+        <div className="knowledge-list__pending rounded border border-amber-500/40 bg-amber-500/5" role="region" aria-label="待采纳的知识提议">
+          <button
+            type="button"
+            className="knowledge-list__pending-toggle flex w-full items-center justify-between px-1.5 py-1 text-left text-xs font-medium"
+            aria-expanded={pendingOpen}
+            onClick={() => setPendingOpen((open) => !open)}
+          >
+            <span>待采纳（{data.pending.length}）— 模型提议，采纳后才会被检索</span>
+            <ChevronDown
+              aria-hidden="true"
+              className={cn("size-3.5 shrink-0 transition-transform", pendingOpen && "rotate-180")}
+            />
+          </button>
+          {pendingOpen ? (
+            <ul className="knowledge-list__pending-items flex flex-col gap-1 border-t border-amber-500/30 p-1.5">
+              {data.pending.map((entry) => (
+                <li key={entry.name} className="knowledge-list__pending-item flex flex-col">
+                  <span className="text-sm">{entry.title}</span>
+                  <span className="mt-0.5 flex gap-2">
+                    <button
+                      type="button"
+                      className="knowledge-list__adopt rounded px-1 text-xs underline underline-offset-2 disabled:opacity-50"
+                      aria-label={`采纳知识提议「${entry.title}」`}
+                      disabled={busy === `p:${entry.name}`}
+                      onClick={() => void adopt(entry)}
+                    >
+                      采纳
+                    </button>
+                    <button
+                      type="button"
+                      className="knowledge-list__discard rounded px-1 text-xs text-muted-foreground underline underline-offset-2 disabled:opacity-50"
+                      aria-label={`忽略知识提议「${entry.title}」`}
+                      disabled={busy === `p:${entry.name}`}
+                      onClick={() => void discard(entry)}
+                    >
+                      忽略
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
       ) : null}
 

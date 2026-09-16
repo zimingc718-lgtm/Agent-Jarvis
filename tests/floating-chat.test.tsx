@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   classifyDrop,
+  collapsedConsoleHeight,
   describeExcluded,
   FloatingChat,
   insertCompactionMarker,
@@ -855,6 +856,58 @@ describe("FloatingChat", () => {
     // Rows streamed in this session carry client ids; count kept user turns from the end.
     const byCount = insertCompactionMarker(restored, { summary: "S", afterMessageId: "not-a-row", keptTurns: 2 });
     expect(byCount.map((row) => row.role === "summary" ? "S" : row.id)).toEqual(["u1", "a1", "S", "u2", "a2", "u3", "a3"]);
+  });
+
+  describe("collapsedConsoleHeight (REQ-F-240, DEC-240 ④-修订)", () => {
+    it("① 记录区未挂载时，收拢态高度就是整个控制台的高度", () => {
+      expect(collapsedConsoleHeight(140, 0)).toBe(140);
+    });
+
+    it("② 记录区展开到很高时，发布值仍是收拢态那一小段——不随记录区变化", () => {
+      // 撤掉本次修复会变回直接发布 rootHeight（520），这条断言会失败——先红后绿。
+      expect(collapsedConsoleHeight(520, 380)).toBe(140);
+    });
+
+    it("③ 悬停收缩（max-h-0 + overflow-hidden）时记录区渲染高度为 0，发布值回到整段控制台高度", () => {
+      expect(collapsedConsoleHeight(140, 0)).toBe(140);
+    });
+
+    it("④ 不产出负数——即便两个测量之间有竞态导致 transcriptHeight 一度大于 rootHeight", () => {
+      expect(collapsedConsoleHeight(100, 130)).toBe(0);
+    });
+  });
+
+  it("REQ-F-240：挂载时发布的 --jarvis-console-h 是「根高度 − 记录区高度」，不是根高度本身", async () => {
+    // jsdom 不做真布局，getBoundingClientRect 默认全零——给根节点和记录区节点各自打桩，
+    // 证明挂载那一刻的接线用的是 collapsedConsoleHeight 这个公式、读的是这两个具体的
+    // ref，而不是「随便发布 rootHeight」（改前的行为）。
+    //
+    // jsdom 的 ResizeObserver 是空实现，不会在后续状态变化时重新触发回调，所以这条只能
+    // 钉「挂载时接线接对了」——「展开记录区之后发布值仍保持在收拢态那一档」这半，属于
+    // jsdom 做不到的真布局行为，由 scripts/probe-console-overlay.mjs 在用户自己那台真
+    // 浏览器上验（CLAUDE.md：涉及 UI 的验收测试桩不算数）。
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect;
+    HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
+      if (this.classList.contains("floating-chat")) {
+        return { height: 520, width: 768, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0, toJSON() {} } as DOMRect;
+      }
+      if (this.classList.contains("floating-chat__messages")) {
+        return { height: 380, width: 768, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0, toJSON() {} } as DOMRect;
+      }
+      return originalGetBoundingClientRect.call(this);
+    };
+
+    try {
+      render(
+        <FloatingChat
+          initialMessages={[{ id: "u1", role: "user", content: "hi" }, { id: "a1", role: "assistant", content: "there" }]}
+        />
+      );
+      // 有历史消息时记录区默认展开（REQ-F-054），所以挂载即读到两个非零高度。
+      await waitFor(() => expect(document.documentElement.style.getPropertyValue("--jarvis-console-h")).toBe("140px"));
+    } finally {
+      HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect;
+    }
   });
 
   // CR-20260911-proactive-wake — TEST-103 ④⑤: the scheduler and the menu-originated notice.

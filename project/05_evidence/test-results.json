@@ -61,7 +61,8 @@
     "CR-20260912-skill-paging",
     "CR-20260915-library-adoption",
     "CR-20260915-library-ignore",
-    "CR-20260915-process-hardening-flow"
+    "CR-20260915-process-hardening-flow",
+    "CR-20260915-console-menu-consolidation"
   ],
   "tests": [
     {
@@ -1300,6 +1301,24 @@
       "real_entry": false,
       "date": "2026-09-15",
       "notes": "生成式索引一致性（DEC-332）。手改 docs/INDEX.md 一个字符触发 FAIL INDEX_STALE，复原后 OK INDEX_PASS；用桩生成器验证比对逻辑本身，不依赖真生成器的输出形状。"
+    },
+    {
+      "id": "TEST-440",
+      "result": "PASS",
+      "command": "npx vitest run tests/floating-chat.test.tsx",
+      "real_entry": true,
+      "date": "2026-09-15",
+      "entry": "user",
+      "notes": "控制台只发布收拢态高度（REQ-F-200 ④ 修订，机器（UI））。collapsedConsoleHeight 四组用例（未挂载/零高度/正常展开先红后绿/竞态负数保护）+ 挂载接线测试（打桩两个 ref 验证读的是根减记录区）。真实入口：node scripts/probe-console-overlay.mjs 对生产构建、真实 Chromium——展开记录区前后屏幕左侧内容均可命中，--jarvis-console-h 保持 176px 不变，见 EV §3。"
+    },
+    {
+      "id": "TEST-441",
+      "result": "PASS",
+      "command": "npx vitest run tests/knowledge-list.test.tsx",
+      "real_entry": true,
+      "date": "2026-09-15",
+      "entry": "user",
+      "notes": "菜单待采纳默认收拢（REQ-F-241，机器（UI））。默认收拢断言（条目/按钮不在文档里）、点徽标展开同一套控件、采纳/忽略行为与改前一致，均用 fireEvent 驱动。真实入口：node scripts/probe-menu-pending-collapse.mjs 对生产构建，用真实待采纳数据 4 条——收拢态 0 条目、展开后 4 条目各配一对采纳/忽略按钮，见 EV §3。"
     }
   ],
   "executed_commands": [
