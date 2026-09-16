@@ -15,6 +15,11 @@ REQUIRED_TEXT = {
     "AGENTS.md": "# AGENTS.md\n",
     "tools/__init__.py": '"""Project-local governance tooling."""\n',
     "tools/governance.py": "# governance script placeholder\n",
+    # `check-index`（CR-20260915-process-hardening-flow CP-5）需要 scripts/gen-index.mjs
+    # 与 docs/INDEX.md 互相一致——两个 stub 内容故意相同，让 check p2|p3|release 在任何
+    # 没在特意测 CP-5 的夹具上默认就绿，不必每条既有测试都单独补这两个文件。
+    "scripts/gen-index.mjs": "#!/usr/bin/env node\nprocess.stdout.write('placeholder index\\n');\n",
+    "docs/INDEX.md": "placeholder index\n",
     "tests/test_governance.py": "# governance tests placeholder\n",
     "docs/AI_STANDARD.md": "# Agent-Jarvis AI 规范控制\n",
     "docs/WORKFLOW.md": "# Agent-Jarvis 执行流程控制\n",
@@ -89,7 +94,12 @@ def write_project(root: Path, overrides: dict[str, str] | None = None) -> None:
     for rel_path, text in files.items():
         path = root / rel_path
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text, encoding="utf-8")
+        # `newline=""`：不让 Windows 把内容里的 `\n` 悄悄翻成 `\r\n`。所有读取路径本来就
+        # 用文本模式（会把 `\r\n` 读回 `\n`），CRLF 落盘对既有断言一向无感——直到
+        # `check_index`（TEST-435）第一次按字节比对子进程输出，CRLF 才第一次成为真正的
+        # 不一致来源。这里修的是夹具，不是仓库本身：仓库文件受 `.gitattributes` 管，
+        # 这里只是让夹具真的写出它声称的那些字节。
+        path.write_text(text, encoding="utf-8", newline="")
 
 
 class GovernanceCliTests(unittest.TestCase):
@@ -2229,6 +2239,342 @@ class ReviewReportingTests(unittest.TestCase):
 
         self.assertEqual(code, 0, output)
         self.assertIn("SKIPPED_BY_LEVEL", output)
+
+
+class SourceHygieneTests(unittest.TestCase):
+    """TEST-430 — 字面控制字符 / BOM / 行尾脱管（CR-20260915-process-hardening-flow CP-1）。
+
+    起因：`insight-export.ts`、`sweep.ts`、`tests/sweep.test.ts` 都在正文里写过字面 NUL
+    字节。这不是难看——它让 git 把整个文件判成二进制，`grep`/`git diff` 从此对该文件
+    静默失效。`test_430_1` 顺带验证了那次修复：真实仓库现在必须一条控制字符都没有。
+    """
+
+    def test_430_1_the_real_repository_passes(self) -> None:
+        code, output = governance.run(["check-hygiene", "--root", str(REPO_ROOT)])
+        self.assertEqual(code, 0, output)
+        self.assertIn("SOURCE_HYGIENE_PASS", output)
+
+    def test_430_2_a_literal_control_byte_is_caught(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            (root / "src").mkdir(parents=True, exist_ok=True)
+            (root / "src/bad.ts").write_bytes(b"const key = `a" + bytes([0]) + b"b`;\n")
+            code, output = governance.run(["check-hygiene", "--root", str(root)])
+        self.assertEqual(code, 1, output)
+        self.assertIn("SOURCE_CONTROL_CHAR", output)
+        self.assertIn("src/bad.ts", output)
+
+    def test_430_3_a_bom_is_caught(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            (root / "src").mkdir(parents=True, exist_ok=True)
+            (root / "src/bom.ts").write_bytes(b"\xef\xbb\xbfexport const x = 1;\n")
+            code, output = governance.run(["check-hygiene", "--root", str(root)])
+        self.assertEqual(code, 1, output)
+        self.assertIn("SOURCE_BOM", output)
+
+    def test_430_4_content_outside_the_scanned_dirs_is_ignored(self) -> None:
+        # 资料库/ 不在 src/tests/scripts/tools 之列，天然被跳过——那是用户内容（PDF、
+        # 网页存档本身就含任意字节），不是本项目的源码，不该被这条检查管。
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            (root / "资料库").mkdir(parents=True, exist_ok=True)
+            (root / "资料库/weird.ts").write_bytes(b"whatever" + bytes([0]))
+            code, output = governance.run(["check-hygiene", "--root", str(root)])
+        self.assertEqual(code, 0, output)
+
+
+class TestCommandResolutionTests(unittest.TestCase):
+    """TEST-432 — 测试说明书「命令」列必须解析到真实文件或已注册的 script
+
+    （CR-20260915-process-hardening-flow CP-3）。一次审计（2026-09-15）发现 5 条命令列本身
+    就是空指针——`npm run test:insights` 这个 script 不存在、`tools-registry`/`tools-web`
+    拼错或词序颠倒——其中 REQ-NF-011 靠的两条 TEST 编号全在此列，按编号一条都追不到证据。
+    """
+
+    def _with_test_row(self, command: str, extra_test_files: dict | None = None) -> tuple[int, str]:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            spec_path = root / "project/04_tests/测试说明书.md"
+            spec_path.write_text(
+                "# 测试说明书\n\n"
+                "| 测试 ID | 类型 | 覆盖需求 | 覆盖模块/任务 | 断言目标 | 命令 | 必选 |\n"
+                "|---|---|---|---|---|---|---|\n"
+                f"| TEST-900 | Unit/夹具 | 无 | MOD-FIXTURE / TASK-900 | 断言目标 | {command} | 是 |\n",
+                encoding="utf-8",
+            )
+            for rel_path, content in (extra_test_files or {}).items():
+                full = root / rel_path
+                full.parent.mkdir(parents=True, exist_ok=True)
+                full.write_text(content, encoding="utf-8")
+            return governance.run(["check-test-commands", "--root", str(root)])
+
+    def test_432_1_the_real_repository_passes(self) -> None:
+        code, output = governance.run(["check-test-commands", "--root", str(REPO_ROOT)])
+        self.assertEqual(code, 0, output)
+        self.assertIn("TEST_COMMANDS_PASS", output)
+
+    def test_432_2_a_direct_file_path_resolves(self) -> None:
+        code, output = self._with_test_row(
+            "`npm test -- tests/fixture.test.ts`", {"tests/fixture.test.ts": "// fixture\n"}
+        )
+        self.assertEqual(code, 0, output)
+
+    def test_432_3_a_script_name_that_does_not_exist_is_caught(self) -> None:
+        # 审计发现的第一种破损形状：npm run 指向一个 package.json 里没有的 script。
+        code, output = self._with_test_row("`npm run test:insights`")
+        self.assertEqual(code, 1, output)
+        self.assertIn("TEST_COMMAND_UNRESOLVED", output)
+        self.assertIn("TEST-900", output)
+
+    def test_432_4_a_registered_script_name_resolves_without_needing_a_file(self) -> None:
+        # `npm run test:e2e` 这类 script 本身就是合法终点，不要求它还得指向一个
+        # tests/*.test.ts 文件——这是第一版实现犯过的一次误报，已经改掉。
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            package_path = root / "package.json"
+            package_data = json.loads(package_path.read_text(encoding="utf-8"))
+            package_data["scripts"]["test:e2e"] = "node scripts/run-e2e.mjs"
+            package_path.write_text(json.dumps(package_data), encoding="utf-8")
+            (root / "project/04_tests/测试说明书.md").write_text(
+                "# 测试说明书\n\n"
+                "| 测试 ID | 类型 | 覆盖需求 | 覆盖模块/任务 | 断言目标 | 命令 | 必选 |\n"
+                "|---|---|---|---|---|---|---|\n"
+                "| TEST-900 | E2E/夹具 | 无 | MOD-FIXTURE / TASK-900 | 断言目标 | `npm run test:e2e` | 是 |\n",
+                encoding="utf-8",
+            )
+            code, output = governance.run(["check-test-commands", "--root", str(root)])
+        self.assertEqual(code, 0, output)
+
+    def test_432_5_a_misspelled_filter_fragment_is_caught(self) -> None:
+        # 审计发现的第二种破损形状：`npm test -- <片段>` 的片段拼错/词序颠倒，vitest 的
+        # 文件名子串过滤找不到任何命中。
+        code, output = self._with_test_row(
+            "`npm test -- tools-registry`", {"tests/registry-args.test.ts": "// fixture\n"}
+        )
+        self.assertEqual(code, 1, output)
+        self.assertIn("TEST_COMMAND_UNRESOLVED", output)
+
+    def test_432_6_multiple_and_chained_fragments_each_need_a_match(self) -> None:
+        code, output = self._with_test_row(
+            "`npm test -- alpha && npm test -- beta`", {"tests/alpha.test.ts": "// a\n"}
+        )
+        # alpha 命中，beta 没有任何文件可匹配——链式命令里任何一段解不出都算破损。
+        self.assertEqual(code, 1, output)
+
+    def test_432_7_a_manual_verification_marker_is_not_a_broken_command(self) -> None:
+        # 与 known_warnings[].check 的 manual 同一个概念：TEST-022 的真实 OAuth 场景本地
+        # 测不了，命令列写的是「人工执行」的声明，不是空指针。
+        code, output = self._with_test_row(
+            "人工执行；结果写入 `test-results.json`（`verification: manual`）"
+        )
+        self.assertEqual(code, 0, output)
+
+    def test_432_8_a_non_matrix_table_in_the_same_file_is_ignored(self) -> None:
+        # 「既有 TEST 作废与反转登记」这类 3 列表不该被当成命令列去解析——那张表的第二列
+        # 是「**作废**」这类状态词。
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            (root / "project/04_tests/测试说明书.md").write_text(
+                "# 测试说明书\n\n"
+                "| 测试 ID | 类型 | 覆盖需求 | 覆盖模块/任务 | 断言目标 | 命令 | 必选 |\n"
+                "|---|---|---|---|---|---|---|\n"
+                "| TEST-900 | Unit/夹具 | 无 | MOD-FIXTURE / TASK-900 | 断言目标 | `npm run test:e2e` | 是 |\n"
+                "\n### 既有 TEST 作废与反转登记\n\n"
+                "| TEST ID | 状态 | 说明 |\n"
+                "|---|---|---|\n"
+                "| TEST-900 | **作废** | 不再适用 |\n",
+                encoding="utf-8",
+            )
+            code, output = governance.run(["check-test-commands", "--root", str(root)])
+        self.assertEqual(code, 0, output)
+
+
+class UiRouteTests(unittest.TestCase):
+    """TEST-434 — `机器（UI）` 声明的路线必须真的驱动了控件
+
+    （CR-20260915-process-hardening-flow CP-4）。作者自己声明「这条断言了 UI」，检查只
+    核对「兑现了吗」。关键词猜测被否决过——45 行命中里 18 行是误伤，40% 的假阳性会把
+    门禁变成噪声。
+    """
+
+    def _with_cp_row(self, discovery_cell: str, extra_files: dict | None = None) -> tuple[int, str]:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            (root / "project/06_changes/CR-2099-ui-route.md").write_text(
+                _cr(
+                    "CR-2099-ui-route",
+                    rows=f"| CP-1 | 产品 | 一句话 | 无 | 新增 | 双向 | {discovery_cell} |\n",
+                ),
+                encoding="utf-8",
+            )
+            spec_rows = "| 测试 ID | 类型 | 覆盖需求 | 覆盖模块/任务 | 断言目标 | 命令 | 必选 |\n|---|---|---|---|---|---|---|\n"
+            spec_rows += "| TEST-901 | UI/夹具 | 无 | MOD-FIXTURE / TASK-900 | 断言目标 | `npm test -- fixture` | 是 |\n"
+            (root / "project/04_tests/测试说明书.md").write_text("# 测试说明书\n\n" + spec_rows, encoding="utf-8")
+            for rel_path, content in (extra_files or {}).items():
+                full = root / rel_path
+                full.parent.mkdir(parents=True, exist_ok=True)
+                full.write_text(content, encoding="utf-8")
+            return governance.run(["check-ui-route", "--root", str(root)])
+
+    def test_434_1_the_real_repository_passes(self) -> None:
+        # 今天全仓 0 处使用 机器（UI） 标记，这条检查此刻必过；作用在下一次有人写它时体现。
+        code, output = governance.run(["check-ui-route", "--root", str(REPO_ROOT)])
+        self.assertEqual(code, 0, output)
+        self.assertIn("UI_ROUTE_PASS", output)
+
+    def test_434_2_a_tagged_route_with_a_real_click_assertion_passes(self) -> None:
+        code, output = self._with_cp_row(
+            "机器（UI）：TEST-901",
+            {"tests/fixture.test.ts": 'fireEvent.click(getByRole("button"));\n'},
+        )
+        self.assertEqual(code, 0, output)
+
+    def test_434_3_a_tagged_route_with_no_ui_driving_call_is_caught(self) -> None:
+        code, output = self._with_cp_row(
+            "机器（UI）：TEST-901",
+            {"tests/fixture.test.ts": "expect(sum(1, 2)).toBe(3);\n"},
+        )
+        self.assertEqual(code, 1, output)
+        self.assertIn("UI_ROUTE_NOT_DRIVEN", output)
+
+    def test_434_4_a_tagged_route_naming_no_test_id_is_caught(self) -> None:
+        code, output = self._with_cp_row("机器（UI）：见 EV")
+        self.assertEqual(code, 1, output)
+        self.assertIn("UI_ROUTE_UNNAMED", output)
+
+    def test_434_5_an_untagged_route_is_not_checked(self) -> None:
+        # 普通的「机器：TEST-901」不受这条检查约束——标记是作者自愿声明的，不是强加的。
+        code, output = self._with_cp_row(
+            "机器：TEST-901", {"tests/fixture.test.ts": "expect(sum(1, 2)).toBe(3);\n"}
+        )
+        self.assertEqual(code, 0, output)
+
+
+class RealEntryClaimRegistrationTests(unittest.TestCase):
+    """TEST-433 — 声称「真实入口」的路线，所属 CR 头部必须有登记行
+
+    （CR-20260915-process-hardening-flow CP-3）。一次审计（2026-09-15）逐 CR 核对，机器
+    口径下数出 43 条这种自称（比人工审计的 25 条更多——`CR-20260910-agent-tooling` 那样
+    的老 CR 完全没有 `- 真实入口:` 行，只在验收条件的散文里提过，人工读的时候容易看漏）。
+    """
+
+    def test_433_1_the_real_repository_reports_the_advisory(self) -> None:
+        code, output = governance.run(["check-real-entry", "--root", str(REPO_ROOT)])
+        self.assertEqual(code, 0, output)
+        self.assertIn("REAL_ENTRY_CLAIM_UNREGISTERED", output)
+
+    @staticmethod
+    def _write_empty_results(root: Path) -> None:
+        # `write_project()` 不含这份文件——`check_real_entry` 没有它就在最开头拦下，
+        # 走不到本测试要验的那段逻辑。每个用例自己写一份空的。
+        (root / "project/05_evidence/test-results.json").write_text(
+            json.dumps({"tests": [], "known_warnings": []}), encoding="utf-8"
+        )
+
+    def test_433_2_a_header_line_discharges_the_claim(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            self._write_empty_results(root)
+            body = _cr(
+                "CR-2099-claim",
+                rows=DOOR_HEADER + "| CP-1 | 产品 | 一句话 | 无 | 新增 | 双向 | 真实入口：开场观感 |\n",
+            )
+            # `_cr()` 的默认模板没有 `- 真实入口:` 行——插一行进去，模拟「有登记」的 CR。
+            body = body.replace("- 提出人: user\n", "- 提出人: user\n- 真实入口: **已裁定**（用户看过，合适）\n")
+            (root / "project/06_changes/CR-2099-claim.md").write_text(body, encoding="utf-8")
+            code, output = governance.run(["check-real-entry", "--root", str(root)])
+        self.assertNotIn("REAL_ENTRY_BLOCKED", output)
+        self.assertNotIn("REAL_ENTRY_CLAIM_UNREGISTERED", output)
+
+    def test_433_3_no_header_line_at_all_is_counted(self) -> None:
+        # 记录整体要能通过（靠 CP-2 那条真正跑过的测试兜底），advisory 才有机会被打印
+        # 出来——advisories 一律跟在 `if findings: return findings` 之后，与既有的
+        # isolated_only / unlabelled / unrun_routes 等其它 advisory 同一个口径，不是本
+        # 检查独有的行为。CP-1 那条真实入口声明本身仍然一个字都不点名、CR 头部也没有
+        # `- 真实入口:` 行，这才是本用例真正要验的东西。
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            (root / "project/05_evidence/test-results.json").write_text(
+                json.dumps({"tests": [{"id": "TEST-901", "result": "PASS", "real_entry": True}], "known_warnings": []}),
+                encoding="utf-8",
+            )
+            body = _cr(
+                "CR-2099-noheader",
+                rows=DOOR_HEADER
+                + "| CP-1 | 产品 | 一句话 | 无 | 新增 | 双向 | 真实入口：开场观感 |\n"
+                + "| CP-2 | 测试 | 另一句话 | 无 | 新增 | 双向 | 机器：TEST-901 |\n",
+            )
+            # 默认模板本就没有 `- 真实入口:` 行——这正是要测的「零登记」状态，不需要再删。
+            body = body.replace("- 影响测试: 无\n", "- 影响测试: TEST-901\n")
+            (root / "project/06_changes/CR-2099-noheader.md").write_text(body, encoding="utf-8")
+            code, output = governance.run(["check-real-entry", "--root", str(root)])
+        self.assertEqual(code, 0, output)
+        self.assertIn("REAL_ENTRY_CLAIM_UNREGISTERED", output)
+        self.assertIn("CR-2099-noheader CP-1", output)
+
+
+class GeneratedIndexTests(unittest.TestCase):
+    """TEST-435 — `docs/INDEX.md` 必须一直等于生成器此刻会写出的内容
+
+    （CR-20260915-process-hardening-flow CP-5）。不在 Python 侧重新实现一遍生成逻辑——
+    那会制造第二份可能分叉的实现；这条检查只是重跑真正的生成器（`scripts/gen-index.mjs`）
+    再逐字节比对，与其说是「测生成逻辑」，不如说是「测有没有人忘了重新生成」。
+    """
+
+    def test_435_1_the_real_repository_passes(self) -> None:
+        code, output = governance.run(["check-index", "--root", str(REPO_ROOT)])
+        self.assertEqual(code, 0, output)
+        self.assertIn("INDEX_PASS", output)
+
+    def _stub_generator(self, root: Path, output: str) -> None:
+        (root / "scripts").mkdir(parents=True, exist_ok=True)
+        (root / "scripts/gen-index.mjs").write_text(
+            "#!/usr/bin/env node\n"
+            f"process.stdout.write({json.dumps(output)});\n",
+            encoding="utf-8",
+        )
+
+    def test_435_2_a_committed_file_that_disagrees_with_the_generator_is_caught(self) -> None:
+        # 不动真实仓库的 docs/INDEX.md——用一个桩生成器（输出固定字符串）在临时目录里
+        # 摆一份「已提交内容」跟它对不上的夹具，测的是比对逻辑本身，不依赖真生成器的输出形状。
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            self._stub_generator(root, "fresh content\n")
+            (root / "docs/INDEX.md").write_text("stale content\n", encoding="utf-8", newline="")
+            code, output = governance.run(["check-index", "--root", str(root)])
+        self.assertEqual(code, 1, output)
+        self.assertIn("INDEX_STALE", output)
+
+    def test_435_3b_a_committed_file_that_agrees_with_the_generator_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            self._stub_generator(root, "matching content\n")
+            (root / "docs/INDEX.md").write_text("matching content\n", encoding="utf-8", newline="")
+            code, output = governance.run(["check-index", "--root", str(root)])
+        self.assertEqual(code, 0, output)
+        self.assertIn("INDEX_PASS", output)
+
+    def test_435_3_a_missing_file_is_reported_not_silently_regenerated(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_project(root)
+            (root / "docs/INDEX.md").unlink()  # write_project 的基线 stub 不该盖住这条用例
+            code, output = governance.run(["check-index", "--root", str(root)])
+        self.assertEqual(code, 1, output)
+        self.assertIn("INDEX_MISSING", output)
+
 
 if __name__ == "__main__":
     unittest.main()

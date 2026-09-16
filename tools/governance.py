@@ -5,6 +5,7 @@ import datetime as dt
 import hashlib
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Iterable
@@ -182,6 +183,14 @@ def run(argv: list[str] | None = None) -> tuple[int, str]:
         messages = check_warnings(root)
     elif args.command == "check-real-entry":
         messages = check_real_entry(root)
+    elif args.command == "check-hygiene":
+        messages = check_source_hygiene(root)
+    elif args.command == "check-test-commands":
+        messages = check_test_commands(root)
+    elif args.command == "check-ui-route":
+        messages = check_ui_route(root)
+    elif args.command == "check-index":
+        messages = check_index(root)
     elif args.command == "check-human-side":
         messages = check_human_side(root)
     elif args.command == "check-tables":
@@ -258,6 +267,30 @@ def build_parser() -> argparse.ArgumentParser:
         help="每条声明了真实入口的记录，要么有执行证据，要么明说未执行 (DEC-200)",
     )
     real_entry_parser.add_argument("--root", default=".", help="project root")
+
+    hygiene_parser = subparsers.add_parser(
+        "check-hygiene",
+        help="源码不含字面控制字符/BOM，行尾不脱离 .gitattributes 管辖 (CR-20260915-process-hardening-flow CP-1)",
+    )
+    hygiene_parser.add_argument("--root", default=".", help="project root")
+
+    test_commands_parser = subparsers.add_parser(
+        "check-test-commands",
+        help="测试说明书「命令」列必须解析到真实文件或已注册 script (CR-20260915-process-hardening-flow CP-3)",
+    )
+    test_commands_parser.add_argument("--root", default=".", help="project root")
+
+    ui_route_parser = subparsers.add_parser(
+        "check-ui-route",
+        help="`机器（UI）` 声明的路线必须真的驱动了控件 (CR-20260915-process-hardening-flow CP-4)",
+    )
+    ui_route_parser.add_argument("--root", default=".", help="project root")
+
+    index_parser = subparsers.add_parser(
+        "check-index",
+        help="docs/INDEX.md 必须与生成器此刻会写出的内容一致 (CR-20260915-process-hardening-flow CP-5)",
+    )
+    index_parser.add_argument("--root", default=".", help="project root")
 
     human_side_parser = subparsers.add_parser(
         "check-human-side",
@@ -1230,6 +1263,262 @@ def check_tables(root: Path) -> list[str]:
     return [f"OK TABLES_PASS {checked} table row(s) match their header width"]
 
 
+# 字面控制字符（CR-20260915-process-hardening-flow CP-1）。
+#
+# 三次同一形状的事故：`insight-export.ts` 的字符类里写了字面 `\x00`/`\x1f`，`sweep.ts`
+# 的复合键分隔符写了字面 `\x00`，`tests/sweep.test.ts` 照抄了同一个字节。后果不是难看——
+# 这些字节让 git 把整个文件判成二进制：`.gitattributes` 的 `eol=lf` 对它不生效，
+# `git diff` 只显示 `Binary files differ`，**`grep` 默认静默跳过它**。字节相同的转义写法
+# （`\x00`、`\0`）语义不变，只是不再是裸字节。
+SOURCE_CONTROL_CHAR = re.compile(rb"[\x00-\x08\x0b\x0c\x0e-\x1f]")
+SOURCE_HYGIENE_DIRS = ("src", "tests", "scripts", "tools")
+SOURCE_HYGIENE_SUFFIXES = (".ts", ".tsx", ".js", ".mjs", ".cjs", ".py")
+
+
+def check_source_hygiene(root: Path) -> list[str]:
+    """源码里不该有字面控制字符、UTF-8 BOM，行尾不该脱离 `.gitattributes` 的管辖。
+
+    行尾判据不用「扫有没有 `\\r`」——那对被字面 NUL 判成二进制的文件会给出假阴性（git 已经
+    不把它当文本处理，规范化压根不会作用于它）。改用 `git ls-files --eol`：只看
+    `.gitattributes` 判给 `text=auto eol=lf` 的那些文件，要求它们的索引态是 `i/lf`。
+    这一条命令同时接住「NUL 导致脱管」与「CRLF 未规范化」两类失效。仓库根下的用户资料
+    （`IGNORED_REL_PREFIXES` 里那些）不在扫描范围内——那是内容，不是源码。
+    """
+    findings: list[str] = []
+    control_hits: list[str] = []
+    bom_hits: list[str] = []
+    scanned = 0
+
+    for dir_name in SOURCE_HYGIENE_DIRS:
+        base = root / dir_name
+        if not base.is_dir():
+            continue
+        for path in sorted(base.rglob("*")):
+            if not path.is_file() or path.suffix not in SOURCE_HYGIENE_SUFFIXES:
+                continue
+            rel_parts = path.relative_to(root).parts
+            if any(part in IGNORED_DIR_NAMES for part in rel_parts[:-1]):
+                continue
+            if any(rel_parts[: len(prefix)] == prefix for prefix in IGNORED_REL_PREFIXES):
+                continue
+            data = path.read_bytes()
+            scanned += 1
+            rel = to_posix(path.relative_to(root))
+            match = SOURCE_CONTROL_CHAR.search(data)
+            if match:
+                offset = match.start()
+                control_hits.append(f"{rel}:byte {offset} (0x{data[offset]:02x})")
+            if data.startswith(b"\xef\xbb\xbf"):
+                bom_hits.append(rel)
+
+    if control_hits:
+        findings.append(
+            "FAIL SOURCE_CONTROL_CHAR literal control byte(s) in source — write as an escape "
+            "(`\\x00`/`\\0`) instead: " + "; ".join(control_hits)
+        )
+    if bom_hits:
+        findings.append("FAIL SOURCE_BOM UTF-8 BOM found, write the file without a BOM: " + "; ".join(bom_hits))
+
+    bad_eol: list[str] = []
+    if (root / ".git").is_dir():
+        eol_output = run_git(root, ["ls-files", "--eol"])
+        for line in eol_output.splitlines():
+            if "\t" not in line:
+                continue
+            meta, rel = line.split("\t", 1)
+            if "attr/text=auto eol=lf" not in meta:
+                # 不受该规则约束的文件（二进制资产、`资料库/** -text`）：这是它们的预期
+                # 状态，不是失效。
+                continue
+            index_state = meta.split()[0]
+            if index_state != "i/lf":
+                bad_eol.append(f"{rel} ({index_state})")
+    if bad_eol:
+        findings.append(
+            "FAIL SOURCE_EOL file(s) `.gitattributes` says should normalise to LF but the git index "
+            "disagrees — usually caused by a control byte making git treat the file as binary: "
+            + "; ".join(sorted(bad_eol))
+        )
+
+    if findings:
+        return findings
+    return [f"OK SOURCE_HYGIENE_PASS {scanned} file(s) scanned across {', '.join(SOURCE_HYGIENE_DIRS)}, clean"]
+
+
+def run_git(root: Path, args: list[str]) -> str:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    return result.stdout
+
+
+# 命令里直接点名的测试文件路径。
+# 命令片段里直接点名的文件路径——tests/tools/scripts 下任意扩展名的 .py，或
+# tests/tools 下的 .test.ts(x) / .spec.ts(x)。
+TEST_COMMAND_FILE = re.compile(
+    r"(?:tests|tools)/[\w./-]+\.(?:test|spec)\.tsx?|(?:tests|tools|scripts)/[\w./-]+\.(?:py|mjs)"
+)
+# `测试说明书.md` 主矩阵的表头列数。文件里还有别的表（例如「既有 TEST 作废与反转登记」，
+# 3 列，没有「命令」这一列，编号列里还可能是「TEST-027 / TEST-031」这种复合形式）——按
+# 列数 + 编号形状识别主矩阵的行，不按「上一个表头是什么」做状态机：主表内部夹着的空行
+# 会把简单的状态机在行 45 那样的地方提前打断，反而漏检。
+TEST_MATRIX_WIDTH = 7
+TEST_ID_ONLY = re.compile(r"^TEST-\d+$")
+
+
+def _enumerate_test_files(root: Path) -> list[str]:
+    found: list[str] = []
+    for dir_name in ("tests", "tools", "scripts"):
+        base = root / dir_name
+        if not base.is_dir():
+            continue
+        for pattern in ("*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx", "*.py", "*.mjs"):
+            for path in base.rglob(pattern):
+                found.append(to_posix(path.relative_to(root)))
+    return sorted(found)
+
+
+def _piece_resolves(root: Path, piece: str, test_files: list[str], scripts: dict[str, str], depth: int) -> bool:
+    stripped = piece.strip().strip("`")
+    if not stripped:
+        return True  # 空片段（多余的 && 两侧空白）不算破损。
+
+    if "人工执行" in stripped:
+        # 与 `test-results.json` 的 `known_warnings[].check` 里 `manual` 同一个概念：
+        # 这条本来就不是一条可运行命令，是「人核对、把结果写进 verification: manual」
+        # 的声明（例如 TEST-022 的真实 OAuth，本地测不了）。不是空指针，不算破损。
+        return True
+
+    # ① 直接点名了一个存在的文件。
+    for match in TEST_COMMAND_FILE.findall(stripped):
+        if (root / match).is_file():
+            return True
+
+    # ② `python -m unittest tests.xxx.yyy`：点号路径转回文件路径。
+    unittest_match = re.match(r"python\s+-m\s+unittest\s+([\w.]+)", stripped)
+    if unittest_match:
+        as_path = unittest_match.group(1).replace(".", "/") + ".py"
+        if (root / as_path).is_file():
+            return True
+
+    # ③ `npm run <script>`：script 名字必须真的在 package.json 里——这正是审计发现的那
+    #    5 条破损里最常见的形状（`test:provider-routes` 这个 script 根本不存在）。script
+    #    名字存在即算解析成功，不递归展开它自己的命令：一个已注册的 npm script 本身就是
+    #    一个可运行的、有意义的入口，不要求它还得指向某个 tests/*.test.ts 文件。
+    run_match = re.match(r"npm run ([\w:.-]+)", stripped)
+    if run_match:
+        return run_match.group(1) in scripts
+
+    # ④ `npm test -- <片段...>` / `npx vitest run <片段...>`：vitest 把 `--` 之后的每个
+    #    位置参数当独立的文件名子串过滤器（OR 关系，不要求同一个文件同时匹配全部片段）。
+    #    片段拼错、词序颠倒时，这里找不到任何命中——这是审计发现的另外 3 条破损的形状
+    #    （`tools-registry` 应为 `registry-args`、`tools-web` 词序反了）。
+    dash_match = re.search(r"--\s*(.+)$", stripped)
+    if dash_match:
+        fragments = [f.strip("'\"") for f in dash_match.group(1).split() if f.strip("'\"")]
+        if fragments and all(any(fragment in path for path in test_files) for fragment in fragments):
+            return True
+
+    return False
+
+
+def _command_text(cell: str) -> str:
+    """从「命令」单元格里取出真正的命令，丢掉反引号闭合之后附带的说明文字。
+
+    有的行把命令写成 `` `npm test -- x`（真实入口部分见 EV §4）``——反引号内是命令，
+    括注是给人看的旁注，混进去会让子串匹配把整段旁注也当成命令的一部分。
+    """
+    match = re.search(r"`([^`]+)`", cell)
+    return match.group(1) if match else cell
+
+
+def _command_candidate_files(root: Path, command: str, test_files: list[str]) -> list[str]:
+    """一条命令**可能**指向的测试文件——直接点名的路径，加上 `--` 片段能子串匹配到的文件。
+
+    与 `_piece_resolves` 的判定同一套语义，但那边只回答「能不能解析」，这里要回答
+    「解析到了哪几个文件」，供 `check_ui_route` 打开文件核对内容用。
+    """
+    text = _command_text(command)
+    candidates: list[str] = []
+    for piece in text.split("&&"):
+        stripped = piece.strip().strip("`")
+        for match in TEST_COMMAND_FILE.findall(stripped):
+            if (root / match).is_file():
+                candidates.append(match)
+        dash_match = re.search(r"--\s*(.+)$", stripped)
+        if dash_match:
+            for fragment in dash_match.group(1).split():
+                fragment = fragment.strip("'\"")
+                if not fragment:
+                    continue
+                candidates.extend(path for path in test_files if fragment in path)
+    return sorted(set(candidates))
+
+
+def _command_resolves(root: Path, command: str, test_files: list[str], scripts: dict[str, str]) -> bool:
+    if "人工执行" in command:
+        # 标注可能在反引号之外（「人工执行；结果写入 `test-results.json`（...）」），
+        # 所以在整段原文上先判——与 `_piece_resolves` 里的同一条判据同理，见那里的注释。
+        return True
+    # `&&` 链式命令：每一段都要能独立解析（全部会被执行，任何一段是空指针都算这条记录破损）。
+    return all(
+        _piece_resolves(root, piece, test_files, scripts, depth=0) for piece in _command_text(command).split("&&")
+    )
+
+
+def load_package_scripts(root: Path) -> dict[str, str]:
+    path = root / "package.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    scripts = data.get("scripts")
+    return scripts if isinstance(scripts, dict) else {}
+
+
+def check_test_commands(root: Path) -> list[str]:
+    """每条 TEST 的「命令」列必须真的解析到一个存在的文件或注册过的 script（CR-20260915-process-hardening-flow CP-2）。
+
+    一次审计（2026-09-15）发现 5 条命令列本身就是空指针——script 名字不存在、文件名拼错、
+    词序颠倒——其中 REQ-NF-011 靠的两条 TEST 编号全在此列，按编号一条都追不到证据。
+    `gate g3.5` 只看 `test-results.json` 里记没记 PASS，不会发现命令本身跑不到任何文件；
+    这条检查把「有编号」升级成「编号背后真有一个可以打开的文件」。
+    """
+    path = root / "project/04_tests/测试说明书.md"
+    if not path.exists():
+        return [f"FAIL TEST_COMMANDS_BLOCKED missing {to_posix(path.relative_to(root))}"]
+
+    scripts = load_package_scripts(root)
+    test_files = _enumerate_test_files(root)
+    findings: list[str] = []
+    checked = 0
+    for raw_line in read_text(path).splitlines():
+        stripped_line = raw_line.strip()
+        if not stripped_line.startswith("| TEST-") or TABLE_DIVIDER.fullmatch(stripped_line):
+            continue
+        cells = table_cells(stripped_line)
+        if len(cells) != TEST_MATRIX_WIDTH or not TEST_ID_ONLY.fullmatch(cells[0]):
+            continue
+        test_id = cells[0]
+        command = cells[-2]
+        checked += 1
+        if not _command_resolves(root, command, test_files, scripts):
+            findings.append(
+                f"FAIL TEST_COMMAND_UNRESOLVED {test_id}: `{command}` does not resolve to an existing "
+                "test file or a real package.json script"
+            )
+
+    if findings:
+        return findings
+    return [f"OK TEST_COMMANDS_PASS {checked} TEST command(s) resolve to a real file or script"]
+
+
 def check_approval_log(root: Path) -> list[str]:
     r"""每个「变更响应 · CR-x」节，批准状态里都要有一行（DEC-270）。
 
@@ -1358,6 +1647,12 @@ REAL_ENTRY_RULED = re.compile(r"^-\s*真实入口[:：].*已裁定", re.MULTILIN
 # 就只能不给已有的证据打勾：用瞒报一件事去换另一件事可见。
 REAL_ENTRY_ROUTE_UNRUN = re.compile(r"[（(]\s*未执行[：:]\s*([^）)]*)[）)]")
 
+# 任何形态的头部登记行——不看内容，只看「有没有」（CR-20260915-process-hardening-flow
+# CP-3）。`REAL_ENTRY_UNRUN`/`RULING`/`RULED` 各自只认一种措辞；这条只用来回答一个更
+# 前置的问题：这份 CR 头部**有没有** `- 真实入口:` 这一行，不管它写了什么。允许
+# `**真实入口实测**：` 这类加粗 + 改名变体——已经在既有记录里见过这种写法。
+REAL_ENTRY_HEADER = re.compile(r"^-\s*\*{0,2}真实入口(?:实测)?\*{0,2}[:：]", re.MULTILINE)
+
 # 一条真实入口路线指明由哪条测试承载证据（DEC-250 ②）。写法固定为「（证据：TEST-xxx）」，
 # 因为「发现方式」这一格是散文，靠猜分不出哪个编号属于机器那一半、哪个属于真实入口那一半。
 REAL_ENTRY_EVIDENCE = re.compile(r"[（(]\s*证据[：:]\s*([^）)]*)[）)]")
@@ -1399,6 +1694,7 @@ def check_real_entry(root: Path) -> list[str]:
     unnamed_routes = 0
     unrun_routes: list[str] = []
     pending_ruling: list[str] = []
+    claim_unregistered: list[str] = []
 
     def passed(test_id: str) -> bool:
         item = by_id.get(test_id, {})
@@ -1411,6 +1707,7 @@ def check_real_entry(root: Path) -> list[str]:
             continue
         name = path.stem
         related = cr_related_tests(root, name) or set()
+        has_header = bool(REAL_ENTRY_HEADER.search(text))
 
         # 逐**路线**对账，而不是逐记录（DEC-250 ②）。一条 CP 行若点名了 TEST 编号，就按那
         # 几条查；查的是「这条路线跑了吗」，不是「这个记录里有没有人跑过什么」。
@@ -1424,6 +1721,13 @@ def check_real_entry(root: Path) -> list[str]:
                 unrun_routes.append(f"{name} {cells_for_route[0]}")
                 routes_declared_unrun += 1
                 continue
+
+            if not has_header:
+                # 这条路线自称「真实入口」，但整份 CR 里连一行 `- 真实入口:` 登记都没有——
+                # 不是「没跑」（那是上面 `unrun_routes` 管的），是「连自己跑没跑都没人写」。
+                # 一次审计（2026-09-15）逐 CR 核对后数出 25 条这种自称：按机器断言层记账，
+                # 不当真实入口用，直到有登记行出现（CR-20260915-process-hardening-flow CP-3）。
+                claim_unregistered.append(f"{name} {cells_for_route[0]}")
 
             # 只认 `（证据：TEST-xxx）` 这一种明确标注（DEC-250 ②）。
             #
@@ -1512,6 +1816,12 @@ def check_real_entry(root: Path) -> list[str]:
             f"{ADVISORY_PREFIX}REAL_ENTRY_UNNAMED_ROUTE {unnamed_routes} real-entry route(s) name no TEST id, "
             "so they are judged at record level — a passing sibling test can discharge them (DEC-250 ②)"
         )
+    if claim_unregistered:
+        messages.append(
+            f"{ADVISORY_PREFIX}REAL_ENTRY_CLAIM_UNREGISTERED {len(claim_unregistered)} route(s) say their "
+            "discovery method is 真实入口 but the owning CR has no `- 真实入口:` header line recording a "
+            "result — treated as machine-assertion evidence until one is added: " + "、".join(sorted(claim_unregistered))
+        )
     if unrun:
         # 列名，永远不静默：这条输出就是本次改动的全部目的。
         messages.append(
@@ -1551,13 +1861,17 @@ def cr_related_tests(root: Path, cr: str) -> set[str] | None:
 # Which gates each stage must clear. `release` is deliberately the only one that
 # runs g4, and it refuses --cr so a narrowing view can never relax a release.
 STAGE_GATES: dict[str, list[str]] = {
-    "p1": ["verify", "check-changes", "check-doors", "check-ids", "check-human-side", "check-tables", "check-req-status", "review r1"],
+    "p1": ["verify", "check-changes", "check-doors", "check-ids", "check-human-side", "check-tables", "check-req-status",
+           "check-hygiene", "check-test-commands", "review r1"],
     "p2": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "check-human-side", "check-tables", "check-req-status", "check-approval-log", "gate g1", "gate g2",
+           "check-hygiene", "check-test-commands", "check-index",
            "review r1", "review r2", "review r3", "review r4"],
     "p3": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "check-human-side", "check-tables", "check-req-status", "check-approval-log", "check-warnings", "check-real-entry", "ui",
+           "check-hygiene", "check-test-commands", "check-ui-route", "check-index",
            "gate g1", "gate g2", "gate g3", "gate g3.5",
            "review r1", "review r2", "review r3", "review r4"],
     "release": ["verify", "check-changes", "check-specs", "check-doors", "check-ids", "check-human-side", "check-tables", "check-req-status", "check-approval-log", "check-warnings", "check-real-entry", "ui",
+                "check-hygiene", "check-test-commands", "check-ui-route", "check-index",
                 "gate g1", "gate g2", "gate g3", "gate g3.5",
                 "gate g4", "review r1", "review r2", "review r3", "review r4"],
 }
@@ -1597,6 +1911,14 @@ def check_stage(root: Path, stage: str, cr: str | None = None) -> list[str]:
             messages = check_req_status(root, strict=(stage == "release"))
         elif head == "ui":
             messages = check_ui_process_control(root)
+        elif head == "check-hygiene":
+            messages = check_source_hygiene(root)
+        elif head == "check-test-commands":
+            messages = check_test_commands(root)
+        elif head == "check-ui-route":
+            messages = check_ui_route(root)
+        elif head == "check-index":
+            messages = check_index(root)
         elif head == "gate":
             messages = gate(root, arg, cr=cr)
         elif head == "review":
@@ -1838,6 +2160,87 @@ DOOR_VALUES = {"单向", "双向"}
 UNDETECTABLE = "发现不了"
 
 
+# 一条 CP 的「发现方式」自称覆盖了用户能碰/能看见的东西时，写成 `机器（UI）：TEST-xxx`
+# 而不是普通的 `机器：TEST-xxx`（CR-20260915-process-hardening-flow CP-4）。
+#
+# 为什么不用关键词猜：一次审计对「一句话」列做关键词命中（按钮/输入框/看板/展示屏/……），
+# 45 行命中里只有 27 行确属真的触达用户控件，18 行是误伤（环境变量叫「开关」、CLI 输出
+# 叫「报告」……）。40% 的误报率做成硬门禁只会被当噪声无视——这正是本轮要治的那个病。
+# 作者自己声明「这条断言了 UI」远比猜词可靠：声明了就该真的兑现，检查只做「兑现了吗」
+# 这一件事，不做「该不该声明」的判断。
+UI_ROUTE_TAG = re.compile(r"机器（UI）[：:]")
+UI_DRIVING_CALL = re.compile(
+    r"fireEvent\.\w+\(|userEvent\.\w+\(|\bpage\.(?:click|fill|press|selectOption|check|type|goto|dblclick)\("
+)
+
+
+def check_ui_route(root: Path) -> list[str]:
+    """`机器（UI）` 声明的那几条路线，点名的测试文件里必须真的驱动了控件（CP-4）。
+
+    只验证「点了名的 TEST 是否含 UI 驱动调用」，不验证「该不该标 UI」——那件事交给
+    CR 评审时的人（`docs/CONTROLS.md`「真实入口控制」一节）。今天全仓 0 处使用这个
+    标记，所以这条检查此刻必过；它的作用在下一次有人写 `机器（UI）` 的时候才会体现。
+    """
+    findings: list[str] = []
+    checked = 0
+    test_files = _enumerate_test_files(root)
+    for path in sorted((root / "project/06_changes").glob("CR-*.md")):
+        text = read_text(path)
+        name = path.stem
+        for line_number, line in enumerate(text.splitlines(), 1):
+            row = line.strip()
+            if not row.startswith("| CP-"):
+                continue
+            cells = table_cells(row)
+            if len(cells) < 2 or not UI_ROUTE_TAG.search(cells[-1]):
+                continue
+            test_ids = sorted(set(re.findall(r"TEST-\d+", cells[-1])))
+            if not test_ids:
+                findings.append(
+                    f"FAIL UI_ROUTE_UNNAMED {name}:{line_number} {cells[0]}: tagged 机器（UI） but names "
+                    "no TEST id to verify against"
+                )
+                continue
+            checked += 1
+            resolved_any = False
+            for test_id in test_ids:
+                command = resolve_test_command(root, test_id)
+                if command is None:
+                    continue
+                for file_path in _command_candidate_files(root, command, test_files):
+                    if UI_DRIVING_CALL.search(read_text(root / file_path)):
+                        resolved_any = True
+            if not resolved_any:
+                findings.append(
+                    f"FAIL UI_ROUTE_NOT_DRIVEN {name}:{line_number} {cells[0]}: tagged 机器（UI）, names "
+                    f"{'/'.join(test_ids)}, but no resolved file contains a fireEvent/userEvent/page click-"
+                    "style call"
+                )
+
+    if findings:
+        return findings
+    return [f"OK UI_ROUTE_PASS {checked} 机器（UI） route(s) verified against a UI-driving test"]
+
+
+def resolve_test_command(root: Path, test_id: str) -> str | None:
+    """`测试说明书.md` 主矩阵里该 TEST 行的「命令」列；不在主矩阵里返回 None。
+
+    与 `check_test_commands` 用同一套行形判据（列数 = 7、编号单独成列）——两处都要
+    避开「既有 TEST 作废与反转登记」那张 3 列表，否则会把状态词当成命令去解析。
+    """
+    path = root / "project/04_tests/测试说明书.md"
+    if not path.exists():
+        return None
+    for raw_line in read_text(path).splitlines():
+        stripped_line = raw_line.strip()
+        if not stripped_line.startswith(f"| {test_id} |"):
+            continue
+        cells = table_cells(stripped_line)
+        if len(cells) == TEST_MATRIX_WIDTH and TEST_ID_ONLY.fullmatch(cells[0]):
+            return cells[-2]
+    return None
+
+
 def check_doors(root: Path) -> list[str]:
     """Every change point declares its door and how a mistake would surface (DEC-021 ①②).
 
@@ -2021,6 +2424,51 @@ def check_warnings(root: Path) -> list[str]:
         return findings
     note = f"; {len(unverifiable)} free-text entry(ies) UNVERIFIABLE" if unverifiable else ""
     return [f"OK CHECK_WARNINGS_PASS {verified} warning(s) re-checked against the tools{note}"]
+
+
+GEN_INDEX_SCRIPT = Path("scripts/gen-index.mjs")
+GENERATED_INDEX_PATH = Path("docs/INDEX.md")
+
+
+def check_index(root: Path) -> list[str]:
+    """`docs/INDEX.md` 必须是 `scripts/gen-index.mjs` 当前会生成的那份内容，一字不差
+
+    （CR-20260915-process-hardening-flow CP-5）。不在这里重新实现一遍生成逻辑——那会让
+    两份实现分叉，分叉的那天这条检查验证的是「两份猜测互相一致」而不是「文档是最新的」。
+    做法是重跑生成器拿到它此刻会写出什么，与已提交的内容比较。
+    """
+    script_path = root / GEN_INDEX_SCRIPT
+    if not script_path.is_file():
+        return [f"FAIL INDEX_BLOCKED missing {to_posix(GEN_INDEX_SCRIPT)}"]
+    index_path = root / GENERATED_INDEX_PATH
+    if not index_path.is_file():
+        return [f"FAIL INDEX_MISSING {to_posix(GENERATED_INDEX_PATH)} does not exist — run `npm run docs:index`"]
+
+    try:
+        # 按字节比较，不按文本比较：文本模式的换行转换在 Windows 上可能把「不一致」悄悄
+        # 抹平，而这条检查存在的意义就是抓不一致。
+        result = subprocess.run(
+            ["node", str(script_path), "--stdout"],
+            cwd=root,
+            capture_output=True,
+            timeout=120,
+            check=False,
+        )
+    except FileNotFoundError:
+        return ["FAIL INDEX_BLOCKED node is not on PATH — cannot regenerate to compare"]
+    except subprocess.TimeoutExpired:
+        return ["FAIL INDEX_TIMEOUT scripts/gen-index.mjs --stdout did not finish within 120s"]
+    if result.returncode != 0:
+        return [f"FAIL INDEX_GENERATOR_FAILED {result.stderr.decode('utf-8', errors='replace').strip()[:300]}"]
+
+    committed = index_path.read_bytes()
+    if result.stdout != committed:
+        return [
+            "FAIL INDEX_STALE docs/INDEX.md does not match what `node scripts/gen-index.mjs` "
+            "would write now — some spec doc or package.json changed since the last "
+            "`npm run docs:index`; regenerate and commit it"
+        ]
+    return ["OK INDEX_PASS docs/INDEX.md matches the generator's current output"]
 
 
 def check_ui_process_control(root: Path) -> list[str]:
