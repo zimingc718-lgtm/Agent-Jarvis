@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | 生成命令 | `npm run docs:index` |
-| 规模 | REQ 99 条 · TEST 157 条（主矩阵） · TASK 151 条 · tests/**/*.test.ts(x) 88 个 |
+| 规模 | REQ 99 条 · TEST 158 条（主矩阵） · TASK 152 条 · tests/**/*.test.ts(x) 88 个 |
 
 ---
 
@@ -63,7 +63,7 @@
 | REQ-F-043 | 压缩可见与可展开 | APPROVED | **TEST-082** → &lt;ui-contract&gt;, `floating-chat.test.tsx`<br>**TEST-083** → &lt;e2e&gt; |
 | REQ-F-060 | 主动唤醒 | APPROVED | **TEST-100** → `wake.test.ts`<br>**TEST-101** → `wake.test.ts`<br>**TEST-102** → `wake-route.test.ts`<br>**TEST-103** → &lt;ui-contract&gt;, `floating-chat.test.tsx`, `wake-settings.test.tsx`<br>**TEST-104** → &lt;e2e&gt; |
 | REQ-F-061 | 唤醒产出的呈现与隔离 | APPROVED | **TEST-101** → `wake.test.ts`<br>**TEST-102** → `wake-route.test.ts`<br>**TEST-103** → &lt;ui-contract&gt;, `floating-chat.test.tsx`, `wake-settings.test.tsx`<br>**TEST-104** → &lt;e2e&gt; |
-| REQ-F-070 | 本地跟踪对象 | APPROVED | **TEST-120** → `entities.test.ts`<br>**TEST-122** → `entity-route.test.ts`<br>**TEST-125** → `sources.test.ts`<br>**TEST-126** → `ingest-extract-chain.test.ts`, `ingest.test.ts`<br>**TEST-127** → `extract.test.ts`, `ingest-extract-chain.test.ts`<br>**TEST-129** → `sweep-route.test.ts`, `sweep.test.ts` |
+| REQ-F-070 | 本地跟踪对象 | APPROVED | **TEST-120** → `entities.test.ts`<br>**TEST-122** → `entity-route.test.ts`<br>**TEST-125** → `sources.test.ts`<br>**TEST-126** → `ingest-extract-chain.test.ts`, `ingest.test.ts`<br>**TEST-127** → `extract.test.ts`, `ingest-extract-chain.test.ts`<br>**TEST-129** → `sweep-route.test.ts`, `sweep.test.ts`<br>**TEST-442** → `knowledge-dashboard.test.tsx` |
 | REQ-F-071 | 知识看板呈现 | APPROVED | **TEST-122** → `entity-route.test.ts`<br>**TEST-123** → `knowledge-dashboard.test.tsx`<br>**TEST-135** → `display-stage.test.tsx` |
 | REQ-F-072 | 实体写入与证据 | APPROVED | **TEST-121** → `entity-tools.test.ts`<br>**TEST-122** → `entity-route.test.ts`<br>**TEST-127** → `extract.test.ts`, `ingest-extract-chain.test.ts` |
 | REQ-F-050 | 洞察追加与参数容错 | APPROVED | **TEST-092** → `agent-loop-truncated.test.ts`, `agent-loop.test.ts`, `registry-args.test.ts`, `tool-suites-append.test.ts`, `tool-suites.test.ts`<br>**TEST-096** → &lt;e2e&gt;, &lt;ui-contract&gt;, `visual.test.ts` |
@@ -203,7 +203,7 @@
 | MOD-PDF | `src/lib/pdf-text.ts` | （无） | TASK-093 |
 | MOD-PROVIDER | （无） | （无） | TASK-003, TASK-011, TASK-021, TASK-022 |
 | MOD-PROVIDERS | （无） | （无） | TASK-370 |
-| MOD-SETTINGS-UI | `src/app/api/settings/documents/route.ts`<br>`src/components/CornerMenu.tsx`<br>`src/components/DocumentSettings.tsx`<br>`src/components/SkillList.tsx`<br>`src/components/ui`<br>`src/lib/chat.ts`<br>`src/lib/display.ts`<br>`src/lib/documents.ts`<br>`src/lib/insight-export.ts`<br>`src/lib/sweep.ts`<br>`src/lib/tools/document-tools.ts`<br>`src/lib/ui-events.ts` | （无） | TASK-006, TASK-012, TASK-016, TASK-021, TASK-027, TASK-031, TASK-038, TASK-043, TASK-045, TASK-046, TASK-048, TASK-074, TASK-085, TASK-091, TASK-096, TASK-102, TASK-124, TASK-129, TASK-130, TASK-132, TASK-134, TASK-170, TASK-320 |
+| MOD-SETTINGS-UI | `src/app/api/settings/documents/route.ts`<br>`src/components/CornerMenu.tsx`<br>`src/components/DocumentSettings.tsx`<br>`src/components/SkillList.tsx`<br>`src/components/ui`<br>`src/lib/chat.ts`<br>`src/lib/display.ts`<br>`src/lib/documents.ts`<br>`src/lib/insight-export.ts`<br>`src/lib/sweep.ts`<br>`src/lib/tools/document-tools.ts`<br>`src/lib/ui-events.ts` | （无） | TASK-006, TASK-012, TASK-016, TASK-021, TASK-027, TASK-031, TASK-038, TASK-043, TASK-045, TASK-046, TASK-048, TASK-074, TASK-085, TASK-091, TASK-096, TASK-102, TASK-124, TASK-129, TASK-130, TASK-132, TASK-134, TASK-170, TASK-320, TASK-442 |
 | MOD-SKILLS | `src/components/FloatingChat.tsx`<br>`src/lib/skills.ts`<br>`src/lib/tools/skill-tools.ts` | （无） | TASK-033, TASK-035, TASK-039, TASK-042, TASK-067, TASK-073, TASK-131, TASK-210 |
 | MOD-STORE | `src/components/FloatingChat.tsx`<br>`src/lib/store.ts`<br>`src/lib/tools/display-tools.ts`<br>`src/lib/tools/skill-tools.ts` | （无） | TASK-200, TASK-360 |
 | MOD-TOOLS | `scripts/ui-contract.mjs`<br>`src/components/DisplayScreen.tsx`<br>`src/components/FloatingChat.tsx`<br>`src/lib/agent-loop.ts`<br>`src/lib/chat.ts`<br>`src/lib/display-document.ts`<br>`src/lib/entity-proposals.ts`<br>`src/lib/extract.ts`<br>`src/lib/insight-export.ts`<br>`src/lib/knowledge.ts`<br>`src/lib/skills.ts`<br>`src/lib/store.ts`<br>`src/lib/tools/browser-fetch.ts`<br>`src/lib/tools/budget.ts`<br>`src/lib/tools/display-tools.ts`<br>`src/lib/tools/knowledge-tools.ts`<br>`src/lib/tools/registry.ts`<br>`src/lib/tools/skill-tools.ts`<br>`src/lib/tools/url-guard.ts`<br>`src/lib/tools/web-tools.ts`<br>`src/lib/types.ts`<br>`src/lib/ui-events.ts` | `src/lib/tools/display-tools.ts`<br>`src/lib/tools/skill-tools.ts`<br>`src/lib/tools/web-tools.ts` | TASK-064, TASK-065, TASK-066, TASK-067, TASK-068, TASK-069, TASK-070, TASK-077, TASK-083, TASK-089, TASK-094, TASK-095, TASK-096, TASK-097, TASK-122, TASK-132, TASK-133, TASK-134, TASK-140, TASK-160, TASK-161, TASK-190, TASK-200, TASK-210, TASK-230, TASK-240, TASK-250, TASK-260, TASK-320 |
