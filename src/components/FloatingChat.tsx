@@ -77,6 +77,30 @@ const STEP_STATE_MARK: Record<NonNullable<FloatingMessage["stepState"]>, string>
 };
 
 /**
+ * The height the display screen should yield for (REQ-F-240, DEC-240 ④-修订).
+ *
+ * `rootHeight` is the console's own full measured height; `transcriptHeight` is the
+ * transcript block's own measured height (0 when it is unmounted or tucked away to
+ * `max-h-0`). Subtracting gives the height of everything that is *always* on screen —
+ * the status row, the panel/usage row, the input form — which is what the display
+ * screen actually needs to leave a permanent gap for.
+ *
+ * The transcript itself is deliberately **not** subtracted from — sorry, **not** part of
+ * the yielded amount: when it grows (expanded, mid-conversation, up to 50–58vh), the
+ * console's own `z-20` already draws it over the display screen's `z-0` content, so it
+ * doesn't need floor space cleared for it. Publishing the *full* height here (the
+ * pre-2026-09-15 behaviour) made the display screen leave a gap sized to whatever the
+ * transcript happened to be — full width, not just the console's own centered 768px
+ * column, so content the console was nowhere near got clipped too
+ * (`CR-20260915-console-menu-consolidation`, item 10 — the exact complaint was "not
+ * pushed content, but content that has nothing to do with the dialog gets covered too").
+ * Exported for the unit test.
+ */
+export function collapsedConsoleHeight(rootHeight: number, transcriptHeight: number): number {
+  return Math.max(0, Math.ceil(rootHeight) - Math.ceil(transcriptHeight));
+}
+
+/**
  * Place a compaction marker where a refresh would rebuild it (REQ-F-043, DEC-030 ①):
  * right after the last row the summary covers. Rows restored from the database carry
  * their database ids, so `afterMessageId` usually matches; rows streamed in this
@@ -1040,10 +1064,17 @@ export function FloatingChat({
   }
 
   /**
-   * 把控制台的实测高度发布给展示屏（REQ-F-200 ④，DEC-240）。
+   * 把控制台**收拢态**的高度发布给展示屏（REQ-F-240，DEC-240 ④-修订）。
    *
-   * 展示屏据此让出底部，于是报告不再有任何一块被压在控制台下面。用实测高度而不是常量：
-   * 高度随记录区展开、悬停收缩、步骤流条数变化，写死一个数就总有一种状态对不上。
+   * 只让展示屏为「始终在屏幕上」的那部分（状态行、面板/用量行、输入框）让出空间——不
+   * 为记录区让。记录区展开时靠控制台自身的 `z-20` 盖在展示屏 `z-0` 内容之上，不需要
+   * 展示屏主动清场：这正是「浮在内容上，不挤走内容」的做法，而不是反过来靠展示屏收窄。
+   *
+   * 2026-09-15 之前这里发布的是整个控制台的实测高度（含展开的记录区，最高 50–58vh），
+   * 于是展示屏让出的是一条**通栏**空白——不止对话框正下方，屏幕两侧跟对话框毫无关系的
+   * 内容也被一起裁掉了（用户原话：「不是重排，是没有对话框的部分内容也被遮挡了」）。
+   * 用 `getBoundingClientRect` 而不是写死常量：收拢态自身的高度也会随内容换行、字号变化
+   * 而变，实测比硬编码更可靠。
    */
   useEffect(() => {
     const node = rootRef.current;
@@ -1051,7 +1082,12 @@ export function FloatingChat({
       return;
     }
     const publish = () => {
-      document.documentElement.style.setProperty("--jarvis-console-h", `${Math.ceil(node.getBoundingClientRect().height)}px`);
+      const rootHeight = node.getBoundingClientRect().height;
+      const transcriptHeight = transcriptRef.current?.getBoundingClientRect().height ?? 0;
+      document.documentElement.style.setProperty(
+        "--jarvis-console-h",
+        `${collapsedConsoleHeight(rootHeight, transcriptHeight)}px`
+      );
     };
     publish();
     const observer = new ResizeObserver(publish);
