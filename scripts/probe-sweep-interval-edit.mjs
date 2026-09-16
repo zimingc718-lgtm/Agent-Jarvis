@@ -17,7 +17,7 @@ await page.waitForSelector(".knowledge-dashboard, [aria-label='知识看板']", 
 
 const bar = page.getByRole("region", { name: "定时巡检" });
 await bar.waitFor({ timeout: 15_000 });
-const input = bar.getByLabelText("巡检间隔（分钟）");
+const input = bar.getByLabel("巡检间隔（分钟）");
 await input.waitFor({ timeout: 15_000 });
 
 const hintVisible = await bar.getByText(/30–1440/).isVisible();
@@ -43,7 +43,7 @@ try {
   await page.waitForSelector(".knowledge-dashboard, [aria-label='知识看板']", { timeout: 15_000 }).catch(() => {});
   const barAfter = page.getByRole("region", { name: "定时巡检" });
   await barAfter.waitFor({ timeout: 15_000 });
-  const inputAfter = barAfter.getByLabelText("巡检间隔（分钟）");
+  const inputAfter = barAfter.getByLabel("巡检间隔（分钟）");
   persistedAfterReload = await inputAfter.inputValue();
   console.log(`刷新页面后读到的值 = ${persistedAfterReload}`);
 

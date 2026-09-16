@@ -27,7 +27,26 @@
 
 ## 3. 真实入口（用户自己那台，端口 3000）
 
-<!-- 待补：npm run build:local && npm run serve:local 后，用 scripts/probe-sweep-interval-edit.mjs 跑一遍，把结果贴在这里。该脚本会把值改回原样，不留测试痕迹。 -->
+`npm run build:local` 重建 `.next-prod`（本次一并带上 CR-A 的产物），重启 `serve:local`
+（旧进程 PID 1888 是 CR-A 收口时起的，被停掉后看护自动拉起新的），`curl http://localhost:3000/api/knowledge`
+确认 200 后开始。
+
+`node scripts/probe-sweep-interval-edit.mjs`（1440x900 真实 Chromium）：
+
+```
+range 提示常驻可见 = true
+原值 = 180，测试值 = 181
+刷新页面后读到的值 = 181
+PASS range 提示常驻、Enter 提交立即写回真实 API 且刷新后仍在，已把值改回原样
+```
+
+核对完毕另用 `curl http://localhost:3000/api/entities/sweep` 独立确认：`intervalMinutes: 180`——
+与探针脚本内部的自我核对一致，服务端真的被改回了原值，没有留下测试痕迹。
+
+采集时间 2026-09-16（本地服务器，端口 3000），采集者：助手（claude-sonnet-5）。
+
+（探针脚本首次运行时报错——误用了 Testing Library 的 `getByLabelText`，Playwright 的
+Locator 链式方法是 `getByLabel`；改名后重跑即通过，脚本文件里的错误未曾进入 main。）
 
 ## 4. 局限（如实登记）
 

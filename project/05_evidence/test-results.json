@@ -1325,9 +1325,10 @@
       "id": "TEST-442",
       "result": "PASS",
       "command": "npx vitest run tests/knowledge-dashboard.test.tsx",
-      "real_entry": false,
+      "real_entry": true,
       "date": "2026-09-16",
-      "notes": "巡检间隔编辑不丢字（REQ-F-070 ⑦，机器（UI））。26/26 用例全绿：Enter 立即保存、500ms 防抖（假计时器）、编辑中不被后台刷新覆盖、范围提示常驻、保存失败原文显示，均 fireEvent 驱动。真实入口待补：scripts/probe-sweep-interval-edit.mjs 跑完后回填 real_entry/entry。"
+      "entry": "user",
+      "notes": "巡检间隔编辑不丢字（REQ-F-070 ⑦，机器（UI））。26/26 用例全绿：Enter 立即保存、500ms 防抖（假计时器）、编辑中不被后台刷新覆盖、范围提示常驻、保存失败原文显示，均 fireEvent 驱动。真实入口：node scripts/probe-sweep-interval-edit.mjs 对生产构建、真实 Chromium——range 提示常驻可见，Enter 提交后端点持久化写入且刷新页面仍在，核对完把值改回原样（服务端另行 curl 确认），见 EV §3。"
     }
   ],
   "executed_commands": [
