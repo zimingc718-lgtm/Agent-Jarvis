@@ -26,7 +26,19 @@ describe("KnowledgeList", () => {
     await waitFor(() => expect(screen.getByText(/知识库为空/)).toBeInTheDocument());
   });
 
-  it("② the pending queue renders first with a count, and 采纳 posts to the pending route then refetches", async () => {
+  it("② the pending queue's count badge renders first, collapsed by default (REQ-F-241 ①)", async () => {
+    render(
+      <KnowledgeList fetchKnowledge={async () => ({ entries: [], pending: [entry("用户偏好", "用户偏好", "model")] })} />
+    );
+    await waitFor(() => expect(screen.getByRole("region", { name: "待采纳的知识提议" })).toBeInTheDocument());
+    expect(screen.getByText(/待采纳（1）/)).toBeInTheDocument();
+    // 菜单默认不显示待采纳内容本体（REQ-F-241 ①）：条目标题与采纳/忽略按钮此刻都不在文档里。
+    expect(screen.queryByText("用户偏好")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "采纳知识提议「用户偏好」" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /待采纳（1）/ })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("② 点计数徽标展开同一套采纳/忽略控件，采纳后刷新收起（不是跳到别处）", async () => {
     let data: KnowledgeListData = { entries: [], pending: [entry("用户偏好", "用户偏好", "model")] };
     const fetchKnowledge = vi.fn(async () => data);
     const request = vi.fn(async (_method: "POST" | "DELETE", _url: string) => {
@@ -35,8 +47,10 @@ describe("KnowledgeList", () => {
     });
 
     render(<KnowledgeList fetchKnowledge={fetchKnowledge} request={request} />);
-    await waitFor(() => expect(screen.getByRole("region", { name: "待采纳的知识提议" })).toBeInTheDocument());
-    expect(screen.getByText(/待采纳（1）/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText(/待采纳（1）/)).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole("button", { name: /待采纳（1）/ }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "采纳知识提议「用户偏好」" })).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole("button", { name: "采纳知识提议「用户偏好」" }));
     await waitFor(() => expect(request).toHaveBeenCalledWith("POST", "/api/knowledge/pending/%E7%94%A8%E6%88%B7%E5%81%8F%E5%A5%BD"));
@@ -53,6 +67,8 @@ describe("KnowledgeList", () => {
         request={request}
       />
     );
+    await waitFor(() => expect(screen.getByText(/待采纳（1）/)).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: /待采纳（1）/ }));
     await waitFor(() => expect(screen.getByRole("button", { name: "忽略知识提议「临时」" })).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "忽略知识提议「临时」" }));
     await waitFor(() => expect(request).toHaveBeenCalledWith("DELETE", "/api/knowledge/pending/x"));
