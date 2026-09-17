@@ -65,7 +65,8 @@
     "CR-20260915-console-menu-consolidation",
     "CR-20260915-sweep-interval-edit",
     "CR-20260915-board-card-lifecycle",
-    "CR-20260915-document-display"
+    "CR-20260915-document-display",
+    "CR-20260915-entity-proposal-card"
   ],
   "tests": [
     {
@@ -1367,6 +1368,15 @@
       "date": "2026-09-16",
       "entry": "user",
       "notes": "展示屏渲染文档原件（REQ-F-032 ⑤）。可内嵌格式走 iframe 空 sandbox，不可内嵌格式给回退说明与新标签页链接。真实入口：模型真实调用 show_document 后展示屏切到 document 视图，iframe 的 src 能真实取到 PDF 字节（非空白/错误），见 EV §3。"
+    },
+    {
+      "id": "TEST-447",
+      "result": "PASS",
+      "command": "npx vitest run tests/entity-tools.test.ts tests/entity-proposal-card.test.tsx tests/floating-chat.test.tsx",
+      "real_entry": true,
+      "date": "2026-09-17",
+      "entry": "user",
+      "notes": "对话内提议卡（REQ-F-072 ⑤，机器（UI））。事件带出 name/id/field/value；卡片按钮走与看板相同的路由，成功/失败/网络异常/防连点均覆盖；标识不全退回纯文字通知。真实入口：node scripts/probe-entity-proposal-card.mjs 对生产构建、真实浏览器、真实 DeepSeek API 调用两条路线——新对象采纳后真的上看板（已清理），字段修改忽略后真实字段未被改动；过程中发现并修好探针脚本自身的 Enter 提交时序问题（非产品缺陷），见 EV §3。"
     }
   ],
   "executed_commands": [
