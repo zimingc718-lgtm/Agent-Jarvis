@@ -2,7 +2,7 @@ import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { extname, join } from "node:path";
 import type { DocumentRoot } from "./documents";
-import { deleteKnowledge, saveKnowledge } from "./knowledge";
+import { deleteKnowledge, listKnowledge, saveKnowledge } from "./knowledge";
 
 /**
  * 资料库：一层**受采纳约束**的原始资料（REQ-F-220、REQ-F-230、DEC-310；CR-20260915-library-adoption）。
@@ -442,4 +442,85 @@ export function countByStatus(items: LibraryItem[]): LibraryCounts {
     },
     { total: 0, pending: 0, adopted: 0, rejected: 0 }
   );
+}
+
+/**
+ * 统一浏览卡（REQ-F-046 ⑤，CR-20260915-knowledge-library-merge CP-2）。
+ *
+ * 已采纳的资料库原件本来就会在知识库里留一张索引卡（`decideLibrary` → `renderIndexCard`），
+ * 所以「统一」不是新起一套存储，是把两个来源拼成一份看得见全貌的列表：已采纳的原件用
+ * `LibraryItem` 本身的结构化字段（层级、来源、取回方式），比解析索引卡正文里的 Markdown
+ * 更能撑起卡片界面；真正的知识条目（`source !== INDEX_CARD_SOURCE`）保留原样。两边不会
+ * 重复——索引卡本身不会再单独出现一次。
+ */
+export type BrowseCard = {
+  kind: "library" | "note";
+  /** library：`LibraryItem.id`；note：知识条目的 `name`。 */
+  id: string;
+  title: string;
+  docType: string;
+  /** library 来源没有归属对象的概念，恒为空串。 */
+  entity: string;
+  bytes: number;
+  /** library 用 `modifiedAt`，note 用 `createdAt`——都是「这份东西上次变化是什么时候」。 */
+  updatedAt: string;
+  sourceUrl: string;
+  /** 非空时可用 `/api/documents/raw?id=` 查看原文；note 没有原文，恒为空串。 */
+  documentId: string;
+};
+
+export type BrowseResult = { cards: BrowseCard[]; byType: Record<string, number> };
+
+/**
+ * 排序近似「模型推荐的优先级」：挂了归属对象的排前面（用户正在跟踪的东西，大概率比无主
+ * 笔记更想先看到），组内按新旧。不是逐条调模型打分——258+ 条量级下不现实，方案选项里如实
+ * 记了这个折衷。
+ */
+export async function listBrowseCards(options: ListLibraryOptions = {}): Promise<BrowseResult> {
+  const [libraryItems, notes] = await Promise.all([listLibrary(options), listKnowledge(options.knowledgeRoot)]);
+
+  const fromLibrary: BrowseCard[] = libraryItems
+    .filter((item) => item.status === "adopted")
+    .map((item) => ({
+      kind: "library",
+      id: item.id,
+      title: item.title || item.name,
+      docType: item.level || "资料库原件",
+      entity: "",
+      bytes: item.bytes,
+      updatedAt: item.modifiedAt,
+      sourceUrl: item.sourceUrl,
+      documentId: `${LIBRARY_LABEL}/${item.id}`,
+    }));
+
+  const fromNotes: BrowseCard[] = notes
+    .filter((entry) => entry.source !== INDEX_CARD_SOURCE)
+    .map((entry) => ({
+      kind: "note",
+      id: entry.name,
+      title: entry.title,
+      docType: entry.docType,
+      entity: entry.entity,
+      bytes: entry.bytes,
+      updatedAt: entry.createdAt,
+      sourceUrl: entry.sourceUrl,
+      documentId: "",
+    }));
+
+  const cards = [...fromLibrary, ...fromNotes].sort((a, b) => {
+    const linkedA = a.entity ? 0 : 1;
+    const linkedB = b.entity ? 0 : 1;
+    if (linkedA !== linkedB) {
+      return linkedA - linkedB;
+    }
+    return b.updatedAt.localeCompare(a.updatedAt);
+  });
+
+  const byType: Record<string, number> = {};
+  for (const card of cards) {
+    const key = card.docType || "未分类";
+    byType[key] = (byType[key] ?? 0) + 1;
+  }
+
+  return { cards, byType };
 }

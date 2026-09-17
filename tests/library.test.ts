@@ -3,12 +3,14 @@ import { readdir, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { saveKnowledge } from "@/lib/knowledge";
 import {
   countByStatus,
   decideLibrary,
   INDEX_CARD_SOURCE,
   LibraryError,
   libraryRoot,
+  listBrowseCards,
   listLibrary,
   parseManifest,
   readLedger,
@@ -143,5 +145,36 @@ describe("TEST-390 资料库采纳登记 (REQ-F-220)", () => {
     // 让 `* text=auto eol=lf` 规范化它们，等于改写归档件本身。
     const attributes = readFileSync(join(process.cwd(), ".gitattributes"), "utf8");
     expect(attributes).toContain("资料库/** -text");
+  });
+
+  it("⑨ 统一浏览：已采纳原件与真实知识条目合并成一份列表，索引卡不重复出现；挂归属的排前面（CR-20260915-knowledge-library-merge CP-2）", async () => {
+    const id = "AIDC/02_原文/P1_diablo.pdf";
+    await decideLibrary([id], "adopted", options());
+    await saveKnowledge(
+      { title: "现场记录", content: "现场勘察记录正文。", source: "manual", entity: "某某公司", docType: "现场记录" },
+      knowledgeRoot
+    );
+    await saveKnowledge({ title: "杂记", content: "一条没有归属的笔记。", source: "manual" }, knowledgeRoot);
+
+    const { cards, byType } = await listBrowseCards(options());
+    expect(cards).toHaveLength(3);
+    expect(cards.filter((card) => card.kind === "library")).toHaveLength(1);
+    expect(cards.filter((card) => card.kind === "note")).toHaveLength(2);
+    // 索引卡本身不再作为第三条「note」重复出现——已采纳原件只以 library 卡的身份出现一次。
+    expect(cards.filter((card) => card.title.includes("Diablo"))).toHaveLength(1);
+
+    // 挂了归属对象的排最前（近似「模型推荐的优先级」，方案选项里如实记了这个折衷）。
+    expect(cards[0]!.entity).toBe("某某公司");
+    expect(cards[0]!.title).toBe("现场记录");
+
+    const libraryCard = cards.find((card) => card.kind === "library")!;
+    expect(libraryCard.documentId).toBe("资料库/AIDC/02_原文/P1_diablo.pdf");
+    expect(libraryCard.docType).toBe("一手");
+    const noteCard = cards.find((card) => card.title === "杂记")!;
+    expect(noteCard.documentId).toBe("");
+
+    expect(byType["一手"]).toBe(1);
+    expect(byType["现场记录"]).toBe(1);
+    expect(byType["未分类"]).toBe(1);
   });
 });

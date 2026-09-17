@@ -34,12 +34,28 @@ export type LibraryCountsView = { total: number; pending: number; adopted: numbe
 
 export type LibraryPanelValue = { items: LibraryItemView[]; counts: LibraryCountsView };
 
+export type BrowseCardView = {
+  kind: "library" | "note";
+  id: string;
+  title: string;
+  docType: string;
+  entity: string;
+  bytes: number;
+  updatedAt: string;
+  sourceUrl: string;
+  documentId: string;
+};
+
+export type BrowsePageView = { cards: BrowseCardView[]; total: number; byType: Record<string, number>; offset: number; limit: number };
+
 type Filter = "pending" | "adopted" | "rejected" | "all";
+type Mode = "review" | "browse";
 
 type LibraryPanelProps = {
   /** 测试缝。 */
   load?: (filter: Filter) => Promise<LibraryPanelValue>;
   decide?: (ids: string[], status: "adopted" | "rejected" | "pending") => Promise<void>;
+  loadBrowse?: (offset: number) => Promise<BrowsePageView>;
 };
 
 const FILTER_LABEL: Record<Filter, string> = {
@@ -77,11 +93,29 @@ function sizeOf(bytes: number): string {
   return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
-export function LibraryPanel({ load = loadFromApi, decide = decideViaApi }: LibraryPanelProps) {
+const BROWSE_LIMIT = 20;
+
+async function loadBrowseFromApi(offset: number): Promise<BrowsePageView> {
+  const response = await fetch(`/api/library/browse?offset=${offset}&limit=${BROWSE_LIMIT}`, {
+    headers: { accept: "application/json" },
+  });
+  if (!response.ok) {
+    throw new Error(`browse fetch failed (${response.status})`);
+  }
+  return (await response.json()) as BrowsePageView;
+}
+
+const MODE_LABEL: Record<Mode, string> = { review: "审批", browse: "浏览" };
+
+export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBrowse = loadBrowseFromApi }: LibraryPanelProps) {
+  const [mode, setMode] = useState<Mode>("review");
   const [filter, setFilter] = useState<Filter>("pending");
   const [value, setValue] = useState<LibraryPanelValue | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [browseOffset, setBrowseOffset] = useState(0);
+  const [browseValue, setBrowseValue] = useState<BrowsePageView | null>(null);
+  const [browseError, setBrowseError] = useState<string | null>(null);
 
   const reload = useCallback(
     async (next: Filter) => {
@@ -96,8 +130,32 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi }: Libr
   );
 
   useEffect(() => {
-    void reload(filter);
-  }, [filter, reload]);
+    if (mode === "review") {
+      void reload(filter);
+    }
+  }, [filter, mode, reload]);
+
+  useEffect(() => {
+    if (mode !== "browse") {
+      return;
+    }
+    let cancelled = false;
+    loadBrowse(browseOffset)
+      .then((page) => {
+        if (!cancelled) {
+          setBrowseValue(page);
+          setBrowseError(null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setBrowseError("读不到浏览列表。服务可能正在重启，稍后再打开一次。");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [browseOffset, loadBrowse, mode]);
 
   const groups = useMemo(() => {
     const byGroup = new Map<string, LibraryItemView[]>();
@@ -144,126 +202,257 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi }: Libr
 
   return (
     <div className="library-panel flex flex-col gap-4">
-      <p className="library-panel__summary text-sm text-muted-foreground">
-        共 {value.counts.total} 份 · 待采纳 {value.counts.pending} · 已采纳 {value.counts.adopted} · 已拒绝{" "}
-        {value.counts.rejected}
-        <span className="mt-1 block text-xs">
-          只有已采纳的资料能在对话里被检索和引用；待采纳的会被挡住，但会告诉你有多少份被挡。
-        </span>
-      </p>
-
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="筛选">
-        {(["pending", "adopted", "rejected", "all"] as Filter[]).map((option) => (
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label="视图">
+        {(["review", "browse"] as Mode[]).map((option) => (
           <button
-            aria-pressed={filter === option}
+            aria-pressed={mode === option}
             className={`rounded border px-2 py-1 text-xs ${
-              filter === option ? "border-foreground font-medium" : "border-border text-muted-foreground"
+              mode === option ? "border-foreground font-medium" : "border-border text-muted-foreground"
             }`}
             key={option}
-            onClick={() => setFilter(option)}
+            onClick={() => setMode(option)}
             type="button"
           >
-            {FILTER_LABEL[option]}
+            {MODE_LABEL[option]}
           </button>
         ))}
       </div>
 
+      {mode === "browse" ? (
+        <LibraryBrowseView page={browseValue} error={browseError} offset={browseOffset} onPage={setBrowseOffset} />
+      ) : (
+        <>
+          <p className="library-panel__summary text-sm text-muted-foreground">
+            共 {value.counts.total} 份 · 待采纳 {value.counts.pending} · 已采纳 {value.counts.adopted} · 已拒绝{" "}
+            {value.counts.rejected}
+            <span className="mt-1 block text-xs">
+              只有已采纳的资料能在对话里被检索和引用；待采纳的会被挡住，但会告诉你有多少份被挡。
+            </span>
+          </p>
+
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="筛选">
+            {(["pending", "adopted", "rejected", "all"] as Filter[]).map((option) => (
+              <button
+                aria-pressed={filter === option}
+                className={`rounded border px-2 py-1 text-xs ${
+                  filter === option ? "border-foreground font-medium" : "border-border text-muted-foreground"
+                }`}
+                key={option}
+                onClick={() => setFilter(option)}
+                type="button"
+              >
+                {FILTER_LABEL[option]}
+              </button>
+            ))}
+          </div>
+
+          {error ? (
+            <p className="library-panel__error text-sm text-destructive" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          {groups.length === 0 ? (
+            <p className="library-panel__empty text-sm text-muted-foreground">
+              {filter === "pending" ? "待采纳区是空的——都审完了。" : `没有${FILTER_LABEL[filter]}的资料。`}
+            </p>
+          ) : null}
+
+          {groups.map(([key, items]) => (
+            <section aria-label={key} className="flex flex-col gap-1.5" key={key}>
+              <header className="flex flex-wrap items-baseline gap-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{key}</h3>
+                <span className="text-xs text-muted-foreground">{items.length} 份</span>
+                {filter === "pending" ? (
+                  <button
+                    className="library-panel__bulk rounded border border-border px-2 py-0.5 text-xs"
+                    disabled={busy}
+                    onClick={() => void act(items.map((item) => item.id), "adopted")}
+                    type="button"
+                  >
+                    本组全部通过
+                  </button>
+                ) : null}
+              </header>
+              <ul className="flex flex-col gap-1">
+                {items.map((item) => (
+                  <li className="rounded-md border border-border px-3 py-2" key={item.id}>
+                    <span className="flex flex-wrap items-baseline gap-2">
+                      <span className="text-sm font-medium">{item.title || item.name}</span>
+                      {item.no ? <span className="text-xs text-muted-foreground">{item.no}</span> : null}
+                      {item.level ? <span className="text-xs text-muted-foreground">{item.level}</span> : null}
+                      <span className="text-xs text-muted-foreground">
+                        {item.ext.slice(1).toUpperCase() || "文件"} · {sizeOf(item.bytes)}
+                      </span>
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {item.name}
+                      {item.org ? ` · ${item.org}` : ""}
+                      {item.retrieval ? ` · ${item.retrieval}` : ""}
+                    </span>
+                    {item.sourceUrl ? (
+                      <a
+                        className="mt-0.5 block truncate text-xs underline"
+                        href={item.sourceUrl}
+                        rel="noreferrer noopener"
+                        target="_blank"
+                      >
+                        {item.sourceUrl}
+                      </a>
+                    ) : null}
+                    <span className="mt-1.5 flex flex-wrap gap-1.5">
+                      {item.status !== "adopted" ? (
+                        <button
+                          className="library-panel__adopt rounded border border-border px-2 py-0.5 text-xs"
+                          disabled={busy}
+                          onClick={() => void act([item.id], "adopted")}
+                          type="button"
+                        >
+                          通过
+                        </button>
+                      ) : null}
+                      {item.status !== "rejected" ? (
+                        <button
+                          className="library-panel__reject rounded border border-border px-2 py-0.5 text-xs text-muted-foreground"
+                          disabled={busy}
+                          onClick={() => void act([item.id], "rejected")}
+                          type="button"
+                        >
+                          拒绝
+                        </button>
+                      ) : null}
+                      {item.status !== "pending" ? (
+                        <button
+                          className="library-panel__revert rounded border border-border px-2 py-0.5 text-xs text-muted-foreground"
+                          disabled={busy}
+                          onClick={() => void act([item.id], "pending")}
+                          type="button"
+                        >
+                          撤回判断
+                        </button>
+                      ) : null}
+                      {item.status !== "pending" && item.decidedAt ? (
+                        <span className="text-xs text-muted-foreground">
+                          {item.status === "adopted" ? "已采纳" : "已拒绝"} · {item.decidedAt.slice(0, 10)}
+                        </span>
+                      ) : null}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </>
+      )}
+    </div>
+  );
+}
+
+type LibraryBrowseViewProps = {
+  page: BrowsePageView | null;
+  error: string | null;
+  offset: number;
+  onPage: (offset: number) => void;
+};
+
+const KIND_LABEL: Record<BrowseCardView["kind"], string> = { library: "资料库原件", note: "知识条目" };
+
+/**
+ * 统一浏览：已采纳原件 + 真实知识条目按同一张卡片形状呈现，分页（CP-2）。与上面的审批视图
+ * 是两套独立状态——切换模式不影响对方已经取到的数据，回切时不必重新拉取。
+ */
+function LibraryBrowseView({ page, error, offset, onPage }: LibraryBrowseViewProps) {
+  if (error && !page) {
+    return (
+      <p className="library-panel__browse-error text-sm text-destructive" role="alert">
+        {error}
+      </p>
+    );
+  }
+  if (!page) {
+    return <p className="library-panel__browse-loading text-sm text-muted-foreground">正在读取…</p>;
+  }
+
+  const typeEntries = Object.entries(page.byType).sort((a, b) => b[1] - a[1]);
+  const from = page.total === 0 ? 0 : offset + 1;
+  const to = Math.min(page.total, offset + page.cards.length);
+
+  return (
+    <div className="library-panel__browse flex flex-col gap-3">
+      <p className="library-panel__browse-summary text-sm text-muted-foreground">
+        共 {page.total} 份
+        {typeEntries.length > 0 ? (
+          <span className="mt-1 block text-xs">
+            {typeEntries.map(([type, count]) => `${type} ${count}`).join(" · ")}
+          </span>
+        ) : null}
+      </p>
+
       {error ? (
-        <p className="library-panel__error text-sm text-destructive" role="alert">
+        <p className="library-panel__browse-error text-sm text-destructive" role="alert">
           {error}
         </p>
       ) : null}
 
-      {groups.length === 0 ? (
-        <p className="library-panel__empty text-sm text-muted-foreground">
-          {filter === "pending" ? "待采纳区是空的——都审完了。" : `没有${FILTER_LABEL[filter]}的资料。`}
-        </p>
-      ) : null}
-
-      {groups.map(([key, items]) => (
-        <section aria-label={key} className="flex flex-col gap-1.5" key={key}>
-          <header className="flex flex-wrap items-baseline gap-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{key}</h3>
-            <span className="text-xs text-muted-foreground">{items.length} 份</span>
-            {filter === "pending" ? (
-              <button
-                className="library-panel__bulk rounded border border-border px-2 py-0.5 text-xs"
-                disabled={busy}
-                onClick={() => void act(items.map((item) => item.id), "adopted")}
-                type="button"
-              >
-                本组全部通过
-              </button>
-            ) : null}
-          </header>
-          <ul className="flex flex-col gap-1">
-            {items.map((item) => (
-              <li className="rounded-md border border-border px-3 py-2" key={item.id}>
-                <span className="flex flex-wrap items-baseline gap-2">
-                  <span className="text-sm font-medium">{item.title || item.name}</span>
-                  {item.no ? <span className="text-xs text-muted-foreground">{item.no}</span> : null}
-                  {item.level ? <span className="text-xs text-muted-foreground">{item.level}</span> : null}
-                  <span className="text-xs text-muted-foreground">
-                    {item.ext.slice(1).toUpperCase() || "文件"} · {sizeOf(item.bytes)}
-                  </span>
-                </span>
-                <span className="mt-0.5 block text-xs text-muted-foreground">
-                  {item.name}
-                  {item.org ? ` · ${item.org}` : ""}
-                  {item.retrieval ? ` · ${item.retrieval}` : ""}
-                </span>
-                {item.sourceUrl ? (
+      {page.cards.length === 0 ? (
+        <p className="library-panel__browse-empty text-sm text-muted-foreground">还没有已采纳的资料或知识条目。</p>
+      ) : (
+        <ul className="flex flex-col gap-1.5">
+          {page.cards.map((card) => (
+            <li className="rounded-md border border-border px-3 py-2" key={`${card.kind}-${card.id}`}>
+              <span className="flex flex-wrap items-baseline gap-2">
+                <span className="text-sm font-medium">{card.title}</span>
+                <span className="text-xs text-muted-foreground">{KIND_LABEL[card.kind]}</span>
+                {card.docType ? <span className="text-xs text-muted-foreground">{card.docType}</span> : null}
+                {card.entity ? <span className="text-xs text-muted-foreground">归属 {card.entity}</span> : null}
+                <span className="text-xs text-muted-foreground">{sizeOf(card.bytes)}</span>
+              </span>
+              <span className="mt-0.5 flex flex-wrap items-baseline gap-2 text-xs text-muted-foreground">
+                <span>{card.updatedAt.slice(0, 10)}</span>
+                {card.documentId ? (
                   <a
-                    className="mt-0.5 block truncate text-xs underline"
-                    href={item.sourceUrl}
+                    className="underline"
+                    href={`/api/documents/raw?id=${encodeURIComponent(card.documentId)}`}
                     rel="noreferrer noopener"
                     target="_blank"
                   >
-                    {item.sourceUrl}
+                    查看原文
                   </a>
                 ) : null}
-                <span className="mt-1.5 flex flex-wrap gap-1.5">
-                  {item.status !== "adopted" ? (
-                    <button
-                      className="library-panel__adopt rounded border border-border px-2 py-0.5 text-xs"
-                      disabled={busy}
-                      onClick={() => void act([item.id], "adopted")}
-                      type="button"
-                    >
-                      通过
-                    </button>
-                  ) : null}
-                  {item.status !== "rejected" ? (
-                    <button
-                      className="library-panel__reject rounded border border-border px-2 py-0.5 text-xs text-muted-foreground"
-                      disabled={busy}
-                      onClick={() => void act([item.id], "rejected")}
-                      type="button"
-                    >
-                      拒绝
-                    </button>
-                  ) : null}
-                  {item.status !== "pending" ? (
-                    <button
-                      className="library-panel__revert rounded border border-border px-2 py-0.5 text-xs text-muted-foreground"
-                      disabled={busy}
-                      onClick={() => void act([item.id], "pending")}
-                      type="button"
-                    >
-                      撤回判断
-                    </button>
-                  ) : null}
-                  {item.status !== "pending" && item.decidedAt ? (
-                    <span className="text-xs text-muted-foreground">
-                      {item.status === "adopted" ? "已采纳" : "已拒绝"} · {item.decidedAt.slice(0, 10)}
-                    </span>
-                  ) : null}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+                {card.sourceUrl ? (
+                  <a className="truncate underline" href={card.sourceUrl} rel="noreferrer noopener" target="_blank">
+                    {card.sourceUrl}
+                  </a>
+                ) : null}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span>
+          {from}–{to} / {page.total}
+        </span>
+        <span className="flex gap-1.5">
+          <button
+            className="rounded border border-border px-2 py-0.5 disabled:opacity-50"
+            disabled={offset <= 0}
+            onClick={() => onPage(Math.max(0, offset - page.limit))}
+            type="button"
+          >
+            上一页
+          </button>
+          <button
+            className="rounded border border-border px-2 py-0.5 disabled:opacity-50"
+            disabled={offset + page.limit >= page.total}
+            onClick={() => onPage(offset + page.limit)}
+            type="button"
+          >
+            下一页
+          </button>
+        </span>
+      </div>
     </div>
   );
 }
