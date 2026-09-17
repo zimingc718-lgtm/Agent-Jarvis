@@ -4,6 +4,10 @@
 // 两条路线都用真实数据，但选择不留痕迹的那一半：新对象走「采纳后立刻用已有的删除
 // 入口（CR-20260915-board-card-lifecycle）归档掉」；字段修改走「忽略」，真实对象的
 // 字段绝不会被这次探针改动。
+//
+// 对话历史跨刷新持久（REQ-F-013）——这是产品本身的正常行为，不是探针要避开的 bug，
+// 但探针重复跑会在同一条对话里堆出好几张长得一样的卡片，靠 aria-label 找卡片会因为
+// 不唯一而找错。每次先点「新对话」，让这次探针只看见自己造出的那一张。
 import { chromium } from "@playwright/test";
 
 const base = process.env.JARVIS_BASE_URL ?? "http://localhost:3000";
@@ -17,12 +21,21 @@ await page.waitForTimeout(300);
 
 const box = page.getByPlaceholder("Ask Agent-Jarvis");
 await box.waitFor({ timeout: 15_000 });
+const newConversation = page.getByRole("button", { name: "新对话" });
+if ((await newConversation.count()) > 0) {
+  await newConversation.click();
+}
+
+// 按发送按钮而不是按 Enter——按钮的可见性本身就是「现在能不能发」的信号
+// （流式中是「停止」、有字是「发送」、没字是「新对话」），比时序上更容易和某个
+// 尚未提交的重渲染擦肩而过的 Enter 键盘事件更稳。
+async function send(text) {
+  await box.fill(text);
+  await page.getByRole("button", { name: "发送" }).click();
+}
 
 // --- 路线一：新对象提议 → 对话里点「采纳」→ 真的出现在看板 → 用已有删除入口清理 ---
-await box.fill(
-  `请调用 propose_entity 工具，kind 用 "competitor"，title 用 "${probeTitle}"，不用先搜索，直接调用。`
-);
-await box.press("Enter");
+await send(`请调用 propose_entity 工具，kind 用 "competitor"，title 用 "${probeTitle}"，不用先搜索，直接调用。`);
 
 const entityCard = page.getByRole("region", { name: `提议新对象「${probeTitle}」` });
 await entityCard.waitFor({ timeout: 60_000 }).catch(() => {});
@@ -52,14 +65,17 @@ const target = "台达-delta";
 const before = await page.request.get(`${base}/api/entities`).then((r) => r.json());
 const beforeChange = (before.entities ?? []).find((entity) => entity.name === target)?.change ?? null;
 
-await box.fill(
+await send(
   `请调用 propose_entity_update 工具，name 用 "${target}"，field 用 "change"，value 用 "探针测试值-不代表真实变更"，source_url 用 "https://probe.example/not-a-real-source"，不用先搜索，直接调用。`
 );
-await box.press("Enter");
 
 const updateCard = page.getByRole("region", { name: `提议修改「${target}」的 change` });
 await updateCard.waitFor({ timeout: 60_000 }).catch(() => {});
 const updateCardShown = (await updateCard.count()) > 0;
+if (!updateCardShown && process.env.PROBE_DEBUG) {
+  console.log("=== DEBUG：路线二未出现卡片，页面末尾文字 ===");
+  console.log((await page.locator("body").innerText()).slice(-2500));
+}
 let updateDiscarded = false;
 let realFieldUntouched = false;
 if (updateCardShown) {
