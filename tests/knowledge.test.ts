@@ -16,6 +16,7 @@ import {
   renderEntryFile,
   saveKnowledge,
   searchKnowledge,
+  setDocType,
   slugifyKnowledgeName,
   snippetFor,
   tokenize,
@@ -135,6 +136,23 @@ describe("knowledge files (REQ-F-044, REQ-NF-013)", () => {
     expect(await deleteKnowledge("a", root)).toBe(false);
   });
 
+  it("⑥b 删除是归档不是硬删：文件搬进 archive/ 且内容原样保留（CR-20260915-knowledge-library-merge）", async () => {
+    await saveKnowledge({ title: "备份验证", content: "误删也能找回来", source: "manual" }, root);
+    expect(await deleteKnowledge("备份验证", root)).toBe(true);
+    expect(readdirSync(root)).not.toContain("备份验证.md");
+    const archived = readFileSync(join(root, "archive", "备份验证.md"), "utf8");
+    expect(archived).toContain("误删也能找回来");
+  });
+
+  it("⑥c 归档路径撞名不覆盖，跟保存时的去重同一逻辑", async () => {
+    await saveKnowledge({ title: "重名", content: "第一次", source: "manual", preferredName: "重名" }, root);
+    await deleteKnowledge("重名", root);
+    await saveKnowledge({ title: "重名", content: "第二次", source: "manual", preferredName: "重名" }, root);
+    await deleteKnowledge("重名", root);
+    const files = readdirSync(join(root, "archive")).sort();
+    expect(files).toEqual(["重名-2.md", "重名.md"]);
+  });
+
   it("⑦ 待采纳区：模型提议不进列表、不进检索；采纳后进入；忽略即删除", async () => {
     const proposal = await saveKnowledge({ title: "用户偏好", content: "偏好中文回答", source: "model", pending: true }, root);
     expect(await listKnowledge(root)).toEqual([]);
@@ -159,6 +177,25 @@ describe("knowledge files (REQ-F-044, REQ-NF-013)", () => {
     const adopted = await adoptPending("偏好", root);
     expect(adopted?.name).toBe("偏好-2");
     expect((await readKnowledge("偏好", root))?.content).toBe("旧");
+  });
+
+  it("⑨ setDocType 只改类型，正文与其它字段原样保留；条目不存在返回 null（CR-20260915-knowledge-library-merge）", async () => {
+    const saved = await saveKnowledge(
+      { title: "整流柜规格", content: "正文不变", source: "manual", entity: "友商-a", sourceUrl: "https://a.example" },
+      root
+    );
+    expect(saved.docType).toBe("");
+
+    const updated = await setDocType(saved.name, "标准说明书", root);
+    expect(updated?.docType).toBe("标准说明书");
+    expect(updated?.entity).toBe("友商-a");
+    expect(updated?.sourceUrl).toBe("https://a.example");
+
+    const reread = await readKnowledge(saved.name, root);
+    expect(reread?.docType).toBe("标准说明书");
+    expect(reread?.content).toBe("正文不变");
+
+    expect(await setDocType("不存在", "x", root)).toBeNull();
   });
 
   it("renderEntryFile 把标题里的换行折成空格，避免破坏 frontmatter", () => {

@@ -22,6 +22,10 @@ import { estimateTokens } from "./adapters";
 
 export const KNOWLEDGE_ROOT = process.env.JARVIS_KNOWLEDGE_PATH ?? join(process.cwd(), ".data", "knowledge");
 export const PENDING_DIR = "pending";
+/** Same shape as `entities.ts`'s `ARCHIVE_DIR` (CR-20260915-board-card-lifecycle): a
+ * delete a click away from a real button should leave something to recover, not nothing
+ * (CR-20260915-knowledge-library-merge). */
+export const ARCHIVE_DIR = "archive";
 /** What a dropped file may be to count as a note (REQ-F-046 ①). */
 export const KNOWLEDGE_TEXT_EXTENSIONS = [".md", ".markdown", ".txt"];
 /** One entry's body; a note, not a book (REQ-NF-013 ②). */
@@ -297,13 +301,22 @@ export async function saveKnowledge(input: SaveKnowledgeInput, root: string = KN
   return { name, title, source: input.source, createdAt, bytes, entity, docType, sourceUrl };
 }
 
+/**
+ * Archive, not `rm` — same reasoning and same shape as `entities.ts`'s `deleteEntity`
+ * (CR-20260915-board-card-lifecycle): move to `root/archive/`, deduplicating the same way
+ * `saveKnowledge` does. `listKnowledge`/`listEntries` only read one level of `root`, so an
+ * archived entry stops showing up without any change to the read side.
+ */
 export async function deleteKnowledge(name: string, root: string = KNOWLEDGE_ROOT): Promise<boolean> {
   if (!isSafeName(name)) {
     return false;
   }
-  const path = entryPath(root, name);
+  const from = entryPath(root, name);
+  const archiveDir = join(root, ARCHIVE_DIR);
   try {
-    await rm(path);
+    await mkdir(archiveDir, { recursive: true });
+    const target = await uniqueName(archiveDir, name);
+    await rename(from, join(archiveDir, `${target}.md`));
     return true;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
@@ -311,6 +324,23 @@ export async function deleteKnowledge(name: string, root: string = KNOWLEDGE_ROO
     }
     throw error;
   }
+}
+
+/**
+ * Reclassify an existing entry's `doc_type` (CR-20260915-knowledge-library-merge,
+ * REQ-F-046 ⑤). Metadata, not a fact: unlike an entity field (REQ-F-072, REQ-F-180),
+ * nothing here claims something is true about the world, so it carries none of the
+ * evidence-and-approval machinery those do — it applies at once.
+ */
+export async function setDocType(name: string, docType: string, root: string = KNOWLEDGE_ROOT): Promise<KnowledgeSummary | null> {
+  const entry = await readKnowledge(name, root);
+  if (!entry) {
+    return null;
+  }
+  const { content, ...summary } = entry;
+  const next = { ...summary, docType: docType.trim() };
+  await writeFile(entryPath(root, name), renderEntryFile({ ...next, content }), "utf8");
+  return next;
 }
 
 /** Move a model proposal into the searchable set (REQ-F-046 ③). */

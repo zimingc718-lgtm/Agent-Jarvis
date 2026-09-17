@@ -33,6 +33,8 @@ describe("knowledge tools", () => {
       "save_knowledge",
       // CR-20260912-knowledge-attribution：枚举工具，`essential`。
       "list_knowledge",
+      // CR-20260915-knowledge-library-merge：整理分类，只在有条目可改时才注册。
+      "classify_knowledge",
     ]);
   });
 
@@ -101,5 +103,25 @@ describe("knowledge tools", () => {
     expect(huge.ok).toBe(false);
     expect(huge.content).toContain("KB");
     expect(await listPending(root)).toEqual([]);
+  });
+
+  it("⑦ classify_knowledge 直接生效，不进待采纳区；参数缺失与条目不存在都失败并给出指引（REQ-F-046）", async () => {
+    const [, , , , list, classify] = createKnowledgeTools({ root });
+    const result = await classify.execute({ name: "部署说明", doc_type: "标准说明书" }, context);
+    expect(result.ok).toBe(true);
+    expect(result.summary).toBe("重新分类：部署说明");
+    expect(result.content).toContain("标准说明书");
+    // 直接生效，不是待采纳区的写入——list_knowledge 立刻能看到新类型。
+    const listed = await list.execute({}, context);
+    expect(listed.content).toContain("类型 标准说明书");
+    expect(await listPending(root)).toEqual([]);
+
+    const missingParams = await classify.execute({ name: "部署说明" }, context);
+    expect(missingParams.ok).toBe(false);
+    expect(missingParams.content).toContain("必填");
+
+    const notFound = await classify.execute({ name: "不存在的条目", doc_type: "x" }, context);
+    expect(notFound.ok).toBe(false);
+    expect(notFound.content).toContain("list_knowledge");
   });
 });
