@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-16",
+  "generated_at": "2026-09-17",
   "source_documents": [
     "project/01_specification/产品需求说明书.md",
     "project/02_solution/架构设计说明书.md",
@@ -1377,6 +1377,33 @@
       "date": "2026-09-17",
       "entry": "user",
       "notes": "对话内提议卡（REQ-F-072 ⑤，机器（UI））。事件带出 name/id/field/value；卡片按钮走与看板相同的路由，成功/失败/网络异常/防连点均覆盖；标识不全退回纯文字通知。真实入口：node scripts/probe-entity-proposal-card.mjs 对生产构建、真实浏览器、真实 DeepSeek API 调用两条路线——新对象采纳后真的上看板（已清理），字段修改忽略后真实字段未被改动；过程中发现并修好探针脚本自身的 Enter 提交时序问题（非产品缺陷），见 EV §3。"
+    },
+    {
+      "id": "TEST-448",
+      "result": "PASS",
+      "command": "npx vitest run tests/knowledge.test.ts tests/knowledge-tools.test.ts",
+      "real_entry": true,
+      "date": "2026-09-17",
+      "entry": "user",
+      "notes": "重新分类 + 归档化删除（REQ-F-046 ⑤⑥）。单测：deleteKnowledge 归档不硬删、撞名不覆盖；setDocType 只改类型；classify_knowledge 按 knowledgeCount>0 收放，成功/参数缺失/条目不存在三态。真实入口：node scripts/probe-classify-knowledge.mjs，真实模型调用 classify_knowledge 改一条真实存在条目的类型，用完即归档清理。"
+    },
+    {
+      "id": "TEST-449",
+      "result": "PASS",
+      "command": "npx vitest run tests/library.test.ts tests/library-routes.test.ts tests/library-panel.test.tsx",
+      "real_entry": true,
+      "date": "2026-09-17",
+      "entry": "user",
+      "notes": "统一浏览视图（REQ-F-242，机器（UI）：fireEvent.click 驱动模式切换/翻页四例）。真实入口：node scripts/probe-library-browse.mjs，真实浏览器切到「浏览」模式，核对卡片、类型统计、查看原文链接可用（不足一页未触发翻页分支，已在脚本里说明）。"
+    },
+    {
+      "id": "TEST-450",
+      "result": "PASS",
+      "command": "node scripts/migrate-legacy-knowledge-notes.mjs --commit",
+      "real_entry": true,
+      "date": "2026-09-17",
+      "entry": "user",
+      "notes": "归档合并前遗留笔记，一次性操作已对用户真实知识库执行：.data/knowledge/ 根目录条目数 253→7（仅剩资料库索引卡），清单落盘 .data/knowledge/archive/_migration-2026-09-17T17-24-43-388Z.json。执行过程中发生一次事故——运行中的服务器加载的是 CP-1 修复 deleteKnowledge 之前的旧构建，246 条实际被硬删而非归档，如实记在 CR 文档「流程偏差记录」与证据文档；本行 result 标 PASS 是就「脚本本身按设计执行、清单完整、条目数变化符合预期」而言，不代表这 246 条数据可恢复。"
     }
   ],
   "executed_commands": [
