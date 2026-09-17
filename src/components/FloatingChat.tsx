@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/lib/markdown";
+import { EntityProposalCard, type EntityProposalPayload } from "@/components/EntityProposalCard";
 
 export type FloatingMessage = {
   id: string;
@@ -49,6 +50,8 @@ export type FloatingMessage = {
   stepState?: "running" | "ok" | "failed";
   /** Assistant rows that cited web sources (REQ-F-039). */
   sources?: Source[];
+  /** System rows that are an adopt/discard card, not plain text (CR-20260915-entity-proposal-card). */
+  entityProposal?: EntityProposalPayload;
 };
 
 /**
@@ -980,11 +983,23 @@ export function FloatingChat({
           // Same shape as `knowledge_pending`, and deliberately the same refresh event:
           // the board already listens to it, and a second event name for the same
           // refresh would be two wires doing one job (出口义务 2).
-          appendSystemMessage(
+          //
+          // A card only when the event carries enough to act on directly — `entity` always
+          // does (propose_entity's own creation result), `update` only from
+          // propose_entity_update (one field, one call); extract_fields's batch event has
+          // no single usable id and falls back to the plain notice, same as before
+          // (CR-20260915-entity-proposal-card).
+          const payload: EntityProposalPayload | null =
             chunk.what === "entity"
-              ? `模型提议跟踪对象「${chunk.title}」，已放入待采纳区——在看板上采纳或忽略。`
-              : `模型提议修改「${chunk.title}」，已放入待采纳区——在看板上采纳或忽略。`
-          );
+              ? { what: "entity", name: chunk.name, title: chunk.title }
+              : chunk.id && chunk.field && chunk.value
+                ? { what: "update", id: chunk.id, entity: chunk.title, field: chunk.field, value: chunk.value }
+                : null;
+          if (payload) {
+            setMessages((current) => [...current, { id: crypto.randomUUID(), role: "system", content: "", entityProposal: payload }]);
+          } else {
+            appendSystemMessage(`模型提议修改「${chunk.title}」，已放入待采纳区——在看板上采纳或忽略。`);
+          }
           window.dispatchEvent(new Event(KNOWLEDGE_CHANGED_EVENT));
         } else if (chunk.type === "compacted") {
           // REQ-F-043: the boundary shows up in the live transcript at the same place a
@@ -1233,6 +1248,8 @@ export function FloatingChat({
                 <CompactionMarker key={message.id} row={message} />
               ) : message.role === "step" ? (
                 <ToolStepRow key={message.id} step={message} />
+              ) : message.entityProposal ? (
+                <EntityProposalCard key={message.id} payload={message.entityProposal} />
               ) : (
                 <article
                   className={cn(

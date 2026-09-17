@@ -189,13 +189,18 @@ describe("entity tools", () => {
   it("⑪ 提议会带出 entity_pending 事件；直写不带——直写已经显示在卡片上了", async () => {
     const { propose, proposeUpdate } = tools();
     const proposed = await propose.execute({ kind: "competitor", title: "友商 Z" }, context);
-    expect(proposed.events).toEqual([{ type: "entity_pending", title: "友商 Z", what: "entity" }]);
+    expect(proposed.events).toEqual([{ type: "entity_pending", title: "友商 Z", what: "entity", name: "友商-z" }]);
 
     const queued = await proposeUpdate.execute(
       { name: "友商-b", field: "change", value: "发布新固件", source_url: "https://b.example/news" },
       context
     );
-    expect(queued.events).toEqual([{ type: "entity_pending", title: "友商 B", what: "update" }]);
+    // name/id/field/value 让对话里的提议卡不用再查一次就能渲染出可操作的按钮
+    // （CR-20260915-entity-proposal-card）；id 只断言「有」，不锁具体格式。
+    expect(queued.events).toHaveLength(1);
+    expect(queued.events?.[0]).toMatchObject({ type: "entity_pending", title: "友商 B", what: "update", field: "change", value: "发布新固件" });
+    expect(typeof (queued.events?.[0] as { id?: unknown })?.id).toBe("string");
+    expect((queued.events?.[0] as { id: string }).id.length).toBeGreaterThan(0);
 
     const direct = await proposeUpdate.execute(
       { name: "tso-a", field: "capacity", value: "可用 0.9 GW", source_url: "https://tso-a.example/rules/x" },

@@ -94,7 +94,15 @@ export type ChatDelta =
   // proposed a tracked object or a change to one. `what` separates the two queues —
   // a whole new object waits in `entities/pending/`, a single field or parameter waits
   // in `entities/proposals/` — because adopting them is two different clicks.
-  | { type: "entity_pending"; title: string; what: "entity" | "update" }
+  //
+  // `name` (对象名) is on every `what:"entity"` event — `propose_entity` is its one
+  // source and always has it. `id`/`field`/`value` on `what:"update"` are optional:
+  // `propose_entity_update` (one field, one call) always has them; `extract_fields`
+  // (many fields in one call) only carries a summary count, not a usable id per field —
+  // the client renders a card when the identifying fields are present and falls back to
+  // the plain notice when they are not (CR-20260915-entity-proposal-card).
+  | { type: "entity_pending"; title: string; what: "entity"; name: string }
+  | { type: "entity_pending"; title: string; what: "update"; id?: string; field?: string; value?: string }
   // REQ-F-102 (CR-20260912-stage-reach): move the display screen between its two session
   // stages. Transient by design — the board is deliberately NOT a persisted display_state
   // value (CR-20260912-display-stage rejected that), so the only way a tool can reach it

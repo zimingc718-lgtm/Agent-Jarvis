@@ -663,11 +663,15 @@ describe("FloatingChat", () => {
       window.removeEventListener(KNOWLEDGE_CHANGED_EVENT, changed);
     });
 
-    it("CR-20260912-entity-pending: 提议对象与提议修改说的是两句话，且都刷新看板", async () => {
-      for (const [what, expected] of [
-        ["entity", /模型提议跟踪对象「友商 X」/],
-        ["update", /模型提议修改「友商 X」/],
-      ] as const) {
+    it("CR-20260912-entity-pending: 提议对象与提议修改各带出一张可操作的卡片，且都刷新看板", async () => {
+      const cases = [
+        { chunk: { type: "entity_pending" as const, title: "友商 X", what: "entity" as const, name: "友商-x" }, expected: /提议跟踪对象「友商 X」/ },
+        {
+          chunk: { type: "entity_pending" as const, title: "友商 X", what: "update" as const, id: "p1", field: "change", value: "新固件" },
+          expected: /提议把「友商 X」的 change 改为「新固件」/,
+        },
+      ];
+      for (const { chunk, expected } of cases) {
         const changed = vi.fn();
         window.addEventListener(KNOWLEDGE_CHANGED_EVENT, changed);
         const view = render(
@@ -676,7 +680,7 @@ describe("FloatingChat", () => {
             probeProviders={readyProbe}
             onStream={async function* () {
               yield { type: "start", conversationId: "c1", messageId: "m" };
-              yield { type: "entity_pending", title: "友商 X", what };
+              yield chunk;
               yield { type: "delta", text: "已提议。" };
               yield { type: "done", messageId: "m" };
             }}
@@ -684,12 +688,36 @@ describe("FloatingChat", () => {
         );
         fireEvent.change(screen.getByPlaceholderText("Ask Agent-Jarvis"), { target: { value: "跟一下友商 X" } });
         fireEvent.click(screen.getByRole("button", { name: "发送" }));
-        // 两个队列采纳时是两次不同的点击，所以话也必须是两句，不能都说「有提议」。
+        // 两个队列采纳时是两次不同的点击，所以卡片文案也必须是两句，不能都说「有提议」。
         await waitFor(() => expect(screen.getByText(expected)).toBeInTheDocument());
+        expect(screen.getByRole("button", { name: "采纳" })).toBeInTheDocument();
         expect(changed).toHaveBeenCalled();
         window.removeEventListener(KNOWLEDGE_CHANGED_EVENT, changed);
         view.unmount();
       }
+    });
+
+    it("CR-20260915-entity-proposal-card: extract_fields 的批量事件没有可用的单一标识，退回纯文字通知", async () => {
+      const changed = vi.fn();
+      window.addEventListener(KNOWLEDGE_CHANGED_EVENT, changed);
+      render(
+        <FloatingChat
+          hasEnabledProvider
+          probeProviders={readyProbe}
+          onStream={async function* () {
+            yield { type: "start", conversationId: "c1", messageId: "m" };
+            yield { type: "entity_pending", title: "友商 X", what: "update" };
+            yield { type: "delta", text: "已提议。" };
+            yield { type: "done", messageId: "m" };
+          }}
+        />
+      );
+      fireEvent.change(screen.getByPlaceholderText("Ask Agent-Jarvis"), { target: { value: "跟一下友商 X" } });
+      fireEvent.click(screen.getByRole("button", { name: "发送" }));
+      await waitFor(() => expect(screen.getByText(/模型提议修改「友商 X」，已放入待采纳区——在看板上采纳或忽略。/)).toBeInTheDocument());
+      expect(screen.queryByRole("button", { name: "采纳" })).not.toBeInTheDocument();
+      expect(changed).toHaveBeenCalled();
+      window.removeEventListener(KNOWLEDGE_CHANGED_EVENT, changed);
     });
 
     it("② dropping a zip posts it to /api/skills as `archive`", async () => {

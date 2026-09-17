@@ -173,8 +173,10 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
           content: `已提议跟踪对象「${saved.title}」（${saved.name}，${describe(kind)}），放入待采纳区；用户采纳后才会出现在看板上。`,
           summary: `提议对象：${saved.title}`,
           // The user has to act on this, so it is said in the transcript too — the board
-          // may not even be the screen they are looking at (出口义务 2).
-          events: [{ type: "entity_pending", title: saved.title, what: "entity" }],
+          // may not even be the screen they are looking at (出口义务 2). `name` lets the
+          // transcript render an adopt/discard card in place, not just a notice pointing
+          // elsewhere (CR-20260915-entity-proposal-card).
+          events: [{ type: "entity_pending", title: saved.title, what: "entity", name: saved.name }],
         };
       } catch (error) {
         if (error instanceof EntityError) {
@@ -296,7 +298,11 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
         }\n${basisNote}`,
         summary: `${record.applied ? "更新" : "提议更新"} ${entity.title}.${field}${basis === "inferred" ? "（推断）" : ""}`,
         // Only the queued case is news: a direct write already shows up on the card.
-        events: record.applied ? undefined : [{ type: "entity_pending", title: entity.title, what: "update" }],
+        // `id`/`field`/`value` let the transcript render an adopt/discard card in place
+        // (CR-20260915-entity-proposal-card).
+        events: record.applied
+          ? undefined
+          : [{ type: "entity_pending", title: entity.title, what: "update", id: record.proposal.id, field, value }],
       };
     },
   };
