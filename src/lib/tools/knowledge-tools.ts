@@ -8,6 +8,7 @@ import {
   recordSearchMiss,
   saveKnowledge,
   searchKnowledge,
+  setDocType,
 } from "../knowledge";
 import { ingestUrl } from "../ingest";
 import { truncateToTokens } from "./budget";
@@ -287,5 +288,39 @@ export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescript
     },
   };
 
-  return [search, read, save, ingest, list];
+  const classify: ToolDescriptor = {
+    name: "classify_knowledge",
+    priority: TOOL_PRIORITY.management,
+    description:
+      "修改一条已入库知识条目的类型（如「厂商新闻稿」「标准说明书」）。直接生效，不进待采纳区——这是整理分类，不是改一个需要来源佐证的事实。",
+    parameters: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "条目名称，来自 list_knowledge / search_knowledge" },
+        doc_type: { type: "string", description: "新的类型" },
+      },
+      required: ["name", "doc_type"],
+    },
+    // 只对已有条目生效（REQ-F-046 见 CR-20260915-knowledge-library-merge），库为空时必然
+    // 找不到条目，和 search/read 一样按 knowledgeCount 收起，不学 save/list 常驻。
+    available: (context) => context.knowledgeCount > 0,
+    async execute(args) {
+      const name = typeof args.name === "string" ? args.name.trim() : "";
+      const docType = typeof args.doc_type === "string" ? args.doc_type.trim() : "";
+      if (!name || !docType) {
+        return { ok: false, content: "name 与 doc_type 都是必填。", summary: "参数缺失" };
+      }
+      const updated = await setDocType(name, docType, root);
+      if (!updated) {
+        return {
+          ok: false,
+          content: `知识库中没有名为「${name}」的条目。可先用 list_knowledge / search_knowledge 确认名称。`,
+          summary: `条目不存在：${name}`,
+        };
+      }
+      return { ok: true, content: `已把「${updated.title}」的类型改为「${docType}」。`, summary: `重新分类：${updated.title}` };
+    },
+  };
+
+  return [search, read, save, ingest, list, classify];
 }
