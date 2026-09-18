@@ -6,6 +6,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 const dir = mkdtempSync(join(tmpdir(), "agent-jarvis-kb-route-"));
 process.env.JARVIS_DB_PATH = join(dir, "k.sqlite");
 process.env.JARVIS_KNOWLEDGE_PATH = join(dir, "knowledge");
+process.env.JARVIS_USERS_PATH = join(dir, "users");
 process.env.JARVIS_SECRET_KEY = "0123456789abcdef0123456789abcdef";
 delete process.env.JARVIS_TEST_USER_ID;
 
@@ -15,8 +16,11 @@ const { getServerSession } = await import("next-auth");
 const listRoute = await import("@/app/api/knowledge/route");
 const entryRoute = await import("@/app/api/knowledge/[name]/route");
 const pendingRoute = await import("@/app/api/knowledge/pending/[name]/route");
-const { KNOWLEDGE_ROOT, saveKnowledge } = await import("@/lib/knowledge");
+const { saveKnowledge } = await import("@/lib/knowledge");
 const { getStore } = await import("@/lib/store-singleton");
+const { knowledgeRootFor } = await import("@/lib/user-data-paths");
+// Every authenticated case below mocks the same session, so its resolved per-user root is fixed too (CR-20260918-per-user-data-isolation).
+const KNOWLEDGE_ROOT = knowledgeRootFor("owner@example.com");
 
 /** TEST-087 — the knowledge API (REQ-F-044 ③④, REQ-F-046 ①②③; TASK-084). */
 

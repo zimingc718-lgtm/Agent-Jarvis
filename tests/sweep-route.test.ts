@@ -7,6 +7,7 @@ const dir = mkdtempSync(join(tmpdir(), "agent-jarvis-sweep-route-"));
 process.env.JARVIS_DB_PATH = join(dir, "s.sqlite");
 process.env.JARVIS_ENTITIES_PATH = join(dir, "entities");
 process.env.JARVIS_KNOWLEDGE_PATH = join(dir, "knowledge");
+process.env.JARVIS_USERS_PATH = join(dir, "users");
 process.env.JARVIS_SECRET_KEY = "0123456789abcdef0123456789abcdef";
 delete process.env.JARVIS_TEST_USER_ID;
 

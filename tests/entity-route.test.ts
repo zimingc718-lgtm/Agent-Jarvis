@@ -7,6 +7,7 @@ const dir = mkdtempSync(join(tmpdir(), "agent-jarvis-ent-route-"));
 process.env.JARVIS_DB_PATH = join(dir, "e.sqlite");
 process.env.JARVIS_ENTITIES_PATH = join(dir, "entities");
 process.env.JARVIS_KNOWLEDGE_PATH = join(dir, "knowledge");
+process.env.JARVIS_USERS_PATH = join(dir, "users");
 process.env.JARVIS_SECRET_KEY = "0123456789abcdef0123456789abcdef";
 delete process.env.JARVIS_TEST_USER_ID;
 
@@ -19,11 +20,15 @@ const historyRoute = await import("@/app/api/entities/[name]/history/route");
 const pendingRoute = await import("@/app/api/entities/pending/[name]/route");
 const proposalRoute = await import("@/app/api/entities/proposals/[id]/route");
 const overviewRoute = await import("@/app/api/knowledge/overview/route");
-const { ENTITIES_ROOT, saveEntity, addSource, readEntity } = await import("@/lib/entities");
+const { saveEntity, addSource, readEntity } = await import("@/lib/entities");
 const { proposeEntityUpdate, listProposals } = await import("@/lib/entity-proposals");
 const { appendHistoryEntry } = await import("@/lib/entity-history");
-const { KNOWLEDGE_ROOT, saveKnowledge, recordSearchMiss } = await import("@/lib/knowledge");
+const { saveKnowledge, recordSearchMiss } = await import("@/lib/knowledge");
 const { getStore } = await import("@/lib/store-singleton");
+const { entitiesRootFor, knowledgeRootFor } = await import("@/lib/user-data-paths");
+// Every authenticated case below mocks the same session, so its resolved per-user root is fixed too (CR-20260918-per-user-data-isolation).
+const ENTITIES_ROOT = entitiesRootFor("owner@example.com");
+const KNOWLEDGE_ROOT = knowledgeRootFor("owner@example.com");
 
 /** TEST-122 — the board's API (CR-20260911-home-dashboard). */
 

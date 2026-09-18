@@ -15,11 +15,12 @@ import { WakeSettings } from "@/components/WakeSettings";
 import { authOptions, getGoogleOAuthConfig } from "@/lib/auth";
 import { requireUserId } from "@/lib/auth-guard";
 import { resolveDisplayView } from "@/lib/display";
-import { KNOWLEDGE_ROOT, listKnowledge, listPending } from "@/lib/knowledge";
+import { listKnowledge, listPending } from "@/lib/knowledge";
 import { buildTranscript } from "@/lib/transcript";
 import { getDefaultProviderTemplates } from "@/lib/providers";
 import { STORAGE_CONFIG_HINT, getStorageConfig } from "@/lib/runtime-config";
 import { getStore } from "@/lib/store-singleton";
+import { resolveUserDataRoots } from "@/lib/user-data-paths";
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
@@ -41,9 +42,11 @@ export default async function HomePage() {
         .map((skill) => ({ id: skill.id, name: skill.name, description: skill.description }))
     : [];
 
+  const dataRoots = storeReady ? await resolveUserDataRoots(auth.userId) : null;
+
   // REQ-F-044 ③: the ☰ list is correct on first open, not after a fetch.
-  const knowledge = storeReady
-    ? { entries: await listKnowledge(KNOWLEDGE_ROOT), pending: await listPending(KNOWLEDGE_ROOT) }
+  const knowledge = dataRoots
+    ? { entries: await listKnowledge(dataRoots.knowledgeRoot), pending: await listPending(dataRoots.knowledgeRoot) }
     : { entries: [], pending: [] };
 
   let initialConversationId: string | null = null;

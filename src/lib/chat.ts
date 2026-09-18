@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { repairDanglingToolCalls, runToolLoop } from "./agent-loop";
-import { KNOWLEDGE_ROOT, listKnowledge } from "./knowledge";
+import { listKnowledge } from "./knowledge";
+import { resolveUserDataRoots, type UserDataRoots } from "./user-data-paths";
 import { estimateMessagesTokens, estimateTokens, sendProviderStream, type StreamProviderConfig, type ToolSpec } from "./adapters";
 import { resolveDisplayView } from "./display";
 import { ProviderSecretError, type SourceRecord, type Store } from "./store";
@@ -82,7 +83,7 @@ function formatSse(delta: ChatDelta): string {
 }
 
 /** Build the toolset for one send. Composition is fixed for the whole turn (DEC-026 ②). */
-export function buildRegistry(store: Store, extra?: ToolRegistry): ToolRegistry {
+export function buildRegistry(store: Store, roots: UserDataRoots, extra?: ToolRegistry): ToolRegistry {
   const registry = new ToolRegistry();
   for (const tool of createSkillTools(store)) {
     registry.register(tool);
@@ -93,13 +94,13 @@ export function buildRegistry(store: Store, extra?: ToolRegistry): ToolRegistry 
   for (const tool of createWebTools({ store })) {
     registry.register(tool);
   }
-  for (const tool of createKnowledgeTools()) {
+  for (const tool of createKnowledgeTools({ root: roots.knowledgeRoot, entitiesRoot: roots.entitiesRoot })) {
     registry.register(tool);
   }
   // CR-20260911-home-dashboard: entity tools register unconditionally, like save_knowledge.
   // Making them conditional needs a ToolContext field, and that file is being rewritten
   // by the display-console CR right now; the condition joins in the wiring step.
-  for (const tool of createEntityTools()) {
+  for (const tool of createEntityTools({ root: roots.entitiesRoot, knowledgeRoot: roots.knowledgeRoot })) {
     registry.register(tool);
   }
   /**
@@ -215,9 +216,10 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
    */
   const toolsUsable = support !== "no";
 
-  const registry = buildRegistry(input.store, input.extraTools);
+  const dataRoots = await resolveUserDataRoots(input.userId);
+  const registry = buildRegistry(input.store, dataRoots, input.extraTools);
   // Counted once per send like the skills: the toolset is fixed for the turn (DEC-026 ②).
-  const knowledgeCount = (await listKnowledge(KNOWLEDGE_ROOT)).length;
+  const knowledgeCount = (await listKnowledge(dataRoots.knowledgeRoot)).length;
   const window = contextWindowFor({ kind: provider.kind, contextWindow: provider.contextWindow });
   const toolContext: ToolContext = {
     userId: input.userId,

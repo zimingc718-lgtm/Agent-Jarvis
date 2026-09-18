@@ -11,6 +11,7 @@ import {
   SweepSettingsError,
   writeSweepSettings,
 } from "@/lib/sweep";
+import { resolveUserDataRoots } from "@/lib/user-data-paths";
 
 /**
  * Scheduled collection (CR-20260911-scheduled-sweep).
@@ -21,27 +22,34 @@ import {
  * which is the user's own action and therefore allowed while the schedule is off.
  */
 
-async function guard() {
+type Guarded = { ok: true; entitiesRoot: string } | { ok: false; response: NextResponse };
+
+async function guard(): Promise<Guarded> {
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
-    return NextResponse.json({ message: auth.message }, { status: auth.status });
+    return { ok: false, response: NextResponse.json({ message: auth.message }, { status: auth.status }) };
   }
-  return storageUnavailable();
+  const unavailable = storageUnavailable();
+  if (unavailable) {
+    return { ok: false, response: unavailable };
+  }
+  const { entitiesRoot } = await resolveUserDataRoots(auth.userId);
+  return { ok: true, entitiesRoot };
 }
 
 export async function GET() {
-  const blocked = await guard();
-  if (blocked) {
-    return blocked;
+  const guarded = await guard();
+  if (!guarded.ok) {
+    return guarded.response;
   }
   const store = getStore();
   return NextResponse.json({ ...readSweepSettings(store), lastRun: readLastRun(store) });
 }
 
 export async function PUT(request: Request) {
-  const blocked = await guard();
-  if (blocked) {
-    return blocked;
+  const guarded = await guard();
+  if (!guarded.ok) {
+    return guarded.response;
   }
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const store = getStore();
@@ -61,12 +69,13 @@ export async function PUT(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const blocked = await guard();
-  if (blocked) {
-    return blocked;
+  const guarded = await guard();
+  if (!guarded.ok) {
+    return guarded.response;
   }
+  const { entitiesRoot } = guarded;
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const store = getStore();
-  const outcome = await runSweep({ store, force: body.force === true });
+  const outcome = await runSweep({ store, force: body.force === true, root: entitiesRoot });
   return NextResponse.json({ ...outcome, lastRun: readLastRun(store) });
 }

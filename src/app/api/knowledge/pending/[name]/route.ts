@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
-import { adoptPending, discardPending, KNOWLEDGE_ROOT } from "@/lib/knowledge";
+import { adoptPending, discardPending } from "@/lib/knowledge";
+import { resolveUserDataRoots } from "@/lib/user-data-paths";
 
 /**
  * The approval step for model-proposed knowledge (REQ-F-046 ③; TASK-084).
@@ -13,21 +14,28 @@ import { adoptPending, discardPending, KNOWLEDGE_ROOT } from "@/lib/knowledge";
 
 type Params = { params: Promise<{ name: string }> };
 
-async function guard() {
+type Guarded = { ok: true; knowledgeRoot: string } | { ok: false; response: NextResponse };
+
+async function guard(): Promise<Guarded> {
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
-    return NextResponse.json({ message: auth.message }, { status: auth.status });
+    return { ok: false, response: NextResponse.json({ message: auth.message }, { status: auth.status }) };
   }
-  return storageUnavailable();
+  const unavailable = storageUnavailable();
+  if (unavailable) {
+    return { ok: false, response: unavailable };
+  }
+  const { knowledgeRoot } = await resolveUserDataRoots(auth.userId);
+  return { ok: true, knowledgeRoot };
 }
 
 export async function POST(_request: Request, { params }: Params) {
-  const blocked = await guard();
-  if (blocked) {
-    return blocked;
+  const guarded = await guard();
+  if (!guarded.ok) {
+    return guarded.response;
   }
   const name = decodeURIComponent((await params).name ?? "").trim();
-  const entry = await adoptPending(name, KNOWLEDGE_ROOT);
+  const entry = await adoptPending(name, guarded.knowledgeRoot);
   if (!entry) {
     return NextResponse.json({ message: `待采纳区没有「${name}」。` }, { status: 404 });
   }
@@ -35,12 +43,12 @@ export async function POST(_request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const blocked = await guard();
-  if (blocked) {
-    return blocked;
+  const guarded = await guard();
+  if (!guarded.ok) {
+    return guarded.response;
   }
   const name = decodeURIComponent((await params).name ?? "").trim();
-  const removed = await discardPending(name, KNOWLEDGE_ROOT);
+  const removed = await discardPending(name, guarded.knowledgeRoot);
   if (!removed) {
     return NextResponse.json({ message: `待采纳区没有「${name}」。` }, { status: 404 });
   }

@@ -6,7 +6,8 @@ import { requireUserId } from "@/lib/auth-guard";
 import { getStore } from "@/lib/store-singleton";
 import { buildRegistry } from "@/lib/chat";
 import { readWebSettings } from "@/lib/tools/web-tools";
-import { KNOWLEDGE_ROOT, listKnowledge } from "@/lib/knowledge";
+import { listKnowledge } from "@/lib/knowledge";
+import { resolveUserDataRoots } from "@/lib/user-data-paths";
 import { contextWindowFor } from "@/lib/tools/budget";
 import type { ToolContext } from "@/lib/tools/registry";
 
@@ -34,7 +35,8 @@ export async function GET() {
   const store = getStore();
   const web = readWebSettings(store);
   const skills = store.listSkills(auth.userId);
-  const knowledgeCount = (await listKnowledge(KNOWLEDGE_ROOT)).length;
+  const dataRoots = await resolveUserDataRoots(auth.userId);
+  const knowledgeCount = (await listKnowledge(dataRoots.knowledgeRoot)).length;
   const provider = store.resolveActiveProvider(auth.userId);
   const contextWindow = provider
     ? contextWindowFor({ kind: provider.kind, contextWindow: provider.contextWindow })
@@ -50,7 +52,7 @@ export async function GET() {
     contextWindow,
   };
 
-  const registry = buildRegistry(store);
+  const registry = buildRegistry(store, dataRoots);
   const live = new Set(registry.availableFor(context).map((tool) => tool.name));
 
   return NextResponse.json({

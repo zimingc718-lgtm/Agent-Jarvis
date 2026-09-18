@@ -219,6 +219,7 @@ export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescript
         return { ok: false, content: "缺少参数 url。", summary: "参数缺失" };
       }
       const outcome = await ingestUrl(url, {
+        entitiesRoot,
         knowledgeRoot: root,
         entity: typeof args.entity === "string" ? args.entity : "",
         docType: typeof args.doc_type === "string" ? args.doc_type : "",

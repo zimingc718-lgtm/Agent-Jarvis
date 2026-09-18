@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
 import { fetchSource } from "@/lib/sources";
+import { resolveUserDataRoots } from "@/lib/user-data-paths";
 import {
   addSource,
   deleteEntity,
@@ -12,7 +13,6 @@ import {
   normalizeParamName,
   removeParam,
   setParam,
-  ENTITIES_ROOT,
   EntityError,
   markSeen,
   readEntity,
@@ -27,21 +27,29 @@ import {
 
 type Params = { params: Promise<{ name: string }> };
 
-async function guard() {
+type Guarded = { ok: true; entitiesRoot: string } | { ok: false; response: NextResponse };
+
+async function guard(): Promise<Guarded> {
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
-    return NextResponse.json({ message: auth.message }, { status: auth.status });
+    return { ok: false, response: NextResponse.json({ message: auth.message }, { status: auth.status }) };
   }
-  return storageUnavailable();
+  const unavailable = storageUnavailable();
+  if (unavailable) {
+    return { ok: false, response: unavailable };
+  }
+  const { entitiesRoot } = await resolveUserDataRoots(auth.userId);
+  return { ok: true, entitiesRoot };
 }
 
 export async function GET(_request: Request, { params }: Params) {
-  const blocked = await guard();
-  if (blocked) {
-    return blocked;
+  const guarded = await guard();
+  if (!guarded.ok) {
+    return guarded.response;
   }
+  const { entitiesRoot } = guarded;
   const name = decodeURIComponent((await params).name ?? "").trim();
-  const entity = await readEntity(name, ENTITIES_ROOT);
+  const entity = await readEntity(name, entitiesRoot);
   if (!entity) {
     return NextResponse.json({ message: `没有名为「${name}」的跟踪对象。` }, { status: 404 });
   }
@@ -55,17 +63,18 @@ export async function GET(_request: Request, { params }: Params) {
  * are the source management that lives inside the card.
  */
 export async function PATCH(request: Request, { params }: Params) {
-  const blocked = await guard();
-  if (blocked) {
-    return blocked;
+  const guarded = await guard();
+  if (!guarded.ok) {
+    return guarded.response;
   }
+  const { entitiesRoot } = guarded;
   const name = decodeURIComponent((await params).name ?? "").trim();
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const action = typeof body.action === "string" ? body.action : "";
 
   try {
     if (action === "seen") {
-      const entity = await markSeen(name, ENTITIES_ROOT);
+      const entity = await markSeen(name, entitiesRoot);
       return entity
         ? NextResponse.json({ ok: true, entity })
         : NextResponse.json({ message: `没有名为「${name}」的跟踪对象。` }, { status: 404 });
@@ -76,7 +85,7 @@ export async function PATCH(request: Request, { params }: Params) {
       if (!url.trim()) {
         return NextResponse.json({ message: "缺少 url。" }, { status: 400 });
       }
-      const entity = action === "addSource" ? await addSource(name, url, ENTITIES_ROOT) : await removeSource(name, url, ENTITIES_ROOT);
+      const entity = action === "addSource" ? await addSource(name, url, entitiesRoot) : await removeSource(name, url, entitiesRoot);
       return entity
         ? NextResponse.json({ ok: true, entity })
         : NextResponse.json({ message: `没有名为「${name}」的跟踪对象。` }, { status: 404 });
@@ -93,7 +102,7 @@ export async function PATCH(request: Request, { params }: Params) {
         return NextResponse.json({ message: `「${paramName}」是对象自身的结构字段，不能当作技术参数。` }, { status: 400 });
       }
       if (action === "removeParam") {
-        const entity = await removeParam(name, paramName, ENTITIES_ROOT);
+        const entity = await removeParam(name, paramName, entitiesRoot);
         return entity
           ? NextResponse.json({ ok: true, entity })
           : NextResponse.json({ message: `没有名为「${name}」的跟踪对象。` }, { status: 404 });
@@ -102,7 +111,7 @@ export async function PATCH(request: Request, { params }: Params) {
       if (action === "paramStatus" && !status) {
         return NextResponse.json({ message: "status 必须是 unknown、meets 或 unmet 之一。" }, { status: 400 });
       }
-      const current = await readEntity(name, ENTITIES_ROOT);
+      const current = await readEntity(name, entitiesRoot);
       if (!current) {
         return NextResponse.json({ message: `没有名为「${name}」的跟踪对象。` }, { status: 404 });
       }
@@ -121,7 +130,7 @@ export async function PATCH(request: Request, { params }: Params) {
           status,
           evidence: url ? { url, at: "", locator: typeof body.locator === "string" ? body.locator : "" } : undefined,
         },
-        ENTITIES_ROOT
+        entitiesRoot
       );
       return entity
         ? NextResponse.json({ ok: true, entity })
@@ -133,8 +142,8 @@ export async function PATCH(request: Request, { params }: Params) {
       if (!url) {
         return NextResponse.json({ message: "缺少 url。" }, { status: 400 });
       }
-      const outcome = await fetchSource(name, url, { root: ENTITIES_ROOT });
-      const entity = await readEntity(name, ENTITIES_ROOT);
+      const outcome = await fetchSource(name, url, { root: entitiesRoot });
+      const entity = await readEntity(name, entitiesRoot);
       return NextResponse.json({ ok: true, outcome, entity: entity ? summarize(entity) : null });
     }
 
@@ -149,7 +158,7 @@ export async function PATCH(request: Request, { params }: Params) {
       const entity = await updateEntity(
         name,
         { field: field as UpdatableField, value, ...(url ? { evidence: { url, at: "", locator } } : {}) },
-        ENTITIES_ROOT
+        entitiesRoot
       );
       return entity
         ? NextResponse.json({ ok: true, entity })
@@ -166,15 +175,16 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const blocked = await guard();
-  if (blocked) {
-    return blocked;
+  const guarded = await guard();
+  if (!guarded.ok) {
+    return guarded.response;
   }
+  const { entitiesRoot } = guarded;
   const name = decodeURIComponent((await params).name ?? "").trim();
   if (!name) {
     return NextResponse.json({ message: "缺少对象名称。" }, { status: 400 });
   }
-  const removed = await deleteEntity(name, ENTITIES_ROOT);
+  const removed = await deleteEntity(name, entitiesRoot);
   if (!removed) {
     return NextResponse.json({ message: `没有名为「${name}」的跟踪对象。` }, { status: 404 });
   }

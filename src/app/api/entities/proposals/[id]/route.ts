@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
-import { ENTITIES_ROOT } from "@/lib/entities";
+import { resolveUserDataRoots } from "@/lib/user-data-paths";
 import { adoptProposal, discardProposal } from "@/lib/entity-proposals";
 
 /**
@@ -14,21 +14,29 @@ import { adoptProposal, discardProposal } from "@/lib/entity-proposals";
 
 type Params = { params: Promise<{ id: string }> };
 
-async function guard() {
+type Guarded = { ok: true; entitiesRoot: string } | { ok: false; response: NextResponse };
+
+async function guard(): Promise<Guarded> {
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
-    return NextResponse.json({ message: auth.message }, { status: auth.status });
+    return { ok: false, response: NextResponse.json({ message: auth.message }, { status: auth.status }) };
   }
-  return storageUnavailable();
+  const unavailable = storageUnavailable();
+  if (unavailable) {
+    return { ok: false, response: unavailable };
+  }
+  const { entitiesRoot } = await resolveUserDataRoots(auth.userId);
+  return { ok: true, entitiesRoot };
 }
 
 export async function POST(_request: Request, { params }: Params) {
-  const blocked = await guard();
-  if (blocked) {
-    return blocked;
+  const guarded = await guard();
+  if (!guarded.ok) {
+    return guarded.response;
   }
+  const { entitiesRoot } = guarded;
   const id = decodeURIComponent((await params).id ?? "").trim();
-  const entity = await adoptProposal(id, ENTITIES_ROOT);
+  const entity = await adoptProposal(id, entitiesRoot);
   if (!entity) {
     return NextResponse.json({ message: `没有编号为「${id}」的待采纳修改，或它指向的对象已不存在。` }, { status: 404 });
   }
@@ -36,12 +44,13 @@ export async function POST(_request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const blocked = await guard();
-  if (blocked) {
-    return blocked;
+  const guarded = await guard();
+  if (!guarded.ok) {
+    return guarded.response;
   }
+  const { entitiesRoot } = guarded;
   const id = decodeURIComponent((await params).id ?? "").trim();
-  const removed = await discardProposal(id, ENTITIES_ROOT);
+  const removed = await discardProposal(id, entitiesRoot);
   if (!removed) {
     return NextResponse.json({ message: `没有编号为「${id}」的待采纳修改。` }, { status: 404 });
   }

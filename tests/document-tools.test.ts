@@ -149,7 +149,7 @@ describe("TEST-171 本地文档工具 (REQ-F-110)", () => {
 
   it("④ 小窗口下被挤掉时出现在「未加载」名单里——能被说明，而不是无声消失", async () => {
     const { buildRegistry } = await import("@/lib/chat");
-    const registry = buildRegistry(store);
+    const registry = buildRegistry(store, { userId: context.userId, entitiesRoot: "/tmp/test-entities", knowledgeRoot: "/tmp/test-knowledge" });
     const fit = registry.fitFor(context, budgetTokens(8_192, BUDGET_SHARES.toolDefinitions));
     const dropped = fit.dropped.map((tool) => tool.name);
     const loaded = fit.loaded.map((tool) => tool.name);

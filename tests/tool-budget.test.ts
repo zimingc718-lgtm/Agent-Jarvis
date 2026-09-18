@@ -111,7 +111,7 @@ describe("工具定义预算", () => {
   it("⑦ 真实工具集在 8k 窗口下装得进声明的子预算，在 128k 下全装", async () => {
     const { buildRegistry } = await import("@/lib/chat");
     const store = { getSetting: () => null, setSetting: () => {} } as never;
-    const registry = buildRegistry(store);
+    const registry = buildRegistry(store, { userId: context.userId, entitiesRoot: "/tmp/test-entities", knowledgeRoot: "/tmp/test-knowledge" });
     const full: ToolContext = { ...context, skillCount: 3, knowledgeCount: 5 };
 
     const small = registry.fitFor(full, budgetTokens(8192, BUDGET_SHARES.toolDefinitions));

@@ -6,13 +6,13 @@ import { requireUserId } from "@/lib/auth-guard";
 import { ingestUrl } from "@/lib/ingest";
 import {
   isKnowledgeTextPath,
-  KNOWLEDGE_ROOT,
   KnowledgeError,
   listKnowledge,
   listPending,
   MAX_ENTRY_BYTES,
   saveKnowledge,
 } from "@/lib/knowledge";
+import { resolveUserDataRoots } from "@/lib/user-data-paths";
 
 /**
  * Knowledge base listing and the two user-initiated consolidation entries
@@ -30,7 +30,8 @@ export async function GET() {
   if (unavailable) {
     return unavailable;
   }
-  const [entries, pending] = await Promise.all([listKnowledge(KNOWLEDGE_ROOT), listPending(KNOWLEDGE_ROOT)]);
+  const { knowledgeRoot } = await resolveUserDataRoots(auth.userId);
+  const [entries, pending] = await Promise.all([listKnowledge(knowledgeRoot), listPending(knowledgeRoot)]);
   return NextResponse.json({ entries, pending });
 }
 
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
   if (unavailable) {
     return unavailable;
   }
+  const { entitiesRoot, knowledgeRoot } = await resolveUserDataRoots(auth.userId);
 
   const contentType = request.headers.get("content-type") ?? "";
   try {
@@ -61,7 +63,7 @@ export async function POST(request: Request) {
       const stem = file.name.replace(/\.[^.]+$/, "");
       const entry = await saveKnowledge(
         { content: await file.text(), source: "file", preferredName: stem, title: undefined },
-        KNOWLEDGE_ROOT
+        knowledgeRoot
       );
       return NextResponse.json({ ok: true, entry }, { status: 201 });
     }
@@ -83,6 +85,8 @@ export async function POST(request: Request) {
         docType: typeof body.docType === "string" ? body.docType : "",
         title: typeof body.title === "string" ? body.title : undefined,
         trustCaller: true,
+        entitiesRoot,
+        knowledgeRoot,
       });
       return outcome.ok
         ? NextResponse.json({ ok: true, entry: outcome.entry, pending: outcome.pending, reason: outcome.reason }, { status: 201 })
@@ -92,7 +96,7 @@ export async function POST(request: Request) {
     const content = typeof body.content === "string" ? body.content : "";
     const title = typeof body.title === "string" ? body.title : undefined;
     const source = body.source === "conversation" || body.source === "manual" ? body.source : "manual";
-    const entry = await saveKnowledge({ title, content, source }, KNOWLEDGE_ROOT);
+    const entry = await saveKnowledge({ title, content, source }, knowledgeRoot);
     return NextResponse.json({ ok: true, entry }, { status: 201 });
   } catch (error) {
     if (error instanceof KnowledgeError) {

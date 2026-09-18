@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
-import { countByEntity, KNOWLEDGE_ROOT, listKnowledge, listSearchMisses } from "@/lib/knowledge";
+import { countByEntity, listKnowledge, listSearchMisses } from "@/lib/knowledge";
+import { resolveUserDataRoots } from "@/lib/user-data-paths";
 
 /**
  * What the board's lower half needs (CR-20260911-home-dashboard).
@@ -22,10 +23,11 @@ export async function GET() {
     return unavailable;
   }
 
+  const { knowledgeRoot } = await resolveUserDataRoots(auth.userId);
   const [entries, byEntity, misses] = await Promise.all([
-    listKnowledge(KNOWLEDGE_ROOT),
-    countByEntity(KNOWLEDGE_ROOT),
-    listSearchMisses(KNOWLEDGE_ROOT),
+    listKnowledge(knowledgeRoot),
+    countByEntity(knowledgeRoot),
+    listSearchMisses(knowledgeRoot),
   ]);
 
   const byType: Record<string, number> = {};

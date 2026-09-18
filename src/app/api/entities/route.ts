@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
-import { ENTITIES_ROOT, EntityError, isEntityKind, listEntities, listPendingEntities, saveEntity } from "@/lib/entities";
+import { EntityError, isEntityKind, listEntities, listPendingEntities, saveEntity } from "@/lib/entities";
+import { resolveUserDataRoots } from "@/lib/user-data-paths";
 import { listProposals } from "@/lib/entity-proposals";
 
 /**
@@ -24,10 +25,11 @@ export async function GET() {
   if (unavailable) {
     return unavailable;
   }
+  const { entitiesRoot } = await resolveUserDataRoots(auth.userId);
   const [entities, pending, proposals] = await Promise.all([
-    listEntities(ENTITIES_ROOT),
-    listPendingEntities(ENTITIES_ROOT),
-    listProposals(ENTITIES_ROOT),
+    listEntities(entitiesRoot),
+    listPendingEntities(entitiesRoot),
+    listProposals(entitiesRoot),
   ]);
   return NextResponse.json({ entities, pending, proposals });
 }
@@ -41,6 +43,7 @@ export async function POST(request: Request) {
   if (unavailable) {
     return unavailable;
   }
+  const { entitiesRoot } = await resolveUserDataRoots(auth.userId);
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   if (!isEntityKind(body.kind)) {
     return NextResponse.json({ message: "kind 必须是 competitor、authority 或 customer 之一。" }, { status: 400 });
@@ -57,7 +60,7 @@ export async function POST(request: Request) {
         sources: Array.isArray(body.sources) ? body.sources.filter((s): s is string => typeof s === "string") : [],
         body: typeof body.body === "string" ? body.body : "",
       },
-      ENTITIES_ROOT
+      entitiesRoot
     );
     return NextResponse.json({ ok: true, entity }, { status: 201 });
   } catch (error) {
