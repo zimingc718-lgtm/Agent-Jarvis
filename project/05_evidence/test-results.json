@@ -66,7 +66,8 @@
     "CR-20260915-sweep-interval-edit",
     "CR-20260915-board-card-lifecycle",
     "CR-20260915-document-display",
-    "CR-20260915-entity-proposal-card"
+    "CR-20260915-entity-proposal-card",
+    "CR-20260918-library-in-board"
   ],
   "tests": [
     {
@@ -1413,6 +1414,15 @@
       "date": "2026-09-17",
       "entry": "user",
       "notes": "上传入口收敛为一个按钮（REQ-F-020 ⑧，机器（UI）：fireEvent.keyDown 驱动键盘打开菜单，aria-expanded 正确翻转）。真实入口：node scripts/probe-unified-upload-entry.mjs，真实浏览器点击「上传」展开菜单，「文件夹」「zip 压缩包」两个选项各自弹出正确的系统选择器；文件夹一侧选一个探针自建的一次性目录，真实注册出技能后立即用既有删除入口清理。"
+    },
+    {
+      "id": "TEST-452",
+      "result": "PASS",
+      "command": "npx vitest run tests/knowledge-dashboard.test.tsx tests/library-panel.test.tsx",
+      "real_entry": false,
+      "date": "2026-09-18",
+      "entry": "assistant",
+      "notes": "看板「资料库」板块改名与内嵌浏览（REQ-F-242 ⑥）。全量 38/38（knowledge-dashboard 29 例 + library-panel 9 例零回归）。真实入口 TEST-453（scripts/probe-library-in-board.mjs）已写好，按四条并行Wave-1 CR 的编排边界未在本分支执行，见 CR 文档与测试说明书「变更响应 · CR-20260918-library-in-board」。"
     }
   ],
   "executed_commands": [
@@ -1664,7 +1674,9 @@
     "npx vitest run  (88 files / 788 tests passed)",
     "python -m unittest tests.test_governance  (139 tests / 25 subtests passed)",
     "node scripts/check-module-graph.mjs  (OK MODULE_GRAPH_PASS 109 files, 0 cycle, 0 layering, 0 client leak)",
-    "python tools/governance.py check-index  (OK INDEX_PASS)"
+    "python tools/governance.py check-index  (OK INDEX_PASS)",
+    "npx tsc --noEmit  (OK no output)",
+    "npx vitest run tests/knowledge-dashboard.test.tsx tests/library-panel.test.tsx  (OK 38/38 passed)"
   ],
   "known_warnings": [
     {
