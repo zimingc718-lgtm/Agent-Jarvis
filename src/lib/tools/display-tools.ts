@@ -81,6 +81,27 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
     },
   };
 
+  const competitorBoard: ToolDescriptor = {
+    name: "show_competitor_board",
+    priority: TOOL_PRIORITY.normal,
+    description: "把展示屏切到友商看板（已登记友商的技术参数横向对比表）。用户说「对比一下友商」「友商看板」时调用。",
+    parameters: { type: "object", properties: {} },
+    available: () => true,
+    async execute() {
+      // 与 show_board 同一条理由：会话态而非持久态，先清到 home 再靠 display_stage 事件
+      // 切换，避免和 show_home/show_insight 的持久 display_state 打架（CR-20260912-
+      // display-stage 已经否决过把它做成第四个 display_state 值）。
+      store.setDisplayState({ kind: "home", refId: null });
+      return {
+        ok: true,
+        content:
+          "展示屏已切到友商看板。表格只列已登记的参数原文，逐维度谁更好由你现在问我——我会读这张表现场判断，不会替你把结论写进表格。",
+        summary: "展示屏 → 友商看板",
+        events: [{ type: "display_stage", stage: "competitor-board" }],
+      };
+    },
+  };
+
   const insight: ToolDescriptor = {
     name: "show_insight",
     priority: TOOL_PRIORITY.normal,
@@ -300,5 +321,5 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
     },
   };
 
-  return [home, board, insight, save, archive];
+  return [home, board, competitorBoard, insight, save, archive];
 }

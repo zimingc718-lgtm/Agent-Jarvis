@@ -103,11 +103,12 @@ export type ChatDelta =
   // the plain notice when they are not (CR-20260915-entity-proposal-card).
   | { type: "entity_pending"; title: string; what: "entity"; name: string }
   | { type: "entity_pending"; title: string; what: "update"; id?: string; field?: string; value?: string }
-  // REQ-F-102 (CR-20260912-stage-reach): move the display screen between its two session
+  // REQ-F-102 (CR-20260912-stage-reach): move the display screen between its session
   // stages. Transient by design — the board is deliberately NOT a persisted display_state
   // value (CR-20260912-display-stage rejected that), so the only way a tool can reach it
-  // is a message that travels once and is not stored.
-  | { type: "display_stage"; stage: "opening" | "board" };
+  // is a message that travels once and is not stored. `competitor-board` follows the same
+  // reasoning (CR-20260918-competitor-board).
+  | { type: "display_stage"; stage: "opening" | "board" | "competitor-board" };
 
 export type ChatMessage = {
   role: "system" | "user" | "assistant" | "tool";
