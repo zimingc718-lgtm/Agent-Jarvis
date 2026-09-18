@@ -66,7 +66,11 @@
     "CR-20260915-sweep-interval-edit",
     "CR-20260915-board-card-lifecycle",
     "CR-20260915-document-display",
-    "CR-20260915-entity-proposal-card"
+    "CR-20260915-entity-proposal-card",
+    "CR-20260918-library-in-board",
+    "CR-20260918-change-history-and-sources",
+    "CR-20260918-competitor-board",
+    "CR-20260918-industry-spec-comparison"
   ],
   "tests": [
     {
@@ -1413,6 +1417,60 @@
       "date": "2026-09-17",
       "entry": "user",
       "notes": "上传入口收敛为一个按钮（REQ-F-020 ⑧，机器（UI）：fireEvent.keyDown 驱动键盘打开菜单，aria-expanded 正确翻转）。真实入口：node scripts/probe-unified-upload-entry.mjs，真实浏览器点击「上传」展开菜单，「文件夹」「zip 压缩包」两个选项各自弹出正确的系统选择器；文件夹一侧选一个探针自建的一次性目录，真实注册出技能后立即用既有删除入口清理。"
+    },
+    {
+      "id": "TEST-452",
+      "result": "PASS",
+      "command": "npx vitest run tests/knowledge-dashboard.test.tsx tests/library-panel.test.tsx",
+      "real_entry": false,
+      "date": "2026-09-18",
+      "entry": "assistant",
+      "notes": "看板「资料库」板块改名与内嵌浏览（REQ-F-242 ⑥）。全量 38/38（knowledge-dashboard 29 例 + library-panel 9 例零回归）。真实入口 TEST-453（scripts/probe-library-in-board.mjs）已写好，按四条并行Wave-1 CR 的编排边界未在本分支执行，见 CR 文档与测试说明书「变更响应 · CR-20260918-library-in-board」。"
+    },
+    {
+      "id": "TEST-457",
+      "result": "PASS",
+      "command": "npx vitest run tests/entity-history.test.ts tests/sources.test.ts tests/entity-route.test.ts tests/knowledge-dashboard.test.tsx",
+      "real_entry": false,
+      "date": "2026-09-18",
+      "entry": "assistant",
+      "notes": "消息清单（REQ-F-244）。真实入口 scripts/probe-change-history-and-sources.mjs 已写好，按并行编排边界未在本分支执行，见测试说明书「变更响应 · CR-20260918-change-history-and-sources」。"
+    },
+    {
+      "id": "TEST-458",
+      "result": "PASS",
+      "command": "npx vitest run tests/entity-tools.test.ts",
+      "real_entry": false,
+      "date": "2026-09-18",
+      "entry": "assistant",
+      "notes": "add_source 工具（REQ-F-245）。"
+    },
+    {
+      "id": "TEST-459",
+      "result": "PASS",
+      "command": "npx vitest run tests/knowledge-dashboard.test.tsx",
+      "real_entry": false,
+      "date": "2026-09-18",
+      "entry": "assistant",
+      "notes": "来源弹窗配置（REQ-F-245）。真实入口同 TEST-457，待编排会话在 build:local/serve:local 上执行。"
+    },
+    {
+      "id": "TEST-456",
+      "result": "PASS",
+      "command": "npx vitest run tests/tool-suites.test.ts tests/stage-reach.test.tsx tests/competitor-board.test.tsx",
+      "real_entry": false,
+      "date": "2026-09-18",
+      "entry": "assistant",
+      "notes": "友商对比看板（REQ-F-243）。工具事件 + 展示屏阶段可达性 + 组件渲染四态，23 个目标用例通过，全量套件绿。真实入口 scripts/probe-competitor-board.mjs 已写好，按并行编排边界未在本分支执行，见测试说明书「变更响应 · CR-20260918-competitor-board」。"
+    },
+    {
+      "id": "TEST-470",
+      "result": "PASS",
+      "command": "npx vitest run tests/industry-spec-comparison.test.tsx tests/tool-suites.test.ts tests/stage-reach.test.tsx",
+      "real_entry": false,
+      "date": "2026-09-18",
+      "entry": "assistant",
+      "notes": "行业技术指标对比（REQ-F-250）。全量 91 个测试文件、838 个用例绿（fork 自报）；协调会话合并后重新跑过受影响的 4 个测试文件（29/29 通过），确认与 competitor-board 合并后仍然共存。真实入口 scripts/probe-industry-spec-comparison.mjs 已写好，按并行编排边界未在本分支执行，见测试说明书「变更响应 · CR-20260918-industry-spec-comparison」。"
     }
   ],
   "executed_commands": [
@@ -1664,7 +1722,15 @@
     "npx vitest run  (88 files / 788 tests passed)",
     "python -m unittest tests.test_governance  (139 tests / 25 subtests passed)",
     "node scripts/check-module-graph.mjs  (OK MODULE_GRAPH_PASS 109 files, 0 cycle, 0 layering, 0 client leak)",
-    "python tools/governance.py check-index  (OK INDEX_PASS)"
+    "python tools/governance.py check-index  (OK INDEX_PASS)",
+    "npx tsc --noEmit  (OK no output)",
+    "npx vitest run tests/knowledge-dashboard.test.tsx tests/library-panel.test.tsx  (OK 38/38 passed)",
+    "npx tsc --noEmit -p .  (OK 0 errors)",
+    "npx vitest run  (841/842 passed, 1 verified pre-existing flake, see evidence doc section 2)",
+    "npx tsc --noEmit  (OK 0 errors)",
+    "npx vitest run tests/tool-suites.test.ts tests/stage-reach.test.tsx tests/competitor-board.test.tsx  (OK 23/23 passed)",
+    "npx tsc --noEmit -p .  (OK 0 errors, post-merge-resolution recheck)",
+    "npx vitest run tests/stage-reach.test.tsx tests/tool-suites.test.ts tests/competitor-board.test.tsx tests/industry-spec-comparison.test.tsx  (OK 29/29 passed, post-merge-resolution recheck)"
   ],
   "known_warnings": [
     {

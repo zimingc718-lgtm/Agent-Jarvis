@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { KnowledgeDashboard } from "@/components/KnowledgeDashboard";
 import { OrgChartBoard } from "@/components/OrgChartBoard";
+import { IndustrySpecComparison } from "@/components/IndustrySpecComparison";
+import { CompetitorBoard } from "@/components/CompetitorBoard";
 import { Archive, ArrowLeft, ShieldAlert } from "lucide-react";
 import { ModelSettings } from "@/components/ModelSettings";
 import type { ProviderTemplate } from "@/lib/providers";
@@ -124,7 +126,13 @@ export function DisplayScreen({
   const [archiveNote, setArchiveNote] = useState<string | null>(null);
   const [archiving, setArchiving] = useState(false);
   const [view, setView] = useState<DisplayView>(initial);
-  /** `opening` is the title screen; `board` is the knowledge board (出口义务 1). */
+  /**
+   * `opening` is the title screen; `board` is the knowledge board (出口义务 1);
+   * `competitor-board` is the friend-comparison table (CR-20260918-competitor-board);
+   * `industry-spec-comparison` is the cross-kind technical-indicator table
+   * (CR-20260918-industry-spec-comparison); `org-chart-board` is the org-chart/people
+   * board (CR-20260918-org-chart-board).
+   */
   const [stage, setStage] = useState<DisplayStage>("opening");
   const stageRef = useRef(stage);
   stageRef.current = stage;
@@ -159,7 +167,12 @@ export function DisplayScreen({
   useEffect(() => {
     const onStage = (event: Event) => {
       const stage = (event as CustomEvent<{ stage?: DisplayStage }>).detail?.stage;
-      if (stage === "board" || stage === "org-chart-board") {
+      if (
+        stage === "board" ||
+        stage === "competitor-board" ||
+        stage === "industry-spec-comparison" ||
+        stage === "org-chart-board"
+      ) {
         rememberOpeningPlayed();
         setStage(stage);
       } else if (stage === "opening") {
@@ -380,6 +393,30 @@ export function DisplayScreen({
             onAsk={(question) => window.dispatchEvent(new CustomEvent(ASK_JARVIS_EVENT, { detail: { text: question } }))}
           />
         </div>
+      </div>
+    );
+  }
+
+  // 友商看板：同一套「不落数据库、纯会话态」的道理（CR-20260918-competitor-board）。
+  if (stage === "competitor-board") {
+    return (
+      <div
+        className="display-screen display-screen--competitor-board fixed inset-x-0 top-0 z-0 overflow-y-auto bg-background"
+        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
+      >
+        <CompetitorBoard />
+      </div>
+    );
+  }
+
+  // 行业技术指标对比：同一套「会话态切换、不落数据库」的道理（CR-20260918-industry-spec-comparison）。
+  if (stage === "industry-spec-comparison") {
+    return (
+      <div
+        className="display-screen display-screen--industry-spec-comparison fixed inset-x-0 top-0 z-0 overflow-y-auto bg-background"
+        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
+      >
+        <IndustrySpecComparison />
       </div>
     );
   }

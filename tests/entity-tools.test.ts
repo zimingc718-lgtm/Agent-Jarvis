@@ -55,6 +55,7 @@ describe("entity tools", () => {
       propose: byName("propose_entity"),
       proposeUpdate: byName("propose_entity_update"),
       proposePerson: byName("propose_person"),
+      addSourceTool: byName("add_source"),
       extract: byName("extract_fields"),
     };
   };
@@ -64,12 +65,15 @@ describe("entity tools", () => {
     for (const tool of createEntityTools({ root })) {
       expect(() => registry.register(tool)).not.toThrow();
     }
+    // add_source 不发起任何网络请求（只登记网址，真正抓取由 fetch_source/巡检负责），
+    // 所以联网开关关闭时它仍在场，只有 fetch_source 一个因为 available 依赖 webEnabled 而缺席。
     expect(registry.availableFor(context).map((t) => t.name)).toEqual([
       "list_entities",
       "read_entity",
       "propose_entity",
       "propose_entity_update",
       "propose_person",
+      "add_source",
       "extract_fields",
     ]);
   });
@@ -293,5 +297,28 @@ describe("entity tools", () => {
       context
     );
     expect(direct.events).toBeUndefined();
+  });
+
+  it("⑫ add_source：登记成功、重复登记报错、对象不存在报错——都不核实内容，只登记网址", async () => {
+    const { addSourceTool } = tools();
+
+    const ok = await addSourceTool.execute({ name: "友商-b", url: "https://b.example/press" }, context);
+    expect(ok.ok).toBe(true);
+    expect(ok.sources?.[0]).toMatchObject({ url: "https://b.example/press" });
+    expect((await readEntity("友商-b", root))?.sources).toContain("https://b.example/press");
+
+    // tso-a 已经在 beforeEach 里登记过 https://tso-a.example/rules——重复登记是数据层
+    // EntityError("该源已存在。")，工具原样转述，不吞掉。
+    const dup = await addSourceTool.execute({ name: "tso-a", url: "https://tso-a.example/rules" }, context);
+    expect(dup.ok).toBe(false);
+    expect(dup.summary).toBe("未登记");
+
+    const missing = await addSourceTool.execute({ name: "没有这个对象", url: "https://x.example" }, context);
+    expect(missing.ok).toBe(false);
+    expect(missing.summary).toBe("对象不存在：没有这个对象");
+
+    const badArgs = await addSourceTool.execute({ name: "友商-b" }, context);
+    expect(badArgs.ok).toBe(false);
+    expect(badArgs.summary).toBe("参数缺失");
   });
 });
