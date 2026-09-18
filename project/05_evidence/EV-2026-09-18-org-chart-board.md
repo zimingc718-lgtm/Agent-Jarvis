@@ -33,13 +33,21 @@
 2. `tests/floating-chat.test.tsx`「④ a registration receipt that excludes files says so」——单独重跑通过；本 CR 未触碰 `FloatingChat.tsx`，与 Wave 1 `CR-20260918-competitor-board` 证据文件记录的同一个已知资源争用现象一致。
 3. `tests/ingest-extract-chain.test.ts`「extract_fields 失败时的 summary 带得走原因」——**单独重跑仍然失败，这是本 fork 真实引入的一处回归，已定位并修正**：该测试文件用固定数组下标 `createEntityTools({...})[5]` 取 `extract_fields` 工具，本 CR 在数组中间插入了新工具 `propose_person`（下标 4），导致下标 5 从 `extract_fields` 变成 `fetch_source`，测试因此拿错工具、断言失败。修正为按工具名 `.find()` 查找，不再依赖数组下标；顺带把 `tests/entity-tools.test.ts` 里同样存在的固定下标解构也一并改成按名查找，防止未来再有工具插入时重犯同一个错误。修正后二次全量跑（见上）91 文件全绿，**含这两处修正过的文件本身**。
 
-## 3. 真实入口（本 CR 交付时未执行，留给协调会话）
+## 3. 真实入口（协调会话已执行，结果 PASS）
 
-`scripts/probe-org-chart-board.mjs` 已写好、`node --check` 语法核对通过，但**本 fork 按约定不得触碰共享的生产服务器**（Wave 2/3 并行开发，服务器是单一共享资源），因此未实际执行。
+- 来源: `scripts/probe-org-chart-board.mjs`
+- 时间: 2026-09-18
+- 采集者: 协调会话（claude-sonnet-5），针对用户本机 `npm run build:local && npm run serve:local`（端口 3000，全部 7 条 2026-09-18 批次 CR 均已合并）的真实生产构建服务
+- 输出:
+  ```
+  ①流式结束=true，组织架构看板出现=true
+  ②流式结束=true，回复提到待采纳/测试字样=true
+  已尝试清理探针写入的待采纳测试记录（若失败需人工在看板上核对并清理）。
+  PASS 组织架构看板可由对话唤起；propose_person 在无可信来源时正确走待采纳分支
+  ```
+- 判定: **PASS**
 
-探针分两步，且刻意避免向用户真实追踪的"维谛"对象写入编造数据（脚本内注释详述设计考虑）：①要求展示屏切到组织架构看板（不要求任何真实人员数据，空态也是合法通过条件）；②要求用一个几乎不可能已被登记为"维谛"可信来源的域名（`example.com`）登记一条明确标注"探针测试勿采纳"的占位记录，核对它是否正确进入待采纳区而非直接生效，并在探针末尾尝试通过真实对话请求清理这条测试记录。
-
-**这是本 CR 唯一尚未闭环的部分**：数据模型与展示机制的正确性已经由代码核对与新增测试确认，但"真实模型在被这样要求时，会不会正确调用 `show_org_chart_board`/`propose_person`，服务是否真的把待采纳记录正确挡在看板之外"，只有真实入口能回答。收口本 CR 时需要在用户自己那台（`npm run build:local && npm run serve:local`）实际跑一次这个探针，并把结果补进本证据文件；若探针在清理步骤未能成功移除测试记录，需要人工在知识看板的待采纳区核对并手动清理。
+**清理独立核实**：探针自己只是"尝试"清理（通过对话请求模型忽略测试提议），不保证真的成功。协调会话额外直接查询 `GET /api/entities`，确认 `pending` 与 `proposals` 两个数组均为空——"维谛"对象上没有留下任何编造的人名/职位测试痕迹，清理是真的成功，不是探针自己说了算。
 
 ## 4. 局限（如实登记）
 

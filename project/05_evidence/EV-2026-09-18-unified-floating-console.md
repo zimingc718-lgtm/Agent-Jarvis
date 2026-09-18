@@ -58,19 +58,19 @@ fork 同时跑测试造成的资源争用曾让 `④ a registration receipt that
 **53 项全过，0 失败**。`node scripts/check-module-graph.mjs`：112 文件扫描，0 环、0 分层违规、
 0 客户端/服务端违规。`python -m unittest tests.test_governance`：**140 个用例全绿**。
 
-## 3. 真实入口（未执行——如实登记）
+## 3. 真实入口（协调会话已执行，结果 PASS）
 
-`scripts/probe-unified-floating-console.mjs` 已写好待用：驱动真实 Chromium，核对①
-`.floating-chat__status` 一行内同时含状态灯、上传、模型/技能/工具/资料库四个入口；②
-打开「资料库」面板后，收拢态与展开一次对话后的展开态下，`.display-screen--settings`
-容器的 `getBoundingClientRect().bottom` 都贴到视口高度（不留让位空白）。
-
-**本次未执行**：本 fork 按上级会话划定的边界，不接触共享 3000 端口服务（`npm run
-build:local` / `npm run serve:local`），也不运行需要它的探针脚本——4 个并行 fork 同时抢
-同一个生产构建 + 服务会互相冲突。真实入口验证的执行责任交给编排本批次的上级会话，在
-整合四条并行 CR 之后统一跑一次。**这一步在补上之前，本 CR 不构成 CLOSED 状态所需的完整
-证据**——组件测试与静态检查只能证明"代码按预期的 DOM/CSS 断言工作"，不能替代
-CLAUDE.md 要求的真实入口验收。
+- 来源: `scripts/probe-unified-floating-console.mjs`
+- 时间: 2026-09-18
+- 采集者: 协调会话（claude-sonnet-5），针对用户本机 `npm run build:local && npm run serve:local`（端口 3000，全部 7 条 2026-09-18 批次 CR 均已合并、含合并期对 competitor-board/industry-spec-comparison/org-chart-board 三个新视图的 `inset-0` 一致性touch-up）的真实生产构建服务
+- 输出:
+  ```
+  状态灯/上传/模型/技能/工具/资料库同一行=true
+  收拢态下资料库面板贴到视口底部（不让位）=true（bottom=900, viewport=900）
+  展开态下资料库面板仍贴到视口底部（不让位）=true（bottom=900）
+  PASS 非首页视图全悬浮，控制台入口收拢为一行
+  ```
+- 判定: **PASS**——两个 CP 的核对项全部通过，收拢态与展开态两种情形都验证过。本 CR 现在构成 CLOSED 状态所需的完整证据。
 
 ## 4. 局限（如实登记）
 

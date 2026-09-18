@@ -13,7 +13,7 @@
 | `npx tsc --noEmit` | 0 错误 |
 | `npx vitest run tests/tool-suites.test.ts tests/stage-reach.test.tsx tests/competitor-board.test.tsx` | **23 passed / 3 files** |
 | `npx vitest run`（全量） | 全绿，唯一例外见下「测试基础设施噪音」一节，与本 CR 无关 |
-| **真实入口** | 未执行——本 CR 按 fork 边界禁止启动或探测共享的 3000 端口生产服务；`scripts/probe-competitor-board.mjs` 已写好、未运行，留给合并会话或用户在 `npm run build:local && npm run serve:local` 上执行 |
+| **真实入口** | **已在生产构建上执行，PASS**（`node scripts/probe-competitor-board.mjs`，2026-09-18，协调会话，端口 3000）——真实模型调用 `show_competitor_board` 后展示屏切到友商看板；真实数据下已跟踪 4 家友商（台达-delta、施耐德电气 Schneider、维谛技术-vertiv、英维克 Envicool）列头全部对得上 `/api/entities`；真实数据里没有两家友商共享同一参数名，共享维度核对如实跳过、未伪造场景；未登记参数的友商正确显示占位说明 |
 
 ## 2. 实现落点
 

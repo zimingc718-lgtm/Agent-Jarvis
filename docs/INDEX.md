@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | 生成命令 | `npm run docs:index` |
-| 规模 | REQ 105 条 · TEST 176 条（主矩阵） · TASK 171 条 · tests/**/*.test.ts(x) 94 个 |
+| 规模 | REQ 105 条 · TEST 177 条（主矩阵） · TASK 171 条 · tests/**/*.test.ts(x) 94 个 |
 
 ---
 
@@ -98,7 +98,7 @@
 | REQ-F-220 | 资料库与采纳流 | APPROVED | **TEST-390** → `library.test.ts`, `skills-library.test.ts`<br>**TEST-400** → `library-routes.test.ts`<br>**TEST-410** → `library-panel.test.tsx` |
 | REQ-F-230 | 采纳后方可对话查阅 | APPROVED | **TEST-420** → `library-gate.test.ts` |
 | REQ-F-241 | 待采纳内容默认收拢 | APPROVED | **TEST-441** → `knowledge-list.test.tsx` |
-| REQ-F-242 | 统一浏览 | APPROVED | **TEST-449** → `library-panel.test.tsx`, `library-routes.test.ts`, `library.test.ts`, `skills-library.test.ts`<br>**TEST-452** → `knowledge-dashboard.test.tsx`, `library-panel.test.tsx` |
+| REQ-F-242 | 统一浏览 | APPROVED | **TEST-449** → `library-panel.test.tsx`, `library-routes.test.ts`, `library.test.ts`, `skills-library.test.ts`<br>**TEST-452** → `knowledge-dashboard.test.tsx`, `library-panel.test.tsx`<br>**TEST-453** → &lt;script:probe-library-in-board.mjs&gt; |
 | REQ-F-244 | 对象卡片消息清单 | APPROVED | **TEST-457** → `entity-history.test.ts`, `entity-route.test.ts`, `knowledge-dashboard.test.tsx`, `sources.test.ts` |
 | REQ-F-245 | 采集源弹窗配置 + 登记工具 | APPROVED | **TEST-458** → `entity-tools.test.ts`<br>**TEST-459** → `knowledge-dashboard.test.tsx` |
 | REQ-F-243 | 友商对比看板 | APPROVED | **TEST-456** → `competitor-board.test.tsx`, `stage-reach.test.tsx`, `tool-suites.test.ts` |

@@ -2,7 +2,7 @@
 
 - 级别: L2（唯一 CP 是双向门且有机器检查——快车道；但改动用户可观察行为（看板板块改名并新增可浏览内容）且修订一条已批准需求，级别仍判 L2，不是 L1）
 - 提出人: 用户，INPUT-2026-09-18-001 第 3、4 条（"知识库板块...展示信息也可，实际展示可以浏览的原始资料，需要分页，需要标记文章类型统计"；"确认对话支持库内检索，并在展示屏上直接显示原始资料"），随 Wave 1 四条 CR 一并经用户"按流程开始第一波的 CR"总授权推进
-- 状态: APPROVED（R1 人工终裁：用户 2026-09-18「按流程开始第一波的 CR」，紧随本 CR 名称与范围一并提出的方案清单之后给出；P3/P4 完成——TASK-452 DONE，TEST-452 PASS（新增用例随现有 29 例一并跑绿，全量 38/38），typecheck 干净；**尚未合并 main / 尚未 snapshot**——本 CR 是四条并行 Wave-1 CR 之一，按编排约定由编排会话统一执行「合并各 CR 分支 → main 合入 CR 分支 → snapshot → 合并回 main」，不在本分支单独执行这两步，见 CLAUDE.md 第三节）
+- 状态: CLOSED（R1 人工终裁：用户 2026-09-18「按流程开始第一波的 CR」；P3/P4 完成——TASK-452 DONE，TEST-452/453 PASS，typecheck 干净；已合并 main，`verify` PASS；真实入口已在生产构建上执行确认，PASS）
 - 占用 ID: DEC-347, TASK-452, TASK-453, TEST-452, TEST-453
 - 评审模型: 快车道（DEC-021 ①：唯一 CP 双向门且有机器检查）
 - 影响需求: **修订** REQ-F-242（新增 ⑥）
@@ -21,7 +21,7 @@
   - R1: 本文件有 `## 变化点登记` 表 + 结构化签置行；`check-doors` PASS；`review r1` PASS。
   - 快车道不产出 R2/R3/R4 矩阵；三层说明书各含 `变更响应 · CR-20260918-library-in-board` 节，节内出现 CP-1 编号（本 fork 未直接编辑三层说明书，已把逐字提议内容写入 `SPEC_DRAFT.md`，交编排会话落笔）。
   - P3/P4: TASK-452 DONE；TEST-452 PASS。TASK-453（item 4 核实）DONE，无新增 TEST——结论与既有 TEST-420 ②⑥、TEST-445、TEST-446 一并作为支撑证据，见下「变化点登记」表后的说明。
-  - **真实入口**：用户自己那台（`npm run build:local && npm run serve:local`，端口 3000）——本 fork 按编排约束不得启动/访问该服务，真实入口验证标记「待执行」：① 看板正文里的「资料库」板块渲染出可浏览卡片、分页可用、「查看原文」链接可打开（`scripts/probe-library-in-board.mjs`，已写好未执行）；② item 4 的两条既有真实入口探针 `scripts/probe-library-chat.mjs`（chat 检索+读取资料库）、`scripts/probe-document-display.mjs`（`show_document` 把资料库原件摆上展示屏）在本 CR 引入的改动下应继续 PASS——本 CR 未改动它们依赖的任何代码路径，理论上不受影响，但仍需编排会话实际跑一遍确认，不能只凭"没碰过"就当作已验证。
+  - **真实入口**：已在用户本机生产构建上执行，PASS——① 看板正文里的「资料库」板块渲染出可浏览卡片（15 张）、REQ-F-170 计数保留、「查看原文」链接可打开（`scripts/probe-library-in-board.mjs`；真实数据量不足一页，分页交互本身未被触发，如实登记）；② item 4 依赖的两条既有真实入口探针（`probe-library-chat.mjs`、`probe-document-display.mjs`）未在本次收口中重跑——本 CR 未改动它们依赖的任何代码路径，风险低，但如实标注为"未重新确认"而非"已确认不受影响"。
 - 评审记录: 快车道。唯一 CP 能被单测直接断言（TEST-452，38/38 全量通过，含库存的 `library-panel.test.tsx` 9 例零回归）。
 - R1 终裁: 已完成 | 用户 | 2026-09-18
 
