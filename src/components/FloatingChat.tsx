@@ -27,9 +27,11 @@ import {
   MessageSquarePlus,
   SendHorizontal,
   Square,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/lib/markdown";
 import { EntityProposalCard, type EntityProposalPayload } from "@/components/EntityProposalCard";
@@ -1180,26 +1182,24 @@ export function FloatingChat({
             accept=".zip,application/zip"
             onChange={handleArchivePicked}
           />
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="floating-chat__upload gap-1.5"
-            onClick={() => folderInputRef.current?.click()}
-          >
-            <FolderUp aria-hidden="true" className="size-4" />
-            上传文件夹
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="floating-chat__upload gap-1.5"
-            onClick={() => archiveInputRef.current?.click()}
-          >
-            <FileArchive aria-hidden="true" className="size-4" />
-            上传 zip
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" variant="ghost" size="sm" className="floating-chat__upload gap-1.5">
+                <Upload aria-hidden="true" className="size-4" />
+                上传
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onSelect={() => folderInputRef.current?.click()}>
+                <FolderUp aria-hidden="true" className="size-4" />
+                文件夹
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => archiveInputRef.current?.click()}>
+                <FileArchive aria-hidden="true" className="size-4" />
+                zip 压缩包
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {hasTranscript ? (
             <Button
