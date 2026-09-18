@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { lookup } from "node:dns/promises";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
+import { appendHistoryEntry } from "./entity-history";
 import { ENTITIES_ROOT, EntityError, readEntity, updateEntity, type Health } from "./entities";
 import { extractReadableText, extractTitle } from "./tools/web-tools";
 import { fetchWithGuardedRedirects, UrlNotAllowedError, type Resolver } from "./tools/url-guard";
@@ -210,5 +211,9 @@ export async function fetchSource(entityName: string, url: string, deps: FetchSo
     { field: "change", value: change, evidence: { url, at, locator: "采集比对" }, now: () => new Date(at) },
     root
   );
+  // The entity's own `change`/`changeAt` stay a single latest line (board glance); this
+  // is the append that gives the card's message list something to show
+  // (CR-20260918-change-history-and-sources, CP-1).
+  await appendHistoryEntry(root, entityName, { at, url, change });
   return { health: "fresh", changed: true, change, detail: `检测到变化：${change}`, at };
 }

@@ -12,15 +12,19 @@ import {
   isReservedParamName,
   listEntities,
   MAX_PARAMS,
+  MAX_PEOPLE,
   listPendingEntities,
   markSeen,
+  normalizePersonName,
   parseEntityFile,
   readEntity,
   removeParam,
+  removePerson,
   removeSource,
   renderEntityFile,
   saveEntity,
   setParam,
+  setPerson,
   slugifyEntityName,
   STALE_AFTER_DAYS,
   updateEntity,
@@ -224,6 +228,7 @@ describe("采集健康度与未读，两个独立的指示", () => {
   it("renderEntityFile 把换行折成空格，不破坏 frontmatter", () => {
     const raw = renderEntityFile({
       params: [],
+      people: [],
       kind: "competitor",
       title: "两\n行",
       summary: "",
@@ -360,5 +365,76 @@ describe("具名技术参数（CR-20260912-technical-spine）", () => {
     expect(isReservedParamName("title")).toBe(true);
     expect(isReservedParamName("Sources")).toBe(true);
     expect(isReservedParamName("LVRT 持续时间")).toBe(false);
+  });
+});
+
+describe("组织架构/研发阵型（CR-20260918-org-chart-board，TEST-480）", () => {
+  let root: string;
+  beforeEach(async () => {
+    root = mkdtempSync(join(tmpdir(), "agent-jarvis-person-"));
+    await saveEntity({ kind: "competitor", title: "维谛" }, root);
+  });
+  afterEach(() => rmSync(root, { recursive: true, force: true }));
+
+  it("① 写入即落到 frontmatter 的 person 行，读回一致", async () => {
+    const summary = await setPerson("维谛", { name: "张三", title: "CTO", team: "研发", bio: "负责整体技术路线" }, root);
+    expect(summary?.people).toEqual([{ name: "张三", title: "CTO", team: "研发", avatarUrl: "", bio: "负责整体技术路线" }]);
+    expect(readFileSync(join(root, "维谛.md"), "utf8")).toContain("person: 张三 | CTO | 研发 |  | 负责整体技术路线");
+    expect((await readEntity("维谛", root))?.people[0]).toMatchObject({ name: "张三", title: "CTO" });
+  });
+
+  it("② 同名再写是更新而不是追加，未给的字段沿用原值", async () => {
+    await setPerson("维谛", { name: "李四", title: "VP", team: "电源事业部", avatarUrl: "https://vertiv.example/li.jpg" }, root);
+    const updated = await setPerson("维谛", { name: "李四", title: "SVP" }, root);
+    expect(updated?.people).toHaveLength(1);
+    // title 显式给了新值；team/avatarUrl 没给，沿用原来的。
+    expect(updated?.people[0]).toEqual({ name: "李四", title: "SVP", team: "电源事业部", avatarUrl: "https://vertiv.example/li.jpg", bio: "" });
+  });
+
+  it("③ 证据按 person:<name> 归档；删人把证据一并带走", async () => {
+    await setPerson(
+      "维谛",
+      { name: "王五", title: "总监", evidence: { url: "https://vertiv.example/team", at: "", locator: "团队页" } },
+      root
+    );
+    expect((await readEntity("维谛", root))?.evidence).toMatchObject([{ field: "person:王五", url: "https://vertiv.example/team" }]);
+    const after = await removePerson("维谛", "王五", root);
+    expect(after?.people).toEqual([]);
+    expect((await readEntity("维谛", root))?.evidence).toEqual([]);
+  });
+
+  it("④ 人员姓名与技术参数各自独立命名空间，证据不会互相覆盖", async () => {
+    await setParam("维谛", { name: "王五", value: "不是人", evidence: { url: "https://vertiv.example/spec", at: "", locator: "" } }, root);
+    await setPerson("维谛", { name: "王五", title: "总监", evidence: { url: "https://vertiv.example/team", at: "", locator: "" } }, root);
+    const entity = await readEntity("维谛", root);
+    expect(entity?.evidence).toHaveLength(2);
+    expect(entity?.evidence.find((e) => e.field === "王五")?.url).toBe("https://vertiv.example/spec");
+    expect(entity?.evidence.find((e) => e.field === "person:王五")?.url).toBe("https://vertiv.example/team");
+  });
+
+  it("⑤ 手写的半行也读得回来：只有姓名和岗位，没有团队/头像/简介", async () => {
+    writeFileSync(join(root, "手写.md"), "---\nkind: competitor\ntitle: 手写\nperson: 只有名字\nperson: 有岗位 | 岗位A\n---\n\n正文", "utf8");
+    const entity = await readEntity("手写", root);
+    expect(entity?.people).toEqual([
+      { name: "只有名字", title: "", team: "", avatarUrl: "", bio: "" },
+      { name: "有岗位", title: "岗位A", team: "", avatarUrl: "", bio: "" },
+    ]);
+  });
+
+  it("⑥ 人员姓名与条数都有上限，空名拒绝", async () => {
+    await expect(setPerson("维谛", { name: "   ", title: "x" }, root)).rejects.toBeInstanceOf(EntityError);
+    for (let index = 0; index < MAX_PEOPLE; index += 1) {
+      await setPerson("维谛", { name: `p${index}`, title: "x" }, root);
+    }
+    await expect(setPerson("维谛", { name: "再来一条", title: "x" }, root)).rejects.toBeInstanceOf(EntityError);
+    // Updating one that already exists is still allowed at the ceiling.
+    await expect(setPerson("维谛", { name: "p0", title: "y" }, root)).resolves.toBeTruthy();
+  });
+
+  it("⑦ 简介是最后一个字段，允许包含「|」（跟 evidence 的 locator 同一处理）；姓名归一化跟参数名同规则", async () => {
+    const summary = await setPerson("维谛", { name: "赵六", title: "经理", bio: "负责 A | B\n两条线" }, root);
+    expect(summary?.people[0].bio).toBe("负责 A | B 两条线");
+    expect((await readEntity("维谛", root))?.people[0].bio).toBe("负责 A | B 两条线");
+    expect(normalizePersonName("  张 三  ")).toBe("张 三");
   });
 });

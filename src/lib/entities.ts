@@ -101,6 +101,33 @@ export const MAX_PARAMS = 60;
 export const MAX_PARAM_NAME_CHARS = 40;
 
 /**
+ * One person in a tracked object's org chart / R&D formation
+ * (CR-20260918-org-chart-board, REQ-F-260). Deliberately a field on `Entity`, not a new
+ * top-level tracked object: the pilot company (维谛) already exists as a `competitor`
+ * entity, and a person only ever makes sense in the context of the company they work
+ * at — there is no cross-company "look up this person" use case in the request that
+ * would justify giving people their own identity independent of the entity that hosts
+ * them (contrast `params`, which the board already treats the same way).
+ */
+export type Person = {
+  name: string;
+  title: string;
+  /** Free-text team/formation label, e.g. 「电源研发」. Empty means unsorted. */
+  team: string;
+  /** External link to a photo. Not locally stored — see DEC-370. */
+  avatarUrl: string;
+  /** One line of positioning, same discipline as the entity's own `summary`. */
+  bio: string;
+};
+
+export const MAX_PEOPLE = 40;
+export const MAX_PERSON_NAME_CHARS = 40;
+
+export function normalizePersonName(raw: string): string {
+  return raw.replace(/[|\r\n]/g, " ").replace(/\s+/g, " ").trim().slice(0, MAX_PERSON_NAME_CHARS);
+}
+
+/**
  * Names that belong to the entity's own structure and therefore may NOT become a
  * parameter. Without this, a caller aiming at a field that simply is not updatable
  * through that path (`title`) would silently get a parameter named 「title」 sitting on
@@ -147,6 +174,8 @@ export type Entity = {
    * nothing re-sorts them, for the same reason the lanes never re-sort.
    */
   params: Param[];
+  /** Org chart / R&D formation (CR-20260918-org-chart-board). Order = insertion order. */
+  people: Person[];
   evidence: Evidence[];
   createdAt: string;
   /** Free notes below the frontmatter. */
@@ -229,6 +258,14 @@ function line(key: string, value: string): string {
   return value ? `${key}: ${value.replace(/\r?\n/g, " ").slice(0, MAX_LINE_CHARS)}\n` : "";
 }
 
+/** See the call site: a person's fields need more than `MAX_LINE_CHARS` of headroom. */
+const MAX_PERSON_LINE_CHARS = 400;
+
+function personLine(p: Person): string {
+  const value = [p.name, p.title, p.team, p.avatarUrl, p.bio].join(" | ").replace(/\r?\n/g, " ").trim();
+  return p.name ? `person: ${value.slice(0, MAX_PERSON_LINE_CHARS)}\n` : "";
+}
+
 export function renderEntityFile(entity: Omit<Entity, "name">): string {
   const head =
     "---\n" +
@@ -246,6 +283,11 @@ export function renderEntityFile(entity: Omit<Entity, "name">): string {
     line("created", entity.createdAt) +
     entity.sources.map((url) => line("source", url)).join("") +
     entity.params.map((p) => line("param", [p.name, p.value, p.status].join(" | "))).join("") +
+    // Own helper, not `line()`: an avatar URL alone can eat most of `MAX_LINE_CHARS`,
+    // and unlike a technical parameter's value, a person's structural fields (name/
+    // title/team/avatarUrl) plus a one-line bio genuinely need more room than 200
+    // chars leaves once a long URL is in the mix.
+    entity.people.map((p) => personLine(p)).join("") +
     entity.evidence.map((e) => line("evidence", [e.field, e.url, e.at, e.locator].join(" | "))).join("") +
     // Its own line, not a fifth segment of `evidence`: a locator is free text that may
     // contain 「|」, so the parser folds everything past the third separator back into it.
@@ -264,6 +306,7 @@ export function parseEntityFile(raw: string, fallback: { name: string; createdAt
   const meta: Record<string, string> = {};
   const sources: string[] = [];
   const params: Param[] = [];
+  const people: Person[] = [];
   const evidence: Evidence[] = [];
   const quotedFields = new Set<string>();
   let body = text;
@@ -286,6 +329,15 @@ export function parseEntityFile(raw: string, fallback: { name: string; createdAt
         const name = normalizeParamName(rawName ?? "");
         if (name && params.length < MAX_PARAMS) {
           params.push({ name, value: rawValue ?? "", status: isParamState(rawStatus) ? rawStatus : "unknown" });
+        }
+      } else if (key === "person") {
+        // `name | title | team | avatarUrl | bio` — bio last so it may itself contain
+        // 「|」 (same trick as `evidence`'s locator: `...rest` re-joins everything past
+        // the fourth separator).
+        const [rawName, title, team, avatarUrl, ...bioRest] = value.split("|").map((part) => part.trim());
+        const name = normalizePersonName(rawName ?? "");
+        if (name && people.length < MAX_PEOPLE) {
+          people.push({ name, title: title ?? "", team: team ?? "", avatarUrl: avatarUrl ?? "", bio: bioRest.join(" | ") });
         }
       } else if (key === "evidence") {
         const [field, url, when, ...rest] = value.split("|").map((part) => part.trim());
@@ -319,6 +371,7 @@ export function parseEntityFile(raw: string, fallback: { name: string; createdAt
     seenAt: meta.seen_at ?? "",
     sources,
     params,
+    people,
     evidence: evidence.map((item) => (quotedFields.has(item.field) ? { ...item, basis: "quoted" as const } : item)),
     createdAt: meta.created || fallback.createdAt,
     body: content,
@@ -466,6 +519,7 @@ export async function saveEntity(input: SaveEntityInput, root: string = ENTITIES
   const sources = (input.sources ?? []).map((url) => url.trim()).filter(Boolean);
   const entity: Omit<Entity, "name"> = {
     params: [],
+    people: [],
     kind: input.kind,
     title: title.slice(0, MAX_TITLE_CHARS),
     summary: (input.summary ?? "").trim(),
@@ -614,6 +668,88 @@ export async function removeParam(entityName: string, paramName: string, root: s
     ...entity,
     params: entity.params.filter((param) => param.name !== target),
     evidence: entity.evidence.filter((e) => e.field !== target),
+  };
+  const { name: _n, ...rest } = next;
+  await writeFile(entityPath(root, entityName), renderEntityFile(rest), "utf8");
+  return summarize(next);
+}
+
+export type SetPersonInput = {
+  name: string;
+  title: string;
+  /** Omitted keeps whatever the row already says. */
+  team?: string;
+  avatarUrl?: string;
+  bio?: string;
+  evidence?: Omit<Evidence, "field">;
+  now?: () => Date;
+};
+
+/**
+ * Write one person into an object's org chart / R&D formation
+ * (CR-20260918-org-chart-board). Matching is by name, same rule as `setParam`: writing
+ * the same name twice UPDATES the row rather than appending a duplicate.
+ *
+ * Evidence is keyed `person:<name>` rather than bare `<name>` — a person and a
+ * technical parameter could otherwise collide on the same name (e.g. someone actually
+ * named 「Capacity」) and silently share one citation.
+ */
+export async function setPerson(entityName: string, input: SetPersonInput, root: string = ENTITIES_ROOT): Promise<EntitySummary | null> {
+  const entity = await readEntity(entityName, root);
+  if (!entity) {
+    return null;
+  }
+  const personName = normalizePersonName(input.name);
+  if (!personName) {
+    throw new EntityError("人员姓名不能为空。", 400);
+  }
+  const at = (input.now ?? (() => new Date()))().toISOString();
+
+  const existing = entity.people.find((person) => person.name === personName);
+  if (!existing && entity.people.length >= MAX_PEOPLE) {
+    throw new EntityError(`一个对象最多 ${MAX_PEOPLE} 条人员，请先清理。`, 409);
+  }
+  const person: Person = {
+    name: personName,
+    title: input.title.replace(/[|\r\n]/g, " ").trim().slice(0, MAX_LINE_CHARS),
+    team: (input.team ?? existing?.team ?? "").replace(/[|\r\n]/g, " ").trim().slice(0, MAX_LINE_CHARS),
+    avatarUrl: (input.avatarUrl ?? existing?.avatarUrl ?? "").trim(),
+    bio: (input.bio ?? existing?.bio ?? "").replace(/[\r\n]/g, " ").trim(),
+  };
+  const people = existing
+    ? entity.people.map((candidate) => (candidate.name === personName ? person : candidate))
+    : [...entity.people, person];
+
+  const evidenceKey = `person:${personName}`;
+  const next: Entity = { ...entity, people };
+  if (input.evidence) {
+    next.evidence = [
+      ...next.evidence.filter((e) => e.field !== evidenceKey),
+      {
+        field: evidenceKey,
+        url: input.evidence.url,
+        at: input.evidence.at || at,
+        locator: input.evidence.locator,
+        basis: input.evidence.basis,
+      },
+    ];
+  }
+  const { name: _n, ...rest } = next;
+  await writeFile(entityPath(root, entityName), renderEntityFile(rest), "utf8");
+  return summarize(next, new Date(at));
+}
+
+/** Removing a person takes their citation with it, same rule as `removeParam`. */
+export async function removePerson(entityName: string, personName: string, root: string = ENTITIES_ROOT): Promise<EntitySummary | null> {
+  const entity = await readEntity(entityName, root);
+  if (!entity) {
+    return null;
+  }
+  const target = normalizePersonName(personName);
+  const next: Entity = {
+    ...entity,
+    people: entity.people.filter((person) => person.name !== target),
+    evidence: entity.evidence.filter((e) => e.field !== `person:${target}`),
   };
   const { name: _n, ...rest } = next;
   await writeFile(entityPath(root, entityName), renderEntityFile(rest), "utf8");

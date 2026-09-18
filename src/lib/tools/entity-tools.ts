@@ -1,4 +1,5 @@
 import {
+  addSource,
   adoptPendingEntity as _adopt,
   ENTITIES_ROOT,
   EntityError,
@@ -82,6 +83,7 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
           entity.summary,
           // Requirements we do not meet are the reason to look at this row at all.
           entity.params.length > 0 ? `参数 ${entity.params.length} 条${entity.unmet > 0 ? `，未对上 ${entity.unmet} 条` : ""}` : "",
+          entity.people.length > 0 ? `组织架构 ${entity.people.length} 人` : "",
           entity.capacity ? `容量 ${entity.capacity}` : "",
           entity.nextDate ? `下一步 ${entity.nextLabel || "里程碑"} ${entity.nextDate}` : "",
           entity.unread ? `未读变更：${entity.change}` : "",
@@ -125,6 +127,14 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
               ...entity.params.map((param) => `- ${param.name} = ${param.value}（我方：${PARAM_STATE_LABEL[param.status]}）`),
             ].join("\n")
           : "技术参数：还没有登记",
+        entity.people.length > 0
+          ? [
+              "组织架构/研发阵型：",
+              ...entity.people.map((person) =>
+                `- ${person.name}｜${person.title}${person.team ? `｜${person.team}` : ""}${person.bio ? `｜${person.bio}` : ""}`
+              ),
+            ].join("\n")
+          : "",
         entity.capacity ? `容量：${entity.capacity}` : "",
         entity.nextDate ? `下一步：${entity.nextLabel || "里程碑"} ${entity.nextDate}` : "",
         entity.change ? `最新变更：${entity.change}（${entity.changeAt}）` : "最新变更：无",
@@ -142,7 +152,9 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
   const propose: ToolDescriptor = {
     name: "propose_entity",
     priority: TOOL_PRIORITY.management,
-    description: "提议把一个对象加入看板跟踪。进入待采纳区，用户采纳后才出现在看板上。参数 kind、title、summary。",
+    description:
+      "提议把一个对象加入看板跟踪。进入待采纳区，用户采纳后才出现在看板上。参数 kind、title、summary。" +
+      "对象被采纳后，可考虑用 web_search 找到其官网或权威媒体页面，确认后用 add_source 登记为采集源。",
     parameters: {
       type: "object",
       properties: {
@@ -307,6 +319,129 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
     },
   };
 
+  const proposePerson: ToolDescriptor = {
+    name: "propose_person",
+    priority: TOOL_PRIORITY.management,
+    description:
+      "提议登记或更新一个对象（公司）组织架构/研发阵型里的一个人：姓名、岗位，可选团队/阵型、简介、头像链接。必须给出来源链接；来源不在该对象已登记的采集源内时进入待采纳区。同名视为更新同一人，不会重复。",
+    parameters: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "对象名称（公司），来自 list_entities" },
+        person_name: { type: "string", description: "人员姓名" },
+        title: { type: "string", description: "岗位/职务" },
+        team: { type: "string", description: "所在团队/研发阵型，如「电源研发」，可选" },
+        avatar_url: { type: "string", description: "头像图片链接，可选" },
+        bio: { type: "string", description: "一句话简介，可选" },
+        source_url: { type: "string", description: "该信息的出处链接" },
+      },
+      required: ["name", "person_name", "title", "source_url"],
+    },
+    available: () => true,
+    async execute(args) {
+      const name = typeof args.name === "string" ? args.name.trim() : "";
+      const personName = typeof args.person_name === "string" ? args.person_name.trim() : "";
+      const title = typeof args.title === "string" ? args.title.trim() : "";
+      const team = typeof args.team === "string" ? args.team.trim() : "";
+      const avatarUrl = typeof args.avatar_url === "string" ? args.avatar_url.trim() : "";
+      const bio = typeof args.bio === "string" ? args.bio.trim() : "";
+      const sourceUrl = typeof args.source_url === "string" ? args.source_url.trim() : "";
+
+      if (!name || !personName || !title || !sourceUrl) {
+        return { ok: false, content: "name、person_name、title、source_url 都是必填。没有来源的人员信息不写入。", summary: "参数缺失" };
+      }
+      const entity = await readEntity(name, root);
+      if (!entity) {
+        return { ok: false, content: `没有名为「${name}」的跟踪对象。`, summary: `对象不存在：${name}` };
+      }
+
+      // Same trust rule as propose_entity_update: only a source the entity already has
+      // registered may write straight through; anything else queues for adoption.
+      let host = "";
+      try {
+        host = new URL(sourceUrl).host;
+      } catch {
+        return { ok: false, content: "source_url 不是合法的链接。", summary: "来源非法" };
+      }
+      const trusted = entity.sources.some((registered) => {
+        try {
+          return new URL(registered).host === host;
+        } catch {
+          return false;
+        }
+      });
+
+      const { proposeEntityUpdate } = await import("../entity-proposals");
+      const record = await proposeEntityUpdate(
+        {
+          name,
+          kind: "person",
+          field: personName,
+          value: JSON.stringify({ title, team, avatarUrl, bio }),
+          evidence: { url: sourceUrl, at: "", locator: "" },
+          basis: "inferred",
+        },
+        { root, autoApply: trusted }
+      );
+      return {
+        ok: true,
+        content: record.applied
+          ? `已登记「${entity.title}」的人员「${personName}」（${title}），来源在该对象已登记的采集源内，直接生效。`
+          : `已提议为「${entity.title}」登记人员「${personName}」（${title}）。来源 ${host} 不在该对象已登记的采集源内，需用户在看板上采纳后才生效。`,
+        summary: `${record.applied ? "登记" : "提议登记"}人员 ${personName}：${entity.title}`,
+        events: record.applied
+          ? undefined
+          : [{ type: "entity_pending", title: entity.title, what: "update", id: record.proposal.id, field: personName, value: title }],
+      };
+    },
+  };
+
+  const addSourceTool: ToolDescriptor = {
+    name: "add_source",
+    priority: TOOL_PRIORITY.management,
+    description:
+      "为一个跟踪对象登记一个采集源（URL）。登记后由巡检机制定期抓取比对，发现变化会计入该对象的消息列表。" +
+      "本工具只登记网址本身，不核实或复述其内容——不构成对任何字段的直接更新，也不需要来源证据（它本身就是来源）。" +
+      "典型用法：先用 web_search 找该对象的官网 / 权威媒体页面，确认像是正式信息来源后用本工具登记。",
+    parameters: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "对象名称，来自 list_entities 或刚创建/采纳的对象" },
+        url: { type: "string", description: "http/https 地址" },
+      },
+      required: ["name", "url"],
+    },
+    // Mirrors the entity data layer's own `addSource`, which has never been gated —
+    // registering a URL to watch is not a fact claim the way a field value is; `fetch_source`
+    // independently fetches and diffs whatever lands here, so a bad URL surfaces as
+    // `failed_fetch`/`parse_failed`, not as false data on the board (see CR doc 选择理由).
+    available: () => true,
+    async execute(args) {
+      const name = typeof args.name === "string" ? args.name.trim() : "";
+      const url = typeof args.url === "string" ? args.url.trim() : "";
+      if (!name || !url) {
+        return { ok: false, content: "name 与 url 都是必填。", summary: "参数缺失" };
+      }
+      try {
+        const entity = await addSource(name, url, root);
+        if (!entity) {
+          return { ok: false, content: `没有名为「${name}」的跟踪对象。`, summary: `对象不存在：${name}` };
+        }
+        return {
+          ok: true,
+          content: `已为「${entity.title}」登记采集源 ${url}，下次巡检会开始抓取比对。`,
+          summary: `登记采集源：${entity.title}`,
+          sources: [{ url, title: entity.title }],
+        };
+      } catch (error) {
+        if (error instanceof EntityError) {
+          return { ok: false, content: error.message, summary: "未登记" };
+        }
+        throw error;
+      }
+    },
+  };
+
   const collect: ToolDescriptor = {
     name: "fetch_source",
     priority: TOOL_PRIORITY.management,
@@ -424,5 +559,5 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
     },
   };
 
-  return [list, read, propose, proposeUpdate, collect, extract];
+  return [list, read, propose, proposeUpdate, proposePerson, addSourceTool, collect, extract];
 }

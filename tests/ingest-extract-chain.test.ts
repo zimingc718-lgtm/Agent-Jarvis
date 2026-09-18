@@ -153,8 +153,13 @@ describe("证据不可伪造：propose_entity_update 的两类字段", () => {
     contextWindow: 128_000,
   };
 
-  const proposeUpdate = () => createEntityTools({ root, knowledgeRoot })[3];
-  const extractTool = () => createEntityTools({ root, knowledgeRoot })[5];
+  // By name, not position: this array has already grown twice in one day
+  // (CR-20260918-change-history-and-sources added add_source, CR-20260918-org-chart-board
+  // added propose_person), each time silently shifting every positional index after the
+  // insertion point and breaking this exact lookup — a fixed index into a growing array
+  // is the wrong contract to depend on.
+  const proposeUpdate = () => createEntityTools({ root, knowledgeRoot }).find((t) => t.name === "propose_entity_update")!;
+  const extractTool = () => createEntityTools({ root, knowledgeRoot }).find((t) => t.name === "extract_fields")!;
 
   beforeEach(async () => {
     root = mkdtempSync(join(tmpdir(), "agent-jarvis-iec-t-"));

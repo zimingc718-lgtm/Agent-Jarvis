@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
-import { ENTITIES_ROOT, EntityError, setParam, updateEntity, type EntitySummary, type UpdatableField } from "./entities";
+import { ENTITIES_ROOT, EntityError, setParam, setPerson, updateEntity, type EntitySummary, type UpdatableField } from "./entities";
 
 /**
  * The approval queue for field changes (EV-2026-09-11-home-dashboard §6).
@@ -24,12 +24,14 @@ export type EntityUpdateProposal = {
   entity: string;
   /**
    * `field` writes one of the seven housekeeping fields; `param` writes a named
-   * technical requirement (CR-20260912-technical-spine). Records written before that CR
-   * carry no `kind` and are read as `field` — the same tolerance the entity files get.
+   * technical requirement (CR-20260912-technical-spine); `person` writes one org-chart
+   * entry (CR-20260918-org-chart-board). Records written before `param` existed carry
+   * no `kind` and are read as `field` — the same tolerance the entity files get.
    */
-  kind: "field" | "param";
-  /** An `UpdatableField` when `kind` is `field`, otherwise the parameter's name. */
+  kind: "field" | "param" | "person";
+  /** An `UpdatableField` when `kind` is `field`, a parameter name, or a person's name. */
   field: string;
+  /** A `person` record's `value` is `JSON.stringify({title, team, avatarUrl, bio})` — the one field here that is not a single scalar. */
   value: string;
   url: string;
   locator: string;
@@ -112,8 +114,8 @@ export function proposalId(entity: string, field: string, createdAt: string): st
 export type ProposeInput = {
   name: string;
   /** Omitted means a housekeeping field, for callers written before the spine change. */
-  kind?: "field" | "param";
-  /** An `UpdatableField`, or a parameter name when `kind` is `param`. */
+  kind?: "field" | "param" | "person";
+  /** An `UpdatableField`, a parameter name, or a person's name. */
   field: UpdatableField | string;
   value: string;
   evidence: { url: string; at: string; locator: string };
@@ -121,7 +123,7 @@ export type ProposeInput = {
   basis?: "quoted" | "inferred";
 };
 
-/** One write, routed by kind. Both paths take the same evidence; neither sets a status. */
+/** One write, routed by kind. All three paths take the same evidence; none sets a status. */
 async function applyProposal(
   proposal: Pick<EntityUpdateProposal, "entity" | "kind" | "field" | "value" | "url" | "locator" | "basis">,
   at: string,
@@ -130,13 +132,27 @@ async function applyProposal(
   // The class travels with the evidence (REQ-F-180 ⑥). Dropping it here is what made the
   // tool's own sentence — 「看板上不会与有据可查的字段同等显示」 — untrue.
   const evidence = { url: proposal.url, at, locator: proposal.locator, basis: proposal.basis ?? "inferred" };
-  return proposal.kind === "param"
-    ? setParam(proposal.entity, { name: proposal.field, value: proposal.value, evidence, now: () => new Date(at) }, root)
-    : updateEntity(
-        proposal.entity,
-        { field: proposal.field as UpdatableField, value: proposal.value, evidence, now: () => new Date(at) },
-        root
-      );
+  if (proposal.kind === "param") {
+    return setParam(proposal.entity, { name: proposal.field, value: proposal.value, evidence, now: () => new Date(at) }, root);
+  }
+  if (proposal.kind === "person") {
+    let parsed: { title?: string; team?: string; avatarUrl?: string; bio?: string };
+    try {
+      parsed = JSON.parse(proposal.value) as typeof parsed;
+    } catch {
+      parsed = {};
+    }
+    return setPerson(
+      proposal.entity,
+      { name: proposal.field, title: parsed.title ?? "", team: parsed.team, avatarUrl: parsed.avatarUrl, bio: parsed.bio, evidence, now: () => new Date(at) },
+      root
+    );
+  }
+  return updateEntity(
+    proposal.entity,
+    { field: proposal.field as UpdatableField, value: proposal.value, evidence, now: () => new Date(at) },
+    root
+  );
 }
 
 export async function proposeEntityUpdate(
@@ -217,7 +233,7 @@ export async function adoptProposal(id: string, root: string = ENTITIES_ROOT): P
     return null;
   }
   const entity = await applyProposal(
-    { ...proposal, kind: proposal.kind === "param" ? "param" : "field" },
+    { ...proposal, kind: proposal.kind === "param" || proposal.kind === "person" ? proposal.kind : "field" },
     proposal.createdAt,
     root
   );

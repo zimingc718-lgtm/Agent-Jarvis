@@ -81,6 +81,68 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
     },
   };
 
+  const orgChartBoard: ToolDescriptor = {
+    name: "show_org_chart_board",
+    priority: TOOL_PRIORITY.normal,
+    description: "把展示屏切到组织架构/研发阵型看板（已登记对象的人员：姓名、岗位、团队、简介）。用户说「看一下某公司的组织架构」「研发阵型」时调用。",
+    parameters: { type: "object", properties: {} },
+    available: () => true,
+    async execute() {
+      // 与 show_board/show_competitor_board 同一条理由：会话态而非持久态，先清到 home
+      // 再靠 display_stage 事件切换，避免和 show_home/show_insight 的持久 display_state
+      // 打架（CR-20260912-display-stage 已经否决过把它做成第四个 display_state 值）。
+      store.setDisplayState({ kind: "home", refId: null });
+      return {
+        ok: true,
+        content: "展示屏已切到组织架构看板。人员信息需要来源链接才能写入——没有来源的名字、岗位不会出现在看板上。",
+        summary: "展示屏 → 组织架构看板",
+        events: [{ type: "display_stage", stage: "org-chart-board" }],
+      };
+    },
+  };
+
+  const industrySpecComparison: ToolDescriptor = {
+    name: "show_industry_spec_comparison",
+    priority: TOOL_PRIORITY.normal,
+    description:
+      "把展示屏切到行业技术指标对比页——横向比较全部已跟踪的友商/规则与准入方/客户三类对象的技术参数。用户说「行业指标对比」「拉个技术指标对比表」「不同厂家的指标放一起看」时调用。与 show_competitor_board 不同：那个只看友商，这个覆盖全部三类跟踪对象。",
+    parameters: { type: "object", properties: {} },
+    available: () => true,
+    async execute() {
+      // 同 show_board 的道理：先清掉可能残留的持久态洞察，这个阶段才会真的显现出来
+      // （REQ-F-102 ②）。
+      store.setDisplayState({ kind: "home", refId: null });
+      return {
+        ok: true,
+        content:
+          "展示屏已切到行业技术指标对比。对比维度取自各对象已登记的技术参数，逐维度谁更优这类判断请直接问我，不会预先写死在表格里。",
+        summary: "展示屏 → 行业技术指标对比",
+        events: [{ type: "display_stage", stage: "industry-spec-comparison" }],
+      };
+    },
+  };
+
+  const competitorBoard: ToolDescriptor = {
+    name: "show_competitor_board",
+    priority: TOOL_PRIORITY.normal,
+    description: "把展示屏切到友商看板（已登记友商的技术参数横向对比表）。用户说「对比一下友商」「友商看板」时调用。",
+    parameters: { type: "object", properties: {} },
+    available: () => true,
+    async execute() {
+      // 与 show_board 同一条理由：会话态而非持久态，先清到 home 再靠 display_stage 事件
+      // 切换，避免和 show_home/show_insight 的持久 display_state 打架（CR-20260912-
+      // display-stage 已经否决过把它做成第四个 display_state 值）。
+      store.setDisplayState({ kind: "home", refId: null });
+      return {
+        ok: true,
+        content:
+          "展示屏已切到友商看板。表格只列已登记的参数原文，逐维度谁更好由你现在问我——我会读这张表现场判断，不会替你把结论写进表格。",
+        summary: "展示屏 → 友商看板",
+        events: [{ type: "display_stage", stage: "competitor-board" }],
+      };
+    },
+  };
+
   const insight: ToolDescriptor = {
     name: "show_insight",
     priority: TOOL_PRIORITY.normal,
@@ -300,5 +362,5 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
     },
   };
 
-  return [home, board, insight, save, archive];
+  return [home, board, competitorBoard, industrySpecComparison, orgChartBoard, insight, save, archive];
 }
