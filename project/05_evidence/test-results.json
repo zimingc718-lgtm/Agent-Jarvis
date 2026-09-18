@@ -70,7 +70,8 @@
     "CR-20260918-library-in-board",
     "CR-20260918-change-history-and-sources",
     "CR-20260918-competitor-board",
-    "CR-20260918-industry-spec-comparison"
+    "CR-20260918-industry-spec-comparison",
+    "CR-20260918-org-chart-board"
   ],
   "tests": [
     {
@@ -1471,6 +1472,15 @@
       "date": "2026-09-18",
       "entry": "assistant",
       "notes": "行业技术指标对比（REQ-F-250）。全量 91 个测试文件、838 个用例绿（fork 自报）；协调会话合并后重新跑过受影响的 4 个测试文件（29/29 通过），确认与 competitor-board 合并后仍然共存。真实入口 scripts/probe-industry-spec-comparison.mjs 已写好，按并行编排边界未在本分支执行，见测试说明书「变更响应 · CR-20260918-industry-spec-comparison」。"
+    },
+    {
+      "id": "TEST-480",
+      "result": "PASS",
+      "command": "npx vitest run tests/entities.test.ts tests/entity-tools.test.ts tests/org-chart-board.test.tsx tests/tool-suites.test.ts tests/stage-reach.test.tsx",
+      "real_entry": false,
+      "date": "2026-09-18",
+      "entry": "assistant",
+      "notes": "组织架构/研发阵型看板（REQ-F-260）。18 个新增/改动用例（fork 自报）；协调会话合并后重新跑过完整受影响集合（99/99 通过），并做过一次全量套件复核（872/873，唯一失败为已知资源争用 flake，隔离单跑通过）。合并期额外发现：change-history-and-sources 与 org-chart-board 各自独立给同一个「新工具插入 createEntityTools() 数组导致固定下标测试错位」的latent bug 打了补丁，一个用按名查找（稳健），一个用新固定下标（本次合并后会再次错位）——协调会话保留了按名查找的版本。真实入口 scripts/probe-org-chart-board.mjs 已写好，按并行编排边界未在本分支执行，见测试说明书「变更响应 · CR-20260918-org-chart-board」。"
     }
   ],
   "executed_commands": [
@@ -1730,7 +1740,10 @@
     "npx tsc --noEmit  (OK 0 errors)",
     "npx vitest run tests/tool-suites.test.ts tests/stage-reach.test.tsx tests/competitor-board.test.tsx  (OK 23/23 passed)",
     "npx tsc --noEmit -p .  (OK 0 errors, post-merge-resolution recheck)",
-    "npx vitest run tests/stage-reach.test.tsx tests/tool-suites.test.ts tests/competitor-board.test.tsx tests/industry-spec-comparison.test.tsx  (OK 29/29 passed, post-merge-resolution recheck)"
+    "npx vitest run tests/stage-reach.test.tsx tests/tool-suites.test.ts tests/competitor-board.test.tsx tests/industry-spec-comparison.test.tsx  (OK 29/29 passed, post-merge-resolution recheck)",
+    "npx tsc --noEmit -p .  (OK 0 errors, org-chart-board post-merge-resolution recheck)",
+    "npx vitest run tests/entity-tools.test.ts tests/ingest-extract-chain.test.ts tests/stage-reach.test.tsx tests/tool-suites.test.ts tests/competitor-board.test.tsx tests/industry-spec-comparison.test.tsx tests/org-chart-board.test.tsx tests/entities.test.ts  (OK 99/99 passed, post-merge-resolution recheck)",
+    "npx vitest run  (872/873 passed, full-suite recheck after the 3-way DisplayStage/entity-tools merge; the 1 failure is the known floating-chat.test.tsx resource-contention flake, isolated rerun passed in 122ms)"
   ],
   "known_warnings": [
     {
