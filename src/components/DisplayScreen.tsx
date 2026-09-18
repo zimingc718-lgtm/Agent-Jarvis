@@ -397,8 +397,7 @@ export function DisplayScreen({
   if (stage === "competitor-board") {
     return (
       <div
-        className="display-screen display-screen--competitor-board fixed inset-x-0 top-0 z-0 overflow-y-auto bg-background"
-        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
+        className="display-screen display-screen--competitor-board fixed inset-0 z-0 overflow-y-auto bg-background"
       >
         <CompetitorBoard />
       </div>
@@ -409,8 +408,7 @@ export function DisplayScreen({
   if (stage === "industry-spec-comparison") {
     return (
       <div
-        className="display-screen display-screen--industry-spec-comparison fixed inset-x-0 top-0 z-0 overflow-y-auto bg-background"
-        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
+        className="display-screen display-screen--industry-spec-comparison fixed inset-0 z-0 overflow-y-auto bg-background"
       >
         <IndustrySpecComparison />
       </div>
@@ -421,8 +419,7 @@ export function DisplayScreen({
   if (stage === "org-chart-board") {
     return (
       <div
-        className="display-screen display-screen--org-chart-board fixed inset-x-0 top-0 z-0 overflow-y-auto bg-background"
-        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
+        className="display-screen display-screen--org-chart-board fixed inset-0 z-0 overflow-y-auto bg-background"
       >
         <OrgChartBoard />
       </div>
