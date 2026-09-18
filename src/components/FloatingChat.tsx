@@ -82,23 +82,30 @@ const STEP_STATE_MARK: Record<NonNullable<FloatingMessage["stepState"]>, string>
 };
 
 /**
- * The height the display screen should yield for (REQ-F-240, DEC-240 ④-修订).
+ * The console's own "chrome" height — status row, panel/usage row, input form —
+ * excluding the transcript (REQ-F-200 ④, DEC-340).
  *
  * `rootHeight` is the console's own full measured height; `transcriptHeight` is the
  * transcript block's own measured height (0 when it is unmounted or tucked away to
- * `max-h-0`). Subtracting gives the height of everything that is *always* on screen —
- * the status row, the panel/usage row, the input form — which is what the display
- * screen actually needs to leave a permanent gap for.
+ * `max-h-0`). Subtracting gives the height of everything that is *always* on screen.
  *
- * The transcript itself is deliberately **not** subtracted from — sorry, **not** part of
- * the yielded amount: when it grows (expanded, mid-conversation, up to 50–58vh), the
- * console's own `z-20` already draws it over the display screen's `z-0` content, so it
- * doesn't need floor space cleared for it. Publishing the *full* height here (the
- * pre-2026-09-15 behaviour) made the display screen leave a gap sized to whatever the
- * transcript happened to be — full width, not just the console's own centered 768px
+ * The transcript itself is deliberately **not** part of the computed amount: when it
+ * grows (expanded, mid-conversation, up to 50–58vh), the console's own `z-20` already
+ * draws it over the display screen's `z-0` content. Publishing the *full* height here
+ * (the pre-2026-09-15 behaviour) made the display screen leave a gap sized to whatever
+ * the transcript happened to be — full width, not just the console's own centered 768px
  * column, so content the console was nowhere near got clipped too
  * (`CR-20260915-console-menu-consolidation`, item 10 — the exact complaint was "not
  * pushed content, but content that has nothing to do with the dialog gets covered too").
+ *
+ * As of `CR-20260918-unified-floating-console` (DEC-348) no `DisplayScreen` view reads
+ * `--jarvis-console-h` any more — every view floats fully (`fixed inset-0`), matching
+ * what the home view already did. This function and the effect below that publishes its
+ * result are kept anyway: removing them is a separate, larger change (it would touch
+ * REQ-F-200 ④'s own existing test coverage beyond this CR's two items) and continuing
+ * to publish the value costs nothing. A future CR can retire this cleanly if nothing
+ * ever needs it.
+ *
  * Exported for the unit test.
  */
 export function collapsedConsoleHeight(rootHeight: number, transcriptHeight: number): number {
@@ -1081,11 +1088,13 @@ export function FloatingChat({
   }
 
   /**
-   * 把控制台**收拢态**的高度发布给展示屏（REQ-F-240，DEC-240 ④-修订）。
+   * 把控制台**收拢态**的高度发布为 `--jarvis-console-h`（REQ-F-200 ④，DEC-340）。
    *
-   * 只让展示屏为「始终在屏幕上」的那部分（状态行、面板/用量行、输入框）让出空间——不
-   * 为记录区让。记录区展开时靠控制台自身的 `z-20` 盖在展示屏 `z-0` 内容之上，不需要
-   * 展示屏主动清场：这正是「浮在内容上，不挤走内容」的做法，而不是反过来靠展示屏收窄。
+   * `CR-20260918-unified-floating-console`（DEC-348）之后，展示屏各视图已全部改为
+   * `fixed inset-0` 真悬浮，不再有任何容器读这个变量——发布这一步因此暂时没有消费者。
+   * 保留这段是有意的范围决定，不是遗漏：拆掉发布机制是比本 CR 两条条目更大的改动（要
+   * 动 REQ-F-200 ④ 自己已有的测试覆盖），且继续发布不产生任何开销或副作用；真要清理，
+   * 应该另开 CR 一并处理测试与文档，而不是顺手在这里拆一半。
    *
    * 2026-09-15 之前这里发布的是整个控制台的实测高度（含展开的记录区，最高 50–58vh），
    * 于是展示屏让出的是一条**通栏**空白——不止对话框正下方，屏幕两侧跟对话框毫无关系的
@@ -1201,6 +1210,35 @@ export function FloatingChat({
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* 设置入口（REQ-F-200 ①）：从对话框唤起，面板呈现在动态屏上，不弹窗盖住正在看的东西。
+              CR-20260918-unified-floating-console 之前这是独立的一行，挂在记录区下方；现在
+              和状态灯/上传并作一行，理由见该 CR：状态灯/上传/模型/技能/工具/资料库都是"控制台
+              本身的常驻入口"，不该因为记录区在不在屏幕上而拆成两行。 */}
+          <span className="text-xs text-muted-foreground">在屏上打开：</span>
+          {(["models", "skills", "tools", "library"] as SettingsPanel[]).map((panel) => (
+            <button
+              className="floating-chat__panel rounded border border-border px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground"
+              key={panel}
+              onClick={() => window.dispatchEvent(new CustomEvent(SETTINGS_PANEL_EVENT, { detail: { panel } }))}
+              type="button"
+            >
+              {SETTINGS_PANEL_LABEL[panel]}
+            </button>
+          ))}
+
+          {/* 本轮用量常驻（REQ-NF-060 ④）。与展开/收起按钮都是"贴右边"的尾部元素——两个都给
+              ml-auto：flex 的自动外边距只会被先出现的那个消耗掉，后一个即便也标了 ml-auto，
+              这时也没有多余空间可占，等效贴着前一个，不需要额外判断谁在谁不在时该由谁顶上。 */}
+          {turnUsage ? (
+            <span
+              className="floating-chat__turn-usage ml-auto text-xs tabular-nums text-muted-foreground"
+              aria-live="polite"
+              title="本轮累计（输入 / 输出 tokens）"
+            >
+              本轮 ↑{turnUsage.inputTokens.toLocaleString()} ↓{turnUsage.outputTokens.toLocaleString()}
+            </span>
+          ) : null}
+
           {hasTranscript ? (
             <Button
               type="button"
@@ -1315,32 +1353,6 @@ export function FloatingChat({
             {errorLine}
           </p>
         ) : null}
-
-        {/* 设置入口（REQ-F-200 ①）：从对话框唤起，面板呈现在动态屏上，不弹窗盖住正在看的东西。 */}
-        <div className="floating-chat__panels flex items-center gap-1.5 px-1">
-          <span className="text-xs text-muted-foreground">在屏上打开：</span>
-          {(["models", "skills", "tools", "library"] as SettingsPanel[]).map((panel) => (
-            <button
-              className="floating-chat__panel rounded border border-border px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground"
-              key={panel}
-              onClick={() => window.dispatchEvent(new CustomEvent(SETTINGS_PANEL_EVENT, { detail: { panel } }))}
-              type="button"
-            >
-              {SETTINGS_PANEL_LABEL[panel]}
-            </button>
-          ))}
-          {/* 本轮用量常驻（REQ-NF-060 ④）。此前只在 ☰ →「搜索设置」弹窗里有——需求写的是
-              「显示」，而它要治的事故是「用户无从看见」，藏两层菜单之后这两者就分岔了。 */}
-          {turnUsage ? (
-            <span
-              className="floating-chat__turn-usage ml-auto text-xs tabular-nums text-muted-foreground"
-              aria-live="polite"
-              title="本轮累计（输入 / 输出 tokens）"
-            >
-              本轮 ↑{turnUsage.inputTokens.toLocaleString()} ↓{turnUsage.outputTokens.toLocaleString()}
-            </span>
-          ) : null}
-        </div>
 
         <form className="floating-chat__form flex items-end gap-2" ref={formRef} onSubmit={handleSubmit}>
           <Textarea

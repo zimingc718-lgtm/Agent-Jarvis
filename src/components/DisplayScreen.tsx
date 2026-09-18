@@ -233,8 +233,7 @@ export function DisplayScreen({
   if (panel) {
     return (
       <section
-        className="display-screen display-screen--settings fixed inset-x-0 top-0 z-0 flex flex-col overflow-y-auto bg-background"
-        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
+        className="display-screen display-screen--settings fixed inset-0 z-0 flex flex-col overflow-y-auto bg-background"
         aria-label={`${SETTINGS_PANEL_LABEL[panel]}设置`}
       >
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2">
@@ -270,8 +269,7 @@ export function DisplayScreen({
   if (view.kind === "insight" && view.html != null) {
     return (
       <section
-        className="display-screen display-screen--insight fixed inset-x-0 top-0 z-0 flex flex-col bg-background"
-        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
+        className="display-screen display-screen--insight fixed inset-0 z-0 flex flex-col bg-background"
         aria-label="技能洞察"
       >
         {/* CP-7: non-dismissible — no close control, no Escape handler. */}
@@ -332,8 +330,7 @@ export function DisplayScreen({
     const inline = [".pdf", ".html", ".htm", ".txt", ".md", ".markdown", ".csv", ".json", ".log", ".xml", ".yaml", ".yml"].includes(ext);
     return (
       <section
-        className="display-screen display-screen--document fixed inset-x-0 top-0 z-0 flex flex-col bg-background"
-        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
+        className="display-screen display-screen--document fixed inset-0 z-0 flex flex-col bg-background"
         aria-label="本机文档"
       >
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2">
@@ -371,8 +368,7 @@ export function DisplayScreen({
     // region, and two landmarks sharing one name is worse than none.
     return (
       <div
-        className="display-screen display-screen--board fixed inset-x-0 top-0 z-0 overflow-y-auto bg-background"
-        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
+        className="display-screen display-screen--board fixed inset-0 z-0 overflow-y-auto bg-background"
       >
         <div className="pb-6">
           <KnowledgeDashboard

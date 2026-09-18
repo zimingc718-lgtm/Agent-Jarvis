@@ -51,12 +51,13 @@ describe("展示屏上的设置面板 (REQ-F-200 ①②)", () => {
     await waitFor(() => expect(screen.getByText(/模型设置暂时打不开/)).toBeInTheDocument());
   });
 
-  it("⑤ 设置面板同样给控制台让出底部，不被它盖住", async () => {
+  it("⑤ 设置面板与首页一样全悬浮，不再靠 --jarvis-console-h 给控制台让出底部（CR-20260918-unified-floating-console 之前的行为相反，见该 CR）", async () => {
     const { container } = render(<DisplayScreen initial={board} fetchView={async () => board} />);
     openPanel("tools");
     await waitFor(() => expect(container.querySelector(".display-screen--settings")).toBeTruthy());
     const pane = container.querySelector(".display-screen--settings") as HTMLElement;
-    expect(pane.style.bottom).toBe("var(--jarvis-console-h, 0px)");
+    expect(pane.className).toContain("inset-0");
+    expect(pane.getAttribute("style")).toBeNull();
   });
 });
 

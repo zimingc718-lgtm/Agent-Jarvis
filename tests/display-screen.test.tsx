@@ -2,6 +2,7 @@
 import { act, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { DisplayScreen } from "@/components/DisplayScreen";
+import { SETTINGS_PANEL_EVENT } from "@/lib/ui-events";
 
 /**
  * TEST-093 ④⑤ — the display screen wraps insight HTML and follows the host theme
@@ -76,5 +77,33 @@ describe("TEST-093 DisplayScreen 外壳与主题 (REQ-F-052)", () => {
     expect(getByText(/DOCX.*无法直接预览/)).toBeInTheDocument();
     const open = container.querySelector(".display-screen__document-open") as HTMLAnchorElement;
     expect(open.getAttribute("href")).toBe(`/api/documents/raw?id=${encodeURIComponent(doc.refId)}`);
+  });
+
+  it("⑧ 非首页视图与首页一样是 inset-0 真悬浮，不再靠 --jarvis-console-h 让位（CR-20260918-unified-floating-console）", () => {
+    const home = { kind: "home", refId: null, html: null };
+    const { container: homeContainer } = render(<DisplayScreen initial={home} fetchView={async () => home} />);
+    const homeSection = homeContainer.querySelector(".display-screen--home") as HTMLElement;
+    expect(homeSection.className).toContain("inset-0");
+    expect(homeSection.getAttribute("style")).toBeNull();
+
+    const { container: insightContainer } = render(<DisplayScreen initial={insight} fetchView={async () => insight} />);
+    const insightSection = insightContainer.querySelector(".display-screen--insight") as HTMLElement;
+    expect(insightSection.className).toContain("inset-0");
+    expect(insightSection.className).not.toContain("inset-x-0");
+    expect(insightSection.getAttribute("style")).toBeNull();
+
+    const doc = { kind: "document", refId: "资料库/AIDC/01_报告/整流柜.html", html: null };
+    const { container: docContainer } = render(<DisplayScreen initial={doc} fetchView={async () => doc} />);
+    const docSection = docContainer.querySelector(".display-screen--document") as HTMLElement;
+    expect(docSection.className).toContain("inset-0");
+    expect(docSection.getAttribute("style")).toBeNull();
+
+    const { container: settingsContainer } = render(<DisplayScreen initial={home} fetchView={async () => home} />);
+    act(() => {
+      window.dispatchEvent(new CustomEvent(SETTINGS_PANEL_EVENT, { detail: { panel: "tools" } }));
+    });
+    const settingsSection = settingsContainer.querySelector(".display-screen--settings") as HTMLElement;
+    expect(settingsSection.className).toContain("inset-0");
+    expect(settingsSection.getAttribute("style")).toBeNull();
   });
 });

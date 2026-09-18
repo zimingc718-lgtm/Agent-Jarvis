@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   classifyDrop,
@@ -784,6 +784,22 @@ describe("FloatingChat", () => {
       // 如实留着这条警告不追。
     });
 
+    it("③c CR-20260918-unified-floating-console: 状态灯/上传/模型/技能/工具/资料库同一行", () => {
+      const { container } = render(<FloatingChat hasEnabledProvider probeProviders={readyProbe} />);
+      const row = container.querySelector(".floating-chat__status") as HTMLElement;
+      expect(row).toBeTruthy();
+
+      // 状态灯本身（sr-only 状态文本，不是可见 dot）与上传入口都在这一行里。
+      expect(row.querySelector('[role="status"]')).toBeTruthy();
+      expect(within(row).getByRole("button", { name: "上传" })).toBeInTheDocument();
+
+      // 「在屏上打开」的四个面板按钮，此前是独立一行、挂在记录区下方，现在应并入同一行。
+      expect(within(row).getByText("在屏上打开：")).toBeInTheDocument();
+      for (const label of ["模型", "技能", "工具", "资料库"]) {
+        expect(within(row).getByRole("button", { name: label })).toBeInTheDocument();
+      }
+    });
+
     it("④ a registration receipt that excludes files says so", async () => {
       vi.stubGlobal(
         "fetch",
@@ -912,7 +928,7 @@ describe("FloatingChat", () => {
     expect(byCount.map((row) => row.role === "summary" ? "S" : row.id)).toEqual(["u1", "a1", "S", "u2", "a2", "u3", "a3"]);
   });
 
-  describe("collapsedConsoleHeight (REQ-F-240, DEC-240 ④-修订)", () => {
+  describe("collapsedConsoleHeight (REQ-F-200 ④, DEC-340)", () => {
     it("① 记录区未挂载时，收拢态高度就是整个控制台的高度", () => {
       expect(collapsedConsoleHeight(140, 0)).toBe(140);
     });
@@ -931,7 +947,7 @@ describe("FloatingChat", () => {
     });
   });
 
-  it("REQ-F-240：挂载时发布的 --jarvis-console-h 是「根高度 − 记录区高度」，不是根高度本身", async () => {
+  it("REQ-F-200 ④：挂载时发布的 --jarvis-console-h 是「根高度 − 记录区高度」，不是根高度本身", async () => {
     // jsdom 不做真布局，getBoundingClientRect 默认全零——给根节点和记录区节点各自打桩，
     // 证明挂载那一刻的接线用的是 collapsedConsoleHeight 这个公式、读的是这两个具体的
     // ref，而不是「随便发布 rootHeight」（改前的行为）。
