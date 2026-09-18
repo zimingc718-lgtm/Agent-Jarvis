@@ -148,6 +148,17 @@ describe("display tools (REQ-F-032 / REQ-F-023)", () => {
     expect(stored.html).toBe(injected);
   });
 
+  it("CR-20260918-org-chart-board: show_org_chart_board 发 org-chart-board 阶段事件，不写 display_state", async () => {
+    const showOrgChartBoard = createDisplayTools(store).find((t) => t.name === "show_org_chart_board")!;
+    const result = await showOrgChartBoard.execute({}, context);
+
+    expect(result.ok).toBe(true);
+    expect(result.events).toEqual([{ type: "display_stage", stage: "org-chart-board" }]);
+    // 与 show_board 同一条理由（CR-20260912-display-stage）：会话态，不落库；
+    // 展示屏的持久态被清回 home，不是切到某个新的 display_state.kind。
+    expect(store.getDisplayState().kind).toBe("home");
+  });
+
   it("looksLikeCompleteHtml 区分完整与截断", () => {
     expect(looksLikeCompleteHtml("<p>ok</p>")).toBe(true);
     expect(looksLikeCompleteHtml("<div><p>cut off mid-tag <sp")).toBe(false);

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { KnowledgeDashboard } from "@/components/KnowledgeDashboard";
+import { OrgChartBoard } from "@/components/OrgChartBoard";
 import { Archive, ArrowLeft, ShieldAlert } from "lucide-react";
 import { ModelSettings } from "@/components/ModelSettings";
 import type { ProviderTemplate } from "@/lib/providers";
@@ -124,7 +125,7 @@ export function DisplayScreen({
   const [archiving, setArchiving] = useState(false);
   const [view, setView] = useState<DisplayView>(initial);
   /** `opening` is the title screen; `board` is the knowledge board (出口义务 1). */
-  const [stage, setStage] = useState<"opening" | "board">("opening");
+  const [stage, setStage] = useState<DisplayStage>("opening");
   const stageRef = useRef(stage);
   stageRef.current = stage;
   // REQ-F-052 ②: the iframe is its own document, so the host theme is passed in by hand.
@@ -158,9 +159,9 @@ export function DisplayScreen({
   useEffect(() => {
     const onStage = (event: Event) => {
       const stage = (event as CustomEvent<{ stage?: DisplayStage }>).detail?.stage;
-      if (stage === "board") {
+      if (stage === "board" || stage === "org-chart-board") {
         rememberOpeningPlayed();
-        setStage("board");
+        setStage(stage);
       } else if (stage === "opening") {
         forgetOpeningPlayed();
         setStage("opening");
@@ -379,6 +380,18 @@ export function DisplayScreen({
             onAsk={(question) => window.dispatchEvent(new CustomEvent(ASK_JARVIS_EVENT, { detail: { text: question } }))}
           />
         </div>
+      </div>
+    );
+  }
+
+  // 组织架构/研发阵型看板：同一套「会话态 stage、不落库」的道理（CR-20260918-org-chart-board）。
+  if (stage === "org-chart-board") {
+    return (
+      <div
+        className="display-screen display-screen--org-chart-board fixed inset-x-0 top-0 z-0 overflow-y-auto bg-background"
+        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
+      >
+        <OrgChartBoard />
       </div>
     );
   }

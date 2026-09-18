@@ -63,7 +63,7 @@ export const ASK_JARVIS_EVENT = "jarvis:ask";
 export const DISPLAY_STAGE_EVENT = "jarvis:display-stage";
 
 /** The two session stages of the display screen. Insight is persistent and sits above both. */
-export type DisplayStage = "opening" | "board";
+export type DisplayStage = "opening" | "board" | "org-chart-board";
 
 /**
  * 把设置类界面唤到动态屏上（REQ-F-200，用户 2026-09-13 决策 3）。`detail` 是 `{ panel }`；

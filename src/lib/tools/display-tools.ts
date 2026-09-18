@@ -81,6 +81,26 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
     },
   };
 
+  const orgChartBoard: ToolDescriptor = {
+    name: "show_org_chart_board",
+    priority: TOOL_PRIORITY.normal,
+    description: "把展示屏切到组织架构/研发阵型看板（已登记对象的人员：姓名、岗位、团队、简介）。用户说「看一下某公司的组织架构」「研发阵型」时调用。",
+    parameters: { type: "object", properties: {} },
+    available: () => true,
+    async execute() {
+      // 与 show_board/show_competitor_board 同一条理由：会话态而非持久态，先清到 home
+      // 再靠 display_stage 事件切换，避免和 show_home/show_insight 的持久 display_state
+      // 打架（CR-20260912-display-stage 已经否决过把它做成第四个 display_state 值）。
+      store.setDisplayState({ kind: "home", refId: null });
+      return {
+        ok: true,
+        content: "展示屏已切到组织架构看板。人员信息需要来源链接才能写入——没有来源的名字、岗位不会出现在看板上。",
+        summary: "展示屏 → 组织架构看板",
+        events: [{ type: "display_stage", stage: "org-chart-board" }],
+      };
+    },
+  };
+
   const insight: ToolDescriptor = {
     name: "show_insight",
     priority: TOOL_PRIORITY.normal,
@@ -300,5 +320,5 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
     },
   };
 
-  return [home, board, insight, save, archive];
+  return [home, board, orgChartBoard, insight, save, archive];
 }

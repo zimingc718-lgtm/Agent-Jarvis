@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { addSource, listEntities, listPendingEntities, readEntity, saveEntity } from "@/lib/entities";
-import { listProposals } from "@/lib/entity-proposals";
+import { adoptProposal, listProposals } from "@/lib/entity-proposals";
 import { saveKnowledge } from "@/lib/knowledge";
 import { createEntityTools } from "@/lib/tools/entity-tools";
 import { ToolRegistry, type ToolContext } from "@/lib/tools/registry";
@@ -42,9 +42,21 @@ describe("entity tools", () => {
     rmSync(knowledgeRoot, { recursive: true, force: true });
   });
 
+  // By name, not position: a fixed index into `createEntityTools()`'s array breaks
+  // every time a new tool is inserted anywhere before the one being looked up — this
+  // already happened once to `tests/ingest-extract-chain.test.ts` when `propose_person`
+  // was added (CR-20260918-org-chart-board), so this file gets the same fix pre-emptively.
   const tools = () => {
-    const [list, read, propose, proposeUpdate, , extract] = createEntityTools({ root, knowledgeRoot });
-    return { list, read, propose, proposeUpdate, extract };
+    const all = createEntityTools({ root, knowledgeRoot });
+    const byName = (name: string) => all.find((t) => t.name === name)!;
+    return {
+      list: byName("list_entities"),
+      read: byName("read_entity"),
+      propose: byName("propose_entity"),
+      proposeUpdate: byName("propose_entity_update"),
+      proposePerson: byName("propose_person"),
+      extract: byName("extract_fields"),
+    };
   };
 
   it("① 工具描述都在 200 字符内、可注册；联网关时只少 fetch_source 一个", () => {
@@ -57,6 +69,7 @@ describe("entity tools", () => {
       "read_entity",
       "propose_entity",
       "propose_entity_update",
+      "propose_person",
       "extract_fields",
     ]);
   });
@@ -153,6 +166,79 @@ describe("entity tools", () => {
     expect((await proposeUpdate.execute({ name: "tso-a", field: "title", value: "x", source_url: "https://tso-a.example" }, context)).ok).toBe(false);
     expect((await proposeUpdate.execute({ name: "nope", field: "capacity", value: "x", source_url: "https://tso-a.example" }, context)).ok).toBe(false);
     const bad = await proposeUpdate.execute({ name: "tso-a", field: "capacity", value: "x", source_url: "不是链接" }, context);
+    expect(bad.ok).toBe(false);
+    expect(bad.summary).toBe("来源非法");
+  });
+
+  it("⑨b propose_person：缺参数拒绝；来源不受信 → 待采纳；同名第二次写入是更新不是重复（TEST-480）", async () => {
+    const { proposePerson } = tools();
+
+    const missing = await proposePerson.execute({ name: "tso-a", person_name: "张三", title: "主任" }, context);
+    expect(missing.ok).toBe(false);
+    expect(missing.content).toContain("没有来源的人员信息不写入");
+
+    const untrusted = await proposePerson.execute(
+      { name: "tso-a", person_name: "张三", title: "主任", team: "标准处", source_url: "https://random-blog.example/post" },
+      context
+    );
+    expect(untrusted.ok).toBe(true);
+    expect(untrusted.content).toContain("不在该对象已登记的采集源内");
+    expect((await readEntity("tso-a", root))?.people).toEqual([]);
+    expect(await listProposals(root)).toHaveLength(1);
+
+    const trusted = await proposePerson.execute(
+      {
+        name: "tso-a",
+        person_name: "李四",
+        title: "副主任",
+        team: "并网处",
+        bio: "负责并网审批",
+        source_url: "https://tso-a.example/about/team",
+      },
+      context
+    );
+    expect(trusted.ok).toBe(true);
+    expect(trusted.content).toContain("直接生效");
+    let entity = await readEntity("tso-a", root);
+    expect(entity?.people).toEqual([{ name: "李四", title: "副主任", team: "并网处", avatarUrl: "", bio: "负责并网审批" }]);
+    expect(entity?.evidence.some((e) => e.field === "person:李四" && e.url === "https://tso-a.example/about/team")).toBe(true);
+
+    // 同名第二次写入是更新，不是新增一条重复的人员。
+    const update = await proposePerson.execute(
+      { name: "tso-a", person_name: "李四", title: "处长（晋升）", team: "并网处", source_url: "https://tso-a.example/about/team" },
+      context
+    );
+    expect(update.ok).toBe(true);
+    entity = await readEntity("tso-a", root);
+    expect(entity?.people).toHaveLength(1);
+    expect(entity?.people[0]).toMatchObject({ name: "李四", title: "处长（晋升）" });
+  });
+
+  it("⑨b2 propose_person 的待采纳提议，adoptProposal 后正确写入人员（不会被错读成 field/param）", async () => {
+    const { proposePerson } = tools();
+    const queued = await proposePerson.execute(
+      { name: "tso-a", person_name: "孙七", title: "处长", team: "并网处", bio: "分管新能源", source_url: "https://random-blog.example/x" },
+      context
+    );
+    expect(queued.ok).toBe(true);
+    const [proposal] = await listProposals(root);
+    expect(proposal).toMatchObject({ entity: "tso-a", kind: "person", field: "孙七" });
+
+    const adopted = await adoptProposal(proposal.id, root);
+    expect(adopted?.people).toEqual([{ name: "孙七", title: "处长", team: "并网处", avatarUrl: "", bio: "分管新能源" }]);
+    expect(await listProposals(root)).toEqual([]);
+    const entity = await readEntity("tso-a", root);
+    expect(entity?.people).toEqual([{ name: "孙七", title: "处长", team: "并网处", avatarUrl: "", bio: "分管新能源" }]);
+    // 没有被误当成技术参数写进 params。
+    expect(entity?.params.some((p) => p.name === "孙七")).toBe(false);
+  });
+
+  it("⑨c propose_person：对象不存在、链接非法都作失败回喂而非抛错", async () => {
+    const { proposePerson } = tools();
+    expect(
+      (await proposePerson.execute({ name: "nope", person_name: "王五", title: "x", source_url: "https://tso-a.example" }, context)).ok
+    ).toBe(false);
+    const bad = await proposePerson.execute({ name: "tso-a", person_name: "王五", title: "x", source_url: "不是链接" }, context);
     expect(bad.ok).toBe(false);
     expect(bad.summary).toBe("来源非法");
   });
