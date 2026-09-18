@@ -15,11 +15,13 @@ vi.mock("next-auth", () => ({ getServerSession: vi.fn() }));
 const { getServerSession } = await import("next-auth");
 const listRoute = await import("@/app/api/entities/route");
 const oneRoute = await import("@/app/api/entities/[name]/route");
+const historyRoute = await import("@/app/api/entities/[name]/history/route");
 const pendingRoute = await import("@/app/api/entities/pending/[name]/route");
 const proposalRoute = await import("@/app/api/entities/proposals/[id]/route");
 const overviewRoute = await import("@/app/api/knowledge/overview/route");
 const { ENTITIES_ROOT, saveEntity, addSource, readEntity } = await import("@/lib/entities");
 const { proposeEntityUpdate, listProposals } = await import("@/lib/entity-proposals");
+const { appendHistoryEntry } = await import("@/lib/entity-history");
 const { KNOWLEDGE_ROOT, saveKnowledge, recordSearchMiss } = await import("@/lib/knowledge");
 const { getStore } = await import("@/lib/store-singleton");
 
@@ -56,6 +58,7 @@ describe("/api/entities", () => {
     expect((await listRoute.POST(post({ kind: "competitor", title: "x" }))).status).toBe(401);
     expect((await oneRoute.GET(new Request("http://test"), params("x"))).status).toBe(401);
     expect((await oneRoute.PATCH(patch({ action: "seen" }), params("x"))).status).toBe(401);
+    expect((await historyRoute.GET(new Request("http://test"), params("x"))).status).toBe(401);
     expect((await pendingRoute.POST(new Request("http://test"), params("x"))).status).toBe(401);
     expect((await proposalRoute.POST(new Request("http://test"), idParams("x"))).status).toBe(401);
     expect((await overviewRoute.GET()).status).toBe(401);
@@ -206,5 +209,27 @@ describe("/api/entities", () => {
     expect((await oneRoute.PATCH(patch({ action: "setParam", param: "title", value: "x" }), params("边界-p"))).status).toBe(400);
     expect((await oneRoute.PATCH(patch({ action: "paramStatus", param: "x", status: "nope" }), params("边界-p"))).status).toBe(400);
     expect((await oneRoute.PATCH(patch({ action: "paramStatus", param: "没这条", status: "meets" }), params("边界-p"))).status).toBe(404);
+  });
+
+  it("⑧ GET /api/entities/[name]/history：不存在的对象 404，存在但没历史返回空数组，有历史按新到旧、可用 limit 收窄（CR-20260918-change-history-and-sources）", async () => {
+    as("owner@example.com");
+    expect((await historyRoute.GET(new Request("http://test"), params("没这个对象"))).status).toBe(404);
+
+    await listRoute.POST(post({ kind: "competitor", title: "消息 M" }));
+    const empty = await historyRoute.GET(new Request("http://test"), params("消息-m"));
+    expect(empty.status).toBe(200);
+    expect((await empty.json()).entries).toEqual([]);
+
+    await appendHistoryEntry(ENTITIES_ROOT, "消息-m", { at: "2026-09-01T00:00:00.000Z", url: "https://m.example/a", change: "第一条" });
+    await appendHistoryEntry(ENTITIES_ROOT, "消息-m", { at: "2026-09-02T00:00:00.000Z", url: "https://m.example/b", change: "第二条" });
+
+    const full = await historyRoute.GET(new Request("http://test"), params("消息-m"));
+    const fullBody = await full.json();
+    expect(fullBody.entries).toHaveLength(2);
+    expect(fullBody.entries[0]).toMatchObject({ change: "第二条", url: "https://m.example/b" });
+    expect(fullBody.entries[1]).toMatchObject({ change: "第一条", url: "https://m.example/a" });
+
+    const limited = await historyRoute.GET(new Request("http://test/x?limit=1"), params("消息-m"));
+    expect((await limited.json()).entries).toHaveLength(1);
   });
 });

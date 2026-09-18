@@ -2,6 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { KNOWLEDGE_CHANGED_EVENT } from "@/lib/ui-events";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 /**
  * The knowledge board (CR-20260911-home-dashboard; design in `design/`).
@@ -55,6 +63,13 @@ export type DashboardEntity = {
    */
   cited?: string[];
 };
+
+/**
+ * One collected change, mechanically derived — never model-written (mirrors
+ * `sources.ts#describeChange`'s own reasoning). A card's message list is this array,
+ * newest first (CR-20260918-change-history-and-sources, CP-1).
+ */
+export type HistoryEntry = { at: string; url: string; change: string };
 
 /**
  * 「不属于任何跟踪对象」的具名归属（REQ-F-170 ②③）。
@@ -124,6 +139,8 @@ type Props = {
   runSweepRound?: (force: boolean) => Promise<SweepRun>;
   /** Injected in tests; the real schedule only ticks while the board is on screen. */
   isVisible?: () => boolean;
+  /** Test seam for a card's message list (CR-20260918-change-history-and-sources). */
+  loadHistory?: (name: string) => Promise<HistoryEntry[]>;
 };
 
 export type SweepState = { enabled: boolean; intervalMinutes: number; maxPerRound: number; lastRun: string };
@@ -226,6 +243,10 @@ const defaultLoadBoard = () => getJson<DashboardData>("/api/entities", EMPTY_BOA
 const defaultLoadOverview = () => getJson<OverviewData>("/api/knowledge/overview", EMPTY_OVERVIEW);
 const defaultLoadSweep = () => getJson<SweepState>("/api/entities/sweep", EMPTY_SWEEP);
 const defaultIsVisible = () => typeof document === "undefined" || document.visibilityState === "visible";
+const defaultLoadHistory = (name: string) =>
+  getJson<{ entries: HistoryEntry[] }>(`/api/entities/${encodeURIComponent(name)}/history`, { entries: [] }).then(
+    (data) => data.entries
+  );
 
 export function KnowledgeDashboard({
   initialData = EMPTY_BOARD,
@@ -238,12 +259,18 @@ export function KnowledgeDashboard({
   saveSweep = saveSweepViaApi,
   runSweepRound = runSweepViaApi,
   isVisible = defaultIsVisible,
+  loadHistory = defaultLoadHistory,
 }: Props) {
   const [board, setBoard] = useState<DashboardData>(initialData);
   const [overview, setOverview] = useState<OverviewData>(initialOverview);
   const [openName, setOpenName] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  /** Per-entity message list, fetched lazily when a card opens — not part of `board`,
+   *  which is refetched on every change event and would otherwise refetch every card's
+   *  full history on every unrelated update. */
+  const [history, setHistory] = useState<Record<string, HistoryEntry[]>>({});
+  const [historyBusy, setHistoryBusy] = useState<string | null>(null);
   /** Per-kind: is that lane's `+` tile expanded into the new-entity form right now. */
   const [addOpenKind, setAddOpenKind] = useState<Partial<Record<DashboardEntity["kind"], boolean>>>({});
   const [sweep, setSweep] = useState<SweepState>(EMPTY_SWEEP);
@@ -389,6 +416,19 @@ export function KnowledgeDashboard({
     if (next && entity.unread) {
       void act("PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, { action: "seen" }).then(reload);
     }
+    // Fetched on every open, not cached across opens: it is cheap (one small JSON GET)
+    // and a card left open across a sweep tick should show new messages on next open,
+    // not a stale list from when it was last expanded.
+    if (next) {
+      setHistoryBusy(entity.name);
+      void loadHistory(entity.name)
+        .then((entries) => setHistory((current) => ({ ...current, [entity.name]: entries })))
+        .catch(() => {
+          /* leave whatever was cached, if anything — the message list is a convenience,
+             not the record itself (that stays the file on disk). */
+        })
+        .finally(() => setHistoryBusy(null));
+    }
   };
 
   const byKind = (kind: DashboardEntity["kind"]) => board.entities.filter((entity) => entity.kind === kind);
@@ -448,6 +488,30 @@ export function KnowledgeDashboard({
 
         {open ? (
           <div className="knowledge-dashboard__detail mt-2 flex flex-col gap-2 border-t border-border pt-2">
+            {/* 新消息清单：点击进源链接（CR-20260918-change-history-and-sources CP-1）。折叠态
+                的单行 entity.change 保持不动（快速一瞥），这里是打开卡片后的完整列表。 */}
+            <p className="text-xs font-medium text-muted-foreground">最近消息</p>
+            {historyBusy === entity.name ? (
+              <p className="text-xs text-muted-foreground">加载中…</p>
+            ) : (history[entity.name]?.length ?? 0) === 0 ? (
+              <p className="text-xs text-muted-foreground">还没有采集到变化。</p>
+            ) : (
+              <ul className="knowledge-dashboard__history flex flex-col gap-1">
+                {history[entity.name]!.map((item, index) => (
+                  <li className="flex items-start gap-2 text-xs" key={`${item.at}-${index}`}>
+                    <span className="shrink-0 text-muted-foreground">{formatWhen(item.at)}</span>
+                    <a
+                      className="min-w-0 flex-1 truncate text-primary underline underline-offset-2"
+                      href={item.url}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      {item.change}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
             <p className="text-xs font-medium text-muted-foreground">技术参数与要求</p>
             {(entity.params?.length ?? 0) === 0 ? (
               <p className="text-xs text-muted-foreground">
@@ -544,71 +608,103 @@ export function KnowledgeDashboard({
               </p>
             ) : null}
 
-            <p className="text-xs font-medium text-muted-foreground">采集源</p>
-            {entity.sources.length === 0 ? (
-              <p className="text-xs text-muted-foreground">未配置。没有源时，这张卡的安静不代表任何事实。</p>
-            ) : (
-              <ul className="flex flex-col gap-1">
-                {entity.sources.map((url) => (
-                  <li className="flex items-center gap-2 text-xs" key={url}>
-                    <span className="min-w-0 flex-1 truncate">{url}</span>
-                    <button
-                      aria-label={`立即采集 ${entity.title} 的 ${url}`}
-                      className="knowledge-dashboard__fetch-source shrink-0 rounded px-1 underline underline-offset-2 disabled:opacity-50"
-                      disabled={busy === `src:${entity.name}`}
-                      onClick={() =>
-                        void run(`src:${entity.name}`, "已采集。", "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
-                          action: "fetch",
-                          url,
-                        })
-                      }
-                      type="button"
-                    >
-                      立即采集
-                    </button>
-                    <button
-                      aria-label={`移除 ${entity.title} 的采集源 ${url}`}
-                      className="knowledge-dashboard__remove-source shrink-0 rounded px-1 text-destructive underline underline-offset-2 disabled:opacity-50"
-                      disabled={busy === `src:${entity.name}`}
-                      onClick={() =>
-                        void run(`src:${entity.name}`, "已移除采集源。", "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
-                          action: "removeSource",
-                          url,
-                        })
-                      }
-                      type="button"
-                    >
-                      移除
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <form
-              className="flex items-center gap-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                const input = event.currentTarget.elements.namedItem("url") as HTMLInputElement | null;
-                const url = input?.value.trim();
-                if (url) {
-                  void run(`src:${entity.name}`, "已添加采集源。", "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
-                    action: "addSource",
-                    url,
-                  });
-                  input!.value = "";
-                }
-              }}
-            >
-              <input
-                aria-label={`为 ${entity.title} 添加采集源`}
-                className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1 text-xs"
-                name="url"
-                placeholder="https://"
-              />
-              <button className="shrink-0 rounded px-1 text-xs underline underline-offset-2" type="submit">
-                添加
-              </button>
-            </form>
+            {/* 采集源从卡片内联改为弹窗配置（CR-20260918-change-history-and-sources CP-3）——
+                卡片里只留一个小按钮，展开的表单挪进 Dialog，卡片本身不再随源的数量变长。 */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <button
+                  className="knowledge-dashboard__sources-trigger self-start rounded px-1 text-xs underline underline-offset-2"
+                  type="button"
+                >
+                  采集源设置（{entity.sources.length}）
+                </button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{entity.title} 的采集源</DialogTitle>
+                  <DialogDescription>登记官网、权威媒体等地址；巡检会定期抓取比对，发现变化即写入上方的消息列表。</DialogDescription>
+                </DialogHeader>
+                {entity.sources.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">未配置。没有源时，这张卡的安静不代表任何事实。</p>
+                ) : (
+                  <ul className="flex flex-col gap-1">
+                    {entity.sources.map((url) => (
+                      <li className="flex items-center gap-2 text-xs" key={url}>
+                        <span className="min-w-0 flex-1 truncate">{url}</span>
+                        <button
+                          aria-label={`立即采集 ${entity.title} 的 ${url}`}
+                          className="knowledge-dashboard__fetch-source shrink-0 rounded px-1 underline underline-offset-2 disabled:opacity-50"
+                          disabled={busy === `src:${entity.name}`}
+                          onClick={() =>
+                            void run(`src:${entity.name}`, "已采集。", "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
+                              action: "fetch",
+                              url,
+                            })
+                          }
+                          type="button"
+                        >
+                          立即采集
+                        </button>
+                        <button
+                          aria-label={`移除 ${entity.title} 的采集源 ${url}`}
+                          className="knowledge-dashboard__remove-source shrink-0 rounded px-1 text-destructive underline underline-offset-2 disabled:opacity-50"
+                          disabled={busy === `src:${entity.name}`}
+                          onClick={() =>
+                            void run(`src:${entity.name}`, "已移除采集源。", "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
+                              action: "removeSource",
+                              url,
+                            })
+                          }
+                          type="button"
+                        >
+                          移除
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <form
+                  className="flex items-center gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const input = event.currentTarget.elements.namedItem("url") as HTMLInputElement | null;
+                    const url = input?.value.trim();
+                    if (url) {
+                      void run(`src:${entity.name}`, "已添加采集源。", "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
+                        action: "addSource",
+                        url,
+                      });
+                      input!.value = "";
+                    }
+                  }}
+                >
+                  <input
+                    aria-label={`为 ${entity.title} 添加采集源`}
+                    className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1 text-xs"
+                    name="url"
+                    placeholder="https://"
+                  />
+                  <button className="shrink-0 rounded px-1 text-xs underline underline-offset-2" type="submit">
+                    添加
+                  </button>
+                </form>
+                {/* 自动配置走既有的「交给对话」路径（onAsk 已经是本卡「问 Jarvis」按钮在用的同一
+                    条机制），不是让弹窗自己悄悄调模型——一次会花 token 的调用理应出现在对话
+                    历史里，让用户看见问的是什么、答的是什么（CR-20260918-change-history-and-sources
+                    CP-2 的「非目标」：不新增一条「弹窗直接触发模型」的旁路）。 */}
+                {onAsk ? (
+                  <button
+                    className="knowledge-dashboard__auto-sources self-start rounded px-1 text-xs text-primary underline underline-offset-2"
+                    onClick={() =>
+                      onAsk(`请帮「${entity.title}」自动查找官网、权威媒体等正式信息来源，找到后登记为采集源。`)
+                    }
+                    type="button"
+                  >
+                    自动配置来源（交给对话）
+                  </button>
+                ) : null}
+              </DialogContent>
+            </Dialog>
             {/* The card hands off to the chat rather than growing a second app inside it. */}
             {onAsk ? (
               <button

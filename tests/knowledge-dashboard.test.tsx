@@ -99,12 +99,19 @@ describe("KnowledgeDashboard", () => {
     expect(act).toHaveBeenCalledWith("PATCH", "/api/entities/%E5%8F%8B%E5%95%86-a", { action: "seen" });
   });
 
-  it("⑤ 卡片点开是源管理，不是第二个应用；没有源时说清「安静不代表事实」", async () => {
+  it("⑤ 采集源在弹窗里管理，不再卡片内联；没有源时说清「安静不代表事实」（CR-20260918-change-history-and-sources CP-3）", async () => {
     const act = vi.fn(async () => ({ ok: true }));
-    render(<KnowledgeDashboard loadBoard={async () => board} loadOverview={async () => overview} act={act} />);
+    render(
+      <KnowledgeDashboard loadBoard={async () => board} loadOverview={async () => overview} act={act} loadHistory={async () => []} />
+    );
     await waitFor(() => expect(screen.getByText("客户 C")).toBeInTheDocument());
 
     fireEvent.click(screen.getByText("客户 C").closest("button")!);
+    await waitFor(() => expect(screen.getByText("还没有采集到变化。")).toBeInTheDocument());
+    // 弹窗打开前，表单不在 DOM 里——这正是「小按钮改为弹窗配置，不再卡片里配置」要的效果。
+    expect(screen.queryByLabelText("为 客户 C 添加采集源")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "采集源设置（0）" }));
     await waitFor(() => expect(screen.getByText(/这张卡的安静不代表任何事实/)).toBeInTheDocument());
 
     const input = screen.getByLabelText("为 客户 C 添加采集源");
@@ -113,6 +120,46 @@ describe("KnowledgeDashboard", () => {
     await waitFor(() =>
       expect(act).toHaveBeenCalledWith("PATCH", "/api/entities/%E5%AE%A2%E6%88%B7-c", { action: "addSource", url: "https://c.example/news" })
     );
+  });
+
+  it("⑤b 弹窗里的「自动配置来源」按钮把预填问题交给对话，不在弹窗里自己调模型", async () => {
+    const onAsk = vi.fn();
+    render(
+      <KnowledgeDashboard
+        loadBoard={async () => board}
+        loadOverview={async () => overview}
+        act={noop}
+        onAsk={onAsk}
+        loadHistory={async () => []}
+      />
+    );
+    await waitFor(() => expect(screen.getByText("客户 C")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("客户 C").closest("button")!);
+    fireEvent.click(await screen.findByRole("button", { name: "采集源设置（0）" }));
+
+    fireEvent.click(await screen.findByText("自动配置来源（交给对话）"));
+    expect(onAsk).toHaveBeenCalledWith("请帮「客户 C」自动查找官网、权威媒体等正式信息来源，找到后登记为采集源。");
+  });
+
+  it("⑤c 消息列表：有历史时按条渲染，每条是指向来源的可点击链接", async () => {
+    render(
+      <KnowledgeDashboard
+        loadBoard={async () => board}
+        loadOverview={async () => overview}
+        act={noop}
+        loadHistory={async (name) =>
+          name === "友商-a"
+            ? [{ at: "2026-09-18T10:00:00.000Z", url: "https://a.example/news/1", change: "新增 1 行：发布新固件" }]
+            : []
+        }
+      />
+    );
+    await waitFor(() => expect(screen.getByText("友商 A")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("友商 A").closest("button")!);
+
+    const link = await screen.findByRole("link", { name: "新增 1 行：发布新固件" });
+    expect(link).toHaveAttribute("href", "https://a.example/news/1");
+    expect(link).toHaveAttribute("target", "_blank");
   });
 
   it("⑥ 卡片把问题交给对话框，不在卡里执行", async () => {

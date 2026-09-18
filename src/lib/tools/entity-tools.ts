@@ -1,4 +1,5 @@
 import {
+  addSource,
   adoptPendingEntity as _adopt,
   ENTITIES_ROOT,
   EntityError,
@@ -142,7 +143,9 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
   const propose: ToolDescriptor = {
     name: "propose_entity",
     priority: TOOL_PRIORITY.management,
-    description: "提议把一个对象加入看板跟踪。进入待采纳区，用户采纳后才出现在看板上。参数 kind、title、summary。",
+    description:
+      "提议把一个对象加入看板跟踪。进入待采纳区，用户采纳后才出现在看板上。参数 kind、title、summary。" +
+      "对象被采纳后，可考虑用 web_search 找到其官网或权威媒体页面，确认后用 add_source 登记为采集源。",
     parameters: {
       type: "object",
       properties: {
@@ -307,6 +310,52 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
     },
   };
 
+  const addSourceTool: ToolDescriptor = {
+    name: "add_source",
+    priority: TOOL_PRIORITY.management,
+    description:
+      "为一个跟踪对象登记一个采集源（URL）。登记后由巡检机制定期抓取比对，发现变化会计入该对象的消息列表。" +
+      "本工具只登记网址本身，不核实或复述其内容——不构成对任何字段的直接更新，也不需要来源证据（它本身就是来源）。" +
+      "典型用法：先用 web_search 找该对象的官网 / 权威媒体页面，确认像是正式信息来源后用本工具登记。",
+    parameters: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "对象名称，来自 list_entities 或刚创建/采纳的对象" },
+        url: { type: "string", description: "http/https 地址" },
+      },
+      required: ["name", "url"],
+    },
+    // Mirrors the entity data layer's own `addSource`, which has never been gated —
+    // registering a URL to watch is not a fact claim the way a field value is; `fetch_source`
+    // independently fetches and diffs whatever lands here, so a bad URL surfaces as
+    // `failed_fetch`/`parse_failed`, not as false data on the board (see CR doc 选择理由).
+    available: () => true,
+    async execute(args) {
+      const name = typeof args.name === "string" ? args.name.trim() : "";
+      const url = typeof args.url === "string" ? args.url.trim() : "";
+      if (!name || !url) {
+        return { ok: false, content: "name 与 url 都是必填。", summary: "参数缺失" };
+      }
+      try {
+        const entity = await addSource(name, url, root);
+        if (!entity) {
+          return { ok: false, content: `没有名为「${name}」的跟踪对象。`, summary: `对象不存在：${name}` };
+        }
+        return {
+          ok: true,
+          content: `已为「${entity.title}」登记采集源 ${url}，下次巡检会开始抓取比对。`,
+          summary: `登记采集源：${entity.title}`,
+          sources: [{ url, title: entity.title }],
+        };
+      } catch (error) {
+        if (error instanceof EntityError) {
+          return { ok: false, content: error.message, summary: "未登记" };
+        }
+        throw error;
+      }
+    },
+  };
+
   const collect: ToolDescriptor = {
     name: "fetch_source",
     priority: TOOL_PRIORITY.management,
@@ -424,5 +473,5 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
     },
   };
 
-  return [list, read, propose, proposeUpdate, collect, extract];
+  return [list, read, propose, proposeUpdate, addSourceTool, collect, extract];
 }

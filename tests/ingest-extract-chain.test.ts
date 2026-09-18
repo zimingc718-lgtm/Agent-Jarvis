@@ -154,7 +154,10 @@ describe("证据不可伪造：propose_entity_update 的两类字段", () => {
   };
 
   const proposeUpdate = () => createEntityTools({ root, knowledgeRoot })[3];
-  const extractTool = () => createEntityTools({ root, knowledgeRoot })[5];
+  // Index 4 is now add_source (CR-20260918-change-history-and-sources) — extract_fields
+  // shifted from 5 to 6. Indexed access is fragile exactly like this; left as-is rather
+  // than refactored to by-name lookup, matching the file's existing style elsewhere.
+  const extractTool = () => createEntityTools({ root, knowledgeRoot })[6];
 
   beforeEach(async () => {
     root = mkdtempSync(join(tmpdir(), "agent-jarvis-iec-t-"));
