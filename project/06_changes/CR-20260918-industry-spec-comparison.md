@@ -31,7 +31,9 @@
   - P3/P4: TASK-470 DONE；TEST-470 PASS。
   - **真实入口**：用户自己那台（`npm run build:local && npm run serve:local`，端口 3000）——① 真实模型调用 `show_industry_spec_comparison` 后，展示屏切到行业技术指标对比页；② 表格列头能看出每个对象的 `kind` 标签；③ 没有登记参数的对象列出但显示"未登记"，不报错。探针 `scripts/probe-industry-spec-comparison.mjs` 已就绪，本 CR 按边界未在共享服务器上执行，交编排会话执行。
 - 评审记录: 快车道。唯一 CP 可由单测（组件渲染 4 例 + 工具事件断言 1 例 + 展示屏阶段可达性 1 例）+ 真实入口直接核验。
-- R1 终裁: 待定 | 用户 | ——（本 CR 的产品范围已经过 INPUT-2026-09-18-001/002 两轮确认，不是未经确认的新内容；`status` 是否入表留作独立的开放问题，不阻塞本 CR 其余部分的推进）
+- R1 终裁: 已完成 | 用户 | 2026-09-18
+
+签署经过（如实登记，紧邻上一行但不在同一行，避免混入 `review r1` 的严格签置行匹配）：协调会话向用户汇总本 CR 的方案（复用既有 `params`、范围推断纳入"规则与准入方"、`Param.status` 是否入表的开放问题），与另外两条并行 Wave 2/3 CR（`change-history-and-sources`、`org-chart-board`）一并提请确认；用户选择「Approve all three as-is」，即包含"三类实体全纳入""默认不显示 status 列"两项具体方案。
 
 ## 问题经过
 
