@@ -194,6 +194,42 @@ describe("KnowledgeDashboard", () => {
     expect(within(misses).getAllByRole("listitem")[0]).toHaveTextContent("液冷选型对比");
   });
 
+  it("⑧b CR-20260918-library-in-board: 「知识库」板块改名「资料库」，嵌入可翻页的浏览卡片，REQ-F-170 的无归属/通用计数原样保留", async () => {
+    const browsePage = {
+      cards: [
+        { kind: "library" as const, id: "AIDC/G1.html", title: "G1 报告", docType: "一手", entity: "", bytes: 2048, updatedAt: "2026-09-17T00:00:00Z", sourceUrl: "", documentId: "资料库/AIDC/G1.html" },
+        { kind: "note" as const, id: "note-1", title: "现场记录", docType: "现场笔记", entity: "友商-a", bytes: 512, updatedAt: "2026-09-16T00:00:00Z", sourceUrl: "", documentId: "" },
+      ],
+      total: 2,
+      byType: { 一手: 1, 现场笔记: 1 },
+      offset: 0,
+      limit: 20,
+    };
+    render(
+      <KnowledgeDashboard
+        loadBoard={async () => board}
+        loadOverview={async () => overview}
+        loadBrowse={async () => browsePage}
+        act={noop}
+      />
+    );
+
+    // 板块改名，旧的「知识库总览」名字不再出现。
+    await waitFor(() => expect(screen.getByRole("region", { name: "资料库" })).toBeInTheDocument());
+    expect(screen.queryByRole("region", { name: "知识库总览" })).not.toBeInTheDocument();
+
+    // REQ-F-170 ②③ 既有要求原样保留，不因为改版而消失。
+    expect(screen.getByText("共 12 条 · 无归属 5 条")).toBeInTheDocument();
+
+    // 新内容：真的能看到可浏览的卡片，含库内原件与知识条目两种。
+    expect(await screen.findByText("G1 报告")).toBeInTheDocument();
+    expect(screen.getByText("现场记录")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "查看原文" })).toHaveAttribute(
+      "href",
+      `/api/documents/raw?id=${encodeURIComponent("资料库/AIDC/G1.html")}`
+    );
+  });
+
   it("⑨ 空看板不假装有数据，并说明怎么添加", async () => {
     render(
       <KnowledgeDashboard
@@ -533,6 +569,9 @@ describe("KnowledgeDashboard", () => {
       }
       if (url.endsWith("/api/knowledge/overview")) {
         return new Response(JSON.stringify(overview), { status: 200 });
+      }
+      if (url.includes("/api/library/browse")) {
+        return new Response(JSON.stringify({ cards: [], total: 0, byType: {}, offset: 0, limit: 20 }), { status: 200 });
       }
       return new Response("{}", { status: 200 });
     });

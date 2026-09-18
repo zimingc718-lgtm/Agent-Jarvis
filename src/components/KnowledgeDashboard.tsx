@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { LibraryBrowseView, loadBrowseFromApi, type BrowsePageView } from "@/components/LibraryPanel";
 
 /**
  * The knowledge board (CR-20260911-home-dashboard; design in `design/`).
@@ -130,6 +131,8 @@ type Props = {
   /** Test seams. */
   loadBoard?: () => Promise<DashboardData>;
   loadOverview?: () => Promise<OverviewData>;
+  /** 资料库统一浏览（CR-20260918-library-in-board CP-1），与 `LibraryPanel.tsx` 共用同一实现。 */
+  loadBrowse?: (offset: number) => Promise<BrowsePageView>;
   act?: (method: "POST" | "DELETE" | "PATCH", url: string, body?: unknown) => Promise<{ ok: boolean; message?: string }>;
   /** Hands a pre-filled question to the chat instead of running anything here. */
   onAsk?: (question: string) => void;
@@ -253,6 +256,7 @@ export function KnowledgeDashboard({
   initialOverview = EMPTY_OVERVIEW,
   loadBoard = defaultLoadBoard,
   loadOverview = defaultLoadOverview,
+  loadBrowse = loadBrowseFromApi,
   act = actViaApi,
   onAsk,
   loadSweep = defaultLoadSweep,
@@ -263,6 +267,9 @@ export function KnowledgeDashboard({
 }: Props) {
   const [board, setBoard] = useState<DashboardData>(initialData);
   const [overview, setOverview] = useState<OverviewData>(initialOverview);
+  const [browseOffset, setBrowseOffset] = useState(0);
+  const [browsePage, setBrowsePage] = useState<BrowsePageView | null>(null);
+  const [browseError, setBrowseError] = useState<string | null>(null);
   const [openName, setOpenName] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -302,6 +309,28 @@ export function KnowledgeDashboard({
         /* keep what is on screen */
       });
   }, [loadBoard, loadOverview]);
+
+  // 资料库浏览是独立于 board/overview 的一套状态（同 LibraryPanel.tsx 的浏览模式），只按
+  // offset 取数，不挂 KNOWLEDGE_CHANGED_EVENT——翻页之外没有别的驱动，跟板面其它区域的
+  // 刷新节奏不绑在一起。
+  useEffect(() => {
+    let cancelled = false;
+    loadBrowse(browseOffset)
+      .then((page) => {
+        if (!cancelled) {
+          setBrowsePage(page);
+          setBrowseError(null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setBrowseError("读不到资料库列表。服务可能正在重启，稍后再打开一次。");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [browseOffset, loadBrowse]);
 
   useEffect(() => {
     reload();
@@ -978,9 +1007,16 @@ export function KnowledgeDashboard({
         {lane("客户", "容量与其技术发布", customers, false, "customer")}
       </div>
 
-      <section aria-label="知识库总览" className="knowledge-dashboard__library flex flex-col gap-2">
+      {/* CR-20260918-library-in-board CP-1：知识看板里原来只有统计数字的「知识库」板块，
+          改名「资料库」并加上真的能翻页浏览的内容——已采纳原件 + 真实知识条目按
+          CR-20260915-knowledge-library-merge 已经建好的同一套桥接机制合并展示，与
+          LibraryPanel.tsx 的浏览模式共用同一份组件实现，不重新发明一套卡片。「按类型」
+          统计box 由 LibraryBrowseView 自带的类型统计取代（覆盖面更大：含已采纳原件，不止
+          知识条目）；REQ-F-170 ②③ 要求的「无归属/通用」两个数**原样保留**——那是已批准的
+          既有要求，与本次改动无关，不因为共处同一节就顺手删掉。 */}
+      <section aria-label="资料库" className="knowledge-dashboard__library flex flex-col gap-3">
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="text-sm font-semibold tracking-tight">知识库</h3>
+          <h3 className="text-sm font-semibold tracking-tight">资料库</h3>
           <span className="text-xs text-muted-foreground">
             共 {overview.total} 条 · 无归属 {overview.unowned} 条
             {/* 具名分组，不并进「无归属」（REQ-F-170 ③）：那是空串桶，这是模型明确说
@@ -988,38 +1024,22 @@ export function KnowledgeDashboard({
             {generalCount > 0 ? ` · 通用 ${generalCount} 条` : ""}
           </span>
         </div>
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          <div className="rounded-md border border-border bg-card p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">内容缺口 · 搜索无结果</p>
-            {overview.misses.length === 0 ? (
-              <p className="mt-1 text-xs text-muted-foreground">还没有查不到的检索。这里只记录真实搜过但库里没有的词。</p>
-            ) : (
-              <ul className="mt-1 flex flex-col gap-1">
-                {overview.misses.map((miss) => (
-                  <li className="flex items-center gap-2 text-xs" key={miss.query}>
-                    <span className="min-w-0 flex-1 truncate">{miss.query}</span>
-                    <span className="shrink-0 rounded bg-muted px-1.5">{miss.count}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="rounded-md border border-border bg-card p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">按类型</p>
-            {Object.keys(overview.byType).length === 0 ? (
-              <p className="mt-1 text-xs text-muted-foreground">知识库为空。</p>
-            ) : (
-              <ul className="mt-1 flex flex-col gap-1">
-                {Object.entries(overview.byType).map(([type, count]) => (
-                  <li className="flex items-center justify-between gap-2 text-xs" key={type}>
-                    <span className={type === "未分类" ? "text-amber-700 dark:text-amber-500" : ""}>{type}</span>
-                    <span className={type === "未分类" ? "text-amber-700 dark:text-amber-500" : "text-muted-foreground"}>{count}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+        <div className="rounded-md border border-border bg-card p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">内容缺口 · 搜索无结果</p>
+          {overview.misses.length === 0 ? (
+            <p className="mt-1 text-xs text-muted-foreground">还没有查不到的检索。这里只记录真实搜过但库里没有的词。</p>
+          ) : (
+            <ul className="mt-1 flex flex-col gap-1">
+              {overview.misses.map((miss) => (
+                <li className="flex items-center gap-2 text-xs" key={miss.query}>
+                  <span className="min-w-0 flex-1 truncate">{miss.query}</span>
+                  <span className="shrink-0 rounded bg-muted px-1.5">{miss.count}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
+        <LibraryBrowseView page={browsePage} error={browseError} offset={browseOffset} onPage={setBrowseOffset} />
       </section>
 
       {notice ? (

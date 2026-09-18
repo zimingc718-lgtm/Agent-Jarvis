@@ -95,7 +95,8 @@ function sizeOf(bytes: number): string {
 
 const BROWSE_LIMIT = 20;
 
-async function loadBrowseFromApi(offset: number): Promise<BrowsePageView> {
+/** 导出给 `KnowledgeDashboard.tsx` 复用（CR-20260918-library-in-board）：同一份取数逻辑，两处调用。 */
+export async function loadBrowseFromApi(offset: number): Promise<BrowsePageView> {
   const response = await fetch(`/api/library/browse?offset=${offset}&limit=${BROWSE_LIMIT}`, {
     headers: { accept: "application/json" },
   });
@@ -348,7 +349,7 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
   );
 }
 
-type LibraryBrowseViewProps = {
+export type LibraryBrowseViewProps = {
   page: BrowsePageView | null;
   error: string | null;
   offset: number;
@@ -360,8 +361,12 @@ const KIND_LABEL: Record<BrowseCardView["kind"], string> = { library: "资料库
 /**
  * 统一浏览：已采纳原件 + 真实知识条目按同一张卡片形状呈现，分页（CP-2）。与上面的审批视图
  * 是两套独立状态——切换模式不影响对方已经取到的数据，回切时不必重新拉取。
+ *
+ * 导出给 `KnowledgeDashboard.tsx` 复用（CR-20260918-library-in-board CP-1）：知识看板要把
+ * 这同一份"资料库"内容直接嵌进板面，而不是另起一套渲染逻辑——两处保持同一份实现，不会
+ * 走着走着就长出两份互相漂移的卡片样式。
  */
-function LibraryBrowseView({ page, error, offset, onPage }: LibraryBrowseViewProps) {
+export function LibraryBrowseView({ page, error, offset, onPage }: LibraryBrowseViewProps) {
   if (error && !page) {
     return (
       <p className="library-panel__browse-error text-sm text-destructive" role="alert">
@@ -373,9 +378,13 @@ function LibraryBrowseView({ page, error, offset, onPage }: LibraryBrowseViewPro
     return <p className="library-panel__browse-loading text-sm text-muted-foreground">正在读取…</p>;
   }
 
-  const typeEntries = Object.entries(page.byType).sort((a, b) => b[1] - a[1]);
+  // `page` 来自网络响应，类型断言不做运行时校验——一个格式不对但状态码 200 的响应不该
+  // 崩掉整张卡片列表，只是拿不到内容/类型统计（CR-20260918-library-in-board：这个组件
+  // 现在被两个宿主共用，容错面比原来只服务一个面板时更值得认真对待）。
+  const cards = page.cards ?? [];
+  const typeEntries = Object.entries(page.byType ?? {}).sort((a, b) => b[1] - a[1]);
   const from = page.total === 0 ? 0 : offset + 1;
-  const to = Math.min(page.total, offset + page.cards.length);
+  const to = Math.min(page.total, offset + cards.length);
 
   return (
     <div className="library-panel__browse flex flex-col gap-3">
@@ -394,11 +403,11 @@ function LibraryBrowseView({ page, error, offset, onPage }: LibraryBrowseViewPro
         </p>
       ) : null}
 
-      {page.cards.length === 0 ? (
+      {cards.length === 0 ? (
         <p className="library-panel__browse-empty text-sm text-muted-foreground">还没有已采纳的资料或知识条目。</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
-          {page.cards.map((card) => (
+          {cards.map((card) => (
             <li className="rounded-md border border-border px-3 py-2" key={`${card.kind}-${card.id}`}>
               <span className="flex flex-wrap items-baseline gap-2">
                 <span className="text-sm font-medium">{card.title}</span>
@@ -438,15 +447,15 @@ function LibraryBrowseView({ page, error, offset, onPage }: LibraryBrowseViewPro
           <button
             className="rounded border border-border px-2 py-0.5 disabled:opacity-50"
             disabled={offset <= 0}
-            onClick={() => onPage(Math.max(0, offset - page.limit))}
+            onClick={() => onPage(Math.max(0, offset - (page.limit || BROWSE_LIMIT)))}
             type="button"
           >
             上一页
           </button>
           <button
             className="rounded border border-border px-2 py-0.5 disabled:opacity-50"
-            disabled={offset + page.limit >= page.total}
-            onClick={() => onPage(offset + page.limit)}
+            disabled={offset + (page.limit || BROWSE_LIMIT) >= page.total}
+            onClick={() => onPage(offset + (page.limit || BROWSE_LIMIT))}
             type="button"
           >
             下一页
