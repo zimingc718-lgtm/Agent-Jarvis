@@ -107,7 +107,7 @@ export type ChatDelta =
   // stages. Transient by design — the board is deliberately NOT a persisted display_state
   // value (CR-20260912-display-stage rejected that), so the only way a tool can reach it
   // is a message that travels once and is not stored.
-  | { type: "display_stage"; stage: "opening" | "board" };
+  | { type: "display_stage"; stage: "opening" | "board" | "industry-spec-comparison" };
 
 export type ChatMessage = {
   role: "system" | "user" | "assistant" | "tool";

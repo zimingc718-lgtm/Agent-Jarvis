@@ -34,7 +34,7 @@ const toolContext: ToolContext = {
   contextWindow: 128_000,
 };
 
-function dispatchStage(stage: "opening" | "board") {
+function dispatchStage(stage: "opening" | "board" | "industry-spec-comparison") {
   window.dispatchEvent(new CustomEvent(DISPLAY_STAGE_EVENT, { detail: { stage } }));
 }
 
@@ -127,5 +127,21 @@ describe("TEST-163 展示屏阶段可达性 (REQ-F-102)", () => {
     // The board event arrived, but a persisted insight still wins.
     expect(container.querySelector(".display-screen--insight")).toBeTruthy();
     expect(container.querySelector(".display-screen--board")).toBeNull();
+  });
+
+  it("⑥ CR-20260918-industry-spec-comparison: 收到 industry-spec-comparison 事件切到对比页，洞察仍压过它", async () => {
+    const { container } = render(<DisplayScreen initial={home} fetchView={async () => home} />);
+    await act(async () => dispatchStage("industry-spec-comparison"));
+    await waitFor(() => expect(container.querySelector(".display-screen--industry-spec-comparison")).toBeTruthy());
+
+    // 和 board 同一条规则：回到 opening 能出来，不是单程票。
+    await act(async () => dispatchStage("opening"));
+    await waitFor(() => expect(container.querySelector(".display-screen--home h1")).toBeTruthy());
+
+    const insight = { kind: "insight", refId: "i1", html: "<h1>报告</h1>" };
+    const rendered = render(<DisplayScreen initial={insight} fetchView={async () => insight} />);
+    await act(async () => dispatchStage("industry-spec-comparison"));
+    expect(rendered.container.querySelector(".display-screen--insight")).toBeTruthy();
+    expect(rendered.container.querySelector(".display-screen--industry-spec-comparison")).toBeNull();
   });
 });

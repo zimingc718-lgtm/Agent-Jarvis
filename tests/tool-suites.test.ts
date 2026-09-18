@@ -116,6 +116,16 @@ describe("display tools (REQ-F-032 / REQ-F-023)", () => {
     expect((await showInsight.execute({ insightId: "nope" }, context)).ok).toBe(false);
   });
 
+  it("⑥ show_industry_spec_comparison 发 industry-spec-comparison 阶段事件，不落库（TEST-470，REQ-F-250）", async () => {
+    const tool = createDisplayTools(store).find((t) => t.name === "show_industry_spec_comparison")!;
+    const result = await tool.execute({}, context);
+
+    expect(result.ok).toBe(true);
+    expect(result.events).toEqual([{ type: "display_stage", stage: "industry-spec-comparison" }]);
+    // 会话态切换，不是持久态——跟 show_board 一样，只清掉可能残留的洞察。
+    expect(store.getDisplayState().kind).toBe("home");
+  });
+
   it("⑤ HTML 不完整时失败回喂，且不写 insights 行", async () => {
     const saveInsight = createDisplayTools(store).find((t) => t.name === "save_insight")!;
     const result = await saveInsight.execute({ html: "<div><p>truncated mid-ta" }, context);

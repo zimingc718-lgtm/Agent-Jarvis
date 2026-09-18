@@ -81,6 +81,27 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
     },
   };
 
+  const industrySpecComparison: ToolDescriptor = {
+    name: "show_industry_spec_comparison",
+    priority: TOOL_PRIORITY.normal,
+    description:
+      "把展示屏切到行业技术指标对比页——横向比较全部已跟踪的友商/规则与准入方/客户三类对象的技术参数。用户说「行业指标对比」「拉个技术指标对比表」「不同厂家的指标放一起看」时调用。与 show_competitor_board 不同：那个只看友商，这个覆盖全部三类跟踪对象。",
+    parameters: { type: "object", properties: {} },
+    available: () => true,
+    async execute() {
+      // 同 show_board 的道理：先清掉可能残留的持久态洞察，这个阶段才会真的显现出来
+      // （REQ-F-102 ②）。
+      store.setDisplayState({ kind: "home", refId: null });
+      return {
+        ok: true,
+        content:
+          "展示屏已切到行业技术指标对比。对比维度取自各对象已登记的技术参数，逐维度谁更优这类判断请直接问我，不会预先写死在表格里。",
+        summary: "展示屏 → 行业技术指标对比",
+        events: [{ type: "display_stage", stage: "industry-spec-comparison" }],
+      };
+    },
+  };
+
   const insight: ToolDescriptor = {
     name: "show_insight",
     priority: TOOL_PRIORITY.normal,
@@ -300,5 +321,5 @@ export function createDisplayTools(store: Store): ToolDescriptor[] {
     },
   };
 
-  return [home, board, insight, save, archive];
+  return [home, board, industrySpecComparison, insight, save, archive];
 }
