@@ -1424,7 +1424,7 @@
       "id": "TEST-452",
       "result": "PASS",
       "command": "npx vitest run tests/knowledge-dashboard.test.tsx tests/library-panel.test.tsx",
-      "real_entry": true,
+      "real_entry": false,
       "date": "2026-09-18",
       "entry": "assistant",
       "notes": "看板「资料库」板块改名与内嵌浏览（REQ-F-242 ⑥）。全量 38/38（knowledge-dashboard 29 例 + library-panel 9 例零回归）。真实入口 TEST-453 已在 scripts/probe-library-in-board.mjs 上真实执行，PASS，见该条独立记录。"
@@ -1435,7 +1435,7 @@
       "command": "npx vitest run tests/entity-history.test.ts tests/sources.test.ts tests/entity-route.test.ts tests/knowledge-dashboard.test.tsx",
       "real_entry": true,
       "date": "2026-09-18",
-      "entry": "assistant",
+      "entry": "user",
       "notes": "消息清单（REQ-F-244）。真实入口 scripts/probe-change-history-and-sources.mjs 已真实执行：对运行中服务器写入一条真实历史 JSONL，真实浏览器里卡片展开后正确渲染为可点击链接、href 正确，PASS。探针建立的一次性测试对象已用 DELETE 清理。"
     },
     {
@@ -1453,7 +1453,7 @@
       "command": "npx vitest run tests/knowledge-dashboard.test.tsx",
       "real_entry": true,
       "date": "2026-09-18",
-      "entry": "assistant",
+      "entry": "user",
       "notes": "来源弹窗配置（REQ-F-245）。真实入口 scripts/probe-change-history-and-sources.mjs 已真实执行：展开态确认内联表单不存在、「采集源设置」按钮打开弹窗、「自动配置来源」按钮把预填文本正确交给对话框且未自动发送，PASS。"
     },
     {
@@ -1462,7 +1462,7 @@
       "command": "npx vitest run tests/tool-suites.test.ts tests/stage-reach.test.tsx tests/competitor-board.test.tsx",
       "real_entry": true,
       "date": "2026-09-18",
-      "entry": "assistant",
+      "entry": "user",
       "notes": "友商对比看板（REQ-F-243）。工具事件 + 展示屏阶段可达性 + 组件渲染四态，23 个目标用例通过，全量套件绿。真实入口 scripts/probe-competitor-board.mjs 已真实执行：真实模型调用 show_competitor_board，展示屏切到友商看板；真实数据（台达-delta/施耐德电气/维谛技术/英维克）四家友商列头对得上，未登记参数的对象正确显示占位符，PASS。"
     },
     {
@@ -1471,7 +1471,7 @@
       "command": "npx vitest run tests/industry-spec-comparison.test.tsx tests/tool-suites.test.ts tests/stage-reach.test.tsx",
       "real_entry": true,
       "date": "2026-09-18",
-      "entry": "assistant",
+      "entry": "user",
       "notes": "行业技术指标对比（REQ-F-250）。全量 91 个测试文件、838 个用例绿（fork 自报）；协调会话合并后重新跑过受影响的 4 个测试文件（29/29 通过），确认与 competitor-board 合并后仍然共存。真实入口 scripts/probe-industry-spec-comparison.mjs 已真实执行：真实模型调用 show_industry_spec_comparison，展示屏切换，真实数据下表头正确显示三类 kind 标签（友商/规则与准入方/客户），PASS。"
     },
     {
@@ -1480,7 +1480,7 @@
       "command": "npx vitest run tests/entities.test.ts tests/entity-tools.test.ts tests/org-chart-board.test.tsx tests/tool-suites.test.ts tests/stage-reach.test.tsx",
       "real_entry": true,
       "date": "2026-09-18",
-      "entry": "assistant",
+      "entry": "user",
       "notes": "组织架构/研发阵型看板（REQ-F-260）。18 个新增/改动用例（fork 自报）；协调会话合并后重新跑过完整受影响集合（99/99 通过），并做过一次全量套件复核（872/873，唯一失败为已知资源争用 flake，隔离单跑通过）。真实入口 scripts/probe-org-chart-board.mjs 已真实执行：①真实模型调用把展示屏切到组织架构看板；②真实模型调用 propose_person，来源不受信时正确回复提及待采纳/测试字样，PASS。探针自身通过对话请求模型忽略测试提议来清理，协调会话额外直接查询 /api/entities 独立核实pending 与 proposals 数组均为空，确认清理真正成功（不只是探针自称成功）。"
     },
     {
@@ -1489,7 +1489,7 @@
       "command": "npx vitest run tests/display-screen.test.tsx tests/settings-on-display.test.tsx",
       "real_entry": true,
       "date": "2026-09-18",
-      "entry": "assistant",
+      "entry": "user",
       "notes": "非首页视图全悬浮（REQ-F-200 ④ 第二次修订）。真实入口 scripts/probe-unified-floating-console.mjs 已真实执行：资料库面板在控制台收拢态与展开一次对话后的展开态下，容器 bottom 均等于视口高度（900=900），不留让位空白，PASS。"
     },
     {
@@ -1498,7 +1498,7 @@
       "command": "npx vitest run tests/floating-chat.test.tsx",
       "real_entry": true,
       "date": "2026-09-18",
-      "entry": "assistant",
+      "entry": "user",
       "notes": "控制台常驻入口合并一行（REQ-F-200 ⑤ 新增）。全量 94 个测试文件、875 个用例全绿（协调会话合并全部 7 条 2026-09-18 批次 CR 后的最终复核，含此前偶发超时的用例这次也一次通过）。真实入口 scripts/probe-unified-floating-console.mjs 已真实执行：状态灯/上传/模型/技能/工具/资料库确认同一行，PASS。"
     },
     {
@@ -1507,7 +1507,7 @@
       "command": "node scripts/probe-library-in-board.mjs",
       "real_entry": true,
       "date": "2026-09-18",
-      "entry": "assistant",
+      "entry": "user",
       "notes": "看板「资料库」板块真实入口（REQ-F-242 ⑥）。真实浏览器确认：看板正文里的「资料库」板块已出现（不再是「知识库总览」）；REQ-F-170 无归属计数保留（“共 7 条 · 无归属 7 条”）；板块内可见 15 张卡片；「查看原文」链接正确指向 /api/documents/raw；真实数据量不足一页，分页交互本身未被这次真实数据触发，如实登记。PASS。"
     }
   ],
