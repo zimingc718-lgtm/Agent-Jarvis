@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { addSource, readEntity, saveEntity, STALE_AFTER_DAYS, listEntities } from "@/lib/entities";
+import { readHistory } from "@/lib/entity-history";
 import { describeChange, fetchSource, MIN_READABLE_CHARS, readSnapshot, SNAPSHOTS_DIR } from "@/lib/sources";
 
 /**
@@ -82,6 +83,13 @@ describe("fetchSource", () => {
     expect(entity?.evidence[0]).toMatchObject({ field: "change", url: URL, locator: "采集比对" });
     // Unread follows from the change timestamp, nothing else sets it.
     expect((await listEntities(root))[0].unread).toBe(true);
+
+    // CR-20260918-change-history-and-sources CP-1: a real change also appends to the
+    // entity's message history, not just the single latest `change` line. The
+    // baseline-establishing first call above must NOT have appended anything.
+    const history = await readHistory("友商-a", root);
+    expect(history).toHaveLength(1);
+    expect(history[0]).toMatchObject({ url: URL, change: changed.change });
   });
 
   it("③ 抓不到 → failed_fetch，且不推进采集时间", async () => {
