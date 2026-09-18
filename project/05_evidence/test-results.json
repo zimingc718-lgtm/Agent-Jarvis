@@ -1404,6 +1404,15 @@
       "date": "2026-09-17",
       "entry": "user",
       "notes": "归档合并前遗留笔记，一次性操作已对用户真实知识库执行：.data/knowledge/ 根目录条目数 253→7（仅剩资料库索引卡），清单落盘 .data/knowledge/archive/_migration-2026-09-17T17-24-43-388Z.json。执行过程中发生一次事故——运行中的服务器加载的是 CP-1 修复 deleteKnowledge 之前的旧构建，246 条实际被硬删而非归档，如实记在 CR 文档「流程偏差记录」与证据文档；本行 result 标 PASS 是就「脚本本身按设计执行、清单完整、条目数变化符合预期」而言，不代表这 246 条数据可恢复。"
+    },
+    {
+      "id": "TEST-451",
+      "result": "PASS",
+      "command": "npx vitest run tests/floating-chat.test.tsx",
+      "real_entry": true,
+      "date": "2026-09-17",
+      "entry": "user",
+      "notes": "上传入口收敛为一个按钮（REQ-F-020 ⑧，机器（UI）：fireEvent.keyDown 驱动键盘打开菜单，aria-expanded 正确翻转）。真实入口：node scripts/probe-unified-upload-entry.mjs，真实浏览器点击「上传」展开菜单，「文件夹」「zip 压缩包」两个选项各自弹出正确的系统选择器；文件夹一侧选一个探针自建的一次性目录，真实注册出技能后立即用既有删除入口清理。"
     }
   ],
   "executed_commands": [

@@ -173,7 +173,9 @@ test("skill turn surfaces an insight on the display screen; 显示首页 returns
   // control — the path that silently did nothing before this CR.
   await page.goto("/");
   const chooser = page.waitForEvent("filechooser");
-  await page.getByRole("button", { name: "上传 zip" }).click();
+  // CR-20260915-unified-upload-entry: 两个并列按钮收敛成一个「上传」入口 + 菜单。
+  await page.getByRole("button", { name: "上传", exact: true }).click();
+  await page.getByRole("menuitem", { name: "zip 压缩包" }).click();
   await (await chooser).setFiles({
     name: "Reporter Skill.zip",
     mimeType: "application/zip",

@@ -747,7 +747,7 @@ describe("FloatingChat", () => {
       vi.stubGlobal("fetch", fetchMock);
       render(<FloatingChat hasEnabledProvider probeProviders={readyProbe} />);
 
-      expect(screen.getByRole("button", { name: "上传文件夹" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "上传" })).toBeInTheDocument();
       const input = screen.getByLabelText("选择技能 zip 压缩包");
       fireEvent.change(input, { target: { files: [new File(["z"], "picked.zip")] } });
 
@@ -756,6 +756,32 @@ describe("FloatingChat", () => {
       expect((init.body as FormData).get("archive")).toBeInstanceOf(File);
       // ⑤ Same receipt wording as the drop path — one shared submit implementation.
       await waitFor(() => expect(screen.getByText(/已注册技能：picked/)).toBeInTheDocument());
+    });
+
+    it("③b CR-20260915-unified-upload-entry: 上传收敛为一个入口，键盘可达", () => {
+      render(<FloatingChat hasEnabledProvider probeProviders={readyProbe} />);
+
+      // 折叠态：只有一个「上传」按钮可见，没有两个并列的旧按钮。
+      expect(screen.queryByRole("button", { name: "上传文件夹" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "上传 zip" })).not.toBeInTheDocument();
+
+      const trigger = screen.getByRole("button", { name: "上传" });
+      expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
+
+      // 键盘（Enter）能打开——原两个按钮的存在本就是给「拖放用不了的键盘用户」准备的
+      // 无障碍路径（REQ-F-020 ①注释），合并成一个入口不能丢掉这条路径。菜单展开后点
+      // 「文件夹」「zip 压缩包」两个选项、真的弹出对应系统选择器、文件夹一侧选完真的
+      // 注册出技能，这一段由 scripts/probe-unified-upload-entry.mjs 在真实浏览器核对
+      // 过（PASS）——Radix 的 Portal 菜单内容在这套 jsdom 环境下的可查询性不稳定（同一个
+      // 断言在真实 Chromium 里稳定可查，多次复现），此处不勉强模拟到点击菜单项那一步，
+      // 如实只断言 jsdom 里能稳定核实的部分。
+      fireEvent.keyDown(trigger, { key: "Enter" });
+      expect(trigger).toHaveAttribute("aria-expanded", "true");
+      // Radix 打开后还有一轮定位/测量相关的微任务，跑在本用例函数返回之后，会打印一条
+      // 无害的 act() 警告（断言已经拿到正确结果，不影响这条用例本身通过）——试过用
+      // `await act(async () => {})` 收尾，反而在这套环境里挂住整条用例，弊大于利，
+      // 如实留着这条警告不追。
     });
 
     it("④ a registration receipt that excludes files says so", async () => {
