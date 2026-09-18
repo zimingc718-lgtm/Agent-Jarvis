@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { KnowledgeDashboard } from "@/components/KnowledgeDashboard";
 import { IndustrySpecComparison } from "@/components/IndustrySpecComparison";
+import { CompetitorBoard } from "@/components/CompetitorBoard";
 import { Archive, ArrowLeft, ShieldAlert } from "lucide-react";
 import { ModelSettings } from "@/components/ModelSettings";
 import type { ProviderTemplate } from "@/lib/providers";
@@ -126,6 +127,7 @@ export function DisplayScreen({
   const [view, setView] = useState<DisplayView>(initial);
   /**
    * `opening` is the title screen; `board` is the knowledge board (出口义务 1);
+   * `competitor-board` is the friend-comparison table (CR-20260918-competitor-board);
    * `industry-spec-comparison` is the cross-kind technical-indicator table
    * (CR-20260918-industry-spec-comparison).
    */
@@ -163,7 +165,7 @@ export function DisplayScreen({
   useEffect(() => {
     const onStage = (event: Event) => {
       const stage = (event as CustomEvent<{ stage?: DisplayStage }>).detail?.stage;
-      if (stage === "board" || stage === "industry-spec-comparison") {
+      if (stage === "board" || stage === "competitor-board" || stage === "industry-spec-comparison") {
         rememberOpeningPlayed();
         setStage(stage);
       } else if (stage === "opening") {
@@ -384,6 +386,18 @@ export function DisplayScreen({
             onAsk={(question) => window.dispatchEvent(new CustomEvent(ASK_JARVIS_EVENT, { detail: { text: question } }))}
           />
         </div>
+      </div>
+    );
+  }
+
+  // 友商看板：同一套「不落数据库、纯会话态」的道理（CR-20260918-competitor-board）。
+  if (stage === "competitor-board") {
+    return (
+      <div
+        className="display-screen display-screen--competitor-board fixed inset-x-0 top-0 z-0 overflow-y-auto bg-background"
+        style={{ bottom: "var(--jarvis-console-h, 0px)" }}
+      >
+        <CompetitorBoard />
       </div>
     );
   }

@@ -63,13 +63,13 @@ export const ASK_JARVIS_EVENT = "jarvis:ask";
 export const DISPLAY_STAGE_EVENT = "jarvis:display-stage";
 
 /**
- * The session stages of the display screen. Insight is persistent and sits above all of
- * them. `industry-spec-comparison` follows the same transient-event pattern as `board`
- * (CR-20260918-industry-spec-comparison) — a persisted fourth `display_state` value would
- * fight `show_home`/`show_insight` across sessions for the same reason CR-20260912-display-
- * stage rejected that for the board itself.
+ * The session stages of the display screen. Insight/document are persistent and sit
+ * above all of these. `competitor-board` and `industry-spec-comparison` both follow the
+ * same non-persisted reasoning as `board` (CR-20260918-competitor-board,
+ * CR-20260918-industry-spec-comparison): a sticky comparison table would fight
+ * `show_home`/`show_insight` across sessions the same way a sticky board would have.
  */
-export type DisplayStage = "opening" | "board" | "industry-spec-comparison";
+export type DisplayStage = "opening" | "board" | "competitor-board" | "industry-spec-comparison";
 
 /**
  * 把设置类界面唤到动态屏上（REQ-F-200，用户 2026-09-13 决策 3）。`detail` 是 `{ panel }`；
