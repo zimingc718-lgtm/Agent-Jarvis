@@ -39,13 +39,31 @@ await send(
     "参考业界最佳实践的会议前瞻报告应该有的结构来组织内容，完成后显示在展示屏上。"
 );
 
-// 没有明确的"完成"信号可等，退而求其次：等一段生成时间，再看展示屏是否已经切到 insight。
-// 生成一份完整报告可能需要多轮工具调用（web_search/read_url/save_insight 分块），给足时间。
-await page.waitForTimeout(60_000);
+// 真实一轮跑下来：一份带真实检索的会议前瞻报告耗时约 2 分钟（多轮 web_search/read_url +
+// save_insight 分块），固定等 60 秒会在报告完全生成前就去查，得到假阴性——第一版探针正是
+// 这样误判过一次。改为轮询"停止"按钮是否已经消失（等于流式真正结束），比猜一个固定时长
+// 稳，上限 4 分钟。
+async function waitForIdle(maxMs) {
+  const deadline = Date.now() + maxMs;
+  while (Date.now() < deadline) {
+    const stillStreaming = (await page.getByRole("button", { name: "停止" }).count()) > 0;
+    if (!stillStreaming) {
+      return true;
+    }
+    await page.waitForTimeout(5_000);
+  }
+  return false;
+}
+const finished = await waitForIdle(240_000);
+console.log(`流式在超时前结束=${finished}`);
 
-const displayFrame = page.locator(".jarvis-insight");
-const insightShown = (await displayFrame.count()) > 0;
-const bodyText = insightShown ? await displayFrame.first().innerText() : "";
+// 洞察渲染在 sandbox="allow-scripts" 的 <iframe srcDoc> 里（DEC-015），跟外层页面不同源
+// ——page.locator() 只查主 frame 的 DOM 树，看不进 iframe，之前两版探针用
+// page.locator(".jarvis-insight") 因此稳定假阴性（同一时刻直接查 /api/display 能确认
+// insight 其实已经真实生成）。用 frameLocator 按 iframe 的 title 精确定位再查内部内容。
+const insightFrame = page.frameLocator('iframe[title="技能洞察报告"]');
+const insightShown = (await page.locator('iframe[title="技能洞察报告"]').count()) > 0;
+const bodyText = insightShown ? await insightFrame.locator("body").innerText() : "";
 
 const hasScheduleHint = /日程|schedule|议程|时间表/i.test(bodyText);
 const hasPanelHint = /panel|专题|讨论环节|分论坛/i.test(bodyText);
@@ -63,10 +81,10 @@ await browser.close();
 // 这是内容质量核验，不是布尔正确性核验——三个关键词信号里只要多数命中，就认为模型确实
 // 理解了"参会前瞻"这个体裁的既有认知已经够用，不需要专门为这类洞察新增任何机制或指引。
 const signals = [hasScheduleHint, hasPanelHint, hasExpertHint].filter(Boolean).length;
-const ok = insightShown && signals >= 2;
+const ok = finished && insightShown && signals >= 2;
 console.log(
   ok
     ? "PASS 既有 save_insight/show_insight 机制足以支撑「学术会议参会前瞻」这类洞察，无需新增代码"
-    : `FAIL 见上方明细（insightShown=${insightShown}，命中信号数=${signals}/3）——若持续不过，可能需要专门的技能而非依赖模型通识`
+    : `FAIL 见上方明细（流式结束=${finished}，insightShown=${insightShown}，命中信号数=${signals}/3）——若持续不过，可能需要专门的技能而非依赖模型通识`
 );
 process.exit(ok ? 0 : 1);

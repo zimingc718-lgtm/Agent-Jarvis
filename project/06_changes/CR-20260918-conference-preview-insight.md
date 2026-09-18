@@ -20,7 +20,7 @@
   - R1: 本文件有 `## 变化点登记` 表（为空，如实注明原因）；`check-doors` PASS（0 个 CP，无需声明门）；`review r1` PASS。
   - R2/R3/R4：不适用，本 CR 无 CP 可供三层说明书响应，不新增"变更响应"节。
   - P3/P4：不适用，无 DONE 任务、无 PASS 测试可供核对——核对对象改为下方「真实入口」一项。
-  - **真实入口**：用户自己那台（`npm run build:local && npm run serve:local`，端口 3000）——真实对话里要求"做一份学术会议参会前瞻洞察，包括日程/panel/核心专家"，模型应自行调用既有的 `save_insight` 产出结构合理的内容并固化显示在动态屏（`scripts/probe-conference-preview-insight.mjs`，本 CR 交付时尚未在真实服务器上执行，留给收口该 CR 的会话执行）。
+  - **真实入口**：用户自己那台（`npm run build:local && npm run serve:local`，端口 3000）——真实对话里要求"做一份学术会议参会前瞻洞察，包括日程/panel/核心专家"，模型应自行调用既有的 `save_insight` 产出结构合理的内容并固化显示在动态屏（`scripts/probe-conference-preview-insight.mjs`）。**已执行，PASS**：流式正常结束，展示屏出现洞察，日程/panel/专家三类内容信号 3/3 命中。详见 `EV-2026-09-18-conference-preview-insight.md` §3。
 - 评审记录: 无 CP，四角色评审不适用；如实记录调查过程供人工复核。
 - R1 终裁: 已完成 | 用户 | 2026-09-18（用户"按流程开始第一波的 CR"总授权，本 CR 是 Wave 1 四条中的一条；调查过程与结论详见下方）
 

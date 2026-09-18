@@ -24,11 +24,24 @@
 
 这些用例用的是任意/占位 HTML 内容（如 `<p>x</p>`），断言的是**机制行为**（属主校验、追加/重写、截断处理）而不是**内容主题**。会议前瞻类内容会走完全相同的代码路径，不产生新分支，因此不需要为它单独再写一份内容不同、断言相同的测试。
 
-## 3. 真实入口（本 CR 交付时未执行，留给收口会话）
+## 3. 真实入口（收口会话已执行，结果 PASS）
 
-`scripts/probe-conference-preview-insight.mjs` 已写好、`node --check` 语法核对通过，但**本 fork 按约定不得触碰共享的生产服务器**（四个 Wave 1 CR 并行开发，服务器是单一共享资源），因此未实际执行。该探针会：在真实对话里要求"做一份学术会议参会前瞻洞察，包括日程/panel/核心专家"，等待模型产出，核对展示屏上出现的 `.jarvis-insight` 内容里是否包含日程/panel/专家三类关键词信号（≥2/3 视为通过）。
+- 来源: `scripts/probe-conference-preview-insight.mjs`
+- 时间: 2026-09-18
+- 采集者: 助手（claude-sonnet-5，收口会话），针对用户本机 `npm run build:local && npm run serve:local`（端口 3000）的真实生产构建服务
+- 命令: `node scripts/probe-conference-preview-insight.mjs`（`JARVIS_BASE_URL` 默认 `http://localhost:3000`）
+- 输出:
+  ```
+  流式在超时前结束=true
+  展示屏出现 insight=true
+  内容含日程相关字样=true，panel 相关字样=true，专家相关字样=true
+  PASS 既有 save_insight/show_insight 机制足以支撑「学术会议参会前瞻」这类洞察，无需新增代码
+  ```
+- 判定: **PASS**（三项内容信号 3/3 命中，超过 ≥2/3 的通过线）
 
-**这是本 CR 唯一尚未闭环的部分**：机制本身的通用性已经由代码核对与既有测试确认，但"模型被这样问的时候，会不会自己想到调用这个机制、产出的内容结构过不过关"，只有真实入口能回答。收口本 CR 时必须在用户自己那台（`npm run build:local && npm run serve:local`）实际跑一次这个探针，并把结果补进本证据文件。
+探针曾在调试过程中两次假阴性，均已定位并修正，不是产品/模型缺陷：①第一版固定 `waitForTimeout(60_000)` 早于真实生成完成（一次真实全流程约 130 秒），改为轮询"停止"按钮消失的 `waitForIdle`；②`page.locator(".jarvis-insight")` 只查主 frame，看不进洞察实际渲染所在的跨域 `<iframe sandbox="allow-scripts" title="技能洞察报告" srcDoc={...}>`（`DisplayScreen.tsx`，DEC-015 的刻意隔离设计），改为 `page.frameLocator('iframe[title="技能洞察报告"]')`。调试期间一次独立的手工轮询确认过模型确实生成了结构完整的报告（洞察 id `b2a2ae54-dd58-4e5d-9812-cbfe628122af`：执行摘要、关键发现、日程总览、专题辩论、专家图谱、风险披露、来源分级附录等十个章节），与本次最终探针的判定互相印证。
+
+**结论**：机制本身的通用性由代码核对与既有测试确认（见 §1、§2）；模型在被要求"学术会议参会前瞻"时会自主调用既有 `save_insight`/`show_insight` 机制、产出结构合格的内容，由本次真实入口确认。本 CR 无需任何新代码，如实关闭。
 
 ## 4. 局限（如实登记）
 
