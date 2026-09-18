@@ -31,7 +31,9 @@
   - P3/P4: TASK-457/458/459 全部 DONE；TEST-457/458/459 全部 PASS。
   - **真实入口**（本 fork 未执行，交编排会话）：用户自己那台（`npm run build:local && npm run serve:local`，端口 3000）——`scripts/probe-change-history-and-sources.mjs`（已写好、`node --check` 通过）：①新建一次性对象、直接写一条历史 JSONL 后，卡片展开态能渲染出这条消息，且是指向其 URL 的可点击链接；②展开态不再直接看到内联的"添加采集源"表单，改为一个"采集源设置"按钮；③点开按钮后是一个弹窗，弹窗内含既有的手动增删表单，以及一个"自动配置来源"按钮；④点击该按钮后，对话框输入框被预填指定文本、且没有被自动发送。全程用完清理（`DELETE /api/entities/<name>`），不污染真实看板。
 - 评审记录: 快车道。三个 CP 均可由单测（`entity-history.test.ts`、`sources.test.ts` 的新增用例、`entity-tools.test.ts` 的新增用例、`entity-route.test.ts` 的新增用例、`knowledge-dashboard.test.tsx` 的改写/新增用例）+ 真实入口共同核验。
-- R1 终裁: 待定 | 用户 | ——（范围已经过 INPUT-2026-09-18-001/002 确认；本 CR 的方案细节待协调会话统一提请用户确认，与 Wave 1 四条 CR 相同的处理方式）
+- R1 终裁: 已完成 | 用户 | 2026-09-18
+
+签署经过（如实登记，紧邻上一行但不在同一行，避免混入 `review r1` 的严格签置行匹配）：协调会话在本 CR 实现完成后，向用户汇总本 CR 三个 CP 的具体方案选择——消息历史用独立 JSONL 文件、`add_source` 不经待采纳闸直接登记、弹窗内的自动配置复用既有 `onAsk` 机制——与另外两条并行 Wave 2/3 CR（`industry-spec-comparison`、`org-chart-board`）一并提请确认；用户回复选择「Approve all three as-is」。与 Wave 1 四条 CR 不同，本 CR 没有先于实现的直接用户授权（Wave 1 有"按流程开始第一波的 CR"这句明确原话），是协调会话依据用户更早前"继续，尽可能多 agent 完成所有代办任务"的总体指示自行派发实现，实现完成后才补的这轮确认——如实记录这个时序差异，不掩盖。
 
 ## 问题经过
 
