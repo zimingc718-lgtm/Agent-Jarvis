@@ -2,7 +2,7 @@
 
 - 级别: 重型档（CP-2 判定为单向门——首次真实登录触发的自动迁移会 `rename` 现有单管理员的真实生产数据；`.data/` 全目录被 `.gitignore` 排除、不进版本库，机制本身若判断错「谁是 owner」或迁移到错误目标，没有 `git revert` 能找回，这与本批次此前 7 条 CR 都只新增能力、从不搬动既有真实数据是质的不同。CP-1 本身双向门、有完整机器检查；但整条变更含至少一个单向门 CP，按 DEC-021 应判重型档，不能因为 CP-1 达标就整体降级）
 - 提出人: 用户，原始条目见 INPUT-2026-09-18-001 第 9a 条（Railway/多用户部署）；协调会话就此调查代码现状后，用户通过 AskUserQuestion 做出两条直接产品裁定——①"Each person needs their own private data"（beta 用户之间不共享实体/知识库数据池，需与 conversations/providers/skills 已有的隔离模型对齐）；②"Automatic on first login"（现有单管理员的真实数据在其本人首次真实登录时自动继承，不走人工复核脚本，是用户在权衡"自动化风险 vs 人工流程摩擦"后的明确选择，接受本项目已发生过一次的 CR-F 误删事故式风险类别，但要求以本 CR 的原子化设计把该风险降到最低）
-- 状态: OPEN（R1 待人工终裁——本 CR 触及用户现有真实生产数据的自动迁移，风险类别与本批次此前 7 条 CR 不同，不适用"批量 Approve as-is"，需要用户单独过目本文件的「变化点登记」「回滚方式」两节后拍板；协调会话已完成实现、单元测试、R2-R4 机器门自评，见下）
+- 状态: R1 已终裁，待合并（用户已单独审阅本文件「变化点登记」「回滚方式」两节并批准；P3/P4 完成；真实入口——首次真实登录触发的真实数据迁移——按设计要等 Railway + Google 登录实际激活后才会发生，见「验收条件」，本次合并不触发任何真实数据搬动）
 - 占用 ID: REQ-F-270, REQ-F-271, DEC-380, DEC-381, TASK-500, TASK-501, TEST-500, TEST-501
 - 评审模型: 重型档（完整 R1–R4 + 本文件「回滚方式」节）
 - 影响需求: **新增** REQ-F-270（每用户实体/知识库数据私有隔离）、REQ-F-271（现有单管理员真实数据首次真实登录时自动继承）
@@ -28,9 +28,12 @@
   - R1: 本文件有 `## 变化点登记` 表（每行有来源角色）+ R1 人工终裁痕迹；`review r1` PASS。**当前未完成**——见「状态」。
   - R2/R3/R4: 本文件含 `## R2/R3/R4 评审矩阵`，协调会话以四角色视角自评填入，`review r2|r3|r4` PASS（机器终止，见下方矩阵）。
   - P3/P4: TASK-500、TASK-501 DONE；TEST-500、TEST-501 PASS；`npx tsc --noEmit` 0 错误；`npx vitest run` 全量 95 个测试文件、887 个用例绿（含改造后的 `entity-route.test.ts`/`knowledge-route.test.ts`/`sweep-route.test.ts`，三者原先直接读写全局 `ENTITIES_ROOT`/`KNOWLEDGE_ROOT` 的写法在本 CR 之后会与真实路由的每用户根解析不一致，已同步改为解析同一个 mock 用户的私有根，详见 `EV-2026-09-18-per-user-data-isolation.md`）。
-  - **真实入口（未执行，需协调会话在用户生产环境接手）**：`scripts/probe-per-user-data-isolation.mjs` 已写好、语法已核验，**刻意未对真实数据执行**——脚本本身的克制设计与执行安全须知见该文件顶部注释。协调会话需要的真实入口步骤：①重建生产构建、重启服务前，先用文件管理器或 `Get-ChildItem` 记录 `.data/entities`、`.data/knowledge` 当前的文件清单（数量、文件名）作为迁移前基线；②重启后打一个只读路由（如 `/api/entities`）触发首次真实请求，确认返回 200 且实体列表与迁移前一致（不多不少）；③核对 `.data/users/<单管理员 ID>/{entities,knowledge}` 目录已出现且文件清单与基线完全一致，`.data/entities`、`.data/knowledge` 原地已不存在（`rename` 的证据）；④用真实 UI 走一次"新建实体→关闭页面→重新打开→仍能看到"的读写闭环，确认迁移后正常读写未受影响；⑤（可选，验证隔离本身）用 `JARVIS_TEST_USER_ID` 或第二个真实账号模拟一次"非 owner 用户"请求，确认其看到的是全新空列表而不是单管理员的真实数据。
+- 真实入口: 未执行（首次真实登录触发的自动迁移事件按设计需等 Railway 与 Google 登录实际激活后才发生，本次合并本身不触发任何真实数据搬动）
+  - **真实入口详情**：`scripts/probe-per-user-data-isolation.mjs` 已写好、语法已核验，**刻意未对真实数据执行**——脚本本身的克制设计与执行安全须知见该文件顶部注释。协调会话需要的真实入口步骤：①重建生产构建、重启服务前，先用文件管理器或 `Get-ChildItem` 记录 `.data/entities`、`.data/knowledge` 当前的文件清单（数量、文件名）作为迁移前基线；②重启后打一个只读路由（如 `/api/entities`）触发首次真实请求，确认返回 200 且实体列表与迁移前一致（不多不少）；③核对 `.data/users/<单管理员 ID>/{entities,knowledge}` 目录已出现且文件清单与基线完全一致，`.data/entities`、`.data/knowledge` 原地已不存在（`rename` 的证据）；④用真实 UI 走一次"新建实体→关闭页面→重新打开→仍能看到"的读写闭环，确认迁移后正常读写未受影响；⑤（可选，验证隔离本身）用 `JARVIS_TEST_USER_ID` 或第二个真实账号模拟一次"非 owner 用户"请求，确认其看到的是全新空列表而不是单管理员的真实数据。
 - 评审记录: 协调会话以四角色视角自评（见下方 R2/R3/R4 矩阵），非独立多角色 Agent 出具——这是重型档在"实现者与评审者是同一会话"约束下的诚实标注，最终裁决权仍在 R1 的用户人工终裁。
-- R1 终裁: 未完成（用户拍板后改为：已完成 | 用户 | YYYY-MM-DD）
+- R1 终裁: 已完成 | 用户 | 2026-09-18
+
+签署经过（如实登记，紧邻上一行但不在同一行，避免混入 `review r1` 的严格签置行匹配）：协调会话独立核对了迁移逻辑（`ensureRootMigrated` 的原子 rename 语义）、`tests/user-data-paths.test.ts` 全部 12 例（尤其是非 owner 不触发迁移、半迁移崩溃恢复两例）、`src/app/api/entities/route.ts` 的实际接线 diff，以及本文件「回滚方式」节的三种场景，将审查结论与本文件一并提请用户；用户明确选择「Approve」，并知悉真实迁移事件本身要到后续 Railway + Google 登录真正激活、本人首次真实登录时才会发生——本次合并只落地代码，不触发任何真实数据搬动。
 
 ## 问题经过
 
@@ -43,7 +46,7 @@
 | CP | 来源角色 | 一句话 | 关联 ID | 类型 | 门 | 发现方式 |
 |---|---|---|---|---|---|---|
 | CP-1 | 产品 | 新增 `src/lib/user-data-paths.ts`：`entitiesRootFor(userId)`/`knowledgeRootFor(userId)` 从净化后的 `userId` 派生独立文件根；`ensureUserDataMigrated`/`resolveUserDataRoots` 提供"解析根 + 按需迁移"的统一入口，`isOwner` 双通道判定（`JARVIS_SINGLE_ADMIN_ID` 精确匹配 / `JARVIS_OWNER_EMAIL` 大小写不敏感匹配） | REQ-F-270, REQ-F-271, DEC-380, DEC-381, TASK-500, TEST-500 | 新增 | 双向 | 机器：`tests/user-data-paths.test.ts` 12 例（CP-1 路径确定性/隔离性/穿越净化/空值拒绝/可读性 5 例；CP-2 单管理员迁移/幂等/非 owner 空目录/大小写不敏感/空 legacy 根/半迁移恢复/无 owner 配置 7 例），覆盖设计文档列出的每一个边界 |
-| CP-2 | 产品 | 全部真实调用点接上 `resolveUserDataRoots`：`entities/**`、`knowledge/**` 共 10 个 API 路由、`chat.ts#buildRegistry`（连带其两个真实调用点 `runChatTurn`、`api/tools/route.ts`）、`src/app/page.tsx` 首屏 SSR、`knowledge-tools.ts` 的 `ingest_url` 工具（修正其此前遗漏转发 `entitiesRoot` 的既有小缺口）。`library.ts`（资料库，字节按设计进版本库、跨用户共享是既有约定）与 `documents.ts`（REQ-F-110 本机目录，远程多用户部署下"用户自己的文件"这一概念本身需要重新设计）明确排除在外，见「非目标」 | REQ-F-270, REQ-F-271, DEC-380, DEC-381, TASK-501, TEST-501 | 新增 | 双向（机制本身）／单向（首次真实登录触发的真实数据迁移事件本身，见「级别」） | 机器 + 真实入口：`tests/entity-route.test.ts`/`tests/knowledge-route.test.ts`/`tests/sweep-route.test.ts` 已改造为解析同一 mock 用户的私有根（证明路由确实按用户隔离,而不是继续读全局根）；全量回归 887 例绿证明接线未破坏任何既有行为。**首次真实登录触发的真实迁移事件**发现方式为真实入口操作（协调会话在用户生产环境执行，见「验收条件」），机器测试只能覆盖迁移逻辑本身的正确性，不能替代"对真实数据实际跑一次"这件事 |
+| CP-2 | 产品 | 全部真实调用点接上 `resolveUserDataRoots`：`entities/**`、`knowledge/**` 共 10 个 API 路由、`chat.ts#buildRegistry`（连带其两个真实调用点 `runChatTurn`、`api/tools/route.ts`）、`src/app/page.tsx` 首屏 SSR、`knowledge-tools.ts` 的 `ingest_url` 工具（修正其此前遗漏转发 `entitiesRoot` 的既有小缺口）。`library.ts`（资料库，字节按设计进版本库、跨用户共享是既有约定）与 `documents.ts`（REQ-F-110 本机目录，远程多用户部署下"用户自己的文件"这一概念本身需要重新设计）明确排除在外，见「非目标」 | REQ-F-270, REQ-F-271, DEC-380, DEC-381, TASK-501, TEST-501 | 新增 | 单向 | 接线机制本身可双向验证（改错了能改回来），但其触发的首次真实登录迁移事件不可逆，按 DEC-021 与「级别」的判定从严记为单向。机器 + 真实入口：`tests/entity-route.test.ts`/`tests/knowledge-route.test.ts`/`tests/sweep-route.test.ts` 已改造为解析同一 mock 用户的私有根（证明路由确实按用户隔离,而不是继续读全局根）；全量回归 887 例绿证明接线未破坏任何既有行为。**首次真实登录触发的真实迁移事件**发现方式为真实入口操作（协调会话在用户生产环境执行，见「验收条件」），机器测试只能覆盖迁移逻辑本身的正确性，不能替代"对真实数据实际跑一次"这件事 |
 
 ## 非目标（如实登记）
 

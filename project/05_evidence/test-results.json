@@ -72,7 +72,8 @@
     "CR-20260918-competitor-board",
     "CR-20260918-industry-spec-comparison",
     "CR-20260918-org-chart-board",
-    "CR-20260918-unified-floating-console"
+    "CR-20260918-unified-floating-console",
+    "CR-20260918-per-user-data-isolation"
   ],
   "tests": [
     {
@@ -1509,6 +1510,24 @@
       "date": "2026-09-18",
       "entry": "user",
       "notes": "看板「资料库」板块真实入口（REQ-F-242 ⑥）。真实浏览器确认：看板正文里的「资料库」板块已出现（不再是「知识库总览」）；REQ-F-170 无归属计数保留（“共 7 条 · 无归属 7 条”）；板块内可见 15 张卡片；「查看原文」链接正确指向 /api/documents/raw；真实数据量不足一页，分页交互本身未被这次真实数据触发，如实登记。PASS。"
+    },
+    {
+      "id": "TEST-500",
+      "result": "PASS",
+      "command": "npx vitest run tests/user-data-paths.test.ts",
+      "real_entry": false,
+      "date": "2026-09-18",
+      "entry": "assistant",
+      "notes": "每用户文件根解析与迁移模块（REQ-F-270/271，DEC-380/381）。12 个新增用例，覆盖路径确定性/隔离性/穿越净化/空值拒绝/可读性（CP-1）与单管理员迁移/幂等/非 owner 空目录/大小写不敏感/空 legacy 根/半迁移恢复/无 owner 配置（CP-2）。纯单元测试，未触碰任何真实数据。"
+    },
+    {
+      "id": "TEST-501",
+      "result": "PASS",
+      "command": "npx vitest run tests/entity-route.test.ts tests/knowledge-route.test.ts tests/sweep-route.test.ts",
+      "real_entry": false,
+      "date": "2026-09-18",
+      "entry": "assistant",
+      "notes": "全部真实调用点接线（REQ-F-270/271，DEC-380/381）。entity-route.test.ts/knowledge-route.test.ts/sweep-route.test.ts 三个既有路由测试文件已改造为解析同一 mock 用户的私有根（此前直接读写全局 ENTITIES_ROOT/KNOWLEDGE_ROOT，本 CR 之后与真实路由行为不一致，已同步修正，过程中发现并清理了它们此前未设置 JARVIS_USERS_PATH 导致测试数据泄漏进 worktree 共享 .data/users 目录的问题）；全量回归 95 个测试文件、887 个用例绿。首次真实登录触发的真实迁移事件本身未在此打钩——real_entry 如实标为 false，该事件的验证方式与时机见 EV-2026-09-18-per-user-data-isolation.md 与 CR 文档「验收条件」，非本条目遗漏。"
     }
   ],
   "executed_commands": [
@@ -1781,7 +1800,9 @@
     "node scripts/probe-industry-spec-comparison.mjs  (PASS)",
     "node scripts/probe-change-history-and-sources.mjs  (PASS)",
     "node scripts/probe-org-chart-board.mjs  (PASS)",
-    "node scripts/probe-unified-floating-console.mjs  (PASS)"
+    "node scripts/probe-unified-floating-console.mjs  (PASS)",
+    "npx tsc --noEmit -p .  (OK 0 错误)",
+    "npx vitest run  (OK：95 个测试文件、887 个用例全绿，含三个改造后的路由测试文件)"
   ],
   "known_warnings": [
     {
