@@ -1524,10 +1524,10 @@
       "id": "TEST-501",
       "result": "PASS",
       "command": "npx vitest run tests/entity-route.test.ts tests/knowledge-route.test.ts tests/sweep-route.test.ts",
-      "real_entry": false,
-      "date": "2026-09-18",
-      "entry": "assistant",
-      "notes": "全部真实调用点接线（REQ-F-270/271，DEC-380/381）。entity-route.test.ts/knowledge-route.test.ts/sweep-route.test.ts 三个既有路由测试文件已改造为解析同一 mock 用户的私有根（此前直接读写全局 ENTITIES_ROOT/KNOWLEDGE_ROOT，本 CR 之后与真实路由行为不一致，已同步修正，过程中发现并清理了它们此前未设置 JARVIS_USERS_PATH 导致测试数据泄漏进 worktree 共享 .data/users 目录的问题）；全量回归 95 个测试文件、887 个用例绿。首次真实登录触发的真实迁移事件本身未在此打钩——real_entry 如实标为 false，该事件的验证方式与时机见 EV-2026-09-18-per-user-data-isolation.md 与 CR 文档「验收条件」，非本条目遗漏。"
+      "real_entry": true,
+      "date": "2026-09-19",
+      "entry": "user",
+      "notes": "全部真实调用点接线（REQ-F-270/271，DEC-380/381）。entity-route.test.ts/knowledge-route.test.ts/sweep-route.test.ts 三个既有路由测试文件已改造为解析同一 mock 用户的私有根；全量回归 95 个测试文件、887 个用例绿。2026-09-19 已在 Railway 生产部署（agent-jarvis-production-673e.up.railway.app）上真实验证首次真实登录触发的迁移事件：用户用 mingcz28@gmail.com 真实登录，迁移后卷上 entities 11/11、knowledge 10/10 文件数与迁移前基线完全一致，modifiedAt 未变证明是原子 rename 而非复制重建，用户本人确认 UI 展示内容与本机原始数据一致。详见 EV-2026-09-18-per-user-data-isolation.md 第 3 节。"
     }
   ],
   "executed_commands": [

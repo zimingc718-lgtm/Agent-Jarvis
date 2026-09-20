@@ -2,7 +2,7 @@
 
 - 级别: 重型档（CP-2 判定为单向门——首次真实登录触发的自动迁移会 `rename` 现有单管理员的真实生产数据；`.data/` 全目录被 `.gitignore` 排除、不进版本库，机制本身若判断错「谁是 owner」或迁移到错误目标，没有 `git revert` 能找回，这与本批次此前 7 条 CR 都只新增能力、从不搬动既有真实数据是质的不同。CP-1 本身双向门、有完整机器检查；但整条变更含至少一个单向门 CP，按 DEC-021 应判重型档，不能因为 CP-1 达标就整体降级）
 - 提出人: 用户，原始条目见 INPUT-2026-09-18-001 第 9a 条（Railway/多用户部署）；协调会话就此调查代码现状后，用户通过 AskUserQuestion 做出两条直接产品裁定——①"Each person needs their own private data"（beta 用户之间不共享实体/知识库数据池，需与 conversations/providers/skills 已有的隔离模型对齐）；②"Automatic on first login"（现有单管理员的真实数据在其本人首次真实登录时自动继承，不走人工复核脚本，是用户在权衡"自动化风险 vs 人工流程摩擦"后的明确选择，接受本项目已发生过一次的 CR-F 误删事故式风险类别，但要求以本 CR 的原子化设计把该风险降到最低）
-- 状态: R1 已终裁，待合并（用户已单独审阅本文件「变化点登记」「回滚方式」两节并批准；P3/P4 完成；真实入口——首次真实登录触发的真实数据迁移——按设计要等 Railway + Google 登录实际激活后才会发生，见「验收条件」，本次合并不触发任何真实数据搬动）
+- 状态: CLOSED（R1 已终裁并合并；P3/P4 完成；2026-09-19 已在 Railway 生产部署上完成真实入口验证——用户用 mingcz28@gmail.com 真实登录触发自动迁移，PASS，详见 `EV-2026-09-18-per-user-data-isolation.md` 第 3 节与 R4 矩阵 CP-2/测试列）
 - 占用 ID: REQ-F-270, REQ-F-271, DEC-380, DEC-381, TASK-500, TASK-501, TEST-500, TEST-501
 - 评审模型: 重型档（完整 R1–R4 + 本文件「回滚方式」节）
 - 影响需求: **新增** REQ-F-270（每用户实体/知识库数据私有隔离）、REQ-F-271（现有单管理员真实数据首次真实登录时自动继承）
@@ -28,7 +28,7 @@
   - R1: 本文件有 `## 变化点登记` 表（每行有来源角色）+ R1 人工终裁痕迹；`review r1` PASS。**当前未完成**——见「状态」。
   - R2/R3/R4: 本文件含 `## R2/R3/R4 评审矩阵`，协调会话以四角色视角自评填入，`review r2|r3|r4` PASS（机器终止，见下方矩阵）。
   - P3/P4: TASK-500、TASK-501 DONE；TEST-500、TEST-501 PASS；`npx tsc --noEmit` 0 错误；`npx vitest run` 全量 95 个测试文件、887 个用例绿（含改造后的 `entity-route.test.ts`/`knowledge-route.test.ts`/`sweep-route.test.ts`，三者原先直接读写全局 `ENTITIES_ROOT`/`KNOWLEDGE_ROOT` 的写法在本 CR 之后会与真实路由的每用户根解析不一致，已同步改为解析同一个 mock 用户的私有根，详见 `EV-2026-09-18-per-user-data-isolation.md`）。
-- 真实入口: 未执行（首次真实登录触发的自动迁移事件按设计需等 Railway 与 Google 登录实际激活后才发生，本次合并本身不触发任何真实数据搬动）
+- 真实入口: 已执行（2026-09-19，Railway 生产部署，用户用 mingcz28@gmail.com 完成真实首次登录，触发自动迁移，PASS，详见 EV-2026-09-18-per-user-data-isolation.md 第 3 节）
   - **真实入口详情**：`scripts/probe-per-user-data-isolation.mjs` 已写好、语法已核验，**刻意未对真实数据执行**——脚本本身的克制设计与执行安全须知见该文件顶部注释。协调会话需要的真实入口步骤：①重建生产构建、重启服务前，先用文件管理器或 `Get-ChildItem` 记录 `.data/entities`、`.data/knowledge` 当前的文件清单（数量、文件名）作为迁移前基线；②重启后打一个只读路由（如 `/api/entities`）触发首次真实请求，确认返回 200 且实体列表与迁移前一致（不多不少）；③核对 `.data/users/<单管理员 ID>/{entities,knowledge}` 目录已出现且文件清单与基线完全一致，`.data/entities`、`.data/knowledge` 原地已不存在（`rename` 的证据）；④用真实 UI 走一次"新建实体→关闭页面→重新打开→仍能看到"的读写闭环，确认迁移后正常读写未受影响；⑤（可选，验证隔离本身）用 `JARVIS_TEST_USER_ID` 或第二个真实账号模拟一次"非 owner 用户"请求，确认其看到的是全新空列表而不是单管理员的真实数据。
 - 评审记录: 协调会话以四角色视角自评（见下方 R2/R3/R4 矩阵），非独立多角色 Agent 出具——这是重型档在"实现者与评审者是同一会话"约束下的诚实标注，最终裁决权仍在 R1 的用户人工终裁。
 - R1 终裁: 已完成 | 用户 | 2026-09-18
@@ -85,4 +85,4 @@
 | CP | 产品 | 架构 | 模块 | 测试 |
 |---|---|---|---|---|
 | CP-1 | APPROVED 测试场景与产品决策①②逐条对应，无遗漏 | APPROVED 测试覆盖架构文档列出的每条设计理由（rename 原子性、按模块非合并幂等） | APPROVED 测试直接针对模块导出接口，不依赖内部实现细节 | APPROVED `tests/user-data-paths.test.ts` 12 例：CP-1 路径确定性/隔离性/穿越净化/空值拒绝/可读性 5 例 + CP-2 单管理员迁移/幂等/非 owner 空目录/大小写不敏感/空 legacy 根/半迁移恢复/无 owner 配置 7 例，`npx vitest run` 全绿 |
-| CP-2 | APPROVED 验收条件已列出真实入口五步骤，对应产品决策②要求的"自动迁移"可验证 | APPROVED 机器测试覆盖接线正确性（路由确实解析到每用户根），架构层面的正确性已可机器证明 | APPROVED 模块级调用点覆盖完整，`tsc --noEmit`/`vitest run` 双重确认 | CONDITIONAL 机器测试只能证明迁移逻辑本身在各类边界条件下正确，不能证明"用户真实机器上这一次真实迁移会成功"——条件为协调会话按验收条件五步骤在生产环境执行真实入口验证，结果补记入 `EV-2026-09-18-per-user-data-isolation.md` 后本条转 APPROVED，此前 R1 终裁不视为已满足全部验收条件 |
+| CP-2 | APPROVED 验收条件已列出真实入口五步骤，对应产品决策②要求的"自动迁移"可验证 | APPROVED 机器测试覆盖接线正确性（路由确实解析到每用户根），架构层面的正确性已可机器证明 | APPROVED 模块级调用点覆盖完整，`tsc --noEmit`/`vitest run` 双重确认 | APPROVED 2026-09-19 已在 Railway 生产部署上真实执行验收条件①②③④（⑤为可选项未执行，已如实登记）：用户用 mingcz28@gmail.com 真实登录触发自动迁移，迁移后 entities 11/11、knowledge 10/10 文件数与迁移前基线完全一致，`modifiedAt` 未变证明是原子 rename，用户本人确认 UI 展示内容无误，详见 `EV-2026-09-18-per-user-data-isolation.md` 第 3 节 |
