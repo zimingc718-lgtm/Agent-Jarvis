@@ -73,7 +73,8 @@
     "CR-20260918-industry-spec-comparison",
     "CR-20260918-org-chart-board",
     "CR-20260918-unified-floating-console",
-    "CR-20260918-per-user-data-isolation"
+    "CR-20260918-per-user-data-isolation",
+    "CR-20260921-markitdown-display"
   ],
   "tests": [
     {
@@ -1528,6 +1529,24 @@
       "date": "2026-09-19",
       "entry": "user",
       "notes": "全部真实调用点接线（REQ-F-270/271，DEC-380/381）。entity-route.test.ts/knowledge-route.test.ts/sweep-route.test.ts 三个既有路由测试文件已改造为解析同一 mock 用户的私有根；全量回归 95 个测试文件、887 个用例绿。2026-09-19 已在 Railway 生产部署（agent-jarvis-production-673e.up.railway.app）上真实验证首次真实登录触发的迁移事件：用户用 mingcz28@gmail.com 真实登录，迁移后卷上 entities 11/11、knowledge 10/10 文件数与迁移前基线完全一致，modifiedAt 未变证明是原子 rename 而非复制重建，用户本人确认 UI 展示内容与本机原始数据一致。详见 EV-2026-09-18-per-user-data-isolation.md 第 3 节。"
+    },
+    {
+      "id": "TEST-510",
+      "result": "PASS",
+      "command": "npx vitest run tests/markitdown.test.ts",
+      "real_entry": false,
+      "date": "2026-09-21",
+      "entry": "assistant",
+      "notes": "markitdown 转换封装模块（REQ-F-280，DEC-390）。6 个用例，execFile 全 mock：成功路径 UTF-8 解码、解释器不存在时依次尝试候选名、真实转换失败不重试（原样上报）、超时归类、空输出视为失败、describeMarkitdownFailure 每种失败原因映射为面向用户的说明且不泄露内部细节。另有一次不经 mock 的真实脚本调用（python scripts/documents_to_html.py，退出码 0，产出 58,351 字节含真实表格的 HTML），证明 mock 断言的行为与真实子进程行为一致，non-real-entry 记录如实标注。"
+    },
+    {
+      "id": "TEST-511",
+      "result": "PASS",
+      "command": "npx vitest run tests/document-raw-route.test.ts",
+      "real_entry": true,
+      "date": "2026-09-21",
+      "entry": "user",
+      "notes": "/api/documents/raw 路由改造（REQ-F-280，DEC-390，TASK-511）。7 例（改造 1 例 + 新增 2 例，convertToHtml mock）：未登录 401、非转换类型原样直传、越界 404、扩展名白名单 400、资料库采纳闸 + 采纳后走转换分支返回 text/html、?raw=1 绕过转换拿到原始字节、转换失败 502 + rawUrl 出口。2026-09-21 已在本机重建重启后的生产构建上真实执行：curl 打真实 /api/documents/raw，携带此前被 Edge SmartScreen 拦截过的真实 PDF 的 id，返回 HTTP 200、Content-Type: text/html（不再是 application/pdf），响应体 62,334 字节，含 6 个真实 <table> 元素、jarvis-insight 包装类、文档真实标题「Diablo 400」文本，且确认不含原始 PDF 的 %PDF 字节标记——证明转换分支在完整路由链路（含认证、resolveWithinRoots、采纳闸）上真实生效，不是只有独立脚本调用生效。Railway 生产部署的真实入口验证随合并后部署步骤一并执行，结果另记入 EV 文档。"
     }
   ],
   "executed_commands": [
@@ -1802,7 +1821,8 @@
     "node scripts/probe-org-chart-board.mjs  (PASS)",
     "node scripts/probe-unified-floating-console.mjs  (PASS)",
     "npx tsc --noEmit -p .  (OK 0 错误)",
-    "npx vitest run  (OK：95 个测试文件、887 个用例全绿，含三个改造后的路由测试文件)"
+    "npx vitest run  (OK：95 个测试文件、887 个用例全绿，含三个改造后的路由测试文件)",
+    "python scripts/documents_to_html.py <真实 PDF>  (退出码 0，58,351 字节 HTML)"
   ],
   "known_warnings": [
     {
