@@ -24,7 +24,9 @@
   - P3/P4: TASK-510/511 DONE；TEST-510/511 PASS；`npx tsc --noEmit` 0 错误；`npx vitest run` 全量绿。
   - **真实入口（本地 + Railway 各一次）**：①本机打开一份此前被 Edge 拦截的真实 PDF（本次会话已确认的那份"资料库"文档），确认展示屏/新标签页能正常显示转换后的 Markdown 内容，不再触发浏览器拦截；②Railway 重新部署后，确认构建成功（`railway logs --build` 看到 markitdown/Python 依赖安装成功、`next build` 成功）且线上同一份文档能正常打开；③抽查转换结果与原 PDF 逐段核对内容一致（不是机器能断言的事，人工目测抽查至少 2 份）。
 - 评审记录: R1 四角色（产品 / 架构 / 模块开发 / 测试）独立评审。**R1 人工终裁**：待用户拍板。
-- R1 终裁: 未完成（用户拍板后改为：已完成 | 用户 | YYYY-MM-DD）
+- R1 终裁: 已完成 | 用户 | 2026-09-21
+
+签署经过（如实登记，紧邻上一行但不在同一行，避免混入 `review r1` 的严格签署行匹配）：协调会话给用户展示了方案概要（`/api/documents/raw` 对 PDF/DOCX 改用 markitdown 转换后的 Markdown 渲染显示，原始字节仍可下载，HTML/纯文本保持原样；Railway 部署新增 Python 运行时依赖），用户通过 AskUserQuestion 选择「同意，按方案推进」。
 
 ## 变化点登记
 
