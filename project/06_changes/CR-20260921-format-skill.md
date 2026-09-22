@@ -2,7 +2,7 @@
 
 - 级别: L2（标准档：全部 CP 双向门——代码可 `git revert`；缓存文件只是派生产物，删掉即回到无缓存状态；设置项清空即回到 CR-20260921-markitdown-display 的纯结构转换行为；不改写任何原始文档或用户数据）
 - 提出人: user（INPUT-2026-09-21-002，推翻 INPUT-2026-09-21-001 时"只整理排版不改内容"的裁定）
-- 状态: P3/P4 完成，待合并（R1-R4 全 PASS；模块单测 9 例、设置路由 6 例、文档路由 9 例全绿，`tsc` 0 错误；模型排版本身的真实入口——需用户先经技能上传入口注册一个排版技能并在「本地文档」里选中——尚未执行，见「验收条件」）
+- 状态: 已合并 main（ledger seq 140，verify PASS），真实入口①②③已完成（本机真实 PDF 经「文档排版」技能由 deepseek-chat 排版成功、缓存命中），待④人工逐段对照与⑤ Railway 线上验证后 CLOSED；见「验收条件」与 EV 第 3 节
 - 占用 ID: REQ-F-290, DEC-400, DEC-401, TASK-520, TASK-521, TEST-520, TEST-521
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: REQ-F-280（展示方式在其之上增加一段可选的模型排版）
@@ -24,7 +24,7 @@
   - R1: 本文件有 `## 变化点登记` 表（每行有来源角色）+ R1 人工终裁痕迹；`review r1` PASS。
   - R2/R3/R4: 三层说明书各含 `变更响应 · CR-20260921-format-skill` 节逐一响应全部 CP；本文件三张矩阵无空、无 REJECTED；`review r2|r3|r4` PASS。
   - P3/P4: TASK-520/521 DONE；TEST-520/521 PASS；`npx tsc --noEmit` 0 错误；`npx vitest run` 全量绿（既有 flaky 用例另记）。
-- 真实入口: 未执行（模型排版的真实入口需要用户先经技能上传入口注册一个排版技能并在「本地文档」里选中，本 CR 交付时该技能尚未注册；转换脚本的两种新模式已本机真实执行，见测试说明书本 CR 变更响应节）
+- 真实入口: 已执行（2026-09-21 本机：用户授权用样例 SKILL.md 经现有 POST /api/skills 注册「文档排版」并选中，真实 PDF 43 秒排版完成 HTTP 200、无回退段、标题层级 h1 11/h2 26/h3 20、表格 21、缓存落盘、二次打开 5.5 秒命中缓存；验收条件④人工逐段对照与⑤ Railway 线上验证尚未执行，详见 EV-2026-09-21-format-skill.md 第 3 节）
   - **真实入口（必做）**：①用户经现有技能上传入口注册一个排版技能，并在「本地文档」里选中它；②本机重建重启生产构建后，打开一份此前"可读性差"的真实 PDF（CR-20260921-markitdown-display 验证过的那份），确认展示屏显示的是模型排版后的版本（有标题层级、段落不被 PDF 换行切碎）；③第二次打开同一份文档，服务器日志确认命中缓存、未再调模型；④人工抽查排版结果与原文逐段对照，确认无漏段、无杜撰（这是模型路线的核心风险，机器测不了，必须人看）；⑤Railway 部署后线上重复①②一次。
 - 评审记录: R1 四角色（产品 / 架构 / 模块开发 / 测试）独立评审。**R1 人工终裁**：待用户拍板。
 - R1 终裁: 已完成 | 用户 | 2026-09-21
@@ -72,7 +72,7 @@ P2 产出。三层说明书写 `变更响应 · CR-20260921-format-skill` 节后
 
 | CP | 产品 | 架构 | 模块 | 测试 |
 |---|---|---|---|---|
-| CP-1 | CONDITIONAL 机器测试证明的是管线逐段行为，不能证明"模型排出来的版本确实可读且无漏段"——条件为按验收条件①-⑤在真实环境执行（需用户先注册排版技能），结果记入 `EV-2026-09-21-format-skill.md` 后本条转 APPROVED | CONDITIONAL 机器测试证明的是管线逐段行为，不能证明"模型排出来的版本确实可读且无漏段"——条件为按验收条件①-⑤在真实环境执行（需用户先注册排版技能），结果记入 `EV-2026-09-21-format-skill.md` 后本条转 APPROVED | CONDITIONAL 机器测试证明的是管线逐段行为，不能证明"模型排出来的版本确实可读且无漏段"——条件为按验收条件①-⑤在真实环境执行（需用户先注册排版技能），结果记入 `EV-2026-09-21-format-skill.md` 后本条转 APPROVED | CONDITIONAL 机器测试证明的是管线逐段行为，不能证明"模型排出来的版本确实可读且无漏段"——条件为按验收条件①-⑤在真实环境执行（需用户先注册排版技能），结果记入 `EV-2026-09-21-format-skill.md` 后本条转 APPROVED |
+| CP-1 | CONDITIONAL 验收条件①②③已在本机真实执行（真实 PDF 43 秒排版成功、标题层级 h1 11/h2 26/h3 20、0 段回退、二次打开命中缓存），剩余条件为④用户人工逐段对照确认无漏段无杜撰——这是产品层无法由机器代答的部分 | CONDITIONAL 管线（分块→调用→缩水兜底→缓存）在真实 Provider 上按设计运转，剩余条件为⑤ Railway 线上重复①②确认部署环境行为一致 | CONDITIONAL 模块层无遗留，剩余条件同产品列④ | CONDITIONAL 机器可证部分已全部证毕（TEST-521 real_entry=true），剩余条件为④人工逐段对照与⑤ Railway 线上验证，结果补记 `EV-2026-09-21-format-skill.md` 第 3 节后本条转 APPROVED |
 | CP-2 | APPROVED 缩水兜底与整体失败两条用户可见文案均有用例断言 | APPROVED 分块边界（两段各约 4,000 token 各占一块）在用例③中真实成立，completer 被调 2 次 | APPROVED 模块图守卫用例（TEST module-graph）在修正后全绿，证明未新增 lib→tools 边 | APPROVED `npx vitest run tests/document-format.test.ts` 9 例全绿，已本机实测 |
 | CP-3 | APPROVED | APPROVED | APPROVED | APPROVED 用例④⑤⑥全绿，已本机实测 |
 | CP-4 | APPROVED stale 提示与 unformatted 页顶说明均有断言 | APPROVED | APPROVED | APPROVED `npx vitest run tests/document-settings-route.test.ts tests/document-raw-route.test.ts` 15 例全绿，已本机实测 |
