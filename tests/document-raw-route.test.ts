@@ -22,11 +22,18 @@ process.env.JARVIS_SECRET_KEY = "0123456789abcdef0123456789abcdef";
 vi.mock("next-auth", () => ({ getServerSession: vi.fn() }));
 vi.mock("@/lib/markitdown", async () => {
   const actual = await vi.importActual<typeof import("@/lib/markitdown")>("@/lib/markitdown");
-  return { ...actual, convertToHtml: vi.fn() };
+  return { ...actual, convertToHtml: vi.fn(), convertToMarkdown: vi.fn(), renderMarkdown: vi.fn() };
+});
+// 只替换真正会调模型的 formatDocument；resolveFormatterSkill / SETTING_FORMAT_SKILL 用真实实现，
+// 这样「设置指向已删除技能」这条路径走的是真代码（CR-20260921-format-skill CP-4）。
+vi.mock("@/lib/document-format", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/document-format")>("@/lib/document-format");
+  return { ...actual, formatDocument: vi.fn() };
 });
 
 const { getServerSession } = await import("next-auth");
-const { convertToHtml } = await import("@/lib/markitdown");
+const { convertToHtml, convertToMarkdown, renderMarkdown } = await import("@/lib/markitdown");
+const { formatDocument, SETTING_FORMAT_SKILL } = await import("@/lib/document-format");
 const rawRoute = await import("@/app/api/documents/raw/route");
 const { getStore } = await import("@/lib/store-singleton");
 const { clearDocumentCache, serializeRoots, SETTING_DOCUMENT_ROOTS } = await import("@/lib/documents");
@@ -49,6 +56,10 @@ let docsRoot: string;
 beforeEach(() => {
   as("owner@example.com");
   vi.mocked(convertToHtml).mockReset();
+  vi.mocked(convertToMarkdown).mockReset();
+  vi.mocked(renderMarkdown).mockReset();
+  vi.mocked(formatDocument).mockReset();
+  getStore().setSetting(SETTING_FORMAT_SKILL, null);
   rmSync(libRoot, { recursive: true, force: true });
   docsRoot = mkdtempSync(join(tmpdir(), "agent-jarvis-doc-raw-cfg-"));
   mkdirSync(join(docsRoot, "规格"), { recursive: true });
@@ -150,5 +161,72 @@ describe("/api/documents/raw", () => {
     const body = (await response.json()) as { message: string; rawUrl: string };
     expect(body.message).toContain("超时");
     expect(body.rawUrl).toContain("raw=1");
+  });
+
+  it("⑧ 设置了排版技能：走 markdown→formatDocument→render，不再调 convertToHtml；排版完整时无页顶提示（CR-20260921-format-skill）", async () => {
+    mkdirSync(join(libRoot, "AIDC", "02_原文"), { recursive: true });
+    writeFileSync(join(libRoot, "AIDC", "02_原文", "P1.pdf"), "%PDF-1.4 fake", "utf8");
+    await decideLibrary(["AIDC/02_原文/P1.pdf"], "adopted", libraryOptions());
+    clearDocumentCache();
+    const record = getStore().insertSkill("owner@example.com", { name: "排版", description: "d", dirPath: docsRoot });
+    getStore().setSetting(SETTING_FORMAT_SKILL, record.id);
+
+    vi.mocked(convertToMarkdown).mockResolvedValue({ ok: true, markdown: "原始 markdown" });
+    vi.mocked(formatDocument).mockResolvedValue({
+      markdown: "# 排好了",
+      status: "formatted",
+      note: "",
+      chunks: 1,
+      keptVerbatim: 0,
+    });
+    vi.mocked(renderMarkdown).mockResolvedValue({ ok: true, html: "<h1>排好了</h1>" });
+
+    const response = await rawRoute.GET(get("资料库/AIDC/02_原文/P1.pdf"));
+    expect(response.status).toBe(200);
+    const body = await response.text();
+    expect(body).toContain("<h1>排好了</h1>");
+    expect(body).not.toContain('role="status"');
+    expect(vi.mocked(convertToHtml)).not.toHaveBeenCalled();
+    // 传给排版的是 markitdown 的 Markdown 与解析到的技能，不是别的东西。
+    const call = vi.mocked(formatDocument).mock.calls[0]![0];
+    expect(call.markdown).toBe("原始 markdown");
+    expect(call.skill.id).toBe(record.id);
+    // 渲染的是排版结果，不是抽取结果。
+    expect(vi.mocked(renderMarkdown)).toHaveBeenCalledWith("# 排好了");
+  });
+
+  it("⑨ 设置指向已删除的技能：退回结构转换，并在页顶如实提示；partial/unformatted 的 note 同样上页顶", async () => {
+    mkdirSync(join(libRoot, "AIDC", "02_原文"), { recursive: true });
+    writeFileSync(join(libRoot, "AIDC", "02_原文", "P1.pdf"), "%PDF-1.4 fake", "utf8");
+    await decideLibrary(["AIDC/02_原文/P1.pdf"], "adopted", libraryOptions());
+    clearDocumentCache();
+
+    getStore().setSetting(SETTING_FORMAT_SKILL, "deleted-skill");
+    vi.mocked(convertToHtml).mockResolvedValue({ ok: true, html: "<p>结构转换</p>" });
+    const stale = await rawRoute.GET(get("资料库/AIDC/02_原文/P1.pdf"));
+    expect(stale.status).toBe(200);
+    const staleBody = await stale.text();
+    expect(staleBody).toContain("<p>结构转换</p>");
+    expect(staleBody).toContain('role="status"');
+    expect(staleBody).toContain("已不存在");
+    expect(vi.mocked(formatDocument)).not.toHaveBeenCalled();
+
+    // 技能存在但模型没排成：note 上页顶，正文仍是（未经排版的）渲染结果。
+    // 名字与 ⑧ 不同：同一用户下技能名唯一（insertSkill 会拒绝重名），而两条用例共用同一个 sqlite。
+    const record = getStore().insertSkill("owner@example.com", { name: "排版二", description: "d", dirPath: docsRoot });
+    getStore().setSetting(SETTING_FORMAT_SKILL, record.id);
+    vi.mocked(convertToMarkdown).mockResolvedValue({ ok: true, markdown: "原文" });
+    vi.mocked(formatDocument).mockResolvedValue({
+      markdown: "原文",
+      status: "unformatted",
+      note: "本次未经排版：当前没有可用的模型 Provider。",
+      chunks: 0,
+      keptVerbatim: 0,
+    });
+    vi.mocked(renderMarkdown).mockResolvedValue({ ok: true, html: "<p>原文</p>" });
+    const unformatted = await rawRoute.GET(get("资料库/AIDC/02_原文/P1.pdf"));
+    const unformattedBody = await unformatted.text();
+    expect(unformattedBody).toContain("本次未经排版");
+    expect(unformattedBody).toContain("<p>原文</p>");
   });
 });

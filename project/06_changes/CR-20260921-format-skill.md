@@ -2,7 +2,7 @@
 
 - 级别: L2（标准档：全部 CP 双向门——代码可 `git revert`；缓存文件只是派生产物，删掉即回到无缓存状态；设置项清空即回到 CR-20260921-markitdown-display 的纯结构转换行为；不改写任何原始文档或用户数据）
 - 提出人: user（INPUT-2026-09-21-002，推翻 INPUT-2026-09-21-001 时"只整理排版不改内容"的裁定）
-- 状态: R1 待人工终裁
+- 状态: P3/P4 完成，待合并（R1-R4 全 PASS；模块单测 9 例、设置路由 6 例、文档路由 9 例全绿，`tsc` 0 错误；模型排版本身的真实入口——需用户先经技能上传入口注册一个排版技能并在「本地文档」里选中——尚未执行，见「验收条件」）
 - 占用 ID: REQ-F-290, DEC-400, DEC-401, TASK-520, TASK-521, TEST-520, TEST-521
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: REQ-F-280（展示方式在其之上增加一段可选的模型排版）
@@ -24,6 +24,7 @@
   - R1: 本文件有 `## 变化点登记` 表（每行有来源角色）+ R1 人工终裁痕迹；`review r1` PASS。
   - R2/R3/R4: 三层说明书各含 `变更响应 · CR-20260921-format-skill` 节逐一响应全部 CP；本文件三张矩阵无空、无 REJECTED；`review r2|r3|r4` PASS。
   - P3/P4: TASK-520/521 DONE；TEST-520/521 PASS；`npx tsc --noEmit` 0 错误；`npx vitest run` 全量绿（既有 flaky 用例另记）。
+- 真实入口: 未执行（模型排版的真实入口需要用户先经技能上传入口注册一个排版技能并在「本地文档」里选中，本 CR 交付时该技能尚未注册；转换脚本的两种新模式已本机真实执行，见测试说明书本 CR 变更响应节）
   - **真实入口（必做）**：①用户经现有技能上传入口注册一个排版技能，并在「本地文档」里选中它；②本机重建重启生产构建后，打开一份此前"可读性差"的真实 PDF（CR-20260921-markitdown-display 验证过的那份），确认展示屏显示的是模型排版后的版本（有标题层级、段落不被 PDF 换行切碎）；③第二次打开同一份文档，服务器日志确认命中缓存、未再调模型；④人工抽查排版结果与原文逐段对照，确认无漏段、无杜撰（这是模型路线的核心风险，机器测不了，必须人看）；⑤Railway 部署后线上重复①②一次。
 - 评审记录: R1 四角色（产品 / 架构 / 模块开发 / 测试）独立评审。**R1 人工终裁**：待用户拍板。
 - R1 终裁: 已完成 | 用户 | 2026-09-21
@@ -46,3 +47,33 @@
 ## R2 / R3 / R4 评审矩阵
 
 P2 产出。三层说明书写 `变更响应 · CR-20260921-format-skill` 节后，跑 `governance.py matrix CR-20260921-format-skill` 生成矩阵骨架，再逐格填裁决。
+
+## R2 评审矩阵
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | APPROVED 可选增强，未指定技能时与 REQ-F-280 行为逐字节一致；"不使用"即停用，符合用户裁定 | APPROVED 新增 REQ-F-290 落 DEC-400（管线）与 DEC-401（缓存），未改写 REQ-F-280 的既有含义 | APPROVED 落点集中在 `/api/documents/raw` 的 PDF/DOCX 分支内，不牵动 `read_document`/`search_documents` 工具路径 | APPROVED 真实入口五步骤已写明且逐条可执行，非机器空断言 |
+| CP-2 | APPROVED 缩水保留原文并可见标注、整体失败页顶说明——把用户接受的"理解偏差风险"限制在"可见"而非"静默" | APPROVED 复用 `makeCompleter(resolveActiveProvider)` 非对话轮模式（与 `summarizeSpan`/`wake.ts` 同源），不新造一条模型调用链；分块 5,000/7,000 token 的依据（Provider 输出上限约 8K）已写进 DEC-400 | APPROVED 初版曾引入 `lib/document-format.ts -> lib/tools/budget.ts` 新边被模块图守卫（`tests/module-graph.test.ts`）当场拦下，已改为本地内联同算法的 `truncateToBudget`，未扩大冻结的 lib→tools 白名单 | APPROVED `tests/document-format.test.ts` 用注入 completer 覆盖分块边界、缩水兜底（两段各占一块、一块被判缩水）、全部失败退回、空 SKILL.md、无 Provider 五类路径 |
+| CP-3 | APPROVED 同一份文件只付一次模型费用，直接对应用户"按文件内容缓存"的裁定 | APPROVED 键含技能 id 与模型名，换规则/换模型自动失效；`unformatted` 不写缓存，避免一次 Provider 抖动被钉死 | APPROVED 目录与 env 覆盖惯例同 `libraryStatePath`；缓存坏/缺一律当未命中，写失败不影响本次展示 | APPROVED 命中时 completer 调用次数为 1、status=cached；键随字节/技能/模型任一变化而变，均有用例 |
+| CP-4 | APPROVED 下拉选项来自用户自己的技能列表，stale 时画出"已删除的技能"并 `role=alert` 提示，不无声退回 | APPROVED 设置键 `documents.formatSkill` 与 `documents.archive` 同表同形态，PATCH 同一入口，无新增存储形态 | APPROVED `PATCH` 校验技能 id 属于当前用户后才写入；`GET` stale 时仍回显原 id 供面板绘制 | APPROVED 设置路由 6 例 + 文档路由新增 2 例覆盖未设置/设置/stale/unformatted 四种分支 |
+| CP-5 | APPROVED 测试范围与验收条件的机器可证部分一一对应 | APPROVED 沿用 `vi.importActual` 局部 mock 惯例，`resolveFormatterSkill`/`SETTING_FORMAT_SKILL` 走真实现 | APPROVED 新建 `document-settings-route.test.ts` 补上此前该路由无独立测试的空缺 | APPROVED 目标三文件 24 例全绿；全量回归 912 例中仅 1 例既有 flaky（floating-chat ④，已在 CR-20260921-markitdown-display 用 git stash 复现于干净基线） |
+
+## R3 评审矩阵
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | APPROVED TASK-521 对应验收条件①②④ | APPROVED 与 DEC-400 一致，无隐藏边界 | APPROVED 路由内一个 `if (formatter.skill)` 分支，两条路径共用 `respondHtml`/`conversionFailed`，无重复 | APPROVED TEST-521 逐分支覆盖 |
+| CP-2 | APPROVED TASK-520 的"永不抛错、全部形态折进 status/note"直接落实"如实报错" | APPROVED 导出面（`resolveFormatterSkill`/`chunkMarkdown`/`cacheKey`/`formatDocument`）与 DEC-400 描述一一对应 | APPROVED 单文件 `document-format.ts` + 转换脚本双模式，`runPython` 三入口共用 | APPROVED TEST-520 九例对应 TASK-520 列出的每个分类边界 |
+| CP-3 | APPROVED 无需求层遗留 | APPROVED 缓存实现与 DEC-401 一致 | APPROVED `readCache` 容错、`writeCache` 失败不冒泡，均在 TASK-520 内 | APPROVED TEST-520 ④⑤⑥ 覆盖不写/命中/键变化 |
+| CP-4 | APPROVED 与 CP-1 同一件事在模块层的落点，不重复占号 | APPROVED 无新增架构决策 | APPROVED TASK-521 写明 GET/PATCH/UI/路由四处改动 | APPROVED TEST-521 |
+| CP-5 | APPROVED 无遗留 | APPROVED 无新增 mock 基础设施 | APPROVED 测试文件与源文件一一对应 | APPROVED 见 R2/CP-5 |
+
+## R4 评审矩阵
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | CONDITIONAL 机器测试证明的是管线逐段行为，不能证明"模型排出来的版本确实可读且无漏段"——条件为按验收条件①-⑤在真实环境执行（需用户先注册排版技能），结果记入 `EV-2026-09-21-format-skill.md` 后本条转 APPROVED | CONDITIONAL 机器测试证明的是管线逐段行为，不能证明"模型排出来的版本确实可读且无漏段"——条件为按验收条件①-⑤在真实环境执行（需用户先注册排版技能），结果记入 `EV-2026-09-21-format-skill.md` 后本条转 APPROVED | CONDITIONAL 机器测试证明的是管线逐段行为，不能证明"模型排出来的版本确实可读且无漏段"——条件为按验收条件①-⑤在真实环境执行（需用户先注册排版技能），结果记入 `EV-2026-09-21-format-skill.md` 后本条转 APPROVED | CONDITIONAL 机器测试证明的是管线逐段行为，不能证明"模型排出来的版本确实可读且无漏段"——条件为按验收条件①-⑤在真实环境执行（需用户先注册排版技能），结果记入 `EV-2026-09-21-format-skill.md` 后本条转 APPROVED |
+| CP-2 | APPROVED 缩水兜底与整体失败两条用户可见文案均有用例断言 | APPROVED 分块边界（两段各约 4,000 token 各占一块）在用例③中真实成立，completer 被调 2 次 | APPROVED 模块图守卫用例（TEST module-graph）在修正后全绿，证明未新增 lib→tools 边 | APPROVED `npx vitest run tests/document-format.test.ts` 9 例全绿，已本机实测 |
+| CP-3 | APPROVED | APPROVED | APPROVED | APPROVED 用例④⑤⑥全绿，已本机实测 |
+| CP-4 | APPROVED stale 提示与 unformatted 页顶说明均有断言 | APPROVED | APPROVED | APPROVED `npx vitest run tests/document-settings-route.test.ts tests/document-raw-route.test.ts` 15 例全绿，已本机实测 |
+| CP-5 | APPROVED | APPROVED `vi.importActual` 保留真实 `resolveFormatterSkill`，stale 路径走真代码 | APPROVED | APPROVED 全量回归 912 例，除 1 例既有 flaky 外全绿；两个 module-graph 失败为本 CR 初版引入并已修正，非遗留 |

@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | 生成命令 | `npm run docs:index` |
-| 规模 | REQ 108 条 · TEST 181 条（主矩阵） · TASK 175 条 · tests/**/*.test.ts(x) 96 个 |
+| 规模 | REQ 109 条 · TEST 183 条（主矩阵） · TASK 177 条 · tests/**/*.test.ts(x) 98 个 |
 
 ---
 
@@ -15,7 +15,7 @@
 
 口径：REQ 取自 `产品需求说明书.md` 的「功能需求」「非功能需求」两节表格（不含 `## 变更响应 · CR-*` 节的重复提及）；REQ → TEST 取自 `测试说明书.md` 「测试矩阵」节「覆盖需求」列的反查；TEST → 文件按该行「命令」列展开：`npm run <script>` 递归查 `package.json`（深度上限 4），`npm test -- <词>` / `vitest run <路径>` 按子串匹配 `tests/**/*.test.ts(x)` 的文件名（vitest 本身按子串过滤，多命中不是解析 bug），非 vitest 入口标 `<tag>`。解析不到的用 ⚠ 标出并保留原始问题文字——这不是本生成器的疏漏，是被索引文档自身的缺口，必须能被看见。
 
-共 108 条 REQ。
+共 109 条 REQ。
 
 | REQ | 名称 | 状态 | 覆盖 TEST → 解析到的文件/入口 |
 |---|---|---|---|
@@ -107,6 +107,7 @@
 | REQ-F-270 | 每用户实体/知识库数据私有隔离 | APPROVED | **TEST-500** → `user-data-paths.test.ts`<br>**TEST-501** → `entity-route.test.ts`, `knowledge-route.test.ts`, `sweep-route.test.ts` |
 | REQ-F-271 | 现有单管理员真实数据首次真实登录时自动继承 | APPROVED | **TEST-500** → `user-data-paths.test.ts`<br>**TEST-501** → `entity-route.test.ts`, `knowledge-route.test.ts`, `sweep-route.test.ts` |
 | REQ-F-280 | 本地文档/资料库展示改用结构化转换后的内容 | APPROVED | **TEST-510** → `markitdown.test.ts`<br>**TEST-511** → `document-raw-route.test.ts` |
+| REQ-F-290 | 文档展示可选由用户指定的技能经模型重新排版 | APPROVED | **TEST-520** → `document-format.test.ts`<br>**TEST-521** → `document-raw-route.test.ts`, `document-settings-route.test.ts` |
 | REQ-NF-050 | 本地读取的边界 | APPROVED | **TEST-170** → `documents.test.ts` |
 | REQ-NF-060 | 单轮成本护栏与可见性 | APPROVED | **TEST-250** → `turn-budget.test.ts` |
 | REQ-NF-061 | 流式超时看沉默，不看总时长 | APPROVED | **TEST-370** → `adapters-stream.test.ts` |
@@ -130,7 +131,7 @@
 
 ### 1.1 没有任何 TEST 覆盖的 REQ
 
-没有。108 条 REQ 全部在「测试矩阵」的「覆盖需求」列里至少出现过一次。
+没有。109 条 REQ 全部在「测试矩阵」的「覆盖需求」列里至少出现过一次。
 
 ### 1.2 「覆盖需求」列引用了、但需求说明书未定义的 REQ 编号
 
@@ -206,7 +207,7 @@
 | MOD-DB | `scripts/check-config.mjs`<br>`src/lib/display.ts`<br>`src/lib/store.ts` | （无） | TASK-002, TASK-013, TASK-019, TASK-021, TASK-033, TASK-036, TASK-059, TASK-060, TASK-079 |
 | MOD-DISPLAY | `scripts/ui-contract.mjs`<br>`src/app/api/display/route.ts`<br>`src/components/CompetitorBoard.tsx`<br>`src/components/DisplayScreen.tsx`<br>`src/components/FloatingChat.tsx`<br>`src/components/IndustrySpecComparison.tsx`<br>`src/components/OrgChartBoard.tsx`<br>`src/components/ToolPanel.tsx`<br>`src/components/ui`<br>`src/lib/agent-loop.ts`<br>`src/lib/display-document.ts`<br>`src/lib/insight-export.ts`<br>`src/lib/tools/budget.ts`<br>`src/lib/tools/display-tools.ts`<br>`src/lib/tools/registry.ts`<br>`src/lib/tools/web-tools.ts`<br>`src/lib/types.ts`<br>`src/lib/ui-events.ts` | （无） | TASK-037, TASK-045, TASK-048, TASK-068, TASK-090, TASK-135, TASK-140, TASK-160, TASK-161, TASK-320, TASK-330, TASK-410, TASK-445, TASK-446, TASK-449, TASK-453, TASK-454, TASK-456, TASK-470, TASK-480 |
 | MOD-DOCS | `src/app/api/settings/documents/route.ts`<br>`src/components/DocumentSettings.tsx`<br>`src/lib/chat.ts`<br>`src/lib/documents.ts`<br>`src/lib/tools/document-tools.ts` | （无） | TASK-170, TASK-445, TASK-453 |
-| MOD-DOCUMENTS | （无） | （无） | TASK-511 |
+| MOD-DOCUMENTS | （无） | （无） | TASK-511, TASK-521 |
 | MOD-ENTITIES | `src/app/api/entities/[name]/history/route.ts`<br>`src/components/OrgChartBoard.tsx`<br>`src/lib/entity-history.ts` | （无） | TASK-457, TASK-480 |
 | MOD-ENTITY | `src/lib/entities.ts`<br>`src/lib/entity-proposals.ts`<br>`src/lib/extract.ts`<br>`src/lib/sources.ts`<br>`src/lib/sweep.ts` | （无） | TASK-120, TASK-121, TASK-123, TASK-125, TASK-127, TASK-129, TASK-132, TASK-443 |
 | MOD-GOVERNANCE | `scripts/check-config.mjs`<br>`scripts/check-dev-server.mjs`<br>`scripts/check-module-graph.mjs`<br>`scripts/gen-index.mjs`<br>`src/lib/sweep.ts`<br>`tests/module-graph.test.ts`<br>`tests/sweep.test.ts`<br>`tools/migrate_r1_signoff.py`<br>`tools/migrate_specs.py` | （无） | TASK-049, TASK-050, TASK-051, TASK-052, TASK-053, TASK-054, TASK-055, TASK-056, TASK-057, TASK-058, TASK-110, TASK-280, TASK-290, TASK-300, TASK-310, TASK-340, TASK-350, TASK-380, TASK-430, TASK-431, TASK-432, TASK-433, TASK-434 |
@@ -220,7 +221,7 @@
 | MOD-SOURCES | `src/app/api/entities/[name]/history/route.ts`<br>`src/lib/entity-history.ts` | （无） | TASK-457 |
 | MOD-STORE | `src/components/FloatingChat.tsx`<br>`src/lib/store.ts`<br>`src/lib/tools/display-tools.ts`<br>`src/lib/tools/skill-tools.ts` | （无） | TASK-200, TASK-360 |
 | MOD-TOOLS | `scripts/ui-contract.mjs`<br>`src/app/page.tsx`<br>`src/components/CompetitorBoard.tsx`<br>`src/components/DisplayScreen.tsx`<br>`src/components/FloatingChat.tsx`<br>`src/components/IndustrySpecComparison.tsx`<br>`src/components/OrgChartBoard.tsx`<br>`src/lib/agent-loop.ts`<br>`src/lib/chat.ts`<br>`src/lib/display-document.ts`<br>`src/lib/entity-proposals.ts`<br>`src/lib/extract.ts`<br>`src/lib/insight-export.ts`<br>`src/lib/knowledge.ts`<br>`src/lib/skills.ts`<br>`src/lib/store.ts`<br>`src/lib/tools/browser-fetch.ts`<br>`src/lib/tools/budget.ts`<br>`src/lib/tools/display-tools.ts`<br>`src/lib/tools/knowledge-tools.ts`<br>`src/lib/tools/registry.ts`<br>`src/lib/tools/skill-tools.ts`<br>`src/lib/tools/url-guard.ts`<br>`src/lib/tools/web-tools.ts`<br>`src/lib/types.ts`<br>`src/lib/ui-events.ts` | `src/lib/tools/display-tools.ts`<br>`src/lib/tools/skill-tools.ts`<br>`src/lib/tools/web-tools.ts` | TASK-064, TASK-065, TASK-066, TASK-067, TASK-068, TASK-069, TASK-070, TASK-077, TASK-083, TASK-089, TASK-094, TASK-095, TASK-096, TASK-097, TASK-122, TASK-132, TASK-133, TASK-134, TASK-140, TASK-160, TASK-161, TASK-190, TASK-200, TASK-210, TASK-230, TASK-240, TASK-250, TASK-260, TASK-320, TASK-445, TASK-447, TASK-453, TASK-456, TASK-458, TASK-470, TASK-480, TASK-501 |
-| MOD-UI | `src/app/page.tsx` | （无） | TASK-501 |
+| MOD-UI | `src/app/page.tsx` | （无） | TASK-501, TASK-521 |
 | MOD-UI-FOUNDATION | `src/components/ui`<br>`src/lib/utils.ts` | （无） | TASK-044, TASK-048 |
 | MOD-WAKE | `src/lib/wake.ts`<br>`tests/e2e/proactive-wake.spec.ts` | （无） | TASK-100, TASK-101, TASK-103 |
 | MOD-ZIP | `src/lib/zip.ts` | （无） | TASK-040, TASK-042 |
@@ -233,3 +234,4 @@
 | TASK-128 | 无代码模块（仓库内容） |
 | TASK-500 | 新增 `src/lib/user-data-paths.ts` |
 | TASK-510 | 新增 `src/lib/markitdown.ts` + `scripts/documents_to_html.py` |
+| TASK-520 | 新增 `src/lib/document-format.ts`；扩展 `scripts/documents_to_html.py`、`src/lib/markitdown.ts` |

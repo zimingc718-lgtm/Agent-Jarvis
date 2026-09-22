@@ -10,7 +10,8 @@ import { DocumentPathError, OFFICE_EXTENSIONS, PDF_EXTENSIONS, READABLE_EXTENSIO
 import { LIBRARY_LABEL, statusOf } from "@/lib/library";
 import { rootsOf } from "@/lib/tools/document-tools";
 import { buildInsightDocument } from "@/lib/display-document";
-import { convertToHtml, describeMarkitdownFailure } from "@/lib/markitdown";
+import { convertToHtml, convertToMarkdown, describeMarkitdownFailure, renderMarkdown } from "@/lib/markitdown";
+import { formatDocument, resolveFormatterSkill } from "@/lib/document-format";
 
 /**
  * 原样字节（CR-20260915-document-display CP-1）。
@@ -29,6 +30,15 @@ import { convertToHtml, describeMarkitdownFailure } from "@/lib/markitdown";
  * （下载/另存为用）。
  */
 const CONVERTIBLE_EXTENSIONS = new Set([...PDF_EXTENSIONS, ...OFFICE_EXTENSIONS]);
+
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/** Page-top notice for a partial/unformatted/stale-skill view. Empty note = no banner. */
+function banner(note: string): string {
+  return note ? `<aside class="note" role="status">${escapeHtml(note)}</aside>\n` : "";
+}
 
 const MIME_BY_EXT: Record<string, string> = {
   ".pdf": "application/pdf",
@@ -76,23 +86,52 @@ export async function GET(request: Request) {
     const filename = relPath.split("/").pop() ?? "document";
 
     if (CONVERTIBLE_EXTENSIONS.has(ext) && !wantsRawBytes) {
-      const converted = await convertToHtml(absPath);
-      if (!converted.ok) {
-        return NextResponse.json(
+      const conversionFailed = (reason: string) =>
+        NextResponse.json(
           {
-            message: `${describeMarkitdownFailure(converted.reason)}可以加 &raw=1 查看原始文件。`,
+            message: `${describeMarkitdownFailure(reason)}可以加 &raw=1 查看原始文件。`,
             rawUrl: `${url.pathname}?${new URLSearchParams({ id, raw: "1" }).toString()}`,
           },
           { status: 502 }
         );
+      const respondHtml = (fragment: string) =>
+        new NextResponse(buildInsightDocument(fragment), {
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "private, no-store",
+          },
+        });
+
+      // 排版技能（REQ-F-290，CR-20260921-format-skill）：设置了就多走一段模型排版。设置
+      // 指向已删除技能时退回结构转换并在页顶说明，而不是无声地当作没设置。
+      const store = getStore();
+      const formatter = resolveFormatterSkill(store, auth.userId);
+      if (formatter.skill) {
+        const extracted = await convertToMarkdown(absPath);
+        if (!extracted.ok) {
+          return conversionFailed(extracted.reason);
+        }
+        const bytes = await readFile(absPath);
+        const formatted = await formatDocument({
+          store,
+          userId: auth.userId,
+          skill: formatter.skill,
+          bytes,
+          markdown: extracted.markdown,
+        });
+        const rendered = await renderMarkdown(formatted.markdown);
+        if (!rendered.ok) {
+          return conversionFailed(rendered.reason);
+        }
+        return respondHtml(`${banner(formatted.note)}${rendered.html}`);
       }
-      const document = buildInsightDocument(converted.html);
-      return new NextResponse(document, {
-        headers: {
-          "Content-Type": "text/html; charset=utf-8",
-          "Cache-Control": "private, no-store",
-        },
-      });
+
+      const converted = await convertToHtml(absPath);
+      if (!converted.ok) {
+        return conversionFailed(converted.reason);
+      }
+      const staleNote = formatter.stale ? "本次未经排版：设置里的排版技能已不存在，请在「本地文档」里重新选择。" : "";
+      return respondHtml(`${banner(staleNote)}${converted.html}`);
     }
 
     const bytes = await readFile(absPath);

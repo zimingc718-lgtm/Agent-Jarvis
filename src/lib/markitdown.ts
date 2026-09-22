@@ -2,7 +2,8 @@ import { execFile } from "node:child_process";
 import { join } from "node:path";
 
 /**
- * PDF/DOCX → HTML via `scripts/documents_to_html.py` (DEC-390, CR-20260921-markitdown-display).
+ * PDF/DOCX → Markdown/HTML via `scripts/documents_to_html.py` (DEC-390, CR-20260921-markitdown-display;
+ * the `--markdown` / `--render` modes serve the optional model pass in CR-20260921-format-skill).
  *
  * Why a subprocess and not a library call: `markitdown` (structure extraction) and
  * `markdown` (Markdown→HTML, with table support the app's own chat renderer lacks) are
@@ -18,17 +19,20 @@ import { join } from "node:path";
 
 const PYTHON_CANDIDATES = process.platform === "win32" ? ["python", "python3"] : ["python3", "python"];
 const DEFAULT_TIMEOUT_MS = 30_000;
-/** Rendered-HTML ceiling on stdout; keeps a corrupted/huge PDF from filling memory. */
+/** Ceiling on stdout; keeps a corrupted/huge PDF from filling memory. */
 const MAX_OUTPUT_BYTES = 12 * 1024 * 1024;
 const SCRIPT_PATH = join(process.cwd(), "scripts", "documents_to_html.py");
 
 export type MarkitdownResult = { ok: true; html: string } | { ok: false; reason: string };
+export type MarkdownResult = { ok: true; markdown: string } | { ok: false; reason: string };
 
-function runOnce(pythonBin: string, absPath: string, timeoutMs: number): Promise<MarkitdownResult> {
+type RawResult = { ok: true; text: string } | { ok: false; reason: string };
+
+function runOnce(pythonBin: string, args: string[], stdin: string | undefined, timeoutMs: number): Promise<RawResult> {
   return new Promise((resolve) => {
-    execFile(
+    const child = execFile(
       pythonBin,
-      [SCRIPT_PATH, absPath],
+      [SCRIPT_PATH, ...args],
       { timeout: timeoutMs, maxBuffer: MAX_OUTPUT_BYTES, windowsHide: true, encoding: "buffer" },
       (error, stdout, stderr) => {
         if (error) {
@@ -44,33 +48,53 @@ function runOnce(pythonBin: string, absPath: string, timeoutMs: number): Promise
           resolve({ ok: false, reason: `exec:${stderr.toString("utf-8").trim().slice(0, 500) || error.message}` });
           return;
         }
-        const html = stdout.toString("utf-8").trim();
-        if (!html) {
+        const text = stdout.toString("utf-8").trim();
+        if (!text) {
           resolve({ ok: false, reason: "empty" });
           return;
         }
-        resolve({ ok: true, html });
+        resolve({ ok: true, text });
       }
     );
+    if (stdin !== undefined && child.stdin) {
+      child.stdin.end(stdin, "utf-8");
+    }
   });
 }
 
 /**
- * Converts one file to HTML. Tries each Python candidate in order and stops at the first
- * one that isn't simply "not installed" (`ENOENT`) — a real conversion failure (timeout,
- * corrupt file, markitdown/markdown themselves erroring) is reported as-is rather than
- * masked by silently trying the next interpreter name.
+ * Tries each Python candidate in order and stops at the first one that isn't simply
+ * "not installed" (`ENOENT`) — a real conversion failure (timeout, corrupt file, the
+ * Python side erroring) is reported as-is rather than masked by trying the next name.
  */
-export async function convertToHtml(absPath: string, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<MarkitdownResult> {
-  let lastNotFound: MarkitdownResult | null = null;
+async function runPython(args: string[], stdin: string | undefined, timeoutMs: number): Promise<RawResult> {
+  let lastNotFound: RawResult | null = null;
   for (const bin of PYTHON_CANDIDATES) {
-    const result = await runOnce(bin, absPath, timeoutMs);
+    const result = await runOnce(bin, args, stdin, timeoutMs);
     if (result.ok || !result.reason.startsWith("notfound:")) {
       return result;
     }
     lastNotFound = result;
   }
   return lastNotFound ?? { ok: false, reason: "notfound:python" };
+}
+
+/** Structural conversion straight to HTML (the CR-20260921-markitdown-display path). */
+export async function convertToHtml(absPath: string, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<MarkitdownResult> {
+  const result = await runPython([absPath], undefined, timeoutMs);
+  return result.ok ? { ok: true, html: result.text } : result;
+}
+
+/** Structural extraction only — the Markdown the model formatting pass works on. */
+export async function convertToMarkdown(absPath: string, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<MarkdownResult> {
+  const result = await runPython(["--markdown", absPath], undefined, timeoutMs);
+  return result.ok ? { ok: true, markdown: result.text } : result;
+}
+
+/** Markdown → HTML through the same Python pipeline, so both display paths render identically. */
+export async function renderMarkdown(markdown: string, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<MarkitdownResult> {
+  const result = await runPython(["--render"], markdown, timeoutMs);
+  return result.ok ? { ok: true, html: result.text } : result;
 }
 
 /** Human-readable message for the failure reasons above — never leaks stderr verbatim to the client. */
