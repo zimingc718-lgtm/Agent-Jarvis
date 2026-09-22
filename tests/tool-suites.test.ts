@@ -60,11 +60,14 @@ describe("skill tools (REQ-F-030)", () => {
     expect(second.content).toContain("中英互译");
   });
 
-  it("⑤ 没有技能时三个工具都不注册", () => {
+  it("⑤ 没有技能时三个只读工具都不注册；第 4 个 register_skill 仍可用（CR-20260921-chat-skill-register：第一个技能就靠它创建）", () => {
     const tools = createSkillTools(store);
     const empty = { ...context, skillCount: 0 };
-    expect(tools.every((tool) => tool.available(empty))).toBe(false);
-    expect(tools.some((tool) => tool.available(empty))).toBe(false);
+    expect(tools).toHaveLength(4);
+    const [list, read, search, register] = tools;
+    expect([list, read, search].some((tool) => tool.available(empty))).toBe(false);
+    expect(register!.name).toBe("register_skill");
+    expect(register!.available(empty)).toBe(true);
   });
 
   it("读取不存在的技能作失败回喂，并提示可用 list_skills", async () => {
