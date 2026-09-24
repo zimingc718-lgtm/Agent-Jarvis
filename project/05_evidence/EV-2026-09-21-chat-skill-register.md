@@ -30,7 +30,7 @@
 
 - 时间: 2026-09-23 08:21–08:24（本机时区，UTC−5；对应 13:21–13:24Z）
 - 环境: 用户本机**正在运行**的生产构建（`.next-prod`，BUILD_ID `L-76_5FmhmscDGSAOmDAe`，08:31 构建，晚于 `skill-tools.ts` 08:26）、用户自己的 `.data/agent-jarvis.sqlite` 与 `.data/skills`——即 DEC-210 ③ 的 `user` 环境，不是一次性服务器
-- 驱动方式: 协调会话用一个 60 行的 HTTP 客户端（`chat_drive.py`，stdlib）向 `POST /api/chat/stream` 发送与用户在输入框里会打的一样的文字，解析 SSE 事件流；每步的完整事件列表（`start`/`delta`/`tool_call`/`tool_result`/`turn_usage`/`done`）留存于协调会话 scratchpad `real-entry/step*.json`（6 份，共约 200 KB）。**不是**在浮窗 UI 里点击——☰ 列表的目视核对由用户完成
+- 驱动方式: 协调会话用一个 60 行的 HTTP 客户端（`chat_drive.py`，stdlib）向 `POST /api/chat/stream` 发送与用户在输入框里会打的一样的文字，解析 SSE 事件流；每步的完整事件列表（`start`/`delta`/`tool_call`/`tool_result`/`turn_usage`/`done`）留存于协调会话 scratchpad `real-entry/step*.json`（6 份，共约 200 KB）。**不是**在浮窗 UI 里点击——☰ 列表的目视核对由用户完成（2026-09-23 用户在 ☰ →「技能」里看到「会议纪要整理」，回复「看到了，标 CLOSED」）
 - 应答模型: 服务器解析的最高优先级提供方 DeepSeek `deepseek-chat`（备选 OpenAI `gpt-5` 未触发 failover）
 - 会话: `816dd238-863a-49e5-8a1a-c4fb33f76b98`，标题即第一句话，可在 ☰ 最近会话里打开复核
 - 基线: 执行前 `GET /api/skills` 8 条、`.data/skills` 8 个目录，无「会议纪要」相关技能

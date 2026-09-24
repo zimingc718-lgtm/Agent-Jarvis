@@ -2,7 +2,7 @@
 
 - 级别: L2（标准档：全部 CP 双向门——新增一个工具与一条注册路径，代码可 `git revert`；注册产生的技能文件夹与技能表行是用户显式确认后才写入的、可在 ☰ 里删除的普通技能，与手工上传的技能形态完全一致；不改写任何既有数据）
 - 提出人: user（INPUT-2026-09-21-003）
-- 状态: 已合并 main（`febec93` 实现 + `6414c0a` snapshot，ledger seq 141；合并后 `verify` PASS；本机按新构建 `L-76_5FmhmscDGSAOmDAe` 重建重启）。真实入口 ①-⑤ 已于 2026-09-23 在用户运行中的本机服务上经真实 `POST /api/chat/stream`（DeepSeek `deepseek-chat`）走完，正例/反例/重名全部符合预期，R4 CP-1 转 APPROVED，见 EV §3。CLOSED 只差用户在 ☰ →「技能」里目视一次「会议纪要整理」在列表中（列表与已核对的 `GET /api/skills` 同源）
+- 状态: CLOSED（2026-09-23 闭环：TASK-530 DONE、TEST-530/531 PASS；已合并 main——`febec93` 实现 + `6414c0a` snapshot，ledger seq 141，合并后 `verify` PASS，本机按新构建 `L-76_5FmhmscDGSAOmDAe` 重建重启；真实入口 ①-⑤ 同日在用户运行中的本机服务上经真实 `POST /api/chat/stream`（DeepSeek `deepseek-chat`）走完，正例/反例/重名全部符合预期，R4 CP-1 转 APPROVED，见 EV §3；用户随后在 ☰ →「技能」里目视确认「会议纪要整理」在列表中并拍板 CLOSED）
 - 占用 ID: REQ-F-300, DEC-410, TASK-530, TEST-530, TEST-531
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: REQ-F-020（技能注册入口在拖放/点选之外多一条对话内路径）、REQ-F-030（技能工具集从三只读增一写）
