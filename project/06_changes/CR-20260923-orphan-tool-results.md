@@ -2,7 +2,7 @@
 
 - 级别: L2（标准档：全部 CP 双向门——只改代码里"发给模型的回放"与"同一会话的并发处理"，数据库一行不动，`git revert` 即回滚；真实入口需人工在受损会话里操作一次）
 - 提出人: user（INPUT-2026-09-21-004，补记）
-- 状态: P2-P4 与真实入口完成，待 snapshot 与合并（R1 四点裁定 2026-09-23 均取推荐项；R1-R4 全 PASS；新增 `dropOrphanToolResults` 5 例 + `runChatTurn` 3 例，定向 92/92、全量 928/928，`tsc` 0 错误；TEST-542 三步已于 2026-09-23 在用户运行中的本机服务（分支构建 `czWnnnHPFeEgyqxr4HhYA`）上经真实 `POST /api/chat/stream` 走完，见 EV §4；合并 main 且 `verify` PASS 后转 CLOSED）
+- 状态: CLOSED（2026-09-23 闭环：TASK-540 DONE，TEST-540/541 PASS，TEST-542 真实入口三步在用户运行中的本机服务上走完（分支构建 `czWnnnHPFeEgyqxr4HhYA`，受损会话自愈、断连/并发两条路径 0 孤儿、被拒请求用量 (0, 0)）；R1 四点裁定均取推荐项，R1-R4 全 PASS；全量回归 928/928，`tsc` 0 错误；snapshot ledger seq 142 后快进合入 main，合并后 `verify` PASS。服务已在跑同一份代码，无需再重建）
 - 占用 ID: REQ-F-310, DEC-420, TASK-540, TEST-540, TEST-541, TEST-542
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: REQ-F-029（工具循环——一轮被中止后服务端仍在写库）、REQ-F-042（上下文压缩——摘要锚点落在错位处）、REQ-F-037（会话累计用量——被拒请求按预估计入）
