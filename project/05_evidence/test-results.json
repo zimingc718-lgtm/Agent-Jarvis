@@ -1572,10 +1572,10 @@
       "id": "TEST-530",
       "result": "PASS",
       "command": "npx vitest run tests/skill-tools-register.test.ts",
-      "real_entry": false,
-      "date": "2026-09-22",
-      "entry": "assistant",
-      "notes": "register_skill 写工具（REQ-F-300，DEC-410，TASK-530）。8 例，JARVIS_SKILLS_PATH 隔离到临时目录：隔离生效；无 confirmed 拒绝且磁盘与表不动；confirmed=true 落盘 SKILLS_ROOT/<slug>/SKILL.md、表多一行、read_skill 读回、结果含 ☰ 提示；重名可读冲突说明；空参数拒绝、name 换行压掉；超 32KB 拒绝；skillCount 0 可用而只读工具不可用；穿越名字经 slug 收进 SKILLS_ROOT。纯单元测试；真实对话里的正例/反例待用户执行，如实标 false。"
+      "real_entry": true,
+      "date": "2026-09-23",
+      "entry": "user",
+      "notes": "register_skill 写工具（REQ-F-300，DEC-410，TASK-530）。8 例，JARVIS_SKILLS_PATH 隔离到临时目录：隔离生效；无 confirmed 拒绝且磁盘与表不动；confirmed=true 落盘 SKILLS_ROOT/<slug>/SKILL.md、表多一行、read_skill 读回、结果含 ☰ 提示；重名可读冲突说明；空参数拒绝、name 换行压掉；超 32KB 拒绝；skillCount 0 可用而只读工具不可用；穿越名字经 slug 收进 SKILLS_ROOT。单测 8 例 2026-09-22 全绿。真实入口 2026-09-23 在用户本机运行中的服务上经真实 POST /api/chat/stream（deepseek-chat）走完：①生成只调只读工具、不注册；②「再改改…先别注册」零工具调用；③「注册」→ register_skill(confirmed=true) ok；④ GET /api/skills 8→9，磁盘 SKILL.md 为修改稿且 read_skill 读回逐字一致；⑤同名再注册被拒且原文件哈希不变。由协调会话经 HTTP 驱动，☰ 列表目视留给用户。见 EV-2026-09-21-chat-skill-register §3。"
     },
     {
       "id": "TEST-531",

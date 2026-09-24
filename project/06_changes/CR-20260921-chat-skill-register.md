@@ -2,7 +2,7 @@
 
 - 级别: L2（标准档：全部 CP 双向门——新增一个工具与一条注册路径，代码可 `git revert`；注册产生的技能文件夹与技能表行是用户显式确认后才写入的、可在 ☰ 里删除的普通技能，与手工上传的技能形态完全一致；不改写任何既有数据）
 - 提出人: user（INPUT-2026-09-21-003）
-- 状态: P3/P4 完成，待合并（R1-R4 全 PASS；`register_skill` 单测 8 例 + 工具套件 13 例全绿，`tsc` 0 错误，全量回归 919/920 仅既有 flaky；真实对话里的正例/反例验证尚未执行，见「验收条件」）
+- 状态: 已合并 main（`febec93` 实现 + `6414c0a` snapshot，ledger seq 141；合并后 `verify` PASS；本机按新构建 `L-76_5FmhmscDGSAOmDAe` 重建重启）。真实入口 ①-⑤ 已于 2026-09-23 在用户运行中的本机服务上经真实 `POST /api/chat/stream`（DeepSeek `deepseek-chat`）走完，正例/反例/重名全部符合预期，R4 CP-1 转 APPROVED，见 EV §3。CLOSED 只差用户在 ☰ →「技能」里目视一次「会议纪要整理」在列表中（列表与已核对的 `GET /api/skills` 同源）
 - 占用 ID: REQ-F-300, DEC-410, TASK-530, TEST-530, TEST-531
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: REQ-F-020（技能注册入口在拖放/点选之外多一条对话内路径）、REQ-F-030（技能工具集从三只读增一写）
@@ -23,7 +23,7 @@
   - R1: 本文件有 `## 变化点登记` 表（每行有来源角色）+ R1 人工终裁痕迹；`review r1` PASS。
   - R2/R3/R4: 三层说明书各含 `变更响应 · CR-20260921-chat-skill-register` 节逐一响应全部 CP；本文件三张矩阵无空、无 REJECTED；`review r2|r3|r4` PASS。
   - P3/P4: TASK-530 DONE；TEST-530/531 PASS；`npx tsc --noEmit` 0 错误；`npx vitest run` 全量绿；模块图守卫（`tests/module-graph.test.ts`）不新增 lib→tools 边（本工具本身就在 `src/lib/tools/` 内，无此风险）。
-- 真实入口: 未执行（需用户在真实对话里走一遍正例——说"帮我生成一个 XX 技能"→模型给出 SKILL.md 全文→用户说「注册」→技能出现在 ☰ 与 GET /api/skills——与反例——不说注册则不注册；本 CR 交付时尚未进行）
+- 真实入口: 已执行（2026-09-23，用户本机运行中的生产构建 `L-76_5FmhmscDGSAOmDAe`，由协调会话经真实 `POST /api/chat/stream` 驱动、DeepSeek `deepseek-chat` 应答，会话 `816dd238-863a-49e5-8a1a-c4fb33f76b98`：①「帮我生成一个会议纪要技能」→ 模型只调 `list_skills`/`read_skill` 对齐既有规范，回复给出完整 SKILL.md，未调 `register_skill`；②「再改改…先别注册」→ 零工具调用，只给修改稿；③「注册」→ `register_skill(confirmed=true)` ok，回复含 ☰ 位置；④ `GET /api/skills` 8→9，`.data/skills/会议纪要整理/SKILL.md` 5668 字节且为修改稿（自检清单 4 条），对话里 `read_skill` 读回逐字一致；⑤ 同名再注册→模型先自行拦下未调工具，明确要求后调用得到「已存在同名技能…未注册」原话，原文件 sha256 不变。详见 EV-2026-09-21-chat-skill-register §3；☰ 列表目视由用户完成）
   - **真实入口（必做）**：①用户在对话里说"帮我生成一个 XX 技能"，模型在回复里给出完整 SKILL.md（frontmatter + 正文）**而不调用工具**；②用户回复"注册"，模型调用 `register_skill`，回复里说明已注册及在 ☰ 里的位置；③`GET /api/skills` 与 ☰「技能」列表出现该技能，`read_skill` 能读回正文；④用户不说注册、或说"再改改"时，模型不注册（反例必须真实试一次）；⑤重名时工具返回可读的冲突说明而非报错堆栈。
 - 评审记录: R1 四角色（产品 / 架构 / 模块开发 / 测试）独立评审。**R1 人工终裁**：待用户拍板。
 - R1 终裁: 已完成 | 用户 | 2026-09-22
@@ -68,7 +68,7 @@ P2 产出。三层说明书写 `变更响应 · CR-20260921-chat-skill-register`
 
 | CP | 产品 | 架构 | 模块 | 测试 |
 |---|---|---|---|---|
-| CP-1 | CONDITIONAL 机器测试证明的是"没有 confirmed 就不写入"，证明不了"模型只在用户真的说了注册之后才置 confirmed"——条件为按验收条件①-⑤在真实对话里走正例与反例各一次，结果记入 `EV-2026-09-21-chat-skill-register.md` 后本条转 APPROVED | CONDITIONAL 机器测试证明的是"没有 confirmed 就不写入"，证明不了"模型只在用户真的说了注册之后才置 confirmed"——条件为按验收条件①-⑤在真实对话里走正例与反例各一次，结果记入 `EV-2026-09-21-chat-skill-register.md` 后本条转 APPROVED | CONDITIONAL 机器测试证明的是"没有 confirmed 就不写入"，证明不了"模型只在用户真的说了注册之后才置 confirmed"——条件为按验收条件①-⑤在真实对话里走正例与反例各一次，结果记入 `EV-2026-09-21-chat-skill-register.md` 后本条转 APPROVED | CONDITIONAL 机器测试证明的是"没有 confirmed 就不写入"，证明不了"模型只在用户真的说了注册之后才置 confirmed"——条件为按验收条件①-⑤在真实对话里走正例与反例各一次，结果记入 `EV-2026-09-21-chat-skill-register.md` 后本条转 APPROVED |
+| CP-1 | APPROVED 2026-09-23 真实对话正例①③、反例②、重名⑤均符合预期（EV §3）；用户「先预览、说注册才写入」的裁定在真实入口上成立 | APPROVED 真实入口证实模型遵从工具描述：无「注册」不置 confirmed；`register_skill` 复用 `registerSkill()` 的产物被 `read_skill` 与 `GET /api/skills` 原样读到 | APPROVED 落盘文件是用户确认的修改稿而非首稿（自检清单 4 条）；重名冲突文案原样回到对话且原文件哈希不变 | APPROVED TEST-530 `real_entry: true`（`entry: user`）；6 份步骤事件日志留存协调会话 scratchpad，关键数字已抄入 EV §3 |
 | CP-2 | APPROVED 拒绝/冲突/超长三种用户可见文案均有断言 | APPROVED 用例③经 `read_skill` 读回，证明注册产物走的是既有读路径 | APPROVED 用例⑧证明穿越名字被既有 slug 规则收住 | APPROVED `npx vitest run tests/skill-tools-register.test.ts` 8 例全绿，已本机实测 |
 | CP-3 | APPROVED | APPROVED | APPROVED | APPROVED `npx vitest run tests/tool-suites.test.ts` 13 例全绿，已本机实测 |
 | CP-4 | APPROVED | APPROVED | APPROVED | APPROVED 全量回归 919/920，唯一失败为既有 flaky，非本 CR 引入 |
