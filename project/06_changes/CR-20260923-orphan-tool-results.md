@@ -2,7 +2,7 @@
 
 - 级别: L2（标准档：全部 CP 双向门——只改代码里"发给模型的回放"与"同一会话的并发处理"，数据库一行不动，`git revert` 即回滚；真实入口需人工在受损会话里操作一次）
 - 提出人: user（INPUT-2026-09-21-004，补记）
-- 状态: P2-P4 完成，待合并（R1 四点裁定 2026-09-23 均取推荐项；R1-R4 全 PASS；新增 `dropOrphanToolResults` 5 例 + `runChatTurn` 3 例，定向 92/92、全量 928/928，`tsc` 0 错误；真实入口 TEST-542 三步待合并重建后在用户运行中的服务上执行，见「真实入口」行）
+- 状态: P2-P4 与真实入口完成，待 snapshot 与合并（R1 四点裁定 2026-09-23 均取推荐项；R1-R4 全 PASS；新增 `dropOrphanToolResults` 5 例 + `runChatTurn` 3 例，定向 92/92、全量 928/928，`tsc` 0 错误；TEST-542 三步已于 2026-09-23 在用户运行中的本机服务（分支构建 `czWnnnHPFeEgyqxr4HhYA`）上经真实 `POST /api/chat/stream` 走完，见 EV §4；合并 main 且 `verify` PASS 后转 CLOSED）
 - 占用 ID: REQ-F-310, DEC-420, TASK-540, TEST-540, TEST-541, TEST-542
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: REQ-F-029（工具循环——一轮被中止后服务端仍在写库）、REQ-F-042（上下文压缩——摘要锚点落在错位处）、REQ-F-037（会话累计用量——被拒请求按预估计入）
@@ -23,7 +23,7 @@
   - R1: 本文件有 `## 变化点登记` 表（每行有来源角色）+ R1 人工终裁痕迹；`review r1` PASS。
   - R2/R3/R4: 三层说明书各含 `变更响应 · CR-20260923-orphan-tool-results` 节逐一响应全部 CP；本文件三张矩阵无空、无 REJECTED；`review r2|r3|r4` PASS。
   - P3/P4: TASK-540 DONE；TEST-540/541/542 PASS；`npx tsc --noEmit` 0 错误；`npx vitest run` 全量绿；不新增 lib→tools 边。
-- 真实入口: 未执行（P2-P4 尚未开始。实现并重建重启后两条路线各走一次：①在受损会话 `b969720b-2c76-4762-b023-78292133187d` 里再发一条消息，得到正常回复且出现"已剔除 N 条错位工具结果"的提示；②在一个会跑工具的长任务里点「停止」后立刻再发一条，事后用只读查询核对该会话没有新的错位行）
+- 真实入口: 已执行（2026-09-23 本机时区 / 2026-09-24T04:00Z，用户运行中的本机服务，分支构建 `czWnnnHPFeEgyqxr4HhYA`，由协调会话经真实 `POST /api/chat/stream` 驱动、DeepSeek `deepseek-chat` 应答：①受损会话 `b969720b…` 再发一条——SSE「已跳过 4 条错位的工具结果」，1.6 s 正常回复，库里 4 条错位行原样未动；②a 收到第一个 `tool_call` 即断开连接并立刻再发——中止经 `request.signal` 立即传到服务端，两个调用在新 user 行**之前**得「已中止」，6 行 0 孤儿；②b 不断开、1.5 s 后从另一条连接并发再发——B 收到「上一轮尚未结束，已先将其中止」，A 以 stopped 收尾，9 行 0 孤儿；③ 用不存在的模型名发一次请求——DeepSeek 拒绝后下沉到 OpenAI 又被 401 拒绝，该会话累计用量 (0, 0)。详见 EV-2026-09-23-orphan-tool-results §4）
   - **真实入口（必做）**：①受损会话自愈——发送后不再 400，回复正常，提示剔除条数；②停止后立刻再发——服务端旧轮被中止，库里 assistant(`tool_calls`) 与其 `tool` 行之间没有插入 user 行；③会话累计用量在一次被拒请求前后不变（对照 `GET /api/conversations/recent` 或 SSE `usage`）。
 - 评审记录: R1 四角色（产品 / 架构 / 模块开发 / 测试）独立评审。**R1 人工终裁**：待用户拍板。
 - R1 终裁: 已完成 | 用户 | 2026-09-23
@@ -91,8 +91,8 @@ P2 产出。三层说明书写 `变更响应 · CR-20260923-orphan-tool-results`
 
 | CP | 产品 | 架构 | 模块 | 测试 |
 |---|---|---|---|---|
-| CP-1 | CONDITIONAL 机器测试证明的是"回放会跳过孤儿行、并发发送会先中止旧轮、被拒请求不计用量"，证明不了"用户那台正在跑的服务上受损会话真的活过来了"——条件为 TEST-542 三步在用户运行中的服务上各走一次并记入 `EV-2026-09-23-orphan-tool-results.md` §4，之后本条转 APPROVED | CONDITIONAL 机器测试证明的是"回放会跳过孤儿行、并发发送会先中止旧轮、被拒请求不计用量"，证明不了"用户那台正在跑的服务上受损会话真的活过来了"——条件为 TEST-542 三步在用户运行中的服务上各走一次并记入 `EV-2026-09-23-orphan-tool-results.md` §4，之后本条转 APPROVED | CONDITIONAL 机器测试证明的是"回放会跳过孤儿行、并发发送会先中止旧轮、被拒请求不计用量"，证明不了"用户那台正在跑的服务上受损会话真的活过来了"——条件为 TEST-542 三步在用户运行中的服务上各走一次并记入 `EV-2026-09-23-orphan-tool-results.md` §4，之后本条转 APPROVED | CONDITIONAL 机器测试证明的是"回放会跳过孤儿行、并发发送会先中止旧轮、被拒请求不计用量"，证明不了"用户那台正在跑的服务上受损会话真的活过来了"——条件为 TEST-542 三步在用户运行中的服务上各走一次并记入 `EV-2026-09-23-orphan-tool-results.md` §4，之后本条转 APPROVED |
+| CP-1 | APPROVED 2026-09-23 真实入口三步全部符合预期（EV §4）：受损会话一条消息即自愈、并发发送先中止旧轮、被拒请求不计用量 | APPROVED 真实服务上验证了断连（`request.signal`）与并发（`inFlightTurns`）两条中止路径都能让旧轮在新 user 行之前收尾 | APPROVED 受损会话的 4 条错位行仍原样在库、只在回放里被跳过；两条新会话 0 孤儿 | APPROVED TEST-542 `real_entry: true`（`entry: user`）；SSE 事件日志 6 份留存协调会话 scratchpad，关键数字已抄入 EV §4 |
 | CP-2 | APPROVED 跳过提示文案有断言（TEST-541 ①） | APPROVED 用例①经 `runChatTurn` 全链路，证明净化发生在压缩与组装之前 | APPROVED TEST-540 ⑤ 证明对象引用与 `turn` 字段原样保留 | APPROVED `npx vitest run tests/agent-loop.test.ts` 17 例全绿，已本机实测 |
-| CP-3 | APPROVED 中止提示文案有断言 | APPROVED 用例②证明旧轮以 stopped 收尾且其调用在新 user 行之前得到结果 | APPROVED 旧轮提供方只被调用 1 次，未泄漏到第二轮 | CONDITIONAL 机器用例用永不返回的假工具复现；真实入口②（长任务中停止后立刻再发、事后只读核对无新的错位行）待在用户运行中的服务上执行，记入 EV §4 后转 APPROVED |
+| CP-3 | APPROVED 中止提示文案有断言 | APPROVED 用例②证明旧轮以 stopped 收尾且其调用在新 user 行之前得到结果 | APPROVED 旧轮提供方只被调用 1 次，未泄漏到第二轮 | APPROVED 真实入口②a/②b 已执行：断连即中止、并发则先中止旧轮，事后只读核对两条会话均 0 孤儿（EV §4） |
 | CP-4 | APPROVED | APPROVED | APPROVED | APPROVED TEST-541 ③ 已本机实测 |
 | CP-5 | APPROVED | APPROVED | APPROVED | APPROVED 全量回归 928/928，无 flaky 复现 |

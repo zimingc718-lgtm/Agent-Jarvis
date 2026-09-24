@@ -49,12 +49,26 @@
 
 `npx vitest run`（全量，2026-09-23 本机）：99 文件 / **928 例全部通过**，84.5 s；此前两次收口都出现的既有 flaky（`tests/floating-chat.test.tsx > skill intake ④`）本次未复现。
 
-## 4. 真实入口（待执行）
+## 4. 真实入口（2026-09-23 本机时区 / 2026-09-24T04:00Z 已执行）
 
-按 CR「验收条件」在用户运行中的本机服务上：①受损会话 `b969720b…` 再发一条消息；②长任务中「停止」后立刻再发，事后只读核对；③一次被拒请求前后累计用量不变。执行后补记本节并翻转 TEST-542。
+- 环境: 用户本机**正在运行**的生产构建——从本 CR 分支 `ab69c59` 构建，BUILD_ID `czWnnnHPFeEgyqxr4HhYA`（22:59:19，晚于 `chat.ts` 22:43:26），`serve:local` 看护 03:59:59Z 启动；用户自己的 `.data/agent-jarvis.sqlite`——即 DEC-210 ③ 的 `user` 环境
+- 驱动方式: 协调会话用 stdlib HTTP 客户端向 `POST /api/chat/stream` 发送真实消息并解析 SSE（`chat_drive.py`；②a 另用 `chat_abort_drive.py`，在收到第一个 `tool_call` 事件时关闭 socket 再立刻发第二条）；事件日志 6 份留存协调会话 scratchpad `real-entry/t542-*.json`
+- 应答模型: DeepSeek `deepseek-chat`（③ 触发下沉到 OpenAI `gpt-5`）
+- 事后核对: 生产库只读查询（`mode=ro`）
+
+| 步 | 做了什么 | 观察到的事件 | 事后只读核对 | 判定 |
+|---|---|---|---|---|
+| ① 受损会话自愈 | 向 `b969720b…` 发「这条会话之前每次发送都报『生成失败』…你能正常收到并回复这条消息吗？」 | SSE：`notice`「已跳过 4 条错位的工具结果（上一轮被中止时留下的），按修复后的历史继续。」→ `turn_usage` 12,030 入 / 34 出 → `done`；1.6 s；回复「能，消息正常收到了，也能回复…」；零 tool_call | 108 行（106 + user + assistant）；按 DB 顺序统计孤儿 tool 行仍为 **4**（原样未动）；累计用量 891,627 → 903,657（本次 DeepSeek **真实**报的 12,030；`usage_estimated` 仍为 1 是历史遗留标记） | 符合 ① |
+| ②a 断连后立刻再发 | 新会话，A =「依次读取两个技能全文并写 800 字对比」；收到第一个 `tool_call read_skill`（+1.2 s）即关闭 socket；0.00 s 后发 B「你好，先停一下」 | B：`done`，1.3 s，回复「收到，已停下。没读取任何技能内容…」；**无**「已先将其中止」提示 | 6 行：user A → assistant+calls(2) → tool `[已中止]` ×2（status error，04:00:55）→ user B（04:00:55）→ assistant B；孤儿 0 | 符合 ②——本次断连经 `request.signal` **立即**传到服务端，旧轮在 B 查表前已收尾，所以没有走到"先中止旧轮"分支；两个调用在新 user 行之前得到结果，正是要守的顺序 |
+| ②b 不断连、并发再发 | 新会话先发一句种子；A =「依次读取三个技能全文并写 1000 字对比」保持连接不断；1.5 s 后从另一条连接发 B「你好，先停一下」 | B：`notice`「上一轮尚未结束，已先将其中止，再处理这条消息。」→ `done`，1.4 s；A：3 个 `tool_call read_skill` 与结果之后 `stopped`（第二次提供方调用被中止，无正文） | 9 行：user → assistant → user A → assistant+calls(3) → tool ×3（真实正文，04:02:11.32–.42）→ user B（04:02:11.59）→ assistant B；孤儿 0、未回答调用 0 | 符合 ②——"旧轮仍在飞行"路径在真实服务上走通 |
+| ③ 被拒请求不计用量 | `POST /api/chat/stream` 带 `model: "no-such-model-xyz"` 新建会话 | SSE：`start` → `notice`（DeepSeek 未能应答，改用 OpenAI）→ `error`「Provider request failed (401): Incorrect API key provided…」；无 `usage` 事件 | 该会话 `conversations` 行 `(input_tokens, output_tokens, usage_estimated) = (0, 0, 0)`；`messages` 只有 1 行 user | 符合 ③ |
+
+顺带发现（与本 CR 无关，已告知用户）：③ 的下沉揭示 **OpenAI 提供方的 API Key 已失效（401）**——"已连接"只表示存了密钥，不表示密钥有效；需用户在「模型」设置里更新。
+
+据此 R4 矩阵 CP-1 四列与 CP-3 测试列由 CONDITIONAL 转 APPROVED；`test-results.json` TEST-542 `PASS`、`real_entry: true`、`entry: user`。
 
 ## 5. 局限（如实登记）
 
 - 被跳过的孤儿结果对模型不可见：它们是被中止那一轮的产物，用户当时已放弃；如需其内容，让模型重新读取。
 - 互斥表是进程内状态；多实例部署下各实例互不知情。当前两处部署都是单进程。
-- 客户端「停止」仍不会向服务端发显式停止请求——服务端只在**下一条消息到达时**中止旧轮。旧轮在无人再发消息的情况下会自行跑完（与修复前一致，但不再污染后续历史）。
+- 客户端「停止」仍不会向服务端发显式停止请求。真实入口 ②a 表明本机 Next 15.5 能把客户端断连作为 `request.signal` 传给循环（旧轮当场以「已中止」收尾）；若哪天传不到（2026-09-18 的生产事故正是这种情形），兜底是**下一条消息到达时**中止旧轮，旧轮在无人再发消息时会自行跑完（与修复前一致，但不再污染后续历史）。

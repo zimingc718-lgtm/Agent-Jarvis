@@ -1604,6 +1604,15 @@
       "date": "2026-09-23",
       "entry": "assistant",
       "notes": "runChatTurn 集成（REQ-F-310，DEC-420 ①②③，TASK-540）。新增 3 例（文件合计 20 例，真实 sqlite + stub 提供方）：①接缝原样种库再发一条——SSE 含「已跳过 2 条错位的工具结果」，外发序列合法且不含错位结果、两调用得「已中止」，库里 8 行原样；②旧轮卡在永不返回的慢工具里时再次发送——旧轮 stopped、其调用在新 user 行之前得「已中止」，库里形状 user/assistant+calls/tool/user/assistant，SSE 含「上一轮尚未结束，已先将其中止」；③提供方直接 error 且无 usage → 不发 usage 事件、getUsage 为 0，随后正常完成仍计预估。真实入口（TEST-542）另记。"
+    },
+    {
+      "id": "TEST-542",
+      "result": "PASS",
+      "command": "npx vitest run tests/chat-stream.test.ts",
+      "real_entry": true,
+      "date": "2026-09-23",
+      "entry": "user",
+      "notes": "真实入口（REQ-F-310，TASK-540）。2026-09-23 本机时区在用户运行中的本机服务（分支构建 czWnnnHPFeEgyqxr4HhYA）上经真实 POST /api/chat/stream（deepseek-chat）走完：①受损会话 b969720b… 再发一条——SSE「已跳过 4 条错位的工具结果」，1.6 s 正常回复，库里 4 条错位行原样；②a 收到首个 tool_call 即断连并立刻再发——中止立即传到服务端，两调用在新 user 行之前得「已中止」，0 孤儿；②b 不断连、1.5 s 后并发再发——B 收到「上一轮尚未结束，已先将其中止」，A 以 stopped 收尾，0 孤儿；③不存在的模型名 → DeepSeek 拒绝、下沉 OpenAI 又 401，该会话累计用量 (0,0)。命令列指向机器对照 TEST-541；由协调会话经 HTTP 驱动，见 EV §4。"
     }
   ],
   "executed_commands": [
