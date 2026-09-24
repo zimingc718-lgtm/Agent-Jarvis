@@ -59,7 +59,7 @@
 |---|---|---|---|---|---|---|
 | CP-1 | 产品 | 一条会话不因某一轮被中止或并发发送而永久不可用：历史出现不合法工具序列时回放自动修复并告知，重试不再加重损伤；显示的累计用量不把被拒请求按预估计入 | REQ-F-310（新增） | 缺陷修复 | 双向 | 真实入口：在受损会话 `b969720b…` 里再发一条消息得到正常回复并看到剔除提示（证据：TEST-542） |
 | CP-2 | 架构 | 回放净化：`loadHistory` 之后、`assembleContext` 之前，剔除 `tool_call_id` 不属于紧邻前一条 assistant `tool_calls` 的 `tool` 行（数据库不动），剔除数以 notice 事件告知；与 `repairDanglingToolCalls` 互为对偶 | DEC-420（新增） | 缺陷修复 | 双向 | 机器：`tests/agent-loop.test.ts` 新增孤儿 tool 行用例（证据：TEST-540） |
-| CP-3 | 架构 | 同会话单轮互斥：服务端以 `conversationId` 登记进行中的轮次；新的发送到达时先中止旧轮并等其收尾，再加载历史（R1 裁定：中止旧轮，不返回 409） | DEC-420 | 缺陷修复 | 双向 | 机器：`tests/chat-stream.test.ts` 并发两次 `runChatTurn` 的用例（证据：TEST-541）；真实入口：长任务中点停止后立刻再发，事后只读核对无错位行 |
+| CP-3 | 架构 | 同会话单轮互斥：服务端以 `conversationId` 登记进行中的轮次；新的发送到达时先中止旧轮并等其收尾，再加载历史（R1 裁定：中止旧轮，不返回 409） | DEC-420 | 缺陷修复 | 双向 | 机器：`tests/chat-stream.test.ts` 并发两次 `runChatTurn` 的用例（TEST-541）；真实入口：长任务中点停止后立刻再发，事后只读核对无错位行（证据：TEST-542） |
 | CP-4 | 架构 | 被提供方拒绝的请求（未返回 usage 且以 error 结束）不再按 `estimateMessagesTokens` 计入会话累计用量；仍对提供方不报 usage 的正常完成保留预估 | DEC-420 | 缺陷修复 | 双向 | 机器：`tests/chat-stream.test.ts` 用例——stub 提供方返回 error 后 `getUsage` 不变（证据：TEST-541） |
 | CP-5 | 测试 | 新增 TEST-540（agent-loop 序列净化）、TEST-541（chat-stream 互斥与用量）、TEST-542（受损会话真实入口） | TEST-540, TEST-541, TEST-542 | 新增 | 双向 | 机器：`npx vitest run tests/agent-loop.test.ts tests/chat-stream.test.ts` |
 
