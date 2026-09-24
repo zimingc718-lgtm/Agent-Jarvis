@@ -1,10 +1,34 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { runChatTurn } from "@/lib/chat";
-import { createStore, type Store } from "@/lib/store";
+import { createStore, type AddMessageInput, type Store } from "@/lib/store";
+import { ToolRegistry, type ToolDescriptor } from "@/lib/tools/registry";
 import type { ChatMessage } from "@/lib/types";
+
+/**
+ * What the OpenAI-compatible providers enforce (DEC-420): a `tool` row must answer a call
+ * in the immediately preceding assistant message, each call exactly once, and nothing
+ * else may sit between an assistant's `tool_calls` and its results.
+ */
+function isLegalToolSequence(messages: ChatMessage[]): boolean {
+  let open = new Set<string>();
+  for (const message of messages) {
+    if (message.role === "tool") {
+      if (!message.tool_call_id || !open.has(message.tool_call_id)) {
+        return false;
+      }
+      open.delete(message.tool_call_id);
+      continue;
+    }
+    if (open.size > 0) {
+      return false;
+    }
+    open = message.role === "assistant" ? new Set((message.tool_calls ?? []).map((call) => call.id)) : new Set();
+  }
+  return open.size === 0;
+}
 
 const encryptionKey = "0123456789abcdef0123456789abcdef";
 
@@ -522,5 +546,160 @@ describe("runChatTurn", () => {
     expect(system).toContain("read_skill");
     // The catalogue is a name plus one line — never the folder contents.
     expect(system).not.toContain("SKILL.md 正文");
+  });
+
+  /**
+   * TEST-541 — DEC-420 (CR-20260923-orphan-tool-results). Three defects, one measured
+   * conversation (EV-2026-09-23 §1): a user row landed between an assistant's `tool_calls`
+   * and its results because the previous turn was still running server-side when the user
+   * pressed stop and typed again; the replay never repaired it, so every later send was
+   * refused with a 400; and each refused send still added an *estimated* context cost to
+   * the conversation total, which reached 891,627 "input tokens" that were never sent.
+   */
+  it("DEC-420 ①: 回放时跳过没有对应调用的 tool 行并提示，数据库一行不动", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    const providerId = localProvider(store, user.id);
+    const conversation = store.createConversation(user.id, "受损会话");
+    const seed = (row: Omit<AddMessageInput, "conversationId">) => store.appendMessage({ conversationId: conversation.id, ...row });
+    const call = (id: string) => ({ id, type: "function" as const, function: { name: "save_knowledge", arguments: "{}" } });
+
+    // The production seam, verbatim in shape.
+    seed({ role: "user", content: "拉一下对比表", status: "complete" });
+    seed({ role: "assistant", content: "", status: "complete", toolCalls: [call("k1"), call("k2")] });
+    seed({ role: "user", content: "你好", status: "complete" });
+    seed({ role: "tool", content: "已存为知识条目 1", status: "complete", toolCallId: "k1" });
+    seed({ role: "tool", content: "已存为知识条目 2", status: "complete", toolCallId: "k2" });
+    seed({ role: "assistant", content: "你好！刚才那批抓取被中止了。", status: "stopped" });
+
+    let sent: ChatMessage[] = [];
+    const stream = await runChatTurn({
+      store,
+      userId: user.id,
+      providerId,
+      conversationId: conversation.id,
+      message: "继续",
+      providerStream: async function* (input) {
+        sent = input.messages;
+        yield { type: "delta", text: "继续中" };
+      },
+    });
+    const sse = await readSse(stream);
+
+    expect(sse).toContain("已跳过 2 条错位的工具结果");
+    expect(sse).toContain("event: done");
+    // What the provider receives is legal: the two calls get「已中止」right behind their
+    // assistant row; the stranded results are not sent at all.
+    expect(isLegalToolSequence(sent.filter((message) => message.role !== "system"))).toBe(true);
+    expect(sent.some((message) => message.content === "已存为知识条目 1")).toBe(false);
+    expect(sent.filter((message) => message.role === "tool").map((message) => message.content)).toEqual(["[已中止]", "[已中止]"]);
+    // The database keeps every row — six seeded plus this turn's user and assistant.
+    const rows = store.listMessages(conversation.id);
+    expect(rows).toHaveLength(8);
+    expect(rows.filter((row) => row.role === "tool").map((row) => row.content)).toEqual(["已存为知识条目 1", "已存为知识条目 2"]);
+  });
+
+  it("DEC-420 ②: 上一轮未结束时再次发送——先中止旧轮，库里 tool_calls 与其结果之间不再插入 user 行", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    const providerId = localProvider(store, user.id);
+    const conversation = store.createConversation(user.id, "长任务");
+
+    // A tool that never finishes on its own — the shape of "still saving knowledge entries
+    // when the user pressed stop and typed again". Only the abort ends it.
+    const slowTool: ToolDescriptor = {
+      name: "slow_tool",
+      description: "慢工具",
+      parameters: { type: "object", properties: {} },
+      available: () => true,
+      execute: () => new Promise(() => {}) as never,
+    };
+    const extraTools = new ToolRegistry().register(slowTool);
+
+    let firstRounds = 0;
+    const first = await runChatTurn({
+      store,
+      userId: user.id,
+      providerId,
+      conversationId: conversation.id,
+      message: "开始长任务",
+      extraTools,
+      providerStream: async function* () {
+        firstRounds += 1;
+        if (firstRounds === 1) {
+          yield { type: "tool_call", callId: "slow-1", name: "slow_tool", argsSummary: "{}" };
+          return;
+        }
+        yield { type: "delta", text: "不该到这里" };
+      },
+    });
+    const firstBody = readSse(first);
+    // The first turn has written its tool_calls row and is now inside the tool.
+    await vi.waitFor(() => {
+      expect(store.listMessages(conversation.id).some((row) => row.role === "assistant" && (row.toolCalls?.length ?? 0) > 0)).toBe(true);
+    });
+
+    let secondSent: ChatMessage[] = [];
+    const second = await runChatTurn({
+      store,
+      userId: user.id,
+      providerId,
+      conversationId: conversation.id,
+      message: "你好",
+      providerStream: async function* (input) {
+        secondSent = input.messages;
+        yield { type: "delta", text: "你好！" };
+      },
+    });
+    const secondBody = await readSse(second);
+    const firstSse = await firstBody;
+
+    // The superseded turn ended as stopped, its call answered with「已中止」BEFORE the new
+    // user row — that ordering is the whole point.
+    expect(firstSse).toContain("event: stopped");
+    const shape = store
+      .listMessages(conversation.id)
+      .map((row) => `${row.role}${(row.toolCalls?.length ?? 0) > 0 ? "+calls" : ""}${row.toolCallId ? `[${row.toolCallId}]` : ""}`);
+    expect(shape).toEqual(["user", "assistant+calls", "tool[slow-1]", "user", "assistant"]);
+    expect(secondBody).toContain("上一轮尚未结束，已先将其中止");
+    expect(secondBody).toContain("event: done");
+    expect(isLegalToolSequence(secondSent.filter((message) => message.role !== "system"))).toBe(true);
+    expect(firstRounds).toBe(1);
+  });
+
+  it("DEC-420 ③: 被提供方拒绝且没有 usage 的请求不计入会话累计用量；正常完成仍保留预估", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    const providerId = localProvider(store, user.id);
+
+    const refused = await runChatTurn({
+      store,
+      userId: user.id,
+      providerId,
+      message: "hi",
+      providerStream: async function* () {
+        yield { type: "error", message: "Provider request failed (400): Messages with role 'tool' must be a response to a preceding message with 'tool_calls'." };
+      },
+    });
+    const refusedSse = await readSse(refused);
+    const [conversation] = store.listRecentConversations(user.id);
+
+    expect(refusedSse).toContain("event: error");
+    expect(refusedSse).not.toContain("event: usage");
+    expect(store.getUsage(conversation.id)).toMatchObject({ inputTokens: 0, outputTokens: 0 });
+
+    // A completed turn from a provider that reports no usage is still estimated (REQ-F-037 ④).
+    const completed = await runChatTurn({
+      store,
+      userId: user.id,
+      providerId,
+      conversationId: conversation.id,
+      message: "again",
+      providerStream: async function* () {
+        yield { type: "delta", text: "ok" };
+      },
+    });
+    const completedSse = await readSse(completed);
+    expect(completedSse).toContain("event: usage");
+    const usage = store.getUsage(conversation.id);
+    expect(usage.inputTokens).toBeGreaterThan(0);
+    expect(usage.estimated).toBe(true);
   });
 });

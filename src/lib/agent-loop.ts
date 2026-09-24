@@ -405,3 +405,38 @@ export function repairDanglingToolCalls(messages: ChatMessage[]): ChatMessage[] 
   }
   return repaired;
 }
+
+/**
+ * The dual of `repairDanglingToolCalls` (DEC-420 ①, CR-20260923-orphan-tool-results).
+ *
+ * `repair…` fills in results that never came back; this drops results no call is asking
+ * for. The measured case (EV-2026-09-23-orphan-tool-results §1): the user pressed stop and
+ * typed again while the previous turn's tools were still finishing, so a `user` row landed
+ * between an assistant's `tool_calls` and its four `tool` rows. Replayed as-is, every later
+ * send was refused with `400: Messages with role 'tool' must be a response to a preceding
+ * message with 'tool_calls'` and the conversation was dead — seventeen retries in a row.
+ *
+ * A `tool` row survives only when the closest preceding non-tool message is an assistant
+ * whose `tool_calls` still contain its id, each id answering at most once. Nothing is
+ * written back: like compaction (DEC-030 ①), only what is sent to the model changes, and
+ * the caller says how many rows were skipped (REQ-F-023).
+ */
+export function dropOrphanToolResults<T extends ChatMessage>(messages: T[]): { messages: T[]; dropped: number } {
+  const kept: T[] = [];
+  let open = new Set<string>();
+  let dropped = 0;
+  for (const message of messages) {
+    if (message.role === "tool") {
+      if (message.tool_call_id && open.has(message.tool_call_id)) {
+        open.delete(message.tool_call_id);
+        kept.push(message);
+      } else {
+        dropped += 1;
+      }
+      continue;
+    }
+    open = message.role === "assistant" ? new Set((message.tool_calls ?? []).map((call) => call.id)) : new Set();
+    kept.push(message);
+  }
+  return { messages: kept, dropped };
+}

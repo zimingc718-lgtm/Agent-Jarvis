@@ -2,14 +2,14 @@
 
 - 级别: L2（标准档：全部 CP 双向门——只改代码里"发给模型的回放"与"同一会话的并发处理"，数据库一行不动，`git revert` 即回滚；真实入口需人工在受损会话里操作一次）
 - 提出人: user（INPUT-2026-09-21-004，补记）
-- 状态: R1 已终裁（2026-09-23 用户经 AskUserQuestion 四点裁定均取推荐项：回放自动剔除并提示 / 新消息先中止旧轮 / 被拒请求不计用量 / 受损会话靠回放自愈不碰库）；P2 进行中
+- 状态: P2-P4 完成，待合并（R1 四点裁定 2026-09-23 均取推荐项；R1-R4 全 PASS；新增 `dropOrphanToolResults` 5 例 + `runChatTurn` 3 例，定向 92/92、全量 928/928，`tsc` 0 错误；真实入口 TEST-542 三步待合并重建后在用户运行中的服务上执行，见「真实入口」行）
 - 占用 ID: REQ-F-310, DEC-420, TASK-540, TEST-540, TEST-541, TEST-542
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: REQ-F-029（工具循环——一轮被中止后服务端仍在写库）、REQ-F-042（上下文压缩——摘要锚点落在错位处）、REQ-F-037（会话累计用量——被拒请求按预估计入）
 - 影响模块: MOD-CHAT（`src/lib/chat.ts` 历史加载/回放、`src/lib/agent-loop.ts` 序列修复）、MOD-API（`src/app/api/chat/stream/route.ts` 同会话互斥）
 - 影响任务: 无既有任务变更，新增 TASK-540
 - 影响测试: 无既有测试变更，新增 TEST-540, TEST-541, TEST-542
-- 当前证据: `project/05_evidence/EV-2026-09-23-orphan-tool-results.md`（待建；根因核实数据先记在本文件「根因」节）
+- 当前证据: `project/05_evidence/EV-2026-09-23-orphan-tool-results.md`
 - 方案选项:
   - A. 只在报错时提示用户"请开启新对话"——不选：受损数据仍在库里，且"点停止后立刻再发"这个动作在任何会话里都会再次制造同样的错位。
   - B. **三件事一起做：①回放净化——`loadHistory` 之后把 `tool_call_id` 不属于紧邻前一条 assistant `tool_calls` 的 `tool` 行从回放里剔除（数据库不动，与压缩同一原则），并以 notice 告知剔除条数；②同会话单轮互斥——服务端登记每个会话进行中的轮次，新的发送先中止旧轮并等其收尾，再加载历史；③被提供方拒绝的请求（无 usage 返回且以 error 结束）不再按预估值计入会话累计用量**——建议选中；②的形态经 R1 裁定为「中止旧轮再处理新消息」，不返回 409。
@@ -66,3 +66,33 @@
 ## R2 / R3 / R4 评审矩阵
 
 P2 产出。三层说明书写 `变更响应 · CR-20260923-orphan-tool-results` 节后，跑 `governance.py matrix CR-20260923-orphan-tool-results` 生成矩阵骨架，再逐格填裁决。
+
+## R2 评审矩阵
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | APPROVED 直接对应用户四点裁定；把"一轮被打断后会话仍可用"作为一条 MUST 单独占号，验收写的是真实会话而非断言 | APPROVED 新增 REQ-F-310 落 DEC-420；REQ-F-029/042/037 的正常路径行为未被改写 | APPROVED 落点集中在 `agent-loop.ts` 一个纯函数与 `chat.ts` 的登记/释放，不牵动 UI 与路由 | APPROVED 验收含真实入口三步（受损会话自愈、停止后再发、被拒请求用量），机器对照 TEST-540/541 |
+| CP-2 | APPROVED 跳过条数说出来（REQ-F-023），用户知道模型少看了什么 | APPROVED 与 `repairDanglingToolCalls` 互为对偶、同一文件；不写库，与压缩同一原则（DEC-030 ①）；放在压缩之前，锚点不再落在接缝上 | APPROVED 泛型直接作用于 `TurnMessage[]`，不丢 `turn`；同一 id 只认第一条、system/user 行重置待回答集合 | APPROVED TEST-540 五例含生产接缝的原样形状与串联修复后的合法性断言 |
+| CP-3 | APPROVED 用户裁定「中止旧轮」而非 409，与客户端已显示「已停止」一致；发生中止时对话里有提示 | APPROVED 进程内 Map 与单进程部署形态匹配；多实例风险已写入 DEC-420 风险列；等待上限 15 s 防止旧轮不收尾时新轮永远等 | APPROVED 四处 signal 消费点统一改用 `turnSignal`；`onSettled` 在 `finally` 释放；413 抛出路径也释放，不留悬挂槽位 | APPROVED TEST-541 ② 用永不返回的慢工具复现并断言库里形状与 SSE 提示 |
+| CP-4 | APPROVED 用户看到的累计数不再含从未发出的请求；正常完成仍保留预估（带 estimated 标记） | APPROVED 守卫只加在 `!sawUsage` 分支，提供方真实报的 usage 路径不变 | APPROVED 一行条件 `result.status !== "error"`，位置在 status 判断之前但语义明确 | APPROVED TEST-541 ③ 断言无 usage 事件、`getUsage` 为 0，且随后正常完成计入预估 |
+| CP-5 | APPROVED 测试范围与验收条件的机器可证部分一一对应，真实入口单列 TEST-542 | APPROVED 无新增 mock 基础设施；慢工具经既有 `extraTools` 注入 | APPROVED 新用例并入既有两个测试文件，命名与编号沿用文件惯例 | APPROVED 定向 92/92，全量 928/928 |
+
+## R3 评审矩阵
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | APPROVED TASK-540 对应验收条件①②③ | APPROVED 与 DEC-420 ①②③ 一致 | APPROVED 两个文件、一个纯函数加一处登记，可审阅可回滚 | APPROVED TEST-540/541/542 覆盖 |
+| CP-2 | APPROVED 无需求层遗留 | APPROVED 调用点在 `loadHistory` 之后、`planCompaction` 之前，与 DEC-420 ① 描述一致 | APPROVED TASK-540 ① 逐项写明规则与提示文案 | APPROVED TEST-540 逐项对应 |
+| CP-3 | APPROVED 无需求层遗留 | APPROVED 登记—中止—等待—释放四步与 DEC-420 ② 一致 | APPROVED TASK-540 ② 列出四处 signal 改点与两处释放点 | APPROVED TEST-541 ② |
+| CP-4 | APPROVED 无需求层遗留 | APPROVED 与 DEC-420 ③ 一致 | APPROVED TASK-540 ③ | APPROVED TEST-541 ③ |
+| CP-5 | APPROVED 无遗留 | APPROVED 无新增架构决策 | APPROVED 测试与源文件一一对应 | APPROVED 见 R2/CP-5 |
+
+## R4 评审矩阵
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | CONDITIONAL 机器测试证明的是"回放会跳过孤儿行、并发发送会先中止旧轮、被拒请求不计用量"，证明不了"用户那台正在跑的服务上受损会话真的活过来了"——条件为 TEST-542 三步在用户运行中的服务上各走一次并记入 `EV-2026-09-23-orphan-tool-results.md` §4，之后本条转 APPROVED | CONDITIONAL 机器测试证明的是"回放会跳过孤儿行、并发发送会先中止旧轮、被拒请求不计用量"，证明不了"用户那台正在跑的服务上受损会话真的活过来了"——条件为 TEST-542 三步在用户运行中的服务上各走一次并记入 `EV-2026-09-23-orphan-tool-results.md` §4，之后本条转 APPROVED | CONDITIONAL 机器测试证明的是"回放会跳过孤儿行、并发发送会先中止旧轮、被拒请求不计用量"，证明不了"用户那台正在跑的服务上受损会话真的活过来了"——条件为 TEST-542 三步在用户运行中的服务上各走一次并记入 `EV-2026-09-23-orphan-tool-results.md` §4，之后本条转 APPROVED | CONDITIONAL 机器测试证明的是"回放会跳过孤儿行、并发发送会先中止旧轮、被拒请求不计用量"，证明不了"用户那台正在跑的服务上受损会话真的活过来了"——条件为 TEST-542 三步在用户运行中的服务上各走一次并记入 `EV-2026-09-23-orphan-tool-results.md` §4，之后本条转 APPROVED |
+| CP-2 | APPROVED 跳过提示文案有断言（TEST-541 ①） | APPROVED 用例①经 `runChatTurn` 全链路，证明净化发生在压缩与组装之前 | APPROVED TEST-540 ⑤ 证明对象引用与 `turn` 字段原样保留 | APPROVED `npx vitest run tests/agent-loop.test.ts` 17 例全绿，已本机实测 |
+| CP-3 | APPROVED 中止提示文案有断言 | APPROVED 用例②证明旧轮以 stopped 收尾且其调用在新 user 行之前得到结果 | APPROVED 旧轮提供方只被调用 1 次，未泄漏到第二轮 | CONDITIONAL 机器用例用永不返回的假工具复现；真实入口②（长任务中停止后立刻再发、事后只读核对无新的错位行）待在用户运行中的服务上执行，记入 EV §4 后转 APPROVED |
+| CP-4 | APPROVED | APPROVED | APPROVED | APPROVED TEST-541 ③ 已本机实测 |
+| CP-5 | APPROVED | APPROVED | APPROVED | APPROVED 全量回归 928/928，无 flaky 复现 |

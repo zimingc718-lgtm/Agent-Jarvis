@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | 生成命令 | `npm run docs:index` |
-| 规模 | REQ 110 条 · TEST 185 条（主矩阵） · TASK 178 条 · tests/**/*.test.ts(x) 99 个 |
+| 规模 | REQ 111 条 · TEST 188 条（主矩阵） · TASK 179 条 · tests/**/*.test.ts(x) 99 个 |
 
 ---
 
@@ -15,7 +15,7 @@
 
 口径：REQ 取自 `产品需求说明书.md` 的「功能需求」「非功能需求」两节表格（不含 `## 变更响应 · CR-*` 节的重复提及）；REQ → TEST 取自 `测试说明书.md` 「测试矩阵」节「覆盖需求」列的反查；TEST → 文件按该行「命令」列展开：`npm run <script>` 递归查 `package.json`（深度上限 4），`npm test -- <词>` / `vitest run <路径>` 按子串匹配 `tests/**/*.test.ts(x)` 的文件名（vitest 本身按子串过滤，多命中不是解析 bug），非 vitest 入口标 `<tag>`。解析不到的用 ⚠ 标出并保留原始问题文字——这不是本生成器的疏漏，是被索引文档自身的缺口，必须能被看见。
 
-共 110 条 REQ。
+共 111 条 REQ。
 
 | REQ | 名称 | 状态 | 覆盖 TEST → 解析到的文件/入口 |
 |---|---|---|---|
@@ -109,6 +109,7 @@
 | REQ-F-280 | 本地文档/资料库展示改用结构化转换后的内容 | APPROVED | **TEST-510** → `markitdown.test.ts`<br>**TEST-511** → `document-raw-route.test.ts` |
 | REQ-F-290 | 文档展示可选由用户指定的技能经模型重新排版 | APPROVED | **TEST-520** → `document-format.test.ts`<br>**TEST-521** → `document-raw-route.test.ts`, `document-settings-route.test.ts` |
 | REQ-F-300 | 对话内生成并注册技能 | APPROVED | **TEST-530** → `skill-tools-register.test.ts`<br>**TEST-531** → `tool-suites.test.ts` |
+| REQ-F-310 | 会话历史的自愈与同会话单轮互斥 | APPROVED | **TEST-540** → `agent-loop.test.ts`<br>**TEST-541** → `chat-stream.test.ts`<br>**TEST-542** → `chat-stream.test.ts` |
 | REQ-NF-050 | 本地读取的边界 | APPROVED | **TEST-170** → `documents.test.ts` |
 | REQ-NF-060 | 单轮成本护栏与可见性 | APPROVED | **TEST-250** → `turn-budget.test.ts` |
 | REQ-NF-061 | 流式超时看沉默，不看总时长 | APPROVED | **TEST-370** → `adapters-stream.test.ts` |
@@ -132,7 +133,7 @@
 
 ### 1.1 没有任何 TEST 覆盖的 REQ
 
-没有。110 条 REQ 全部在「测试矩阵」的「覆盖需求」列里至少出现过一次。
+没有。111 条 REQ 全部在「测试矩阵」的「覆盖需求」列里至少出现过一次。
 
 ### 1.2 「覆盖需求」列引用了、但需求说明书未定义的 REQ 编号
 
@@ -202,7 +203,7 @@
 | MOD-AGENT | `src/lib/html-text.ts` | （无） | TASK-420 |
 | MOD-API | `src/app/page.tsx` | （无） | TASK-400, TASK-501 |
 | MOD-AUTH | `scripts/check-config.mjs` | （无） | TASK-001, TASK-019, TASK-020, TASK-029, TASK-110 |
-| MOD-CHAT | `scripts/serve-local.mjs`<br>`scripts/ui-contract.mjs`<br>`src/app/api/settings/documents/route.ts`<br>`src/app/page.tsx`<br>`src/components/DisplayScreen.tsx`<br>`src/components/DocumentSettings.tsx`<br>`src/components/FloatingChat.tsx`<br>`src/components/SkillList.tsx`<br>`src/lib/agent-loop.ts`<br>`src/lib/chat.ts`<br>`src/lib/documents.ts`<br>`src/lib/send-failure.ts`<br>`src/lib/skills.ts`<br>`src/lib/supervisor-policy.ts`<br>`src/lib/tools/budget.ts`<br>`src/lib/tools/document-tools.ts`<br>`src/lib/tools/registry.ts`<br>`src/lib/tools/web-tools.ts`<br>`src/lib/ui-events.ts`<br>`tests/e2e/knowledge-base.spec.ts` | （无） | TASK-005, TASK-010, TASK-022, TASK-025, TASK-034, TASK-035, TASK-039, TASK-043, TASK-071, TASK-072, TASK-078, TASK-079, TASK-081, TASK-086, TASK-133, TASK-134, TASK-160, TASK-170, TASK-180, TASK-190, TASK-250, TASK-360, TASK-501 |
+| MOD-CHAT | `scripts/serve-local.mjs`<br>`scripts/ui-contract.mjs`<br>`src/app/api/settings/documents/route.ts`<br>`src/app/page.tsx`<br>`src/components/DisplayScreen.tsx`<br>`src/components/DocumentSettings.tsx`<br>`src/components/FloatingChat.tsx`<br>`src/components/SkillList.tsx`<br>`src/lib/agent-loop.ts`<br>`src/lib/chat.ts`<br>`src/lib/documents.ts`<br>`src/lib/send-failure.ts`<br>`src/lib/skills.ts`<br>`src/lib/supervisor-policy.ts`<br>`src/lib/tools/budget.ts`<br>`src/lib/tools/document-tools.ts`<br>`src/lib/tools/registry.ts`<br>`src/lib/tools/web-tools.ts`<br>`src/lib/ui-events.ts`<br>`tests/e2e/knowledge-base.spec.ts` | （无） | TASK-005, TASK-010, TASK-022, TASK-025, TASK-034, TASK-035, TASK-039, TASK-043, TASK-071, TASK-072, TASK-078, TASK-079, TASK-081, TASK-086, TASK-133, TASK-134, TASK-160, TASK-170, TASK-180, TASK-190, TASK-250, TASK-360, TASK-501, TASK-540 |
 | MOD-CHAT-UI | `scripts/serve-local.mjs`<br>`scripts/ui-contract.mjs`<br>`src/components/DisplayScreen.tsx`<br>`src/components/FloatingChat.tsx`<br>`src/components/SkillList.tsx`<br>`src/components/ToolPanel.tsx`<br>`src/components/ui`<br>`src/lib/chat.ts`<br>`src/lib/display.ts`<br>`src/lib/markdown.tsx`<br>`src/lib/send-failure.ts`<br>`src/lib/skills.ts`<br>`src/lib/store.ts`<br>`src/lib/supervisor-policy.ts`<br>`src/lib/tools/budget.ts`<br>`src/lib/tools/display-tools.ts`<br>`src/lib/tools/skill-tools.ts`<br>`src/lib/types.ts`<br>`src/lib/ui-events.ts`<br>`tests/setup.ts` | `src/app/page.tsx`<br>`src/app/layout.tsx`<br>`src/lib/ui-events.ts` | TASK-007, TASK-008, TASK-009, TASK-014, TASK-015, TASK-016, TASK-017, TASK-018, TASK-023, TASK-024, TASK-025, TASK-026, TASK-027, TASK-028, TASK-030, TASK-033, TASK-034, TASK-038, TASK-041, TASK-043, TASK-047, TASK-048, TASK-075, TASK-076, TASK-080, TASK-085, TASK-092, TASK-102, TASK-135, TASK-161, TASK-180, TASK-200, TASK-210, TASK-330, TASK-440, TASK-441, TASK-447, TASK-451, TASK-455 |
 | MOD-DASHBOARD-UI | `src/app/api/entities/[name]/history/route.ts`<br>`src/lib/entity-history.ts` | （无） | TASK-457, TASK-459 |
 | MOD-DB | `scripts/check-config.mjs`<br>`src/lib/display.ts`<br>`src/lib/store.ts` | （无） | TASK-002, TASK-013, TASK-019, TASK-021, TASK-033, TASK-036, TASK-059, TASK-060, TASK-079 |

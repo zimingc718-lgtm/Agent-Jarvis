@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { MAX_TOOL_STEPS, repairDanglingToolCalls, runToolLoop } from "@/lib/agent-loop";
+import { dropOrphanToolResults, MAX_TOOL_STEPS, repairDanglingToolCalls, runToolLoop } from "@/lib/agent-loop";
 import { ToolRegistry, normalizeArgs, type ToolContext, type ToolDescriptor } from "@/lib/tools/registry";
 import type { ChatDelta, ChatMessage } from "@/lib/types";
 
@@ -301,5 +301,91 @@ describe("repairDanglingToolCalls (DEC-024 ④)", () => {
       { role: "tool", content: "ok", tool_call_id: "a" },
     ];
     expect(repairDanglingToolCalls(messages)).toEqual(messages);
+  });
+});
+
+/**
+ * TEST-540 — dropOrphanToolResults (DEC-420 ①, CR-20260923-orphan-tool-results).
+ *
+ * The shapes below are lifted from the production conversation that stayed dead for
+ * seventeen sends (EV-2026-09-23-orphan-tool-results §1), not invented.
+ */
+describe("dropOrphanToolResults (DEC-420 ①)", () => {
+  const call = (id: string) => ({ id, type: "function" as const, function: { name: "save_knowledge", arguments: "{}" } });
+
+  it("① 生产库里的接缝：user 行插在 tool_calls 与其 4 条结果之间——结果被跳过，其余原样，串联修复后序列合法", () => {
+    const messages: ChatMessage[] = [
+      { role: "user", content: "拉一下对比表" },
+      { role: "assistant", content: "", tool_calls: [call("a"), call("b"), call("c"), call("d")] },
+      { role: "user", content: "你好" },
+      { role: "tool", content: "已存为知识条目 1", tool_call_id: "a" },
+      { role: "tool", content: "已存为知识条目 2", tool_call_id: "b" },
+      { role: "tool", content: "已存为知识条目 3", tool_call_id: "c" },
+      { role: "tool", content: "已存为知识条目 4", tool_call_id: "d" },
+      { role: "assistant", content: "你好！刚才那批抓取被中止了。" },
+    ];
+
+    const { messages: kept, dropped } = dropOrphanToolResults(messages);
+
+    expect(dropped).toBe(4);
+    expect(kept.map((message) => message.role)).toEqual(["user", "assistant", "user", "assistant"]);
+    // Input untouched — the caller owns the rows.
+    expect(messages).toHaveLength(8);
+
+    const repaired = repairDanglingToolCalls(kept);
+    expect(repaired.map((message) => message.role)).toEqual(["user", "assistant", "tool", "tool", "tool", "tool", "user", "assistant"]);
+    expect(repaired.filter((message) => message.role === "tool").map((message) => message.tool_call_id)).toEqual(["a", "b", "c", "d"]);
+    expect(repaired.filter((message) => message.role === "tool").every((message) => message.content === "[已中止]")).toBe(true);
+  });
+
+  it("② 合法序列一条不动", () => {
+    const messages: ChatMessage[] = [
+      { role: "user", content: "go" },
+      { role: "assistant", content: "", tool_calls: [call("a"), call("b")] },
+      { role: "tool", content: "ok-a", tool_call_id: "a" },
+      { role: "tool", content: "ok-b", tool_call_id: "b" },
+      { role: "assistant", content: "done" },
+      { role: "user", content: "more" },
+    ];
+    expect(dropOrphanToolResults(messages)).toEqual({ messages, dropped: 0 });
+  });
+
+  it("③ 摘要边界之后紧跟的 tool 行是孤儿——它的调用已被折进摘要", () => {
+    const messages: ChatMessage[] = [
+      { role: "system", content: "# 对话历史摘要 …" },
+      { role: "tool", content: "已存为知识条目", tool_call_id: "a" },
+      { role: "user", content: "你好" },
+      { role: "assistant", content: "你好！" },
+    ];
+    const { messages: kept, dropped } = dropOrphanToolResults(messages);
+    expect(dropped).toBe(1);
+    expect(kept.map((message) => message.role)).toEqual(["system", "user", "assistant"]);
+  });
+
+  it("④ 同一 tool_call_id 只认第一条回答，重复的按孤儿跳过；没有 tool_call_id 的 tool 行也是孤儿", () => {
+    const messages: ChatMessage[] = [
+      { role: "assistant", content: "", tool_calls: [call("a")] },
+      { role: "tool", content: "first", tool_call_id: "a" },
+      { role: "tool", content: "second", tool_call_id: "a" },
+      { role: "tool", content: "no id" },
+    ];
+    const { messages: kept, dropped } = dropOrphanToolResults(messages);
+    expect(dropped).toBe(2);
+    expect(kept.map((message) => message.content)).toEqual(["", "first"]);
+  });
+
+  it("⑤ 泛型：TurnMessage 之类带附加字段的行原样保留（同一对象引用）", () => {
+    const rows = [
+      { role: "user" as const, content: "go", turn: 1 },
+      { role: "assistant" as const, content: "", tool_calls: [call("a")], turn: 1 },
+      { role: "tool" as const, content: "ok", tool_call_id: "a", turn: 1 },
+      { role: "user" as const, content: "again", turn: 2 },
+      { role: "tool" as const, content: "stray", tool_call_id: "zzz", turn: 2 },
+    ];
+    const { messages: kept, dropped } = dropOrphanToolResults(rows);
+    expect(dropped).toBe(1);
+    expect(kept).toEqual([rows[0], rows[1], rows[2], rows[3]]);
+    expect(kept[1]).toBe(rows[1]);
+    expect(kept[1].turn).toBe(1);
   });
 });

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { repairDanglingToolCalls, runToolLoop } from "./agent-loop";
+import { dropOrphanToolResults, repairDanglingToolCalls, runToolLoop } from "./agent-loop";
 import { listKnowledge } from "./knowledge";
 import { resolveUserDataRoots, type UserDataRoots } from "./user-data-paths";
 import { estimateMessagesTokens, estimateTokens, sendProviderStream, type StreamProviderConfig, type ToolSpec } from "./adapters";
@@ -68,6 +68,37 @@ type RunChatTurnInput = {
 };
 
 const encoder = new TextEncoder();
+
+/**
+ * Turns in flight, one per conversation (DEC-420 ②, CR-20260923-orphan-tool-results).
+ *
+ * The measured failure (EV-2026-09-23-orphan-tool-results §1): the user pressed stop and
+ * typed again while the previous turn's tools were still finishing. The client had already
+ * let go — `handleStop` aborts its fetch and re-enables sending — but nothing here knew, so
+ * the new `user` row landed between an assistant's `tool_calls` and its `tool` rows, and
+ * every later replay was refused by the provider. A new send now aborts whatever this
+ * conversation still has running and waits for it to wind down BEFORE history is read.
+ *
+ * Process-local on purpose: one `next start` process serves the app (locally and on
+ * Railway alike), and a lock that outlived the process would need its own cleanup story.
+ */
+const inFlightTurns = new Map<string, { controller: AbortController; settled: Promise<void> }>();
+
+/** Longest a new send waits for the superseded turn to wind down before proceeding anyway. */
+const SUPERSEDE_WAIT_MS = 15_000;
+
+async function settleWithin(settled: Promise<void>, ms: number): Promise<void> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  await Promise.race([
+    settled,
+    new Promise<void>((resolve) => {
+      timer = setTimeout(resolve, ms);
+    }),
+  ]);
+  if (timer) {
+    clearTimeout(timer);
+  }
+}
 
 export class ChatServiceError extends Error {
   readonly status: number;
@@ -251,7 +282,40 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     displayState: describeDisplay(),
   });
 
-  const { messages: history, lastRowIdByTurn } = loadHistory(input.store, conversationId);
+  // DEC-420 ②: at most one turn per conversation. Whatever is still running here is
+  // aborted and allowed to wind down before history is read, so its final rows land in
+  // order and this turn's user row cannot fall between a `tool_calls` row and its results.
+  const previous = inFlightTurns.get(conversationId);
+  const supersededPrevious = previous !== undefined;
+  if (previous) {
+    previous.controller.abort();
+    await settleWithin(previous.settled, SUPERSEDE_WAIT_MS);
+  }
+  const turnController = new AbortController();
+  if (input.signal?.aborted) {
+    turnController.abort();
+  } else {
+    input.signal?.addEventListener("abort", () => turnController.abort(), { once: true });
+  }
+  let markSettled: () => void = () => {};
+  const settled = new Promise<void>((resolve) => {
+    markSettled = resolve;
+  });
+  const inFlight = { controller: turnController, settled };
+  inFlightTurns.set(conversationId, inFlight);
+  const releaseTurn = () => {
+    markSettled();
+    if (inFlightTurns.get(conversationId) === inFlight) {
+      inFlightTurns.delete(conversationId);
+    }
+  };
+  const turnSignal = turnController.signal;
+
+  const loaded = loadHistory(input.store, conversationId);
+  const lastRowIdByTurn = loaded.lastRowIdByTurn;
+  // DEC-420 ①: tool results whose call is no longer in front of them are skipped in the
+  // replay. The rows stay in the database — compaction works the same way (DEC-030 ①).
+  const { messages: history, dropped } = dropOrphanToolResults(loaded.messages);
   input.store.appendMessage({ conversationId, role: "user", content: message, status: "complete" });
 
   const currentTurn = history.length > 0 ? Math.max(...history.map((entry) => entry.turn)) + 1 : 1;
@@ -262,6 +326,15 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
   let contextMessages = turnMessages;
   let compaction: CompactionOutcome = "not-attempted";
   const preamble: ChatDelta[] = [];
+  if (supersededPrevious) {
+    preamble.push({ type: "notice", text: "上一轮尚未结束，已先将其中止，再处理这条消息。" });
+  }
+  if (dropped > 0) {
+    preamble.push({
+      type: "notice",
+      text: `已跳过 ${dropped} 条错位的工具结果（上一轮被中止时留下的），按修复后的历史继续。`,
+    });
+  }
   const plan = planCompaction({ messages: turnMessages, currentTurn, contextWindow: window });
   if (plan.shouldCompact) {
     // The summary row goes right behind the last row it covers — its position is the
@@ -318,6 +391,7 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
       });
     }
   } catch (error) {
+    releaseTurn();
     if (error instanceof ContextOverflowError) {
       throw new ChatServiceError(413, describeOverflow(error.message, compaction));
     }
@@ -377,7 +451,7 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
   return createStreamingResponse({
     conversationId,
     messageId,
-    signal: input.signal,
+    signal: turnSignal,
     preamble,
     toolsUsable,
     // ③ 换了模型必须说出来（REQ-F-210 ③）：静默换模型比换错模型更坏——用户会拿着
@@ -406,11 +480,11 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
       runToolLoop({
         registry,
         toolSpecs: toolFit.specs,
-        toolContext: { ...toolContext, signal: input.signal },
+        toolContext: { ...toolContext, signal: turnSignal },
         messages: assembled,
         contextWindow: window,
         emit,
-        signal: input.signal,
+        signal: turnSignal,
         persist,
         providerTurn: ({ messages, tools }) =>
           withFailover((candidate, model) =>
@@ -418,7 +492,7 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
               provider: candidate.id === provider.id ? providerConfig : toStreamProviderConfig(candidate),
               messages,
               model,
-              signal: input.signal,
+              signal: turnSignal,
               tools: toolsUsable ? tools : undefined,
               includeUsage: candidate.kind !== "local",
             })
@@ -427,6 +501,7 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     store: input.store,
     estimateFallback: () => estimateMessagesTokens(assembled),
     onFinal: input.onFinal,
+    onSettled: releaseTurn,
   });
 }
 
@@ -619,6 +694,8 @@ function createStreamingResponse(input: {
     persist: (message: ChatMessage & { status: string; sources?: Source[] }) => void
   ) => Promise<{ text: string; status: string; sources: Source[]; toolsUsed: string[]; errorMessage?: string }>;
   onFinal?: (finalText: string, status: string, conversationId: string, toolsUsed: string[]) => ChatDelta[];
+  /** Runs once the stream has closed, however it ended — the turn's in-flight slot is released here (DEC-420 ②). */
+  onSettled?: () => void;
 }): ReadableStream<Uint8Array> {
   return new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -688,7 +765,10 @@ function createStreamingResponse(input: {
         }
 
         // REQ-F-037 ④: providers that never report usage still get a number, flagged.
-        if (!sawUsage) {
+        // DEC-420 ③: unless the provider refused the request — nothing was processed, so
+        // nothing is estimated. Seventeen refused retries once pushed one conversation's
+        // total to 891,627 "input tokens" that were never sent (EV-2026-09-23 §1).
+        if (!sawUsage && result.status !== "error") {
           const usage = {
             inputTokens: input.estimateFallback(),
             outputTokens: estimateTokens(result.text),
@@ -722,6 +802,7 @@ function createStreamingResponse(input: {
       } finally {
         closed = true;
         controller.close();
+        input.onSettled?.();
       }
     },
   });

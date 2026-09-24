@@ -76,7 +76,8 @@
     "CR-20260918-per-user-data-isolation",
     "CR-20260921-markitdown-display",
     "CR-20260921-format-skill",
-    "CR-20260921-chat-skill-register"
+    "CR-20260921-chat-skill-register",
+    "CR-20260923-orphan-tool-results"
   ],
   "tests": [
     {
@@ -1585,9 +1586,37 @@
       "date": "2026-09-22",
       "entry": "assistant",
       "notes": "技能工具组回归（REQ-F-300，DEC-410）。既有 ①④ 与读取不存在技能三例按位置解构前三个工具不变仍绿；⑤ 改写为三个只读工具无技能时不注册、第 4 个 register_skill 名称正确且可用、数组长度 4。13 例全绿。"
+    },
+    {
+      "id": "TEST-540",
+      "result": "PASS",
+      "command": "npx vitest run tests/agent-loop.test.ts",
+      "real_entry": false,
+      "date": "2026-09-23",
+      "entry": "assistant",
+      "notes": "dropOrphanToolResults（REQ-F-310，DEC-420 ①，TASK-540）。新增 5 例（文件合计 17 例）：①生产库接缝形状（user 行插在 4 个 tool_calls 与其结果之间）→ 跳过 4 条、其余原样、输入未被改动，串联 repairDanglingToolCalls 后序列合法且 4 个调用各得「已中止」；②合法序列一条不动；③摘要边界后紧跟的 tool 行是孤儿；④同一 id 只认第一条、无 id 的 tool 行也是孤儿；⑤泛型在带 turn 的行上保留对象引用。纯单元测试。"
+    },
+    {
+      "id": "TEST-541",
+      "result": "PASS",
+      "command": "npx vitest run tests/chat-stream.test.ts",
+      "real_entry": false,
+      "date": "2026-09-23",
+      "entry": "assistant",
+      "notes": "runChatTurn 集成（REQ-F-310，DEC-420 ①②③，TASK-540）。新增 3 例（文件合计 20 例，真实 sqlite + stub 提供方）：①接缝原样种库再发一条——SSE 含「已跳过 2 条错位的工具结果」，外发序列合法且不含错位结果、两调用得「已中止」，库里 8 行原样；②旧轮卡在永不返回的慢工具里时再次发送——旧轮 stopped、其调用在新 user 行之前得「已中止」，库里形状 user/assistant+calls/tool/user/assistant，SSE 含「上一轮尚未结束，已先将其中止」；③提供方直接 error 且无 usage → 不发 usage 事件、getUsage 为 0，随后正常完成仍计预估。真实入口（TEST-542）另记。"
     }
   ],
   "executed_commands": [
+    {
+      "command": "npx vitest run",
+      "result": "PASS",
+      "summary": "2026-09-23 CR-20260923-orphan-tool-results P3：99 文件 928/928 通过，84.5 s；既有 flaky floating-chat ④ 本次未复现"
+    },
+    {
+      "command": "npx vitest run tests/agent-loop.test.ts tests/chat-stream.test.ts tests/compaction.test.ts tests/wake.test.ts tests/module-graph.test.ts",
+      "result": "PASS",
+      "summary": "2026-09-23 CR-20260923-orphan-tool-results 定向：5 文件 92/92；compaction 与 wake 经 runChatTurn，互斥登记不影响既有单轮路径"
+    },
     {
       "command": "npx tsc --noEmit",
       "result": "PASS",
