@@ -720,6 +720,31 @@ describe("FloatingChat", () => {
       window.removeEventListener(KNOWLEDGE_CHANGED_EVENT, changed);
     });
 
+    it("CR-20260925-write-approval-action-log: skill_pending 带出「采纳 / 忽略」卡片并刷新技能列表，技能此时尚未注册", async () => {
+      // `SKILLS_CHANGED_EVENT` from ui-events, spelled out so this test needs no new import.
+      const changed = vi.fn();
+      window.addEventListener("jarvis:skills-changed", changed);
+      render(
+        <FloatingChat
+          hasEnabledProvider
+          probeProviders={readyProbe}
+          onStream={async function* () {
+            yield { type: "start", conversationId: "c1", messageId: "m" };
+            yield { type: "skill_pending", id: "sp-1", name: "会议纪要整理", description: "把会议记录整理成纪要" };
+            yield { type: "delta", text: "已提交提议，等你确认。" };
+            yield { type: "done", messageId: "m" };
+          }}
+        />
+      );
+      fireEvent.change(screen.getByPlaceholderText("Ask Agent-Jarvis"), { target: { value: "注册" } });
+      fireEvent.click(screen.getByRole("button", { name: "发送" }));
+      await waitFor(() => expect(screen.getByText(/模型提议注册技能「会议纪要整理」/)).toBeInTheDocument());
+      expect(screen.getByRole("button", { name: "采纳" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "忽略" })).toBeInTheDocument();
+      expect(changed).toHaveBeenCalled();
+      window.removeEventListener("jarvis:skills-changed", changed);
+    });
+
     it("② dropping a zip posts it to /api/skills as `archive`", async () => {
       const fetchMock = vi.fn(
         async () =>

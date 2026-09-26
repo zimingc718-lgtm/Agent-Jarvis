@@ -256,6 +256,7 @@ export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {
   const webSearch: ToolDescriptor = {
     name: "web_search",
     priority: TOOL_PRIORITY.normal,
+    effect: "network",
     description: "用配置的搜索服务检索网页，返回标题、网址与摘要。需要网页正文时再调 read_url。",
     parameters: {
       type: "object",
@@ -363,6 +364,7 @@ export function createWebTools(deps: WebToolDeps): ToolDescriptor[] {
   const readUrl: ToolDescriptor = {
     name: "read_url",
     priority: TOOL_PRIORITY.normal,
+    effect: "network",
     description: "读取一个网页或 PDF 的正文。参数 url 必须是 http/https 公网地址；遇到人机校验会自动改用浏览器重试。",
     parameters: {
       type: "object",

@@ -95,6 +95,41 @@ export type InsightRecord = {
   createdAt: string;
 };
 
+/** A model-proposed skill awaiting the user's decision (CR-20260925-write-approval-action-log, DEC-430 ②). */
+export type SkillProposalRecord = {
+  id: string;
+  userId: string;
+  conversationId: string | null;
+  name: string;
+  description: string;
+  body: string;
+  status: "pending" | "adopted" | "discarded";
+  createdAt: string;
+  decidedAt: string | null;
+};
+
+/**
+ * What a tool call did to the world (DEC-430 ①): read-only, changed local data, or left the
+ * machine. Same literals as `ToolEffect` in `tools/registry.ts` — declared twice on purpose,
+ * because `src/lib/*` → `src/lib/tools/**` is a frozen allowlist and the store must not join it.
+ */
+export type ActionEffect = "read" | "write" | "network";
+
+/** One tool call as it actually ran — the user-facing audit trail (REQ-F-320 ②, DEC-430 ①). */
+export type ActionRecord = {
+  id: string;
+  userId: string;
+  conversationId: string;
+  tool: string;
+  effect: ActionEffect;
+  argsSummary: string;
+  outcome: "ok" | "failed" | "aborted" | "refused" | "not_run";
+  summary: string;
+  createdAt: string;
+  /** Title of the conversation the call ran in, joined at read time; null once that row is gone. */
+  conversationTitle?: string | null;
+};
+
 /**
  * The single global pointer for the dynamic display screen (CR-20260909-display-screen, DEC-017).
  * `kind` is an extension point: F2 renders "home" / "insight", anything else falls back to home.
@@ -207,8 +242,28 @@ export type Store = {
   getDisplayState(): DisplayStateRecord;
   setDisplayState(next: { kind: string; refId?: string | null }): void;
   dumpDisplayStateRowsForTest(): DisplayStateRecord[];
+  // --- Skill proposals (CR-20260925-write-approval-action-log, DEC-430 ②) ---
+  insertSkillProposal(input: {
+    userId: string;
+    conversationId: string | null;
+    name: string;
+    description: string;
+    body: string;
+  }): SkillProposalRecord;
+  /** Pending proposals only, newest first. */
+  listPendingSkillProposals(userId: string): SkillProposalRecord[];
+  getSkillProposal(userId: string, id: string): SkillProposalRecord | null;
+  /** Marks a pending proposal decided; null when it is not pending or not this user's. */
+  decideSkillProposal(userId: string, id: string, status: "adopted" | "discarded"): SkillProposalRecord | null;
+  // --- Action log (CR-20260925-write-approval-action-log, DEC-430 ①) ---
+  insertAction(input: Omit<ActionRecord, "id" | "createdAt" | "conversationTitle">): ActionRecord;
+  /** Newest first. `effects` narrows to those kinds; `before` pages by `createdAt`; `limit` caps at 500. */
+  listActions(userId: string, options?: { effects?: ActionEffect[]; limit?: number; before?: string }): ActionRecord[];
   close(): void;
 };
+
+const SKILL_PROPOSAL_SELECT =
+  "SELECT id, user_id AS userId, conversation_id AS conversationId, name, description, body, status, created_at AS createdAt, decided_at AS decidedAt FROM skill_proposals";
 
 export function createStore(databasePath: string, encryptionKey = process.env.JARVIS_SECRET_KEY ?? ""): Store {
   if (!encryptionKey) {
@@ -810,6 +865,96 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
         .all() as DisplayStateRecord[];
     },
 
+    insertSkillProposal(input) {
+      ensureUserRecord(db, input.userId);
+      const record: SkillProposalRecord = {
+        id: randomUUID(),
+        userId: input.userId,
+        conversationId: input.conversationId,
+        name: input.name,
+        description: input.description,
+        body: input.body,
+        status: "pending",
+        createdAt: new Date().toISOString(),
+        decidedAt: null,
+      };
+      db.prepare(
+        `INSERT INTO skill_proposals (id, user_id, conversation_id, name, description, body, status, created_at, decided_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)`
+      ).run(record.id, record.userId, record.conversationId, record.name, record.description, record.body, record.status, record.createdAt);
+      return record;
+    },
+
+    listPendingSkillProposals(userId) {
+      return db
+        .prepare(`${SKILL_PROPOSAL_SELECT} WHERE user_id = ? AND status = 'pending' ORDER BY created_at DESC, rowid DESC`)
+        .all(userId) as SkillProposalRecord[];
+    },
+
+    getSkillProposal(userId, id) {
+      const row = db
+        .prepare(`${SKILL_PROPOSAL_SELECT} WHERE user_id = ? AND id = ? LIMIT 1`)
+        .get(userId, id) as SkillProposalRecord | undefined;
+      return row ?? null;
+    },
+
+    decideSkillProposal(userId, id, status) {
+      const changed = db
+        .prepare("UPDATE skill_proposals SET status = ?, decided_at = ? WHERE user_id = ? AND id = ? AND status = 'pending'")
+        .run(status, new Date().toISOString(), userId, id);
+      if (Number(changed.changes) === 0) {
+        return null;
+      }
+      return this.getSkillProposal(userId, id);
+    },
+
+    insertAction(input) {
+      const record: ActionRecord = { id: randomUUID(), createdAt: new Date().toISOString(), ...input };
+      db.prepare(
+        `INSERT INTO action_log (id, user_id, conversation_id, tool, effect, args_summary, outcome, summary, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        record.id,
+        record.userId,
+        record.conversationId,
+        record.tool,
+        record.effect,
+        record.argsSummary,
+        record.outcome,
+        record.summary,
+        record.createdAt
+      );
+      return record;
+    },
+
+    listActions(userId, options = {}) {
+      const limit = Math.min(Math.max(Math.floor(options.limit ?? 100), 1), 500);
+      const effects = options.effects && options.effects.length > 0 ? options.effects : null;
+      const clauses = ["a.user_id = ?"];
+      const params: Array<string | number> = [userId];
+      if (effects) {
+        clauses.push(`a.effect IN (${effects.map(() => "?").join(", ")})`);
+        params.push(...effects);
+      }
+      if (options.before) {
+        clauses.push("a.created_at < ?");
+        params.push(options.before);
+      }
+      params.push(limit);
+      return db
+        .prepare(
+          `SELECT a.id, a.user_id AS userId, a.conversation_id AS conversationId, a.tool, a.effect,
+                  a.args_summary AS argsSummary, a.outcome, a.summary, a.created_at AS createdAt,
+                  c.title AS conversationTitle
+             FROM action_log a
+             LEFT JOIN conversations c ON c.id = a.conversation_id
+            WHERE ${clauses.join(" AND ")}
+            ORDER BY a.created_at DESC, a.rowid DESC
+            LIMIT ?`
+        )
+        .all(...params) as ActionRecord[];
+    },
+
     close() {
       db.close();
     },
@@ -899,10 +1044,36 @@ function migrate(db: DatabaseSync): void {
       updated_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS skill_proposals (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      conversation_id TEXT,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL,
+      body TEXT NOT NULL,
+      status TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      decided_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS action_log (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      conversation_id TEXT NOT NULL,
+      tool TEXT NOT NULL,
+      effect TEXT NOT NULL,
+      args_summary TEXT NOT NULL,
+      outcome TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_providers_user ON providers(user_id);
     CREATE INDEX IF NOT EXISTS idx_conversations_user ON conversations(user_id, updated_at DESC);
     CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_skills_user ON skills(user_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_insights_conversation ON insights(conversation_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_skill_proposals_user ON skill_proposals(user_id, status, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_action_log_user ON action_log(user_id, created_at DESC);
   `);
 }

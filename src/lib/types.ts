@@ -103,6 +103,10 @@ export type ChatDelta =
   // the plain notice when they are not (CR-20260915-entity-proposal-card).
   | { type: "entity_pending"; title: string; what: "entity"; name: string }
   | { type: "entity_pending"; title: string; what: "update"; id?: string; field?: string; value?: string }
+  // CR-20260925-write-approval-action-log (REQ-F-320 ①): the model proposed a skill. It
+  // waits in `skill_proposals` until the user adopts it — in the transcript card or in
+  // ☰「技能」— and only then does `registerSkill()` run.
+  | { type: "skill_pending"; id: string; name: string; description: string }
   // REQ-F-102 (CR-20260912-stage-reach): move the display screen between its session
   // stages. Transient by design — the board is deliberately NOT a persisted display_state
   // value (CR-20260912-display-stage rejected that), so the only way a tool can reach it

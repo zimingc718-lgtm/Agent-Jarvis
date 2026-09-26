@@ -56,6 +56,12 @@ export type ToolDescriptor = {
    * Ranking is by what breaks when the tool is missing, not by how often it is used.
    */
   priority?: ToolPriority;
+  /**
+   * What a call does to the world (CR-20260925-write-approval-action-log, DEC-430 ①). Only the
+   * outbound tools declare it; everything else is derived by `effectOf` — a `management`
+   * tool writes, the rest read.
+   */
+  effect?: ToolEffect;
   /** Whether this tool exists at all for the current context (REQ-NF-008 ④). */
   available(context: ToolContext): boolean;
   /**
@@ -80,6 +86,22 @@ export type ToolDescriptor = {
  */
 export const TOOL_PRIORITY = { essential: 1, normal: 2, management: 3 } as const;
 export type ToolPriority = (typeof TOOL_PRIORITY)[keyof typeof TOOL_PRIORITY];
+
+/**
+ * The three kinds of consequence a call can have, as the 操作记录 page files them
+ * (REQ-F-320 ②): `read` is hidden by default, `write` (local data changed) and `network`
+ * (the request left the machine) are shown. Same literals as `ActionEffect` in `store.ts`,
+ * declared there again because the store may not import from this directory.
+ */
+export type ToolEffect = "read" | "write" | "network";
+
+/** A missing tool (the model named one that does not exist) counts as a read: nothing ran. */
+export function effectOf(tool: Pick<ToolDescriptor, "effect" | "priority"> | undefined): ToolEffect {
+  if (!tool) {
+    return "read";
+  }
+  return tool.effect ?? (tool.priority === TOOL_PRIORITY.management ? "write" : "read");
+}
 
 export type ToolFit = {
   /** What the provider request may carry this turn. */

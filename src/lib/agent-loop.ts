@@ -1,6 +1,14 @@
 import type { ToolSpec } from "./adapters";
 import type { ChatDelta, ChatMessage, Source, ToolCall } from "./types";
-import { normalizeArgs, parseToolArguments, summarizeArgs, type ToolContext, type ToolRegistry } from "./tools/registry";
+import {
+  effectOf,
+  normalizeArgs,
+  parseToolArguments,
+  summarizeArgs,
+  type ToolContext,
+  type ToolEffect,
+  type ToolRegistry,
+} from "./tools/registry";
 import { fitToolLoopContext, overTurnCeiling } from "./tools/budget";
 
 /**
@@ -42,6 +50,22 @@ export type ProviderTurn = (input: {
   tools: ToolSpec[];
 }) => AsyncIterable<ChatDelta>;
 
+/**
+ * One tool call as it actually ran, for the user-facing 操作记录 (REQ-F-320 ②, DEC-430 ①).
+ * Emitted for refused and never-run calls too — an audit trail that lists only successes
+ * would hide exactly the calls a user most wants to know about.
+ */
+export type ActionEvent = {
+  callId: string;
+  tool: string;
+  effect: ToolEffect;
+  argsSummary: string;
+  outcome: "ok" | "failed" | "aborted" | "refused" | "not_run";
+  summary: string;
+};
+
+type Executed = { call: ToolCall; content: string; ok: boolean; outcome: ActionEvent["outcome"]; summary: string };
+
 export type ToolLoopInput = {
   registry: ToolRegistry;
   toolContext: ToolContext;
@@ -64,6 +88,8 @@ export type ToolLoopInput = {
   signal?: AbortSignal;
   /** Persist one message row as the loop produces it (DEC-024 ②). */
   persist: (message: ChatMessage & { status: string; sources?: Source[] }) => void;
+  /** Called once per tool call after it settled, whatever the outcome (DEC-430 ①). */
+  onAction?: (action: ActionEvent) => void;
 };
 
 export type ToolLoopResult = {
@@ -280,7 +306,7 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
     input.persist({ role: "assistant", content: stepText, status: "complete", tool_calls: pendingCalls });
 
     const results = await Promise.all(
-      pendingCalls.map(async (call) => {
+      pendingCalls.map(async (call): Promise<Executed> => {
         steps += 1;
         toolsUsed.push(call.function.name);
         const args = parseToolArguments(call.function.arguments);
@@ -298,21 +324,23 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
           // Running a half-arrived call would only produce a confusing downstream error
           // (the nine "HTML 不完整" retries in EV §1.1). Say exactly what happened instead.
           const content = `工具参数在第 ${cutAt} 字符处被模型输出上限截断，本次调用未执行。请缩短参数内容，或分成多次较小的调用提交。`;
-          input.emit({ type: "tool_result", callId: call.id, ok: false, summary: "参数被输出上限截断，未执行" });
-          return { call, content, ok: false };
+          const summary = "参数被输出上限截断，未执行";
+          input.emit({ type: "tool_result", callId: call.id, ok: false, summary });
+          return { call, content, ok: false, outcome: "not_run", summary };
         }
 
         if ((failureStreak.get(key) ?? 0) >= REPEAT_FAILURE_LIMIT) {
           const content = `同一调用已连续失败 ${REPEAT_FAILURE_LIMIT} 次，本轮不再重试。请换一种做法。`;
-          input.emit({ type: "tool_result", callId: call.id, ok: false, summary: "重复失败，已拒绝" });
-          return { call, content, ok: false };
+          const summary = "重复失败，已拒绝";
+          input.emit({ type: "tool_result", callId: call.id, ok: false, summary });
+          return { call, content, ok: false, outcome: "refused", summary };
         }
 
         const tool = input.registry.get(call.function.name);
         if (!tool) {
           const content = `没有名为 ${call.function.name} 的工具。`;
           input.emit({ type: "tool_result", callId: call.id, ok: false, summary: "未知工具" });
-          return { call, content, ok: false };
+          return { call, content, ok: false, outcome: "failed", summary: "未知工具" };
         }
 
         try {
@@ -333,18 +361,20 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
           for (const event of result.events ?? []) {
             input.emit(event);
           }
-          return { call, content: result.content, ok: result.ok };
+          return { call, content: result.content, ok: result.ok, outcome: result.ok ? "ok" : "failed", summary: result.summary };
         } catch (error) {
           failureStreak.set(key, (failureStreak.get(key) ?? 0) + 1);
           const message = error instanceof Error ? error.message : "未知错误";
           const aborted = message === "aborted";
-          input.emit({
-            type: "tool_result",
-            callId: call.id,
+          const summary = aborted ? "已中止" : `失败：${message}`;
+          input.emit({ type: "tool_result", callId: call.id, ok: false, summary });
+          return {
+            call,
+            content: aborted ? "[已中止]" : `工具执行失败：${message}`,
             ok: false,
-            summary: aborted ? "已中止" : `失败：${message}`,
-          });
-          return { call, content: aborted ? "[已中止]" : `工具执行失败：${message}`, ok: false };
+            outcome: aborted ? "aborted" : "failed",
+            summary,
+          };
         }
       })
     );
@@ -357,6 +387,16 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
       };
       conversation.push(message);
       input.persist({ ...message, status: result.ok ? "complete" : "error" });
+      // DEC-430 ①: the audit row is written from what actually happened, after the
+      // result exists — never from the intent to call.
+      input.onAction?.({
+        callId: result.call.id,
+        tool: result.call.function.name,
+        effect: effectOf(input.registry.get(result.call.function.name)),
+        argsSummary: summarizeArgs(result.call.function.arguments),
+        outcome: result.outcome,
+        summary: result.summary,
+      });
     }
 
     if (input.signal?.aborted) {

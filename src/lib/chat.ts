@@ -486,6 +486,17 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
         emit,
         signal: turnSignal,
         persist,
+        // REQ-F-320 ② / DEC-430 ①: one audit row per tool call, in the user's own store.
+        onAction: (action) =>
+          input.store.insertAction({
+            userId: input.userId,
+            conversationId,
+            tool: action.tool,
+            effect: action.effect,
+            argsSummary: action.argsSummary,
+            outcome: action.outcome,
+            summary: action.summary,
+          }),
         providerTurn: ({ messages, tools }) =>
           withFailover((candidate, model) =>
             streamFactory({

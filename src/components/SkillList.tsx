@@ -5,11 +5,16 @@ import { SKILLS_CHANGED_EVENT } from "@/lib/ui-events";
 
 export type SkillListEntry = { id: string; name: string; description: string };
 
+/** A skill the model proposed and the user has not decided on (REQ-F-320 ①, DEC-430 ②). */
+export type SkillProposalEntry = { id: string; name: string; description: string; createdAt?: string };
+
 type SkillListProps = {
   /** SSR-resolved list so the menu is already correct on first open. */
   initialSkills?: SkillListEntry[];
-  /** Test seam. */
+  /** Test seams. */
   fetchSkills?: () => Promise<SkillListEntry[]>;
+  fetchProposals?: () => Promise<SkillProposalEntry[]>;
+  decideProposal?: (method: "POST" | "DELETE", url: string) => Promise<{ ok: boolean; message?: string }>;
 };
 
 async function fetchSkillsFromApi(): Promise<SkillListEntry[]> {
@@ -21,6 +26,21 @@ async function fetchSkillsFromApi(): Promise<SkillListEntry[]> {
   return body.skills ?? [];
 }
 
+async function fetchProposalsFromApi(): Promise<SkillProposalEntry[]> {
+  const response = await fetch("/api/skills/proposals", { headers: { accept: "application/json" } });
+  if (!response.ok) {
+    throw new Error(`skill proposals fetch failed (${response.status})`);
+  }
+  const body = (await response.json()) as { proposals?: SkillProposalEntry[] };
+  return body.proposals ?? [];
+}
+
+async function decideViaApi(method: "POST" | "DELETE", url: string) {
+  const response = await fetch(url, { method });
+  const body = (await response.json().catch(() => ({}))) as { message?: string };
+  return { ok: response.ok, message: body.message };
+}
+
 /**
  * What the system currently knows how to do, and how to change it.
  *
@@ -28,9 +48,19 @@ async function fetchSkillsFromApi(): Promise<SkillListEntry[]> {
  * (REQ-F-031) — a skill could previously be uploaded but never removed or corrected,
  * which is one of the two gaps that opened this CR. Editing the body, versioning and a
  * marketplace remain non-goals.
+ *
+ * CR-20260925-write-approval-action-log adds the 待确认 section: skills the model proposed
+ * through `register_skill` wait here (and in the transcript card) until the user adopts or
+ * discards them — the same approval shape the knowledge list has for pending entries.
  */
-export function SkillList({ initialSkills = [], fetchSkills = fetchSkillsFromApi }: SkillListProps) {
+export function SkillList({
+  initialSkills = [],
+  fetchSkills = fetchSkillsFromApi,
+  fetchProposals = fetchProposalsFromApi,
+  decideProposal = decideViaApi,
+}: SkillListProps) {
   const [skills, setSkills] = useState<SkillListEntry[]>(initialSkills);
+  const [proposals, setProposals] = useState<SkillProposalEntry[]>([]);
   const [pending, setPending] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   /** REQ-F-053 ⑤: which row has its actions disclosed (one at a time keeps rows single-line). */
@@ -48,6 +78,15 @@ export function SkillList({ initialSkills = [], fetchSkills = fetchSkillsFromApi
         .catch(() => {
           /* keep whatever is on screen */
         });
+      fetchProposals()
+        .then((next) => {
+          if (!cancelled) {
+            setProposals(next);
+          }
+        })
+        .catch(() => {
+          /* keep whatever is on screen */
+        });
     };
 
     reload();
@@ -56,7 +95,7 @@ export function SkillList({ initialSkills = [], fetchSkills = fetchSkillsFromApi
       cancelled = true;
       window.removeEventListener(SKILLS_CHANGED_EVENT, reload);
     };
-  }, [fetchSkills]);
+  }, [fetchSkills, fetchProposals]);
 
   const refresh = () => {
     window.dispatchEvent(new Event(SKILLS_CHANGED_EVENT));
@@ -108,9 +147,62 @@ export function SkillList({ initialSkills = [], fetchSkills = fetchSkillsFromApi
     }
   };
 
+  /** REQ-F-320 ①: the click that actually registers (or drops) a model-proposed skill. */
+  const decide = async (proposal: SkillProposalEntry, decision: "adopted" | "discarded") => {
+    setPending(proposal.id);
+    setNotice(null);
+    try {
+      const result = await decideProposal(
+        decision === "adopted" ? "POST" : "DELETE",
+        `/api/skills/proposals/${encodeURIComponent(proposal.id)}`
+      );
+      if (result.ok) {
+        setNotice(decision === "adopted" ? `已注册「${proposal.name}」。` : `已忽略「${proposal.name}」。`);
+        refresh();
+      } else {
+        setNotice(result.message ?? (decision === "adopted" ? "采纳失败。" : "忽略失败。"));
+      }
+    } catch {
+      setNotice("操作失败：网络错误。");
+    } finally {
+      setPending(null);
+    }
+  };
+
   return (
     <section className="skill-list flex flex-col gap-1.5 rounded-md border border-border p-2" aria-label="已注册技能">
       <h3 className="skill-list__title text-xs font-semibold uppercase tracking-wide text-muted-foreground">技能</h3>
+      {proposals.length > 0 ? (
+        <div className="skill-list__proposals flex flex-col gap-0.5" aria-label="待确认的技能提议">
+          <p className="skill-list__proposals-title text-xs text-muted-foreground">待确认（模型提议，采纳后才注册）</p>
+          <ul className="flex flex-col gap-0.5">
+            {proposals.map((proposal) => (
+              <li key={proposal.id} className="skill-list__proposal flex min-h-9 items-center gap-2">
+                <span className="skill-list__proposal-name shrink-0 text-sm font-medium">{proposal.name}</span>
+                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={proposal.description}>
+                  {proposal.description}
+                </span>
+                <button
+                  type="button"
+                  className="skill-list__adopt shrink-0 rounded px-1 text-xs underline underline-offset-2 disabled:opacity-50"
+                  disabled={pending === proposal.id}
+                  onClick={() => void decide(proposal, "adopted")}
+                >
+                  采纳
+                </button>
+                <button
+                  type="button"
+                  className="skill-list__discard shrink-0 rounded px-1 text-xs text-muted-foreground underline underline-offset-2 disabled:opacity-50"
+                  disabled={pending === proposal.id}
+                  onClick={() => void decide(proposal, "discarded")}
+                >
+                  忽略
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {skills.length === 0 ? (
         <p className="skill-list__empty text-sm text-muted-foreground">尚未注册技能</p>
       ) : (

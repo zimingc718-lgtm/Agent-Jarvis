@@ -2,14 +2,14 @@
 
 - 级别: L2（标准档：全部 CP 双向门——新增一张追加写入的表与一条待确认队列，`git revert` 后表与待确认文件成为无人读写的残留、不影响其它数据；不改既有表结构，不改任何已有数据的含义）
 - 提出人: user（INPUT-2026-09-25-001）
-- 状态: R1 已终裁（2026-09-25 用户经 AskUserQuestion 四点裁定均取推荐项：复用「提议→卡片采纳」模式 / 本次只把 `register_skill` 纳入 / 记所有工具调用、页面默认只显示写与出网 / ☰ 新增「操作记录」页）；P2 进行中
+- 状态: P2-P4 与真实入口完成，待 snapshot 与合并（R1 四点裁定 2026-09-25 均取推荐项；R1-R4 全 PASS；新增/改写测试 26 例，全量 946/946，`tsc` 0 错误；TEST-553 已于 2026-09-26 在用户运行中的本机服务（分支构建 `M1ZH_UX3FdslPgilWKml5`）上经真实 `POST /api/chat/stream` 与提议 / 操作记录路由走完，见 EV §4；合并 main 且 `verify` PASS 后转 CLOSED）
 - 占用 ID: REQ-F-320, DEC-430, TASK-550, TEST-550, TEST-551, TEST-552, TEST-553
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: REQ-F-300（`register_skill` 的确认由"模型自述 `confirmed`"改为系统承担）、REQ-F-046 ③ 与实体提议卡片（既有"先提议、再采纳"模式被复用为通用确认形态）、REQ-F-035（工具步骤流——步骤第一次跨会话持久可查）
 - 影响模块: MOD-TOOLS（`skill-tools.ts`、`registry.ts`）、MOD-CHAT（`agent-loop.ts` 落账）、MOD-STORE（新增 `action_log` 表）、MOD-CHAT-UI（转录卡片、☰「操作记录」页）
 - 影响任务: 无既有任务变更，新增 TASK-550
 - 影响测试: 无既有测试变更，新增 TEST-550, TEST-551, TEST-552, TEST-553
-- 当前证据: `project/05_evidence/EV-2026-09-25-write-approval-action-log.md`（待建；R1 阶段的依据见本文件「现状核对」）
+- 当前证据: `project/05_evidence/EV-2026-09-25-write-approval-action-log.md`
 - 方案选项:
   - A. Muse 式对话内实时审批——写类工具执行前流里出现「批准 / 拒绝」按钮，服务端挂起等待点击（超时即放弃）。优点是当场决定；代价是工具循环要从"同步执行"改成"可挂起、可续跑"，SSE 要多一种等待态，超时/断连/并发（刚做完的 DEC-420 互斥）都要重新推敲。
   - B. **复用既有「提议 → 卡片采纳」模式**——写类工具不直接写，先落一条待确认记录，转录里出现与实体提议同形态的「采纳 / 忽略」卡片，☰ 里也有队列；用户点击后才真正执行。知识条目（REQ-F-046 ③）与实体字段提议（CR-20260915-entity-proposal-card）已经是这个形态，本 CR 把 `register_skill` 接上同一套，并新增跨会话的「操作记录」页——建议选中。
@@ -24,7 +24,7 @@
   - R1: 本文件有 `## 变化点登记` 表（每行有来源角色）+ R1 人工终裁痕迹；`review r1` PASS。
   - R2/R3/R4: 三层说明书各含 `变更响应 · CR-20260925-write-approval-action-log` 节逐一响应全部 CP；本文件三张矩阵无空、无 REJECTED；`review r2|r3|r4` PASS。
   - P3/P4: TASK-550 DONE；TEST-550..553 PASS；`npx tsc --noEmit` 0 错误；`npx vitest run` 全量绿；不新增 lib→tools 边。
-- 真实入口: 未执行（R1 尚未终裁。实现并重建重启后在用户运行中的服务上：①对话里生成技能并说「注册」→ 转录出现「采纳 / 忽略」卡片、技能**尚未**出现在 ☰「技能」→ 点「采纳」后出现；点「忽略」则不出现；②☰「操作记录」里能看到刚才的 `register_skill` 提议、采纳动作与本轮其它工具调用，跨会话仍在；③回归：知识条目与实体提议的既有采纳流程不变）
+- 真实入口: 已执行（2026-09-26 本机时区，用户运行中的本机服务，分支构建 `M1ZH_UX3FdslPgilWKml5`，由协调会话经真实 `POST /api/chat/stream` 驱动、DeepSeek `deepseek-chat` 应答，采纳 / 忽略经卡片与 ☰ 所调用的同一条 `/api/skills/proposals/[id]` 路由：①会话 A「帮我生成一个『周报速记』技能…」→ 模型只调 `list_skills` / `read_skill`、给出 SKILL.md、**未调** `register_skill`；「注册」→ `register_skill` 调用 + `skill_pending` 事件，`GET /api/skills/proposals` 列出「周报速记」而 `GET /api/skills` 没有它；`POST` 采纳 200 后技能出现、待确认区清空，SKILL.md 落盘；会话 B「会议复盘」同样先提议，`DELETE` 忽略 200 后技能列表与待确认区都没有它；②`GET /api/actions?effects=write,network` 只列两条 `register_skill` write/ok 行并带各自会话标题，`GET /api/actions` 全部 6 行含 `list_skills` / `read_skill` 只读调用，跨两条会话；③知识 / 实体提议采纳流程由全量回归 946/946 覆盖，未在真实入口重复。只读查库：`skill_proposals` 两行 adopted / discarded，`action_log` 6 行。☰ 卡片与「操作记录」页的目视由用户完成。详见 EV-2026-09-25-write-approval-action-log §4）
   - **真实入口（必做）**：①「注册」后先卡片、后采纳、技能才出现；忽略则不出现；②操作记录跨会话可查、条目含时间 / 会话 / 工具 / 参数摘要 / 结果；③既有的知识/实体采纳流程不受影响。
 - 评审记录: R1 四角色（产品 / 架构 / 模块开发 / 测试）独立评审。**R1 人工终裁**：待用户拍板。
 - R1 终裁: 已完成 | 用户 | 2026-09-25
@@ -58,3 +58,36 @@
 ## R2 / R3 / R4 评审矩阵
 
 P2 产出。三层说明书写 `变更响应 · CR-20260925-write-approval-action-log` 节后，跑 `governance.py matrix CR-20260925-write-approval-action-log` 生成矩阵骨架，再逐格填裁决。
+
+## R2 评审矩阵
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | APPROVED 直接落实用户裁定①②：确认由系统承担、本次只纳入 `register_skill`；REQ-F-300 补修订说明而不改其便利路径的语义 | APPROVED 新增 REQ-F-320 落 DEC-430 ②；与 REQ-F-046 ③ / 实体提议同一确认形态，不另造协议 | APPROVED 落点在 `skill-tools.ts` + 新模块 `skill-proposals.ts` + 两条路由，注册仍走 `registerSkill()` | APPROVED 验收含真实入口三步（卡片先于技能出现、忽略不出现、重名可读），机器对照 TEST-551 |
+| CP-2 | APPROVED 用户裁定③④：记所有调用、默认只显示写与出网、☰ 一页；空态文案说明筛选的存在 | APPROVED 新表追加写入不改既有表；`effect` 三分法与 `TOOL_PRIORITY` 对应，出网工具显式声明 | APPROVED `ActionLog` 与 `SearchSettings` 同形态，列表在对话框内，打开前不请求 | APPROVED TEST-550（落账 + 路由）与 TEST-552（页面）分别覆盖数据与界面 |
+| CP-3 | APPROVED 五种结算结果全记，被拒与未执行的调用不会从账上消失 | APPROVED 落账在结果之后、按调用顺序；`chat.ts` 只做一行接线；`ActionEffect` 与 `ToolEffect` 双声明的理由（lib→tools 白名单）写进注释与 DEC-430 风险列 | APPROVED `Executed` 类型让五个分支必须都带 outcome / summary，漏一个编译不过 | APPROVED TEST-550 五种 outcome 各有断言，路由过滤 / 分页 / 400 各有断言 |
+| CP-4 | APPROVED 提议不落磁盘、采纳才注册；忽略只改状态；用户可先删旧技能再采纳撞名的提议 | APPROVED `buildSkillDoc` 一处生成，提交时的大小校验与采纳时写入的文件一致；采纳复用 `registerSkill()` 的 slug / 穿越 / 重名规则 | APPROVED 参数表去掉 `confirmed`，已注册同名早拒；`adoptSkillProposal` 返回判别联合，路由按 status 映射 | APPROVED TEST-551 16 例覆盖提议、采纳、忽略、重名两种时机、穿越名、参数表 |
+| CP-5 | APPROVED 卡片文案写明「模型提议注册技能」而非「已注册」，避免误以为已生效 | APPROVED 卡片与 ☰ 待确认区调用同一条路由，成功后派发同一事件刷新 | APPROVED `SkillList` 既有用例零改动仍绿（只给删除确认用例补 `fetchProposals` 缝）；`page.tsx` 只加一行 | APPROVED TEST-552 五例覆盖卡片、待确认区两种结果、操作记录页四种状态 |
+| CP-6 | APPROVED 测试范围与验收条件的机器可证部分一一对应，真实入口单列 TEST-553 | APPROVED 路由测试沿用 `skills-route.test.ts` 的 env 隔离与 next-auth mock 惯例 | APPROVED 新旧用例并存于既有文件，编号与命名沿用文件惯例 | APPROVED 全量 946/946，含既有 flaky 在内本轮无失败 |
+
+## R3 评审矩阵
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | APPROVED TASK-550 ③④ 对应验收条件① | APPROVED 与 DEC-430 ② 一致 | APPROVED 单模块 + 两路由，可审阅可回滚 | APPROVED TEST-551 / TEST-553 |
+| CP-2 | APPROVED TASK-550 ①②④⑤ 对应验收条件② | APPROVED 与 DEC-430 ①③ 一致 | APPROVED 表、落账、路由、页面四段各有落点 | APPROVED TEST-550 / TEST-552 / TEST-553 |
+| CP-3 | APPROVED 无需求层遗留 | APPROVED `effectOf` 位置在 registry，与 `TOOL_PRIORITY` 同处 | APPROVED TASK-550 ①② 逐项写明字段与回调 | APPROVED TEST-550 |
+| CP-4 | APPROVED 无需求层遗留 | APPROVED 与 DEC-430 ② 一致 | APPROVED TASK-550 ①③④ 写明状态机与路由动词 | APPROVED TEST-551 |
+| CP-5 | APPROVED 无需求层遗留 | APPROVED 与 DEC-430 ③ 一致 | APPROVED TASK-550 ⑤ 三处界面各有落点 | APPROVED TEST-552 |
+| CP-6 | APPROVED 无遗留 | APPROVED 无新增 mock 基础设施 | APPROVED 测试与源文件一一对应 | APPROVED 见 R2/CP-6 |
+
+## R4 评审矩阵
+
+| CP | 产品 | 架构 | 模块 | 测试 |
+|---|---|---|---|---|
+| CP-1 | APPROVED 2026-09-26 真实入口①：两条会话里模型都只在「注册」后才调用，提议先于技能出现，采纳后出现、忽略后不出现（EV §4） | APPROVED 采纳走 `registerSkill()`：SKILL.md 落盘、`GET /api/skills` 列出；忽略只改状态 | APPROVED 只读查库 `skill_proposals` 两行 adopted / discarded，与路由结果一致 | APPROVED TEST-553 `real_entry: true`（`entry: user`）；事件与响应日志留存协调会话 scratchpad，关键数字已抄入 EV §4 |
+| CP-2 | APPROVED 2026-09-26 真实入口②：默认视图只列两条 `register_skill` 写入行并带各自会话标题，全部视图 6 行含只读调用 | APPROVED 跨两条会话可查，`effect` / `outcome` 与实际调用一致 | APPROVED 只读查库 `action_log` 6 行，与路由返回一致 | APPROVED TEST-553 ②；页面目视由用户完成 |
+| CP-3 | APPROVED 五种结果文案在页面里各有标签 | APPROVED 用例经 `runToolLoop` 全链路，落账顺序与调用顺序一致 | APPROVED 未知工具记 read/failed 已断言 | APPROVED `npx vitest run tests/agent-loop.test.ts tests/actions-route.test.ts` 22 例全绿，已本机实测 |
+| CP-4 | APPROVED 重名两种时机的用户可见文案均有断言 | APPROVED 采纳产物经 `read_skill` 读回，证明走的是既有读路径 | APPROVED 穿越名经 slug 收住已断言 | APPROVED `npx vitest run tests/skill-tools-register.test.ts tests/skill-proposals-route.test.ts` 16 例全绿，已本机实测 |
+| CP-5 | APPROVED 卡片、待确认区、操作记录页的文案均有断言 | APPROVED 事件派发与路由调用均有断言 | APPROVED 既有 SkillList 用例仍绿 | APPROVED `npx vitest run tests/floating-chat.test.tsx tests/skill-list.test.tsx tests/action-log.test.tsx` 全绿，已本机实测 |
+| CP-6 | APPROVED | APPROVED | APPROVED | APPROVED 全量回归 946/946 |

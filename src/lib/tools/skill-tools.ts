@@ -1,13 +1,6 @@
-import {
-  listSkillFiles,
-  MAX_INJECTION_BYTES,
-  readSkillDoc,
-  readSkillFile,
-  registerSkill,
-  SkillFileError,
-  SKILLS_ROOT,
-} from "../skills";
-import { SkillNameConflictError, type Store } from "../store";
+import { buildSkillDoc } from "../skill-proposals";
+import { listSkillFiles, MAX_INJECTION_BYTES, readSkillDoc, readSkillFile, SkillFileError } from "../skills";
+import type { Store } from "../store";
 import { truncateToTokens } from "./budget";
 import { TOOL_PRIORITY, type ToolDescriptor } from "./registry";
 
@@ -183,85 +176,75 @@ ${HOST_OUTPUT_NOTE}`,
   };
 
   /**
-   * The one write in this suite (REQ-F-300, DEC-410; CR-20260921-chat-skill-register).
+   * The one write in this suite — and it no longer writes the skill itself
+   * (REQ-F-320 ①, DEC-430 ②; CR-20260925-write-approval-action-log supersedes the
+   * `confirmed` protocol of CR-20260921-chat-skill-register).
    *
-   * Conversation protocol, enforced two ways: the description tells the model to show
-   * the full SKILL.md and wait for the user to say 注册; `confirmed` is the model's
-   * attestation that it did, and without it the call is refused with the same
-   * instruction. Registration is the SAME path the drag-and-drop intake uses
-   * (`registerSkill`: slug, path-traversal guard, name conflict, write + insert), so a
-   * skill born in chat is indistinguishable on disk and in the table from an uploaded
-   * one — `read_skill`, the ☰ list, rename and delete all just apply.
+   * The previous version trusted the model's own `confirmed: true` as proof that the user
+   * had said 注册 — a claim no machine test could check (EV-2026-09-21-chat-skill-register
+   * §4). Now the call files a proposal and the user decides: the transcript shows a
+   * 采纳 / 忽略 card, ☰「技能」lists it under 待确认, and only that click runs
+   * `registerSkill()` — the same path knowledge entries (REQ-F-046 ③) and entity proposals
+   * already take. Nothing reaches `.data/skills/` or the `skills` table from here.
    *
-   * Available even with zero skills: the first skill is exactly what this creates.
+   * Available even with zero skills: the first skill is exactly what this proposes.
    * Appended LAST — existing tests destructure the first three by position.
    */
   const registerSkillTool: ToolDescriptor = {
     name: "register_skill",
     priority: TOOL_PRIORITY.management,
     description:
-      "把一份 SKILL.md 注册为技能。约定：先在回复里把完整的 SKILL.md（frontmatter 的 name/description + 正文）给用户看，" +
-      "等用户明确说「注册」之后再调用本工具，并把 confirmed 置为 true；用户没说注册、或说还要改，就不要调用。" +
-      "只注册这一份 SKILL.md，不能附带其它文件（需要附属文件请让用户走「技能」里的上传入口）。",
+      "把一份 SKILL.md 提交为待确认的技能提议。约定：先在回复里把完整的 SKILL.md（frontmatter 的 name/description + 正文）给用户看，" +
+      "用户明确说「注册」后再调用；调用后技能不会立即生效——用户需在对话卡片或 ☰「技能」的「待确认」区点「采纳」，请在回复里告知。" +
+      "只提交这一份 SKILL.md，不能附带其它文件（需要附属文件请让用户走「技能」里的上传入口）。",
     parameters: {
       type: "object",
       properties: {
         name: { type: "string", description: "技能名称（frontmatter 的 name），同时用作技能文件夹名" },
         description: { type: "string", description: "一句话描述（frontmatter 的 description）" },
         body: { type: "string", description: "SKILL.md 正文（frontmatter 之后的 Markdown 说明）" },
-        confirmed: { type: "boolean", description: "用户已看过完整 SKILL.md 并明确说了「注册」时才为 true" },
       },
-      required: ["name", "description", "body", "confirmed"],
+      required: ["name", "description", "body"],
     },
     available: () => true,
     async execute(args, context) {
-      if (args.confirmed !== true) {
-        return {
-          ok: false,
-          content: "未注册：请先把完整的 SKILL.md（name、description 与正文）在回复里给用户看，等用户明确说「注册」后再带 confirmed=true 调用。",
-          summary: "等待用户确认",
-        };
-      }
       const name = typeof args.name === "string" ? args.name.replace(/[\r\n]+/g, " ").trim() : "";
       const description = typeof args.description === "string" ? args.description.replace(/[\r\n]+/g, " ").trim() : "";
       const body = typeof args.body === "string" ? args.body.trim() : "";
       if (!name || !description || !body) {
         return { ok: false, content: "缺少参数：name、description、body 都不能为空。", summary: "参数缺失" };
       }
-      const content = `---\nname: ${name}\ndescription: ${description}\n---\n\n${body}\n`;
-      if (Buffer.byteLength(content, "utf8") > MAX_INJECTION_BYTES) {
+      if (Buffer.byteLength(buildSkillDoc(name, description, body), "utf8") > MAX_INJECTION_BYTES) {
         return {
           ok: false,
-          content: `SKILL.md 超过 ${Math.round(MAX_INJECTION_BYTES / 1024)} KB 上限，请精简正文后再注册。`,
+          content: `SKILL.md 超过 ${Math.round(MAX_INJECTION_BYTES / 1024)} KB 上限，请精简正文后再提交。`,
           summary: "正文过长",
         };
       }
-      try {
-        // `complete: null` — an authored SKILL.md with frontmatter never needs generation
-        // (CR-20260911-skill-doc-preserved), so no model call happens here.
-        const record = await registerSkill({
-          store,
-          userId: context.userId,
-          folderName: name,
-          files: [{ path: "SKILL.md", content }],
-          skillsRoot: SKILLS_ROOT,
-          complete: null,
-        });
+      // The same rule adoption applies, checked now so the model can pick another name
+      // instead of the user meeting a conflict on the card.
+      if (store.listSkills(context.userId).some((skill) => skill.name === name)) {
         return {
-          ok: true,
-          content: `已注册技能「${record.name}」：${record.description}。请提醒用户：可在 ☰ →「技能」里查看、改名或删除它；以后对话里用 read_skill 读取。`,
-          summary: `注册技能 ${record.name}`,
+          ok: false,
+          content: `已存在同名技能「${name}」，未提交。请换一个名称，或让用户先在 ☰ →「技能」里删除/改名旧的那个。`,
+          summary: `技能重名：${name}`,
         };
-      } catch (error) {
-        if (error instanceof SkillNameConflictError) {
-          return {
-            ok: false,
-            content: `已存在同名技能「${name}」，未注册。请换一个名称，或让用户先在 ☰ →「技能」里删除/改名旧的那个。`,
-            summary: `技能重名：${name}`,
-          };
-        }
-        return { ok: false, content: "注册技能失败，未写入。", summary: "注册失败" };
       }
+      const proposal = store.insertSkillProposal({
+        userId: context.userId,
+        conversationId: context.conversationId,
+        name,
+        description,
+        body,
+      });
+      return {
+        ok: true,
+        content:
+          `已提交技能提议「${proposal.name}」（编号 ${proposal.id}），尚未注册。` +
+          "请告知用户：在对话里的卡片或 ☰ →「技能」的「待确认」区点「采纳」后才会生效，点「忽略」则丢弃。",
+        summary: `技能提议 ${proposal.name}`,
+        events: [{ type: "skill_pending", id: proposal.id, name: proposal.name, description: proposal.description }],
+      };
     },
   };
 

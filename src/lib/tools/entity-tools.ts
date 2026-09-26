@@ -445,6 +445,7 @@ export function createEntityTools(deps: EntityToolDeps = {}): ToolDescriptor[] {
   const collect: ToolDescriptor = {
     name: "fetch_source",
     priority: TOOL_PRIORITY.management,
+    effect: "network",
     description: "立即采集某个对象的一个已登记来源，返回是否有变化，并写回该对象的采集状态。参数 name 与 url。",
     parameters: {
       type: "object",

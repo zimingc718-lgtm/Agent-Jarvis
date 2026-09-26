@@ -201,6 +201,7 @@ export function createKnowledgeTools(deps: KnowledgeToolDeps = {}): ToolDescript
   const ingest: ToolDescriptor = {
     name: "ingest_url",
     priority: TOOL_PRIORITY.management,
+    effect: "network",
     description: "把一个网页抓下来存成知识条目：只存正文与原链接，不存原件。参数 url，可选 entity 与 doc_type。",
     parameters: {
       type: "object",

@@ -70,7 +70,8 @@ describe("SkillList (REQ-F-028)", () => {
       calls.push(url);
       return new Response("{}", { status: 200 });
     }) as unknown as typeof fetch);
-    render(<SkillList fetchSkills={async () => [{ id: "s1", name: "reporter", description: "d" }]} />);
+    // `fetchProposals` is seamed too: the default would hit /api/skills/proposals and count as a call here.
+    render(<SkillList fetchSkills={async () => [{ id: "s1", name: "reporter", description: "d" }]} fetchProposals={async () => []} />);
     await waitFor(() => expect(screen.getByText("reporter")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "更多：reporter" }));
     fireEvent.click(screen.getByRole("button", { name: "删除" }));
@@ -94,5 +95,53 @@ describe("SkillList (REQ-F-028)", () => {
     fail = true;
     window.dispatchEvent(new Event(SKILLS_CHANGED_EVENT));
     await waitFor(() => expect(screen.getByText("kept")).toBeInTheDocument());
+  });
+
+  /**
+   * TEST-552 — the 待确认 section (REQ-F-320 ①, DEC-430 ②; CR-20260925-write-approval-action-log).
+   * The click here is the same route the transcript card forwards to; the list is the second door.
+   */
+  it("CR-20260925-write-approval-action-log: 待确认的技能提议列在技能之上，采纳 / 忽略走 /api/skills/proposals/[id] 并刷新", async () => {
+    const calls: Array<[string, string]> = [];
+    const decideProposal = vi.fn(async (method: "POST" | "DELETE", url: string) => {
+      calls.push([method, url]);
+      return { ok: true };
+    });
+    const changed = vi.fn();
+    window.addEventListener(SKILLS_CHANGED_EVENT, changed);
+    render(
+      <SkillList
+        fetchSkills={async () => [{ id: "s1", name: "reporter", description: "d" }]}
+        fetchProposals={async () => [{ id: "sp-1", name: "会议纪要整理", description: "把会议记录整理成纪要" }]}
+        decideProposal={decideProposal}
+      />
+    );
+    await waitFor(() => expect(screen.getByText("会议纪要整理")).toBeInTheDocument());
+    expect(screen.getByText(/待确认（模型提议，采纳后才注册）/)).toBeInTheDocument();
+    // The proposal is not a registered skill: no 「更多」 disclosure for it.
+    expect(screen.queryByRole("button", { name: "更多：会议纪要整理" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "采纳" }));
+    await waitFor(() => expect(calls).toEqual([["POST", "/api/skills/proposals/sp-1"]]));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("已注册「会议纪要整理」。"));
+    expect(changed).toHaveBeenCalled();
+    window.removeEventListener(SKILLS_CHANGED_EVENT, changed);
+  });
+
+  it("CR-20260925-write-approval-action-log: 忽略走 DELETE，失败时把服务端说明原样显示", async () => {
+    const decideProposal = vi.fn(async (method: "POST" | "DELETE") =>
+      method === "DELETE" ? { ok: false, message: "没有编号为「sp-2」的待确认技能提议。" } : { ok: true }
+    );
+    render(
+      <SkillList
+        fetchSkills={async () => []}
+        fetchProposals={async () => [{ id: "sp-2", name: "旧提议", description: "d" }]}
+        decideProposal={decideProposal}
+      />
+    );
+    await waitFor(() => expect(screen.getByText("旧提议")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "忽略" }));
+    await waitFor(() => expect(decideProposal).toHaveBeenCalledWith("DELETE", "/api/skills/proposals/sp-2"));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("没有编号为「sp-2」的待确认技能提议。"));
   });
 });

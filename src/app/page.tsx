@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { AccountDialog } from "@/components/AccountDialog";
 import { ConfigWarning } from "@/components/ConfigWarning";
+import { ActionLog } from "@/components/ActionLog";
 import { CornerMenu } from "@/components/CornerMenu";
 import { DisplayScreen } from "@/components/DisplayScreen";
 import { FloatingChat, type FloatingMessage } from "@/components/FloatingChat";
@@ -89,6 +90,8 @@ export default async function HomePage() {
         {storeReady ? <SearchSettings /> : null}
         {/* REQ-F-060 ②: its own entry, off by default. */}
         {storeReady ? <WakeSettings /> : null}
+        {/* REQ-F-320 ②: what the model actually did, across conversations. */}
+        {storeReady ? <ActionLog /> : null}
       </CornerMenu>
 
       {auth.ok && !storage.configured ? (

@@ -35,6 +35,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/lib/markdown";
 import { EntityProposalCard, type EntityProposalPayload } from "@/components/EntityProposalCard";
+import { SkillProposalCard, type SkillProposalPayload } from "@/components/SkillProposalCard";
 
 export type FloatingMessage = {
   id: string;
@@ -54,6 +55,8 @@ export type FloatingMessage = {
   sources?: Source[];
   /** System rows that are an adopt/discard card, not plain text (CR-20260915-entity-proposal-card). */
   entityProposal?: EntityProposalPayload;
+  /** System rows that are a skill-proposal card (REQ-F-320 ①, CR-20260925-write-approval-action-log). */
+  skillProposal?: SkillProposalPayload;
 };
 
 /**
@@ -1010,6 +1013,15 @@ export function FloatingChat({
             appendSystemMessage(`模型提议修改「${chunk.title}」，已放入待采纳区——在看板上采纳或忽略。`);
           }
           window.dispatchEvent(new Event(KNOWLEDGE_CHANGED_EVENT));
+        } else if (chunk.type === "skill_pending") {
+          // REQ-F-320 ①: the skill is NOT registered yet — the card is where the user decides,
+          // same shape as the entity proposal card. ☰「技能」refreshes so its 待确认 section
+          // shows the same proposal.
+          setMessages((current) => [
+            ...current,
+            { id: crypto.randomUUID(), role: "system", content: "", skillProposal: { id: chunk.id, name: chunk.name, description: chunk.description } },
+          ]);
+          window.dispatchEvent(new Event(SKILLS_CHANGED_EVENT));
         } else if (chunk.type === "compacted") {
           // REQ-F-043: the boundary shows up in the live transcript at the same place a
           // refresh would rebuild it — silent (no bubble), but not traceless.
@@ -1288,6 +1300,8 @@ export function FloatingChat({
                 <ToolStepRow key={message.id} step={message} />
               ) : message.entityProposal ? (
                 <EntityProposalCard key={message.id} payload={message.entityProposal} />
+              ) : message.skillProposal ? (
+                <SkillProposalCard key={message.id} payload={message.skillProposal} />
               ) : (
                 <article
                   className={cn(

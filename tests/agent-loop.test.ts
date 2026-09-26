@@ -389,3 +389,111 @@ describe("dropOrphanToolResults (DEC-420 ①)", () => {
     expect(kept[1].turn).toBe(1);
   });
 });
+
+/**
+ * TEST-550 (loop half) — one audit row per tool call, whatever happened to it
+ * (REQ-F-320 ②, DEC-430 ①; CR-20260925-write-approval-action-log).
+ */
+describe("onAction (DEC-430 ①)", () => {
+  type Recorded = { tool: string; effect: string; outcome: string; argsSummary: string; summary: string };
+
+  it("① 成功 / 失败 / 未知工具 / 参数被截断各落一条，effect 由 management 优先级或显式声明推出", async () => {
+    const actions: Recorded[] = [];
+    const registry = new ToolRegistry()
+      .register(fakeTool({ name: "echo" }))
+      .register(fakeTool({ name: "writer", priority: 3 }))
+      .register(
+        fakeTool({
+          name: "fetcher",
+          effect: "network",
+          async execute() {
+            return { ok: false, content: "403", summary: "抓取失败" };
+          },
+        })
+      );
+    let round = 0;
+    await runToolLoop({
+      registry,
+      toolContext: context,
+      messages: [{ role: "user", content: "go" }],
+      emit: () => {},
+      persist: () => {},
+      onAction: (action) => actions.push(action),
+      providerTurn: async function* () {
+        round += 1;
+        if (round === 1) {
+          yield callDelta("t1", "echo", '{"x":1}');
+          yield callDelta("t2", "writer");
+          yield callDelta("t3", "fetcher");
+          yield callDelta("t4", "nope");
+          yield { type: "tool_call", callId: "t5", name: "echo", argsSummary: '{"cut', truncated: true, argsLength: 5 };
+          return;
+        }
+        yield { type: "delta", text: "done" };
+      },
+    });
+
+    expect(actions.map((action) => [action.tool, action.effect, action.outcome])).toEqual([
+      ["echo", "read", "ok"],
+      ["writer", "write", "ok"],
+      ["fetcher", "network", "failed"],
+      ["nope", "read", "failed"],
+      ["echo", "read", "not_run"],
+    ]);
+    expect(actions[0].argsSummary).toContain("x");
+    expect(actions[2].summary).toBe("抓取失败");
+    expect(actions[4].summary).toBe("参数被输出上限截断，未执行");
+  });
+
+  it("② 同参数连续失败后第 3 次被拒 → refused；工具执行期中止 → aborted", async () => {
+    const refused: Recorded[] = [];
+    const registry = new ToolRegistry().register(
+      fakeTool({
+        async execute() {
+          return { ok: false, content: "still broken", summary: "失败" };
+        },
+      })
+    );
+    let round = 0;
+    await runToolLoop({
+      registry,
+      toolContext: context,
+      messages: [{ role: "user", content: "go" }],
+      emit: () => {},
+      persist: () => {},
+      onAction: (action) => refused.push(action),
+      providerTurn: async function* () {
+        round += 1;
+        if (round <= 3) {
+          yield callDelta(`t${round}`, "echo", '{"same":true}');
+          return;
+        }
+        yield { type: "delta", text: "give up" };
+      },
+    });
+    expect(refused.map((action) => action.outcome)).toEqual(["failed", "failed", "refused"]);
+
+    const aborted: Recorded[] = [];
+    const controller = new AbortController();
+    await runToolLoop({
+      registry: new ToolRegistry().register(
+        fakeTool({
+          async execute() {
+            controller.abort();
+            return new Promise(() => {}) as never;
+          },
+        })
+      ),
+      toolContext: context,
+      messages: [{ role: "user", content: "go" }],
+      signal: controller.signal,
+      emit: () => {},
+      persist: () => {},
+      onAction: (action) => aborted.push(action),
+      providerTurn: async function* () {
+        yield callDelta("t1", "echo");
+      },
+    });
+    expect(aborted.map((action) => action.outcome)).toEqual(["aborted"]);
+  });
+});
