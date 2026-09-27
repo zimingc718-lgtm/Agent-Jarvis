@@ -27,13 +27,30 @@
 | TEST-571 | `tests/chat-stream.test.ts`（+1，文件合计 21）+ `tests/language-toggle.test.tsx`（2） | 3 | 默认前缀含「回复语言：中文」、设置 en 后含 `Reply language: English` 且互斥；开关两选项与 SSR 初值、点 English 保存 / 派发 `jarvis:language-changed` / `<html lang>` 变 `en`；保存失败回退并显示服务端说明，点当前值不发请求 |
 | TEST-560（既有守卫） | `tests/architecture-doc.test.ts` | 6 | 新增模块 / 路由 / 组件已写进 `docs/ARCHITECTURE.md` |
 
-`npx tsc --noEmit`：**0 错误**。定向 4 文件 **34/34**。
+`npx tsc --noEmit`：**0 错误**（两次改动后各跑一次）。定向：首版 4 文件 34/34；加末尾提醒后 3 文件 28/28（含更新的前缀用例——同时断言 identity 与 suffix）。
 
-`npx vitest run`（全量，2026-09-28 本机）：105 文件 / 960 例，**959 通过、1 失败**——失败为既有 flaky `tests/floating-chat.test.tsx > skill intake ④`（27 s 超时，此前多次收口均出现并已在干净基线复现），与本 CR 无关；本 CR 涉及的 4 个文件全绿。
+`npx vitest run`（全量，最终代码，2026-09-27 本机）：105 文件 960/960 全部通过（既有 flaky floating-chat ④ 本轮未复现）。此前一轮（末尾提醒之前）为 105 文件 959/960，失败同样只有既有 flaky `tests/floating-chat.test.tsx > skill intake ④`。
 
-## 4. 真实入口（待执行）
+## 4. 真实入口（2026-09-27 本机时区已执行，两次）
 
-在用户运行中的本机服务上：①切到 English 后用中文提一个会调工具的问题，回复为英文且工具照常；②切回中文，回复为中文；③刷新后开关仍是所选值。执行后补记并登记 TEST-572。
+- 环境: 用户本机**正在运行**的生产构建，用户自己的 `.data`——DEC-210 ③ 的 `user` 环境。第一次构建 `UivEy7piYKVS1nN28DFYS`（只有前缀顶部一行指令），第二次 `oGAsKEmNMKu9IXML_USqp`（加末尾提醒）
+- 驱动方式: 协调会话用 stdlib HTTP 客户端（`real_entry_t572.py`）：`GET/PUT /api/settings/language` 切换设置，`POST /api/chat/stream` 发送同一中文问题「列一下我有哪些技能，并用一句话说明每个技能是做什么的。」，解析 SSE；语言判定按正文（去掉加粗技能名与引号内容）里 CJK 与拉丁字母的数量。事件日志留存 scratchpad `real-entry/t572.json`
+- 应答模型: DeepSeek `deepseek-chat`
+
+| 次 | 步 | 设置 | 观察 | 判定 |
+|---|---|---|---|---|
+| 第一次 | ② | en | 回复以「I'll pull the registered skill list.」开头，随即「你当前注册了 10 个技能：…」整段中文（正文 CJK 387 / 拉丁 77） | **FAIL**——用户的中文提问 + 中文工具结果压过了前缀顶部的一行指令 |
+| 第二次 | ① | zh（默认） | `list_skills` 照常；正文中文（CJK 357 / 拉丁 55）；3.6 s | 符合 |
+| 第二次 | ② | en（`PUT` 后 `GET` 读到 en） | `list_skills` 照常；正文英文（CJK 0 / 拉丁 1435），技能名保留中文并附英文释义「客户技术准入解读 (Customer technical admission reading) — Separates hard requirements…」；3.3 s | 符合 ①③ |
+| 第二次 | ③ | zh（切回） | 正文中文（CJK 327 / 拉丁 23）；3.0 s | 符合 ② |
+
+第一次失败直接改了设计：`languageInstruction` 措辞加强（"You MUST … including when the user writes in Chinese …"），并新增 `languageReminder` 放进易变后缀——即系统提示的**末尾**，紧挨历史与用户消息；`tests/chat-stream.test.ts` 的前缀用例随之同时断言两处。这一条本来只写在「人工发现项」里（"模型是否严格遵从指令"），真实入口把它变成了必须修的事实。
+
+顺带观察：zh 下模型在调工具前仍会先说一句英文（「I'll list the registered skills for you.」）再用中文作答——那是调用工具前的开场白，正文语言正确；如需彻底消除，下一步可在工具调用阶段的措辞上再收，本 CR 不扩。
+
+☰ 开关本身与刷新后仍是所选值的目视由用户完成（设置持久化已由 `GET` 读回证明）。
+
+据此 R4 矩阵 CP-1 四列由 CONDITIONAL 转 APPROVED；`test-results.json` TEST-572 `PASS`、`real_entry: true`、`entry: user`。
 
 ## 5. 局限（如实登记）
 

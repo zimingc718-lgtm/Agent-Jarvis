@@ -2,7 +2,7 @@
 
 - 级别: L2（标准档：全部 CP 双向门——一个全局设置键、一条路由、一个 ☰ 开关、提示词里一行指令；不改数据含义，`git revert` 即回滚；回复语言是否真的切换须人在真实对话里看一次）
 - 提出人: user（INPUT-2026-09-27-002 第一步）
-- 状态: P2-P4 完成，待真实入口与合并（R1 由用户四点裁定终裁；R1-R4 全 PASS；新增测试 8 例，定向 34/34，全量 959/960 仅既有 flaky，`tsc` 0 错误；TEST-572 三步待在用户运行中的服务上执行）
+- 状态: P2-P4 与真实入口完成，待 snapshot 与合并（R1 由用户四点裁定终裁；R1-R4 全 PASS；新增测试 8 例；`tsc` 0 错误；全量 105 文件 960/960 全部通过（既有 flaky floating-chat ④ 本轮未复现）；TEST-572 三步已于 2026-09-27 在用户运行中的本机服务（分支构建 `oGAsKEmNMKu9IXML_USqp`）上经真实 `POST /api/chat/stream` 走完——第一次尝试暴露「只在前缀顶部放一行指令不够」，加了末尾提醒后通过，见 EV §4；合并 main 且 `verify` PASS 后转 CLOSED）
 - 占用 ID: REQ-F-330, DEC-450, TASK-570, TEST-570, TEST-571, TEST-572
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: REQ-F-014（☰ 外观分组多一个「语言」开关）、REQ-NF-008 ①（稳定前缀多一行、只随设置变化）
@@ -23,7 +23,7 @@
   - R1: 本文件有 `## 变化点登记` 表（每行有来源角色）+ R1 人工终裁痕迹；`review r1` PASS。
   - R2/R3/R4: 三层说明书各含 `变更响应 · CR-20260927-reply-language` 节逐一响应全部 CP；本文件三张矩阵无空、无 REJECTED；`review r2|r3|r4` PASS。
   - P3/P4: TASK-570 DONE；TEST-570/571 PASS，TEST-572 真实入口 PASS；`npx tsc --noEmit` 0 错误；`npx vitest run` 全量绿（含 `tests/architecture-doc.test.ts`——本 CR 新增模块 / 路由 / 组件都要写进 `docs/ARCHITECTURE.md`）。
-- 真实入口: 未执行（实现并重建重启后在用户运行中的服务上：①☰ →「外观」→「语言」切到 English，用中文提一个会调工具的问题（如「列一下我有哪些技能」），回复应为英文且工具照常调用；②切回中文，同样的问题回复应为中文；③`<html lang>` 随开关变化）
+- 真实入口: 已执行（2026-09-27 本机时区，用户运行中的本机服务，分支构建 `oGAsKEmNMKu9IXML_USqp`，由协调会话经真实 `POST /api/chat/stream` 与 `GET/PUT /api/settings/language` 驱动、DeepSeek `deepseek-chat` 应答；同一中文问题「列一下我有哪些技能，并用一句话说明每个技能是做什么的。」三次：①默认 zh → 中文正文（正文 CJK 357 / 拉丁 55），`list_skills` 照常；②`PUT en` 后 `GET` 读到 en（持久化）→ 英文正文（去掉加粗技能名后 CJK 0 / 拉丁 1435），技能名保留中文并附英文释义，`list_skills` 照常；③`PUT zh` → 中文正文（CJK 327 / 拉丁 23）。首次尝试（只有前缀顶部一行指令、构建 `UivEy7piYKVS1nN28DFYS`）在 en 下以英文开头随即滑回中文，判 FAIL；加末尾提醒 `languageReminder` 后重建重跑通过。☰ 开关与刷新后状态的目视由用户完成。详见 EV-2026-09-27-reply-language §4）
   - **真实入口（必做）**：①English 下中文提问得英文回复、工具照常；②切回中文得中文回复；③刷新页面后开关仍是所选值（服务端持久化）。
 - 评审记录: R1 四角色（产品 / 架构 / 模块开发 / 测试）独立评审。**R1 人工终裁**：用户四点裁定。
 - R1 终裁: 已完成 | 用户 | 2026-09-27
@@ -68,7 +68,7 @@ P2 产出。三层说明书写 `变更响应 · CR-20260927-reply-language` 节�
 
 | CP | 产品 | 架构 | 模块 | 测试 |
 |---|---|---|---|---|
-| CP-1 | CONDITIONAL 机器只能证明语言指令进了稳定前缀、开关能保存——证明不了模型在用户那台正在跑的服务上真的按所选语言作答；条件为 TEST-572 三步在用户运行中的服务上各走一次并记入 `EV-2026-09-27-reply-language.md` §4，之后本条转 APPROVED | CONDITIONAL 机器只能证明语言指令进了稳定前缀、开关能保存——证明不了模型在用户那台正在跑的服务上真的按所选语言作答；条件为 TEST-572 三步在用户运行中的服务上各走一次并记入 `EV-2026-09-27-reply-language.md` §4，之后本条转 APPROVED | CONDITIONAL 机器只能证明语言指令进了稳定前缀、开关能保存——证明不了模型在用户那台正在跑的服务上真的按所选语言作答；条件为 TEST-572 三步在用户运行中的服务上各走一次并记入 `EV-2026-09-27-reply-language.md` §4，之后本条转 APPROVED | CONDITIONAL 机器只能证明语言指令进了稳定前缀、开关能保存——证明不了模型在用户那台正在跑的服务上真的按所选语言作答；条件为 TEST-572 三步在用户运行中的服务上各走一次并记入 `EV-2026-09-27-reply-language.md` §4，之后本条转 APPROVED |
+| CP-1 | APPROVED 2026-09-27 真实入口三步通过：en 下中文提问得英文正文且工具照常，切回得中文，设置持久化（EV §4） | APPROVED 首次尝试证明一行指令不够，指令 + 末尾提醒两处并存后模型遵从；两处都只随设置变化，前缀缓存不受影响 | APPROVED 修正只加了一个纯函数 `languageReminder` 与 `chat.ts` 两行，测试同步断言后缀 | APPROVED TEST-572 `real_entry: true`（`entry: user`）；两次运行的事件日志留存协调会话 scratchpad，关键数字已抄入 EV §4 |
 | CP-2 | APPROVED 非法值与意外值文案有断言 | APPROVED 前缀用例经 `runChatTurn` 全链路，证明指令在 identity 段、随设置切换 | APPROVED 路由五例全绿，已本机实测 | APPROVED `npx vitest run tests/language-settings-route.test.ts tests/chat-stream.test.ts` |
 | CP-3 | APPROVED 提示文案与状态文案有断言 | APPROVED `<html lang>` 跟随与事件派发有断言 | APPROVED 守卫测试通过证明架构图已同步 | APPROVED `npx vitest run tests/language-toggle.test.tsx tests/architecture-doc.test.ts` |
 | CP-4 | APPROVED | APPROVED | APPROVED | APPROVED 全量回归见 EV §3 |
