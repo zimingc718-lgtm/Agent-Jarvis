@@ -6,6 +6,7 @@ import { CornerMenu } from "@/components/CornerMenu";
 import { DisplayScreen } from "@/components/DisplayScreen";
 import { FloatingChat, type FloatingMessage } from "@/components/FloatingChat";
 import { KnowledgeList } from "@/components/KnowledgeList";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { MenuSection } from "@/components/MenuSection";
 import { DocumentSettings } from "@/components/DocumentSettings";
 import { SearchSettings } from "@/components/SearchSettings";
@@ -17,6 +18,7 @@ import { authOptions, getGoogleOAuthConfig } from "@/lib/auth";
 import { requireUserId } from "@/lib/auth-guard";
 import { resolveDisplayView } from "@/lib/display";
 import { listKnowledge, listPending } from "@/lib/knowledge";
+import { readLanguage } from "@/lib/language";
 import { buildTranscript } from "@/lib/transcript";
 import { getDefaultProviderTemplates } from "@/lib/providers";
 import { STORAGE_CONFIG_HINT, getStorageConfig } from "@/lib/runtime-config";
@@ -44,6 +46,8 @@ export default async function HomePage() {
     : [];
 
   const dataRoots = storeReady ? await resolveUserDataRoots(auth.userId) : null;
+  // REQ-F-330 ③: the ☰ switch is right on first paint, not after a fetch.
+  const initialLanguage = storeReady ? readLanguage(getStore()) : "zh";
 
   // REQ-F-044 ③: the ☰ list is correct on first open, not after a fetch.
   const knowledge = dataRoots
@@ -78,6 +82,8 @@ export default async function HomePage() {
       <CornerMenu>
         <MenuSection title="外观">
           <ThemeToggle />
+          {/* REQ-F-330 ②: reply language, saved server-side (CR-20260927-reply-language). */}
+          {storeReady ? <LanguageToggle initialLanguage={initialLanguage} /> : null}
         </MenuSection>
         <MenuSection title="模型与账号">
           <SettingsDialog templates={templates} providers={savedProviders} storage={storage} />

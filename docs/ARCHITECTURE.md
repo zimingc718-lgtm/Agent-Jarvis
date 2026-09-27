@@ -1,6 +1,6 @@
 # Agent-Jarvis 架构图
 
-> 截至 2026-09-27（main `16a3e5b`）。本文件是架构图的**源**；可分享的页面版由它派生（https://claude.ai/artifact/TLFbGtPytg96k9L5PazCzA ，私有链接，改后重新发布）。
+> 截至 2026-09-27（main `32b3cce`，CR-20260927-reply-language 分支基点）。本文件是架构图的**源**；可分享的页面版由它派生（https://claude.ai/artifact/TLFbGtPytg96k9L5PazCzA ，私有链接，改后重新发布）。
 > **维护规则见文末**：凡动了模块、路由、表、依赖或部署形态的 CR，都要在同一变更里更新本文件；`tests/architecture-doc.test.ts` 逐项核对附录清单，漏了直接红。
 
 一个 Node.js 进程同时提供页面与 API：浮窗对话把用户消息交给工具循环，模型在循环里读技能、查知识库、读网页与文档、提出写入提议；写入先进待确认队列，用户点采纳才生效，每次工具调用都落到操作记录。数据全部在 `.data/`（SQLite + 文件），本机与 Railway 各跑一份同样的构建。
@@ -19,7 +19,7 @@
 |---|---|---|
 | 展示屏 | 标题视图 / 洞察报告 / 文档；会话态看板：知识看板、竞品、行业指标对照、组织架构；设置面板可唤到屏上 | `DisplayScreen`、`KnowledgeDashboard`、`LibraryPanel`、`CompetitorBoard`、`IndustrySpecComparison`、`OrgChartBoard`、`ToolPanel`、`ModelSettings` |
 | 浮窗对话 | 消费 SSE：正文、工具步骤行、压缩边界、来源；实体提议卡 / 技能提议卡；拖放上传技能与资料；状态灯、停止、新对话、折叠 | `FloatingChat`、`EntityProposalCard`、`SkillProposalCard` |
-| ☰ 抽屉 | 外观、模型、账号、技能（含待确认）、知识库（含待采纳）、文档设置、搜索与用量、主动唤醒、操作记录 | `CornerMenu`、`MenuSection`、`ThemeToggle`、`SettingsDialog`、`AccountDialog`、`SkillList`、`KnowledgeList`、`DocumentSettings`、`SearchSettings`、`WakeSettings`、`ActionLog`、`Dialog`、`ConfigWarning` |
+| ☰ 抽屉 | 外观（主题、回复语言）、模型、账号、技能（含待确认）、知识库（含待采纳）、文档设置、搜索与用量、主动唤醒、操作记录 | `CornerMenu`、`MenuSection`、`ThemeToggle`、`LanguageToggle`、`SettingsDialog`、`AccountDialog`、`SkillList`、`KnowledgeList`、`DocumentSettings`、`SearchSettings`、`WakeSettings`、`ActionLog`、`Dialog`、`ConfigWarning` |
 
 首帧由 RSC 注水（`src/app/page.tsx` 读服务端状态作初始 props）；之后经 `fetch` + `ReadableStream` 消费 SSE，`AbortController` 停止。
 
@@ -30,7 +30,7 @@
 | 组 | 路由 |
 |---|---|
 | 对话 | `/api/chat/stream`（SSE）· `/api/chat/wake` · `/api/conversations/recent` · `/api/conversations/[id]/messages` |
-| 能力配置 | `/api/providers` · `/api/providers/[id]` · `/api/providers/probe` · `/api/providers/test` · `/api/settings/search` · `/api/settings/search/test` · `/api/settings/wake` · `/api/settings/documents` · `/api/tools` |
+| 能力配置 | `/api/providers` · `/api/providers/[id]` · `/api/providers/probe` · `/api/providers/test` · `/api/settings/search` · `/api/settings/search/test` · `/api/settings/wake` · `/api/settings/documents` · `/api/settings/language` · `/api/tools` |
 | 知识与对象 | `/api/knowledge` · `/api/knowledge/[name]` · `/api/knowledge/overview` · `/api/knowledge/pending/[name]` · `/api/entities` · `/api/entities/[name]` · `/api/entities/[name]/history` · `/api/entities/pending/[name]` · `/api/entities/proposals/[id]` · `/api/entities/sweep` · `/api/library` · `/api/library/browse` · `/api/library/decide` |
 | 技能与产出 | `/api/skills` · `/api/skills/[name]` · `/api/skills/proposals` · `/api/skills/proposals/[id]` · `/api/insights` · `/api/insights/archive` · `/api/display` · `/api/documents/raw` · `/api/actions` |
 | 身份 | `/api/auth/[...nextauth]` |
@@ -41,7 +41,7 @@
 
 | 模块 | 职责 |
 |---|---|
-| `chat.ts` `runChatTurn` | Provider 链解析与失败下沉、历史回放（剔除孤儿 tool 行 `dropOrphanToolResults`）、压缩摘要、预算装配、同会话单轮互斥（`inFlightTurns`）、每调用落账、SSE 编排 |
+| `chat.ts` `runChatTurn` | Provider 链解析与失败下沉、历史回放（剔除孤儿 tool 行 `dropOrphanToolResults`）、压缩摘要、预算装配、同会话单轮互斥（`inFlightTurns`）、每调用落账、SSE 编排；稳定前缀 identity 带回复语言指令（`language.ts`，全局设置 `ui.language`，默认中文） |
 | `agent-loop.ts` `runToolLoop` | 调用模型 → 并发执行 `tool_calls` → 回喂 → 再调用；100 步上限、15 s 工具超时、重复失败短路、本轮成本上限；`onAction` 落账 |
 | `tools/registry.ts` · `tools/budget.ts` | `ToolDescriptor`（优先级 essential / normal / management，可用性，`effect` read / write / network）；上下文预算、保留窗口、压缩计划、前缀稳定 |
 | `adapters.ts` | OpenAI / DeepSeek / 本地 OpenAI-compatible 统一走 `/chat/completions`，流归一为 `ChatDelta`，工具调用分片累积、usage、截断标记、`stream_options` 回退 |
@@ -59,7 +59,7 @@
 | 文档与资料库 | 本地目录只读检索与读取；资料库采纳与浏览 | `documents.ts` `library.ts` `markitdown.ts`（PDF/DOCX → HTML 子进程）`document-format.ts`（按排版技能重排、按内容缓存）`pdf-text.ts` · `tools/document-tools.ts` |
 | 联网 | `web_search`（SearXNG）`read_url`（地址校验、PDF 抽取、被拦截时浏览器回退） | `tools/web-tools.ts` `tools/url-guard.ts` `tools/browser-fetch.ts` |
 | 展示与主动性 | `show_home` `show_insight` `save_insight` 与各看板阶段 | `display.ts` `display-document.ts` `insight-export.ts` · `tools/display-tools.ts`；`wake.ts` 主动唤醒（按日上限一次非流式调用） |
-| 横切 | — | `store.ts` `store-singleton.ts` `migrations.ts`（`PRAGMA user_version` 迁移框架）`user-data-paths.ts`（按用户数据根）`transcript.ts` `send-failure.ts` `supervisor-policy.ts` `types.ts` `ui-events.ts` `utils.ts` `auth.ts` |
+| 横切 | — | `store.ts` `store-singleton.ts` `migrations.ts`（`PRAGMA user_version` 迁移框架）`user-data-paths.ts`（按用户数据根）`language.ts`（回复语言设置与指令）`transcript.ts` `send-failure.ts` `supervisor-policy.ts` `types.ts` `ui-events.ts` `utils.ts` `auth.ts` |
 
 ### 1.5 数据
 
@@ -74,7 +74,7 @@
 | 跟踪对象 | `users/<email>/entities/` | 实体文件、来源、`proposals/*.json` 字段提议、变更历史 |
 | 资料库 | `资料库/`（git）· `.data/library/` · `.data/document-format/` | 参考 PDF 随仓库分发；采纳的原件与排版缓存在 `.data` |
 | 展示屏与报告 | `insights` · `display_state` | 报告 HTML 原样存储（未沙箱 iframe，DEC-015 已登记风险）；展示指针全局单行 |
-| 应用设置 | `app_settings` | 搜索后端、排版技能、文档目录等键值 |
+| 应用设置 | `app_settings` | 搜索后端、排版技能、文档目录、回复语言（`ui.language`）等键值 |
 | 操作记录 | `action_log` | 每次工具调用一行：工具、effect、结果、参数摘要、所在会话 |
 | 治理基线 | `project/.governance/baseline.json` · `ledger.jsonl` | 受控文件哈希与哈希链台账 |
 
@@ -145,13 +145,13 @@ flowchart LR
 
 ## 附录 · 清单（守卫测试逐项核对）
 
-**`src/lib`**：`adapters.ts` `agent-loop.ts` `api-guard.ts` `auth.ts` `auth-guard.ts` `chat.ts` `crypto.ts` `display.ts` `display-document.ts` `document-format.ts` `documents.ts` `entities.ts` `entity-history.ts` `entity-proposals.ts` `extract.ts` `html-text.ts` `ingest.ts` `insight-export.ts` `knowledge.ts` `library.ts` `markitdown.ts` `migrations.ts` `pdf-text.ts` `providers.ts` `runtime-config.ts` `send-failure.ts` `skill-proposals.ts` `skills.ts` `sources.ts` `store.ts` `store-singleton.ts` `supervisor-policy.ts` `sweep.ts` `transcript.ts` `types.ts` `ui-events.ts` `user-data-paths.ts` `utils.ts` `wake.ts` `zip.ts`
+**`src/lib`**：`adapters.ts` `agent-loop.ts` `api-guard.ts` `auth.ts` `auth-guard.ts` `chat.ts` `crypto.ts` `display.ts` `display-document.ts` `document-format.ts` `documents.ts` `entities.ts` `entity-history.ts` `entity-proposals.ts` `extract.ts` `html-text.ts` `ingest.ts` `insight-export.ts` `knowledge.ts` `language.ts` `library.ts` `markitdown.ts` `migrations.ts` `pdf-text.ts` `providers.ts` `runtime-config.ts` `send-failure.ts` `skill-proposals.ts` `skills.ts` `sources.ts` `store.ts` `store-singleton.ts` `supervisor-policy.ts` `sweep.ts` `transcript.ts` `types.ts` `ui-events.ts` `user-data-paths.ts` `utils.ts` `wake.ts` `zip.ts`
 
 **`src/lib/tools`**：`browser-fetch.ts` `budget.ts` `display-tools.ts` `document-tools.ts` `entity-tools.ts` `knowledge-tools.ts` `registry.ts` `skill-tools.ts` `url-guard.ts` `web-tools.ts`
 
-**`src/components`（顶层）**：`AccountDialog` `ActionLog` `CompetitorBoard` `ConfigWarning` `CornerMenu` `Dialog` `DisplayScreen` `DocumentSettings` `EntityProposalCard` `FloatingChat` `IndustrySpecComparison` `KnowledgeDashboard` `KnowledgeList` `LibraryPanel` `MenuSection` `ModelSettings` `OrgChartBoard` `SearchSettings` `SettingsDialog` `SkillList` `SkillProposalCard` `ThemeToggle` `ToolPanel` `WakeSettings`
+**`src/components`（顶层）**：`AccountDialog` `ActionLog` `CompetitorBoard` `ConfigWarning` `CornerMenu` `Dialog` `DisplayScreen` `DocumentSettings` `EntityProposalCard` `FloatingChat` `IndustrySpecComparison` `KnowledgeDashboard` `KnowledgeList` `LanguageToggle` `LibraryPanel` `MenuSection` `ModelSettings` `OrgChartBoard` `SearchSettings` `SettingsDialog` `SkillList` `SkillProposalCard` `ThemeToggle` `ToolPanel` `WakeSettings`
 
-**API 路由**：见 1.2（36 条）。
+**API 路由**：见 1.2（37 条）。
 
 **SQLite 表**：`users` `providers` `conversations` `messages` `skills` `skill_proposals` `insights` `display_state` `app_settings` `action_log`
 

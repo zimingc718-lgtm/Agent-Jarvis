@@ -702,4 +702,37 @@ describe("runChatTurn", () => {
     expect(usage.inputTokens).toBeGreaterThan(0);
     expect(usage.estimated).toBe(true);
   });
+
+  /**
+   * TEST-571 (prefix half) — REQ-F-330 ① (CR-20260927-reply-language): the reply language is
+   * part of the stable prefix's identity; default zh, "en" after the ☰ switch. Tool text stays
+   * Chinese by ruling — the instruction is what tells the model to answer in English anyway.
+   */
+  it("REQ-F-330 ①: 回复语言指令并入稳定前缀——默认中文，设置 en 后为英文", async () => {
+    const user = store.upsertUser({ email: "user@example.com", name: "User" });
+    const providerId = localProvider(store, user.id);
+
+    let sent: ChatMessage[] = [];
+    const capture = async function* (input: { messages: ChatMessage[] }) {
+      sent = input.messages;
+      yield { type: "delta" as const, text: "ok" };
+    };
+
+    await readSse(await runChatTurn({ store, userId: user.id, providerId, message: "hi", providerStream: capture }));
+    expect(sent[0]).toMatchObject({ role: "system" });
+    expect(sent[0]!.content).toContain("Agent-Jarvis");
+    expect(sent[0]!.content).toContain("回复语言：中文");
+    expect(sent[0]!.content).not.toContain("Reply language: English");
+    // The rule is restated at the END of the system prompt (volatile suffix) — the real
+    // entry showed one line at the top loses to a Chinese question plus Chinese tool output.
+    expect(sent[1]).toMatchObject({ role: "system" });
+    expect(sent[1]!.content).toContain("本轮回复语言：中文");
+
+    store.setSetting("ui.language", "en");
+    await readSse(await runChatTurn({ store, userId: user.id, providerId, message: "hi again", providerStream: capture }));
+    expect(sent[0]!.content).toContain("Reply language: English");
+    expect(sent[0]!.content).not.toContain("回复语言：中文");
+    expect(sent[1]!.content).toContain("Reply language for this turn: English");
+    expect(sent[1]!.content).not.toContain("本轮回复语言：中文");
+  });
 });

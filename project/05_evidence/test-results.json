@@ -79,7 +79,8 @@
     "CR-20260921-chat-skill-register",
     "CR-20260923-orphan-tool-results",
     "CR-20260925-write-approval-action-log",
-    "CR-20260927-architecture-doc"
+    "CR-20260927-architecture-doc",
+    "CR-20260927-reply-language"
   ],
   "tests": [
     {
@@ -1660,9 +1661,32 @@
       "date": "2026-09-27",
       "entry": "assistant",
       "notes": "架构文档清单守卫（DEC-440，TASK-560）。6 例：src/lib 与 src/lib/tools 每个模块、src/components 每个顶层组件、每条 /api 路由、每张 CREATE TABLE IF NOT EXISTS 表、package.json 每个运行依赖与 requirements.txt 每个包都出现在 docs/ARCHITECTURE.md；文首带日期与 main 提交号、维护规则节存在。清单全部从文件系统与源码枚举。"
+    },
+    {
+      "id": "TEST-570",
+      "result": "PASS",
+      "command": "npx vitest run tests/language-settings-route.test.ts",
+      "real_entry": false,
+      "date": "2026-09-28",
+      "entry": "assistant",
+      "notes": "回复语言设置路由（REQ-F-330 ②③，DEC-450，TASK-570）。5 例：401；默认 zh；PUT en 持久化并可切回；非法值/坏 JSON/空体 400 且不改设置；库里意外值按默认读不抛错。"
+    },
+    {
+      "id": "TEST-571",
+      "result": "PASS",
+      "command": "npx vitest run tests/chat-stream.test.ts tests/language-toggle.test.tsx",
+      "real_entry": false,
+      "date": "2026-09-28",
+      "entry": "assistant",
+      "notes": "前缀指令 + 开关组件（REQ-F-330 ①②，DEC-450，TASK-570）。chat-stream +1：默认前缀含「回复语言：中文」，设置 en 后含 Reply language: English 且互斥；language-toggle 2 例：两选项与 SSR 初值、点 English 保存/派发事件/html lang 变 en，保存失败回退并显示服务端说明、点当前值不发请求。真实入口（TEST-572）另记。"
     }
   ],
   "executed_commands": [
+    {
+      "command": "npx vitest run",
+      "result": "PASS",
+      "summary": "2026-09-28 CR-20260927-reply-language P3：105 文件 959/960，唯一失败为既有 flaky floating-chat ④（27 s 超时），本 CR 4 个文件全绿"
+    },
     {
       "command": "npx vitest run",
       "result": "PASS",

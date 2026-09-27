@@ -102,6 +102,13 @@ export const SETTINGS_PANEL_LABEL: Record<SettingsPanel, string> = {
 };
 
 /**
+ * The ☰「语言」switch changed the reply language (REQ-F-330 ②; CR-20260927-reply-language).
+ * `detail` is `{ language: "zh" | "en" }`. Step 1 has no listener yet — the model reads the
+ * setting server-side on the next send; step 2 (UI strings) will subscribe here.
+ */
+export const LANGUAGE_CHANGED_EVENT = "jarvis:language-changed";
+
+/**
  * Proactive wake-up (CR-20260911-proactive-wake). `WAKE_CHANGED_EVENT` tells the chat
  * that the schedule changed in the ☰ menu; `WAKE_NOTICE_EVENT` carries a reminder the
  * menu's 「现在唤醒」 produced, so the chat can show it — `detail` is `{ text, messageId }`.

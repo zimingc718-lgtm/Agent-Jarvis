@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { dropOrphanToolResults, repairDanglingToolCalls, runToolLoop } from "./agent-loop";
 import { listKnowledge } from "./knowledge";
+import { languageInstruction, languageReminder, readLanguage } from "./language";
 import { resolveUserDataRoots, type UserDataRoots } from "./user-data-paths";
 import { estimateMessagesTokens, estimateTokens, sendProviderStream, type StreamProviderConfig, type ToolSpec } from "./adapters";
 import { resolveDisplayView } from "./display";
@@ -270,15 +271,25 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
   // the prefix and the `tools` array on the wire are computed from ONE fit, so the prefix
   // can never advertise a tool the request does not carry.
   const toolFit = registry.fitFor(toolContext, budgetTokens(window, BUDGET_SHARES.toolDefinitions));
+  // REQ-F-330 ① (CR-20260927-reply-language): the reply language rides in the identity, so
+  // it is part of the stable prefix — byte-identical between sends, changing only when the
+  // user flips the ☰ switch. Tool descriptions and results stay Chinese (user ruling ④);
+  // the instruction tells the model to read them and still answer in the chosen language.
+  const language = readLanguage(input.store);
   const stablePrefix = buildStablePrefix({
-    identity: input.systemPrompt ?? DEFAULT_SYSTEM_PROMPT,
+    identity: [input.systemPrompt ?? DEFAULT_SYSTEM_PROMPT, languageInstruction(language)].join("\n"),
     skillCatalogue: catalogue.text,
     toolCatalogue: toolsUsable ? registry.catalogueFor(toolContext, toolFit) : "",
   });
   const volatileSuffix = buildVolatileSuffix({
     // REQ-F-120 ④: without this the model has no way to know which provider or model it is
     // running on, and said so when asked.
-    runtime: describeRuntime({ providerName: provider.name, kind: provider.kind, model, contextWindow: window }),
+    // REQ-F-330 ① again, at the end of the system prompt: one line at the top was not enough
+    // against a Chinese question plus Chinese tool output (real entry 2026-09-27).
+    runtime: [
+      describeRuntime({ providerName: provider.name, kind: provider.kind, model, contextWindow: window }),
+      languageReminder(language),
+    ].join("\n"),
     displayState: describeDisplay(),
   });
 
