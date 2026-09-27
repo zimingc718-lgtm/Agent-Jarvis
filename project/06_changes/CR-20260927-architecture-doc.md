@@ -2,7 +2,7 @@
 
 - 级别: L1（快车道：全部 CP 双向门且各有机器检查——新增一份文档、一条守卫测试、CLAUDE.md 一条纪律；不改运行时代码、不改数据、`git revert` 即回滚）
 - 提出人: user（INPUT-2026-09-27-001）
-- 状态: P2-P4 完成，待 snapshot 与合并（R1 由用户原话直接终裁；`tests/architecture-doc.test.ts` 6 例全绿，`tsc` 0 错误；无真实入口路线——纯文档与守卫）
+- 状态: CLOSED（2026-09-27 闭环：TASK-560 DONE，TEST-560 PASS 6/6；L1 快车道，R1 由用户原话终裁、R2–R4 按 DEC-021 免矩阵；`tsc` 0 错误，全量 952/952；snapshot ledger seq 144 后快进合入 main，合并后 `verify` PASS；纯文档与守卫，无需重建服务）
 - 占用 ID: DEC-440, TASK-560, TEST-560
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: 无（流程与文档控制，不覆盖产品需求；与 MOD-GOVERNANCE 的 DEC-020/021 同类）
