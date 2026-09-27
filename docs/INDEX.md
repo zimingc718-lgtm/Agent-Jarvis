@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | 生成命令 | `npm run docs:index` |
-| 规模 | REQ 112 条 · TEST 192 条（主矩阵） · TASK 180 条 · tests/**/*.test.ts(x) 102 个 |
+| 规模 | REQ 112 条 · TEST 193 条（主矩阵） · TASK 181 条 · tests/**/*.test.ts(x) 103 个 |
 
 ---
 
@@ -213,7 +213,7 @@
 | MOD-DOCUMENTS | （无） | （无） | TASK-511, TASK-521 |
 | MOD-ENTITIES | `src/app/api/entities/[name]/history/route.ts`<br>`src/components/OrgChartBoard.tsx`<br>`src/lib/entity-history.ts` | （无） | TASK-457, TASK-480 |
 | MOD-ENTITY | `src/lib/entities.ts`<br>`src/lib/entity-proposals.ts`<br>`src/lib/extract.ts`<br>`src/lib/sources.ts`<br>`src/lib/sweep.ts` | （无） | TASK-120, TASK-121, TASK-123, TASK-125, TASK-127, TASK-129, TASK-132, TASK-443 |
-| MOD-GOVERNANCE | `scripts/check-config.mjs`<br>`scripts/check-dev-server.mjs`<br>`scripts/check-module-graph.mjs`<br>`scripts/gen-index.mjs`<br>`src/lib/sweep.ts`<br>`tests/module-graph.test.ts`<br>`tests/sweep.test.ts`<br>`tools/migrate_r1_signoff.py`<br>`tools/migrate_specs.py` | （无） | TASK-049, TASK-050, TASK-051, TASK-052, TASK-053, TASK-054, TASK-055, TASK-056, TASK-057, TASK-058, TASK-110, TASK-280, TASK-290, TASK-300, TASK-310, TASK-340, TASK-350, TASK-380, TASK-430, TASK-431, TASK-432, TASK-433, TASK-434 |
+| MOD-GOVERNANCE | `scripts/check-config.mjs`<br>`scripts/check-dev-server.mjs`<br>`scripts/check-module-graph.mjs`<br>`scripts/gen-index.mjs`<br>`src/app/api`<br>`src/components`<br>`src/lib`<br>`src/lib/sweep.ts`<br>`src/lib/tools`<br>`tests/architecture-doc.test.ts`<br>`tests/module-graph.test.ts`<br>`tests/sweep.test.ts`<br>`tools/migrate_r1_signoff.py`<br>`tools/migrate_specs.py` | （无） | TASK-049, TASK-050, TASK-051, TASK-052, TASK-053, TASK-054, TASK-055, TASK-056, TASK-057, TASK-058, TASK-110, TASK-280, TASK-290, TASK-300, TASK-310, TASK-340, TASK-350, TASK-380, TASK-430, TASK-431, TASK-432, TASK-433, TASK-434, TASK-560 |
 | MOD-KNOWLEDGE | `scripts/migrate-legacy-knowledge-notes.mjs`<br>`src/lib/entity-proposals.ts`<br>`src/lib/extract.ts`<br>`src/lib/ingest.ts`<br>`src/lib/knowledge.ts`<br>`src/lib/library.ts`<br>`src/lib/sources.ts`<br>`src/lib/tools/knowledge-tools.ts`<br>`src/lib/tools/registry.ts` | （无） | TASK-082, TASK-084, TASK-123, TASK-126, TASK-127, TASK-230, TASK-240, TASK-260, TASK-390, TASK-448, TASK-449, TASK-450 |
 | MOD-OPS | `scripts/serve-local.mjs`<br>`src/components/FloatingChat.tsx`<br>`src/lib/chat.ts`<br>`src/lib/send-failure.ts`<br>`src/lib/supervisor-policy.ts`<br>`src/lib/tools/budget.ts` | （无） | TASK-180 |
 | MOD-PDF | `src/lib/pdf-text.ts` | （无） | TASK-093 |

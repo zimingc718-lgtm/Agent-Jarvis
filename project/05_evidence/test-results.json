@@ -78,7 +78,8 @@
     "CR-20260921-format-skill",
     "CR-20260921-chat-skill-register",
     "CR-20260923-orphan-tool-results",
-    "CR-20260925-write-approval-action-log"
+    "CR-20260925-write-approval-action-log",
+    "CR-20260927-architecture-doc"
   ],
   "tests": [
     {
@@ -1650,9 +1651,23 @@
       "date": "2026-09-26",
       "entry": "user",
       "notes": "真实入口（REQ-F-320，TASK-550）。2026-09-26 在用户运行中的本机服务（分支构建 M1ZH_UX3FdslPgilWKml5）上经真实 POST /api/chat/stream（deepseek-chat）与提议/操作记录路由走完：①两条会话里模型都只在「注册」后才调 register_skill，skill_pending 事件到达，提议列在待确认区而技能列表没有；会话 A 采纳 200 后技能出现、SKILL.md 落盘；会话 B 忽略 200 后不出现；②GET /api/actions 默认只列两条 register_skill 写入行带会话标题，全部 6 行含只读调用、跨两条会话；③既有采纳流程由全量回归覆盖。命令列指向机器对照 TEST-551；由协调会话经 HTTP 驱动，卡片与页面目视留给用户，见 EV §4。"
+    },
+    {
+      "id": "TEST-560",
+      "result": "PASS",
+      "command": "npx vitest run tests/architecture-doc.test.ts",
+      "real_entry": false,
+      "date": "2026-09-27",
+      "entry": "assistant",
+      "notes": "架构文档清单守卫（DEC-440，TASK-560）。6 例：src/lib 与 src/lib/tools 每个模块、src/components 每个顶层组件、每条 /api 路由、每张 CREATE TABLE IF NOT EXISTS 表、package.json 每个运行依赖与 requirements.txt 每个包都出现在 docs/ARCHITECTURE.md；文首带日期与 main 提交号、维护规则节存在。清单全部从文件系统与源码枚举。"
     }
   ],
   "executed_commands": [
+    {
+      "command": "npx vitest run",
+      "result": "PASS",
+      "summary": "2026-09-27 CR-20260927-architecture-doc：103 文件 952/952 通过"
+    },
     {
       "command": "npx vitest run",
       "result": "PASS",
