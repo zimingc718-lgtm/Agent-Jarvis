@@ -2,7 +2,7 @@
 
 - 级别: L2（标准档：全部 CP 双向门——一个全局设置键、一条路由、一个 ☰ 开关、提示词里一行指令；不改数据含义，`git revert` 即回滚；回复语言是否真的切换须人在真实对话里看一次）
 - 提出人: user（INPUT-2026-09-27-002 第一步）
-- 状态: P2-P4 与真实入口完成，待 snapshot 与合并（R1 由用户四点裁定终裁；R1-R4 全 PASS；新增测试 8 例；`tsc` 0 错误；全量 105 文件 960/960 全部通过（既有 flaky floating-chat ④ 本轮未复现）；TEST-572 三步已于 2026-09-27 在用户运行中的本机服务（分支构建 `oGAsKEmNMKu9IXML_USqp`）上经真实 `POST /api/chat/stream` 走完——第一次尝试暴露「只在前缀顶部放一行指令不够」，加了末尾提醒后通过，见 EV §4；合并 main 且 `verify` PASS 后转 CLOSED）
+- 状态: CLOSED（2026-09-28 闭环：TASK-570 DONE，TEST-570/571 PASS、TEST-572 真实入口 PASS（`entry: user`）；L2 标准档，R1 由用户四点裁定终裁，R2–R4 全 PASS、R4 CP-1 由 CONDITIONAL 转 APPROVED；`tsc` 0 错误，全量 105 文件 960/960；TEST-572 三步于 2026-09-27 在用户运行中的本机服务（分支构建 `oGAsKEmNMKu9IXML_USqp`）上经真实 `POST /api/chat/stream` 走完——第一次尝试暴露「只在前缀顶部放一行指令不够」，加了末尾提醒后通过，见 EV §4；snapshot ledger seq 145 后快进合入 main（`9c9370b`），合并后 `verify` PASS；本机服务已在跑本 CR 的构建，无需再重建）
 - 占用 ID: REQ-F-330, DEC-450, TASK-570, TEST-570, TEST-571, TEST-572
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: REQ-F-014（☰ 外观分组多一个「语言」开关）、REQ-NF-008 ①（稳定前缀多一行、只随设置变化）
