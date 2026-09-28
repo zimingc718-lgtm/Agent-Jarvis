@@ -6,6 +6,7 @@ import { ConfigWarning } from "./ConfigWarning";
 import { Dialog } from "./Dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useT } from "@/components/LanguageProvider";
 
 export type GoogleOAuthUiState = { configured: true; missing: [] } | { configured: false; missing: string[] };
 
@@ -15,6 +16,7 @@ type AccountDialogProps = {
 };
 
 export function AccountDialog({ authenticated, googleOAuth }: AccountDialogProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
 
   return (
@@ -26,11 +28,11 @@ export function AccountDialog({ authenticated, googleOAuth }: AccountDialogProps
         onClick={() => setOpen(true)}
       >
         <UserRound aria-hidden="true" className="size-4" />
-        账号登录
+        {t("account.open")}
       </Button>
-      <Dialog open={open} title="Agent-Jarvis 账号" onClose={() => setOpen(false)}>
+      <Dialog open={open} title={t("account.dialogTitle")} onClose={() => setOpen(false)}>
         <p className="dialog__note text-sm text-muted-foreground" role="status">
-          {authenticated ? "已登录 Agent-Jarvis。" : "尚未登录 Agent-Jarvis。"}
+          {authenticated ? t("account.signedIn") : t("account.signedOut")}
         </p>
 
         <div className="dialog__section mt-4">
@@ -52,7 +54,7 @@ export function AccountDialog({ authenticated, googleOAuth }: AccountDialogProps
             <ConfigWarning
               title="Google OAuth configuration required"
               missing={googleOAuth.missing}
-              hint="在 .env.local 中设置后重启开发服务器；Google 控制台的回调地址需为 <NEXTAUTH_URL>/api/auth/callback/google。"
+              hint={t("account.oauthHint")}
             />
           )}
         </div>
@@ -60,7 +62,7 @@ export function AccountDialog({ authenticated, googleOAuth }: AccountDialogProps
         <Separator className="my-4" />
 
         <p className="dialog__note text-sm text-muted-foreground">
-          Agent-Jarvis 账号 ≠ 模型授权。OpenAI、DeepSeek、本地模型的凭据在「配置」中单独设置。
+          {t("account.credentialsNote")}
         </p>
       </Dialog>
     </>

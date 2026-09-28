@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { FolderOpen, Trash2 } from "lucide-react";
 import { Dialog } from "./Dialog";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/components/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n";
 
 /**
  * Local document folders (REQ-F-110 ①, TASK-170 ⑤).
@@ -32,7 +34,8 @@ export type DocumentSettingsValue = {
 
 export type SkillOption = { id: string; name: string };
 
-type MutationResult = { ok: boolean; message?: string; data?: DocumentSettingsValue };
+/** `status` is the HTTP status of a failed call; the component turns it into words (REQ-F-340). */
+type MutationResult = { ok: boolean; message?: string; status?: number; data?: DocumentSettingsValue };
 
 type DocumentSettingsProps = {
   /** Test seams. */
@@ -62,7 +65,7 @@ async function setFormatSkillViaApi(skillId: string): Promise<MutationResult> {
   const body = (await response.json().catch(() => ({}))) as { message?: string } & Partial<DocumentSettingsValue>;
   return response.ok
     ? { ok: true, data: body as DocumentSettingsValue }
-    : { ok: false, message: body.message ?? `设置失败（${response.status}）。` };
+    : { ok: false, message: body.message, status: response.status };
 }
 
 async function loadFromApi(): Promise<DocumentSettingsValue> {
@@ -82,7 +85,7 @@ async function addViaApi(path: string) {
   const body = (await response.json().catch(() => ({}))) as { message?: string } & Partial<DocumentSettingsValue>;
   return response.ok
     ? { ok: true, data: body as DocumentSettingsValue }
-    : { ok: false, message: body.message ?? `添加失败（${response.status}）。` };
+    : { ok: false, message: body.message, status: response.status };
 }
 
 async function removeViaApi(label: string) {
@@ -90,7 +93,7 @@ async function removeViaApi(label: string) {
   const body = (await response.json().catch(() => ({}))) as { message?: string } & Partial<DocumentSettingsValue>;
   return response.ok
     ? { ok: true, data: body as DocumentSettingsValue }
-    : { ok: false, message: body.message ?? `移除失败（${response.status}）。` };
+    : { ok: false, message: body.message, status: response.status };
 }
 
 async function setArchiveViaApi(path: string) {
@@ -102,7 +105,7 @@ async function setArchiveViaApi(path: string) {
   const body = (await response.json().catch(() => ({}))) as { message?: string } & Partial<DocumentSettingsValue>;
   return response.ok
     ? { ok: true, data: body as DocumentSettingsValue }
-    : { ok: false, message: body.message ?? `设置失败（${response.status}）。` };
+    : { ok: false, message: body.message, status: response.status };
 }
 
 export function DocumentSettings({
@@ -113,6 +116,10 @@ export function DocumentSettings({
   setFormatSkill = setFormatSkillViaApi,
   loadSkills = loadSkillsFromApi,
 }: DocumentSettingsProps) {
+  const t = useT();
+  // Server messages win; otherwise name the failed call and its status, as the panel always did.
+  const failure = (result: MutationResult, withStatus: MessageKey, plain: MessageKey) =>
+    result.message ?? (result.status ? t(withStatus, { status: result.status }) : t(plain));
   const [open, setOpen] = useState(false);
   const [roots, setRoots] = useState<DocumentRootView[]>([]);
   const [count, setCount] = useState(0);
@@ -164,11 +171,11 @@ export function DocumentSettings({
       apply(result.data);
       setStatus(
         result.data.formatSkill
-          ? `打开 PDF/DOCX 时将按技能「${result.data.formatSkillName}」由模型重新排版；同一份文件只排一次，之后走缓存。`
-          : "已停用模型排版，恢复为只做结构转换。"
+          ? t("docs.formatSkillOn", { name: result.data.formatSkillName ?? "" })
+          : t("docs.formatSkillOff")
       );
     } else {
-      setStatus(result.message ?? "设置失败。");
+      setStatus(failure(result, "docs.setFailedStatus", "docs.setFailed"));
     }
   };
 
@@ -199,9 +206,9 @@ export function DocumentSettings({
     if (result.ok && result.data) {
       apply(result.data);
       setDraft("");
-      setStatus(`已添加，共 ${result.data.counts.documents} 份可读文档。`);
+      setStatus(t("docs.added", { count: result.data.counts.documents }));
     } else {
-      setStatus(result.message ?? "添加失败。");
+      setStatus(failure(result, "docs.addFailedStatus", "docs.addFailed"));
     }
   };
 
@@ -211,9 +218,9 @@ export function DocumentSettings({
     setBusy(false);
     if (result.ok && result.data) {
       apply(result.data);
-      setStatus("已移除。磁盘上的文件没有任何改动。");
+      setStatus(t("docs.removed"));
     } else {
-      setStatus(result.message ?? "移除失败。");
+      setStatus(failure(result, "docs.removeFailedStatus", "docs.removeFailed"));
     }
   };
 
@@ -223,38 +230,37 @@ export function DocumentSettings({
     setBusy(false);
     if (result.ok && result.data) {
       apply(result.data);
-      setStatus(result.data.archive ? `报告将归档到 ${result.data.archive}。` : "已清除归档目录，报告不再写入磁盘。");
+      setStatus(result.data.archive ? t("docs.archiveSet", { path: result.data.archive }) : t("docs.archiveCleared"));
     } else {
-      setStatus(result.message ?? "设置失败。");
+      setStatus(failure(result, "docs.setFailedStatus", "docs.setFailed"));
     }
   };
 
   const summary =
     roots.length === 0
-      ? "本地文档：未配置目录"
-      : `本地文档：${roots.length} 个目录 · ${count} 份可读文件${archive ? " · 已设归档目录" : ""}${
-          formatSkill ? ` · 排版技能：${formatSkillName}` : ""
-        }`;
+      ? t("docs.summaryNone")
+      : t("docs.summary", { roots: roots.length, count }) +
+        (archive ? t("docs.summaryArchive") : "") +
+        (formatSkill ? t("docs.summaryFormat", { name: formatSkillName }) : "");
 
   return (
-    <section className="document-settings flex flex-col gap-1.5 rounded-md border border-border p-2" aria-label="本地文档">
+    <section className="document-settings flex flex-col gap-1.5 rounded-md border border-border p-2" aria-label={t("docs.title")}>
       <h3 className="document-settings__title text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        本地文档
+        {t("docs.title")}
       </h3>
 
       <Button type="button" variant="ghost" className="w-full justify-start gap-2" onClick={() => setOpen(true)}>
         <FolderOpen aria-hidden="true" className="size-4" />
-        文档目录
+        {t("docs.foldersHeading")}
       </Button>
       <p className="document-settings__summary px-3 text-xs text-muted-foreground" aria-live="polite">
         {summary}
       </p>
 
-      <Dialog onClose={() => setOpen(false)} open={open} title="本地文档目录">
+      <Dialog onClose={() => setOpen(false)} open={open} title={t("docs.foldersAria")}>
         <div className="flex flex-col gap-3">
           <p className="text-sm text-muted-foreground">
-            指向存放规格书、标准、论文等原件的文件夹。Jarvis
-            只读取，不复制、不改写、不移动其中任何文件；移除目录也只是不再查找它。
+            {t("docs.foldersHint")}
           </p>
 
           {roots.length > 0 ? (
@@ -271,7 +277,7 @@ export function DocumentSettings({
                     </span>
                   </span>
                   <Button
-                    aria-label={`移除 ${root.label}`}
+                    aria-label={t("docs.removeFolder", { label: root.label })}
                     disabled={busy}
                     onClick={() => onRemove(root.label)}
                     size="icon"
@@ -285,57 +291,56 @@ export function DocumentSettings({
             </ul>
           ) : (
             <p className="rounded-md border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
-              还没有添加目录。添加之后，对话里就可以直接检索和阅读这些原文档。
+              {t("docs.foldersEmpty")}
             </p>
           )}
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium" htmlFor="document-root-path">
-              添加文件夹（绝对路径）
+              {t("docs.addFolderLabel")}
             </label>
             <div className="flex gap-2">
               <input
                 className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
                 id="document-root-path"
                 onChange={(event) => setDraft(event.target.value)}
-                placeholder="D:\\资料\\产品规格书"
+                placeholder={t("docs.folderPlaceholder")}
                 value={draft}
               />
               <Button disabled={busy || draft.trim().length === 0} onClick={onAdd} type="button">
-                添加
+                {t("common.add")}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              支持 PDF、.docx、Markdown、纯文本、CSV、JSON。旧的 .doc 二进制格式与扫描件 PDF（无文字层）读不了，会如实说明。
+              {t("docs.formatsHint")}
             </p>
           </div>
 
           <div className="document-settings__archive flex flex-col gap-1.5 border-t border-border pt-3">
             <label className="text-xs font-medium" htmlFor="document-archive-path">
-              报告归档目录（绝对路径，须位于上面某个目录之内）
+              {t("docs.archiveLabel")}
             </label>
             <div className="flex gap-2">
               <input
                 className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
                 id="document-archive-path"
                 onChange={(event) => setArchiveDraft(event.target.value)}
-                placeholder="D:\\资料\\Jarvis 报告"
+                placeholder={t("docs.archivePlaceholder")}
                 value={archiveDraft}
               />
               <Button disabled={busy || archiveDraft.trim() === archive.trim()} onClick={onArchive} type="button">
-                保存
+                {t("common.save")}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
               {/* 写入是这一层唯一的写动作，边界写在明处（REQ-F-190 ③④）。 */}
-              展示屏上的报告可归档为 Markdown 存到这里，随后能被检索和阅读。
-              写入只发生在这个目录里、只新建文件，**永不覆盖**已有文件；留空即不写磁盘。
+              {t("docs.archiveHint")}
             </p>
           </div>
 
           <div className="document-settings__format flex flex-col gap-1.5 border-t border-border pt-3">
             <label className="text-xs font-medium" htmlFor="document-format-skill">
-              排版技能（PDF/DOCX 打开时由模型按该技能的 SKILL.md 重新排版）
+              {t("docs.formatSkillLabel")}
             </label>
             <select
               className="min-w-0 rounded-md border border-border bg-background px-3 py-2 text-sm"
@@ -344,9 +349,9 @@ export function DocumentSettings({
               onChange={(event) => void onFormatSkill(event.target.value)}
               value={formatSkill}
             >
-              <option value="">不使用（只做结构转换）</option>
+              <option value="">{t("docs.formatSkillNone")}</option>
               {formatSkillStale && formatSkill ? (
-                <option value={formatSkill}>{`（已删除的技能 ${formatSkill.slice(0, 8)}…）`}</option>
+                <option value={formatSkill}>{t("docs.formatSkillDeleted", { id: formatSkill.slice(0, 8) })}</option>
               ) : null}
               {skills.map((skill) => (
                 <option key={skill.id} value={skill.id}>
@@ -356,12 +361,11 @@ export function DocumentSettings({
             </select>
             <p className="text-xs text-muted-foreground">
               {/* REQ-F-290 ①③：技能经常规上传注册；排版结果按文件内容缓存。 */}
-              先在「技能」里上传一个技能，它的 SKILL.md 就是排版规则。选中后每份文件只排一次，之后走缓存；
-              模型输出明显缩水的段落会保留原文并标注，不会静默丢内容。选「不使用」即刻停用。
+              {t("docs.formatSkillHint")}
             </p>
             {formatSkillStale ? (
               <p className="text-xs text-destructive" role="alert">
-                当前设置指向的技能已不存在，打开文档时会退回结构转换。请重新选择或选「不使用」。
+                {t("docs.formatSkillMissing")}
               </p>
             ) : null}
           </div>

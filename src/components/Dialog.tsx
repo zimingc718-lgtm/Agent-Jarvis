@@ -4,6 +4,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useT } from "@/components/LanguageProvider";
 
 type DialogProps = {
   open: boolean;
@@ -25,6 +26,7 @@ type DialogProps = {
  * `document.querySelector("dialog")` and its `open` attribute directly.
  */
 export function Dialog({ open, title, onClose, children }: DialogProps) {
+  const t = useT();
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -62,7 +64,7 @@ export function Dialog({ open, title, onClose, children }: DialogProps) {
     >
       <div className="dialog__head flex items-center justify-between gap-4 px-5 py-4">
         <h2 className="text-base font-semibold tracking-tight">{title}</h2>
-        <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="关闭">
+        <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label={t("common.close")}>
           <X aria-hidden="true" className="size-4" />
         </Button>
       </div>

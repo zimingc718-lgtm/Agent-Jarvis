@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/LanguageProvider";
 
 /**
  * 友商看板（CR-20260918-competitor-board，REQ-F-243）。
@@ -35,6 +36,7 @@ async function defaultLoad(): Promise<CompetitorBoardData> {
 }
 
 export function CompetitorBoard({ load = defaultLoad }: CompetitorBoardProps) {
+  const t = useT();
   const [data, setData] = useState<CompetitorBoardData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,7 +51,7 @@ export function CompetitorBoard({ load = defaultLoad }: CompetitorBoardProps) {
       })
       .catch(() => {
         if (!cancelled) {
-          setError("读不到友商数据。服务可能正在重启，稍后再打开一次。");
+          setError(t("competitor.loadFailed"));
         }
       });
     return () => {
@@ -65,10 +67,10 @@ export function CompetitorBoard({ load = defaultLoad }: CompetitorBoardProps) {
     );
   }
   if (!data) {
-    return <p className="competitor-board__loading text-sm text-muted-foreground">正在读取友商数据…</p>;
+    return <p className="competitor-board__loading text-sm text-muted-foreground">{t("competitor.loading")}</p>;
   }
   if (data.competitors.length === 0) {
-    return <p className="competitor-board__empty text-sm text-muted-foreground">还没有登记友商——先在知识看板新增一个。</p>;
+    return <p className="competitor-board__empty text-sm text-muted-foreground">{t("competitor.empty")}</p>;
   }
 
   // 维度 = 各友商已登记参数名的并集，按首次出现的顺序——和看板本身「参数不重排」同一条道理。
@@ -82,23 +84,23 @@ export function CompetitorBoard({ load = defaultLoad }: CompetitorBoardProps) {
   }
 
   return (
-    <section aria-label="友商看板" className="competitor-board flex flex-col gap-3 p-6">
+    <section aria-label={t("competitor.title")} className="competitor-board flex flex-col gap-3 p-6">
       <div>
-        <h2 className="text-lg font-semibold tracking-tight">友商看板</h2>
+        <h2 className="text-lg font-semibold tracking-tight">{t("competitor.title")}</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          对比维度取自各友商已登记的技术参数。逐维度的评价请直接在对话里问——现场给出的判断，不写死在表格里。
+          {t("competitor.subtitle")}
         </p>
       </div>
       {dimensions.length === 0 ? (
         <p className="competitor-board__no-params text-sm text-muted-foreground">
-          这些友商还没有登记任何技术参数，可以在知识看板里补充，或让 Jarvis 从已入库的材料里抽。
+          {t("competitor.noParams")}
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-max border-collapse text-sm">
             <thead>
               <tr>
-                <th className="border-b border-border px-3 py-2 text-left font-medium text-muted-foreground">维度</th>
+                <th className="border-b border-border px-3 py-2 text-left font-medium text-muted-foreground">{t("common.dimension")}</th>
                 {data.competitors.map((competitor) => (
                   <th className="border-b border-border px-3 py-2 text-left font-medium" key={competitor.name}>
                     {competitor.title}

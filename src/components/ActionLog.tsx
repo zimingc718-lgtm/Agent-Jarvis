@@ -5,6 +5,8 @@ import { History } from "lucide-react";
 import { Dialog } from "./Dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { useT } from "@/components/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n";
 
 /**
  * 操作记录（REQ-F-320 ②，DEC-430 ①；CR-20260925-write-approval-action-log）。
@@ -34,13 +36,17 @@ type ActionLogProps = {
 const DEFAULT_EFFECTS: ActionLogEntry["effect"][] = ["write", "network"];
 const PAGE = 100;
 
-const EFFECT_LABEL: Record<ActionLogEntry["effect"], string> = { read: "读", write: "写", network: "出网" };
-const OUTCOME_LABEL: Record<ActionLogEntry["outcome"], string> = {
-  ok: "成功",
-  failed: "失败",
-  aborted: "已中止",
-  refused: "被拒",
-  not_run: "未执行",
+const EFFECT_LABEL: Record<ActionLogEntry["effect"], MessageKey> = {
+  read: "actions.effect.read",
+  write: "actions.effect.write",
+  network: "actions.effect.network",
+};
+const OUTCOME_LABEL: Record<ActionLogEntry["outcome"], MessageKey> = {
+  ok: "actions.outcome.ok",
+  failed: "actions.outcome.failed",
+  aborted: "actions.outcome.aborted",
+  refused: "actions.outcome.refused",
+  not_run: "actions.outcome.notRun",
 };
 
 async function loadFromApi(input: { effects: ActionLogEntry["effect"][] | null; limit: number }) {
@@ -65,6 +71,7 @@ function formatTime(iso: string): string {
 }
 
 export function ActionLog({ load = loadFromApi }: ActionLogProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [entries, setEntries] = useState<ActionLogEntry[] | null>(null);
@@ -84,7 +91,7 @@ export function ActionLog({ load = loadFromApi }: ActionLogProps) {
       })
       .catch(() => {
         if (!cancelled) {
-          setError("操作记录读取失败。");
+          setError(t("actions.loadFailed"));
         }
       });
     return () => {
@@ -93,24 +100,24 @@ export function ActionLog({ load = loadFromApi }: ActionLogProps) {
   }, [open, showAll, load]);
 
   return (
-    <section className="action-log flex flex-col gap-1.5 rounded-md border border-border p-2" aria-label="操作记录">
-      <h3 className="action-log__title text-xs font-semibold uppercase tracking-wide text-muted-foreground">操作记录</h3>
+    <section className="action-log flex flex-col gap-1.5 rounded-md border border-border p-2" aria-label={t("actions.title")}>
+      <h3 className="action-log__title text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("actions.title")}</h3>
 
       {/* Entry row: same shape as 「搜索设置」, so the drawer reads as one list. */}
       <Button type="button" variant="ghost" className="w-full justify-start gap-2" onClick={() => setOpen(true)}>
         <History aria-hidden="true" className="size-4" />
-        查看操作记录
+        {t("actions.open")}
       </Button>
-      <p className="action-log__summary px-3 text-xs text-muted-foreground">模型做过的每一次工具调用，跨会话可查</p>
+      <p className="action-log__summary px-3 text-xs text-muted-foreground">{t("actions.subtitle")}</p>
 
-      <Dialog open={open} title="操作记录" onClose={() => setOpen(false)}>
+      <Dialog open={open} title={t("actions.title")} onClose={() => setOpen(false)}>
         <div className="action-log__body flex flex-col gap-3">
           <label className="action-log__filter flex items-center justify-between gap-2 text-sm">
             <span>
-              显示全部
-              <span className="mt-0.5 block text-xs text-muted-foreground">关闭时只列「写」与「出网」两类；打开后包含只读调用</span>
+              {t("actions.showAll")}
+              <span className="mt-0.5 block text-xs text-muted-foreground">{t("actions.showAllHint")}</span>
             </span>
-            <Switch aria-label="显示全部工具调用" checked={showAll} onCheckedChange={setShowAll} />
+            <Switch aria-label={t("actions.showAllAria")} checked={showAll} onCheckedChange={setShowAll} />
           </label>
 
           {error ? (
@@ -119,11 +126,11 @@ export function ActionLog({ load = loadFromApi }: ActionLogProps) {
             </p>
           ) : entries === null ? (
             <p className="action-log__loading text-xs text-muted-foreground" role="status">
-              读取中…
+              {t("common.loading")}
             </p>
           ) : entries.length === 0 ? (
             <p className="action-log__empty text-xs text-muted-foreground" role="status">
-              {showAll ? "还没有任何工具调用。" : "还没有写入或出网类的调用；打开「显示全部」可查看只读调用。"}
+              {showAll ? t("actions.emptyAll") : t("actions.emptyFiltered")}
             </p>
           ) : (
             <ul className="action-log__items flex max-h-[60vh] flex-col gap-1 overflow-y-auto text-xs">
@@ -133,10 +140,10 @@ export function ActionLog({ load = loadFromApi }: ActionLogProps) {
                     <time className="action-log__time text-muted-foreground" dateTime={entry.createdAt}>
                       {formatTime(entry.createdAt)}
                     </time>
-                    <span className="action-log__effect rounded bg-muted px-1 text-[11px]">{EFFECT_LABEL[entry.effect]}</span>
+                    <span className="action-log__effect rounded bg-muted px-1 text-[11px]">{t(EFFECT_LABEL[entry.effect])}</span>
                     <span className="action-log__tool font-medium">{entry.tool}</span>
                     <span className={`action-log__outcome ${entry.outcome === "ok" ? "text-muted-foreground" : "text-destructive"}`}>
-                      {OUTCOME_LABEL[entry.outcome]}
+                      {t(OUTCOME_LABEL[entry.outcome])}
                     </span>
                   </div>
                   <span className="action-log__args truncate text-muted-foreground" title={entry.argsSummary}>
@@ -146,7 +153,7 @@ export function ActionLog({ load = loadFromApi }: ActionLogProps) {
                     {entry.summary}
                   </span>
                   <span className="action-log__conversation truncate text-muted-foreground" title={entry.conversationTitle ?? entry.conversationId}>
-                    会话：{entry.conversationTitle ?? entry.conversationId}
+                    {t("actions.conversation", { title: entry.conversationTitle ?? entry.conversationId })}
                   </span>
                 </li>
               ))}

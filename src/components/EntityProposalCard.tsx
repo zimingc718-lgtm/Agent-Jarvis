@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { KNOWLEDGE_CHANGED_EVENT } from "@/lib/ui-events";
+import { useT } from "@/components/LanguageProvider";
 
 /**
  * 对话内提议卡（INPUT-2026-09-15-029 第 2 条「支持对话阅读，编辑」；CR-20260915-entity-proposal-card）。
@@ -42,6 +43,7 @@ function routeFor(payload: EntityProposalPayload): string {
 }
 
 export function EntityProposalCard({ payload, act = actViaApi }: EntityProposalCardProps) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
 
@@ -53,14 +55,14 @@ export function EntityProposalCard({ payload, act = actViaApi }: EntityProposalC
     try {
       const result = await act(decision === "adopted" ? "POST" : "DELETE", routeFor(payload));
       if (result.ok) {
-        setOutcome({ kind: decision, note: decision === "adopted" ? "已采纳。" : "已忽略。" });
+        setOutcome({ kind: decision, note: decision === "adopted" ? t("common.adopted") : t("common.ignored") });
         // 看板是同一份数据的另一扇门：卡片这边一旦有了结果，那边的待采纳队列也要跟着动。
         window.dispatchEvent(new Event(KNOWLEDGE_CHANGED_EVENT));
       } else {
-        setOutcome({ kind: "error", note: result.message ?? "操作失败。" });
+        setOutcome({ kind: "error", note: result.message ?? t("common.actionFailed") });
       }
     } catch {
-      setOutcome({ kind: "error", note: "操作失败：网络错误。" });
+      setOutcome({ kind: "error", note: t("common.actionFailedNetwork") });
     } finally {
       setBusy(false);
     }
@@ -68,12 +70,12 @@ export function EntityProposalCard({ payload, act = actViaApi }: EntityProposalC
 
   const headline =
     payload.what === "entity"
-      ? `模型提议跟踪对象「${payload.title}」`
-      : `模型提议把「${payload.entity}」的 ${payload.field} 改为「${payload.value}」`;
+      ? t("entityCard.proposeTrackAria", { title: payload.title })
+      : t("entityCard.proposeChangeAria", { entity: payload.entity, field: payload.field, value: payload.value });
 
   return (
     <div
-      aria-label={payload.what === "entity" ? `提议新对象「${payload.title}」` : `提议修改「${payload.entity}」的 ${payload.field}`}
+      aria-label={payload.what === "entity" ? t("entityCard.proposeNew", { title: payload.title }) : t("entityCard.proposeChange", { entity: payload.entity, field: payload.field })}
       className="entity-proposal-card flex flex-col gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-xs"
       role="region"
     >
@@ -90,7 +92,7 @@ export function EntityProposalCard({ payload, act = actViaApi }: EntityProposalC
             onClick={() => void decide("adopted")}
             type="button"
           >
-            采纳
+            {t("common.adopt")}
           </button>
           <button
             className="entity-proposal-card__discard rounded px-1 text-muted-foreground underline underline-offset-2 disabled:opacity-50"
@@ -98,7 +100,7 @@ export function EntityProposalCard({ payload, act = actViaApi }: EntityProposalC
             onClick={() => void decide("discarded")}
             type="button"
           >
-            忽略
+            {t("common.ignore")}
           </button>
         </div>
       )}

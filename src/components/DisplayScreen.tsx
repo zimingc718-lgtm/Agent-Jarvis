@@ -18,14 +18,20 @@ import {
   DISPLAY_CHANGED_EVENT,
   DISPLAY_STAGE_EVENT,
   SETTINGS_PANEL_EVENT,
-  SETTINGS_PANEL_LABEL,
   type DisplayStage,
   type DisplayView,
   type SettingsPanel,
 } from "@/lib/ui-events";
+import { useT } from "@/components/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n";
 
-const NOTICE_TEXT =
-  "以下内容由大模型生成，在沙箱中隔离显示。内容未经核实，请勿在其中输入敏感信息。";
+/** Heading and aria label of each on-screen settings panel (REQ-F-200 ②), through the dictionary (REQ-F-340). */
+const PANEL_KEY: Record<SettingsPanel, MessageKey> = {
+  models: "display.panel.models",
+  skills: "display.panel.skills",
+  tools: "display.panel.tools",
+  library: "display.panel.library",
+};
 
 /**
  * The opening (CR-20260912-display-stage; user ruling 2026-09-11).
@@ -89,7 +95,7 @@ type DisplayScreenProps = {
   /** Test seam. */
   fetchView?: () => Promise<DisplayView>;
   /** 测试缝：归档一份报告（REQ-F-190 ⑦）。 */
-  archiveInsight?: (insightId: string) => Promise<{ ok: boolean; id?: string; message?: string }>;
+  archiveInsight?: (insightId: string) => Promise<{ ok: boolean; id?: string; message?: string; status?: number }>;
   /** 「模型」面板要的两份服务端数据；缺省时该面板提示去 ☰ 配置（REQ-F-200 ②）。 */
   providerTemplates?: ProviderTemplate[];
   savedProviders?: ProviderSummary[];
@@ -110,7 +116,8 @@ async function archiveViaApi(insightId: string) {
     body: JSON.stringify({ insightId }),
   });
   const body = (await response.json().catch(() => ({}))) as { id?: string; message?: string };
-  return response.ok ? { ok: true, id: body.id } : { ok: false, message: body.message ?? `归档失败（${response.status}）。` };
+  // No wording here: the component says what failed, in the interface language (REQ-F-340).
+  return response.ok ? { ok: true, id: body.id } : { ok: false, message: body.message, status: response.status };
 }
 
 export function DisplayScreen({
@@ -120,6 +127,7 @@ export function DisplayScreen({
   providerTemplates,
   savedProviders,
 }: DisplayScreenProps) {
+  const t = useT();
   /** 屏上当前打开的设置面板；null 表示没开（REQ-F-200 ②）。 */
   const [panel, setPanel] = useState<SettingsPanel | null>(null);
   // 归档结果就地回话：写到哪儿了、或者为什么没写成。不弹窗——报告是主角。
@@ -248,7 +256,7 @@ export function DisplayScreen({
     return (
       <section
         className="display-screen display-screen--settings fixed inset-0 z-0 flex flex-col overflow-y-auto bg-background"
-        aria-label={`${SETTINGS_PANEL_LABEL[panel]}设置`}
+        aria-label={t("display.panelSettingsAria", { panel: t(PANEL_KEY[panel]) })}
       >
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2">
           <button
@@ -257,9 +265,9 @@ export function DisplayScreen({
             type="button"
           >
             <ArrowLeft aria-hidden="true" className="mr-1 inline size-3.5" />
-            返回
+            {t("common.back")}
           </button>
-          <h2 className="text-sm font-medium">{SETTINGS_PANEL_LABEL[panel]}</h2>
+          <h2 className="text-sm font-medium">{t(PANEL_KEY[panel])}</h2>
         </div>
         <div className="mx-auto w-full max-w-3xl px-4 py-4">
           {panel === "tools" ? <ToolPanel /> : null}
@@ -271,7 +279,7 @@ export function DisplayScreen({
             ) : (
               // 没拿到模板就明说，而不是画一个空表单让人填了保存不了。
               <p className="text-sm text-muted-foreground">
-                这台服务尚未就绪（存储未配置或未登录），模型设置暂时打不开。配置好后刷新页面即可。
+                {t("display.settingsNotReady")}
               </p>
             )
           ) : null}
@@ -284,7 +292,7 @@ export function DisplayScreen({
     return (
       <section
         className="display-screen display-screen--insight fixed inset-0 z-0 flex flex-col bg-background"
-        aria-label="技能洞察"
+        aria-label={t("display.skillInsight")}
       >
         {/* CP-7: non-dismissible — no close control, no Escape handler. */}
         <div
@@ -292,7 +300,7 @@ export function DisplayScreen({
           role="note"
         >
           <ShieldAlert aria-hidden="true" className="size-4 shrink-0" />
-          <span>{NOTICE_TEXT}</span>
+          <span>{t("display.sandboxNotice")}</span>
         </div>
         {/* 归档动作单独一行，不放进提示条：那条提示「不可关闭」是一条 UI 契约（LB-09），
             它的断言方式是「提示条里没有任何按钮」。把动作塞进去会把那条守卫一起拆掉——
@@ -307,12 +315,17 @@ export function DisplayScreen({
                 setArchiveNote(null);
                 const result = await archiveInsight(view.refId as string);
                 setArchiving(false);
-                setArchiveNote(result.ok ? `已归档为 ${result.id}` : result.message ?? "归档失败。");
+                setArchiveNote(
+                  result.ok
+                    ? t("display.archived", { id: result.id ?? "" })
+                    : (result.message ??
+                      (result.status ? t("display.archiveFailedStatus", { status: result.status }) : t("display.archiveFailed")))
+                );
               }}
               type="button"
             >
               <Archive aria-hidden="true" className="mr-1 inline size-3.5" />
-              {archiving ? "归档中…" : "归档到本地文档库"}
+              {archiving ? t("display.archiving") : t("display.archiveToLibrary")}
             </button>
             {archiveNote ? (
               <span className="display-screen__archive-note min-w-0 truncate text-xs text-muted-foreground" aria-live="polite">
@@ -324,7 +337,7 @@ export function DisplayScreen({
         <iframe
           className="display-screen__frame min-h-0 w-full flex-1 border-0 bg-background"
           sandbox="allow-scripts"
-          title="技能洞察报告"
+          title={t("display.skillInsightReport")}
           srcDoc={buildInsightDocument(view.html, theme)}
         />
       </section>
@@ -345,7 +358,7 @@ export function DisplayScreen({
     return (
       <section
         className="display-screen display-screen--document fixed inset-0 z-0 flex flex-col bg-background"
-        aria-label="本机文档"
+        aria-label={t("display.localDocument")}
       >
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2">
           <h2 className="min-w-0 flex-1 truncate text-sm font-medium">{filename}</h2>
@@ -355,7 +368,7 @@ export function DisplayScreen({
             rel="noreferrer noopener"
             target="_blank"
           >
-            新标签页打开
+            {t("display.openInNewTab")}
           </a>
         </div>
         {inline ? (
@@ -368,7 +381,7 @@ export function DisplayScreen({
         ) : (
           <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-muted-foreground">
             <p>
-              「{ext ? ext.slice(1).toUpperCase() : "该"}」格式浏览器无法直接预览，点右上角「新标签页打开」查看或下载原文件。
+              {t("display.previewUnavailable", { format: ext ? ext.slice(1).toUpperCase() : t("display.unknownFormat") })}
             </p>
           </div>
         )}
@@ -444,14 +457,14 @@ export function DisplayScreen({
           Agent-Jarvis
         </h1>
         <p className="mt-4 text-balance text-base text-muted-foreground">
-          本机运行的动态显示屏。在下方对话框提问；技能洞察与其它内容会在这里呈现。
+          {t("display.intro")}
         </p>
         <button
           className="display-screen__enter mt-6 rounded px-2 py-1 text-xs text-muted-foreground underline underline-offset-4"
           onClick={enterBoard}
           type="button"
         >
-          进入知识看板
+          {t("display.enterBoard")}
         </button>
       </div>
     </section>

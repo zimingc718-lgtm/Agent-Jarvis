@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils";
 import type { ProviderTemplate } from "@/lib/providers";
 import type { ProviderAuthMode, ProviderKind, ProviderSummary } from "@/lib/types";
+import { useT } from "@/components/LanguageProvider";
 
 type ModelSettingsProps = {
   templates: ProviderTemplate[];
@@ -48,6 +49,7 @@ function stateFromTemplate(template: ProviderTemplate): ProviderFormState {
 }
 
 export function ModelSettings({ templates, providers }: ModelSettingsProps) {
+  const t = useT();
   const [form, setForm] = useState<ProviderFormState>(() => stateFromTemplate(templates[0]));
   const [savedProviders, setSavedProviders] = useState(providers);
   const [status, setStatus] = useState("Ready");
@@ -241,7 +243,7 @@ export function ModelSettings({ templates, providers }: ModelSettingsProps) {
           <h2 className="text-sm font-semibold tracking-tight">Saved providers</h2>
           {showReorder ? (
             <p className="dialog__note text-sm text-muted-foreground">
-              优先级从上到下递减；对话自动使用最靠上、连接有效的 Provider。
+              {t("models.priorityHint")}
             </p>
           ) : null}
           {savedProviders.length > 0 ? (
@@ -290,7 +292,7 @@ export function ModelSettings({ templates, providers }: ModelSettingsProps) {
                               <ArrowUp aria-hidden="true" className="size-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>提高优先级</TooltipContent>
+                          <TooltipContent>{t("models.raisePriority")}</TooltipContent>
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -306,7 +308,7 @@ export function ModelSettings({ templates, providers }: ModelSettingsProps) {
                               <ArrowDown aria-hidden="true" className="size-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>降低优先级</TooltipContent>
+                          <TooltipContent>{t("models.lowerPriority")}</TooltipContent>
                         </Tooltip>
                       </>
                     ) : null}

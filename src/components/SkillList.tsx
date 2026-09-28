@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { SKILLS_CHANGED_EVENT } from "@/lib/ui-events";
+import { useT } from "@/components/LanguageProvider";
 
 export type SkillListEntry = { id: string; name: string; description: string };
 
@@ -59,6 +60,7 @@ export function SkillList({
   fetchProposals = fetchProposalsFromApi,
   decideProposal = decideViaApi,
 }: SkillListProps) {
+  const t = useT();
   const [skills, setSkills] = useState<SkillListEntry[]>(initialSkills);
   const [proposals, setProposals] = useState<SkillProposalEntry[]>([]);
   const [pending, setPending] = useState<string | null>(null);
@@ -103,7 +105,7 @@ export function SkillList({
 
   /** REQ-F-031 ②: deletion is irreversible, so it asks first. */
   const remove = async (name: string) => {
-    if (!window.confirm(`删除技能「${name}」？该操作不可撤销。`)) {
+    if (!window.confirm(t("skills.deleteConfirm", { name }))) {
       return;
     }
     setPending(name);
@@ -111,19 +113,19 @@ export function SkillList({
     try {
       const response = await fetch(`/api/skills/${encodeURIComponent(name)}`, { method: "DELETE" });
       const body = (await response.json().catch(() => ({}))) as { message?: string; warning?: string };
-      setNotice(response.ok ? (body.warning ?? `已删除「${name}」。`) : (body.message ?? "删除失败。"));
+      setNotice(response.ok ? (body.warning ?? t("skills.deleted", { name })) : (body.message ?? t("skills.deleteFailed")));
       if (response.ok) {
         refresh();
       }
     } catch {
-      setNotice("删除失败：网络错误。");
+      setNotice(t("skills.deleteFailedNetwork"));
     } finally {
       setPending(null);
     }
   };
 
   const rename = async (name: string) => {
-    const next = window.prompt(`把「${name}」重命名为：`, name)?.trim();
+    const next = window.prompt(t("skills.renamePrompt", { name }), name)?.trim();
     if (!next || next === name) {
       return;
     }
@@ -136,12 +138,12 @@ export function SkillList({
         body: JSON.stringify({ name: next }),
       });
       const body = (await response.json().catch(() => ({}))) as { message?: string };
-      setNotice(response.ok ? `已重命名为「${next}」。` : (body.message ?? "重命名失败。"));
+      setNotice(response.ok ? t("skills.renamed", { name: next }) : (body.message ?? t("skills.renameFailed")));
       if (response.ok) {
         refresh();
       }
     } catch {
-      setNotice("重命名失败：网络错误。");
+      setNotice(t("skills.renameFailedNetwork"));
     } finally {
       setPending(null);
     }
@@ -157,24 +159,24 @@ export function SkillList({
         `/api/skills/proposals/${encodeURIComponent(proposal.id)}`
       );
       if (result.ok) {
-        setNotice(decision === "adopted" ? `已注册「${proposal.name}」。` : `已忽略「${proposal.name}」。`);
+        setNotice(decision === "adopted" ? t("skills.proposalRegistered", { name: proposal.name }) : t("skills.proposalIgnored", { name: proposal.name }));
         refresh();
       } else {
-        setNotice(result.message ?? (decision === "adopted" ? "采纳失败。" : "忽略失败。"));
+        setNotice(result.message ?? (decision === "adopted" ? t("skills.adoptFailed") : t("skills.ignoreFailed")));
       }
     } catch {
-      setNotice("操作失败：网络错误。");
+      setNotice(t("common.actionFailedNetwork"));
     } finally {
       setPending(null);
     }
   };
 
   return (
-    <section className="skill-list flex flex-col gap-1.5 rounded-md border border-border p-2" aria-label="已注册技能">
-      <h3 className="skill-list__title text-xs font-semibold uppercase tracking-wide text-muted-foreground">技能</h3>
+    <section className="skill-list flex flex-col gap-1.5 rounded-md border border-border p-2" aria-label={t("skills.registeredAria")}>
+      <h3 className="skill-list__title text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("skills.title")}</h3>
       {proposals.length > 0 ? (
-        <div className="skill-list__proposals flex flex-col gap-0.5" aria-label="待确认的技能提议">
-          <p className="skill-list__proposals-title text-xs text-muted-foreground">待确认（模型提议，采纳后才注册）</p>
+        <div className="skill-list__proposals flex flex-col gap-0.5" aria-label={t("skills.pendingAria")}>
+          <p className="skill-list__proposals-title text-xs text-muted-foreground">{t("skills.pendingHeading")}</p>
           <ul className="flex flex-col gap-0.5">
             {proposals.map((proposal) => (
               <li key={proposal.id} className="skill-list__proposal flex min-h-9 items-center gap-2">
@@ -188,7 +190,7 @@ export function SkillList({
                   disabled={pending === proposal.id}
                   onClick={() => void decide(proposal, "adopted")}
                 >
-                  采纳
+                  {t("common.adopt")}
                 </button>
                 <button
                   type="button"
@@ -196,7 +198,7 @@ export function SkillList({
                   disabled={pending === proposal.id}
                   onClick={() => void decide(proposal, "discarded")}
                 >
-                  忽略
+                  {t("common.ignore")}
                 </button>
               </li>
             ))}
@@ -204,7 +206,7 @@ export function SkillList({
         </div>
       ) : null}
       {skills.length === 0 ? (
-        <p className="skill-list__empty text-sm text-muted-foreground">尚未注册技能</p>
+        <p className="skill-list__empty text-sm text-muted-foreground">{t("skills.empty")}</p>
       ) : (
         <ul className="skill-list__items flex flex-col gap-0.5">
           {skills.map((skill) => {
@@ -225,10 +227,10 @@ export function SkillList({
                     type="button"
                     className="skill-list__more shrink-0 rounded px-1 text-xs text-muted-foreground underline underline-offset-2"
                     aria-expanded={disclosed}
-                    aria-label={disclosed ? `收起 ${skill.name} 的操作` : `更多：${skill.name}`}
+                    aria-label={disclosed ? t("skills.collapseActionsAria", { name: skill.name }) : t("skills.moreAria", { name: skill.name })}
                     onClick={() => setOpenActions(disclosed ? null : skill.name)}
                   >
-                    {disclosed ? "收起" : "更多"}
+                    {disclosed ? t("common.collapse") : t("common.more")}
                   </button>
                 </div>
                 {disclosed ? (
@@ -239,7 +241,7 @@ export function SkillList({
                       disabled={pending === skill.name}
                       onClick={() => void rename(skill.name)}
                     >
-                      重命名
+                      {t("skills.rename")}
                     </button>
                     <button
                       type="button"
@@ -247,7 +249,7 @@ export function SkillList({
                       disabled={pending === skill.name}
                       onClick={() => void remove(skill.name)}
                     >
-                      删除
+                      {t("common.delete")}
                     </button>
                   </span>
                 ) : null}

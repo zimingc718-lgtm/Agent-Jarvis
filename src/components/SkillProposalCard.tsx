@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { SKILLS_CHANGED_EVENT } from "@/lib/ui-events";
+import { useT } from "@/components/LanguageProvider";
 
 /**
  * 对话内技能提议卡（REQ-F-320 ①，DEC-430 ②；CR-20260925-write-approval-action-log）。
@@ -28,6 +29,7 @@ async function actViaApi(method: "POST" | "DELETE", url: string) {
 }
 
 export function SkillProposalCard({ payload, act = actViaApi }: SkillProposalCardProps) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
 
@@ -41,15 +43,15 @@ export function SkillProposalCard({ payload, act = actViaApi }: SkillProposalCar
       if (result.ok) {
         setOutcome({
           kind: decision,
-          note: decision === "adopted" ? `已注册技能「${payload.name}」。` : "已忽略，未注册。",
+          note: decision === "adopted" ? t("skillCard.registered", { name: payload.name }) : t("skillCard.ignored"),
         });
         // ☰「技能」是同一份数据的另一扇门：这边有了结果，那边的待确认区与技能列表都要跟着动。
         window.dispatchEvent(new Event(SKILLS_CHANGED_EVENT));
       } else {
-        setOutcome({ kind: "error", note: result.message ?? "操作失败。" });
+        setOutcome({ kind: "error", note: result.message ?? t("common.actionFailed") });
       }
     } catch {
-      setOutcome({ kind: "error", note: "操作失败：网络错误。" });
+      setOutcome({ kind: "error", note: t("common.actionFailedNetwork") });
     } finally {
       setBusy(false);
     }
@@ -57,12 +59,12 @@ export function SkillProposalCard({ payload, act = actViaApi }: SkillProposalCar
 
   return (
     <div
-      aria-label={`提议注册技能「${payload.name}」`}
+      aria-label={t("skillCard.proposeAria", { name: payload.name })}
       className="skill-proposal-card flex flex-col gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-xs"
       role="region"
     >
       <p>
-        模型提议注册技能「{payload.name}」：<span className="text-muted-foreground">{payload.description}</span>
+        {t("skillCard.proposeText", { name: payload.name })}<span className="text-muted-foreground">{payload.description}</span>
       </p>
       {outcome ? (
         <p className={outcome.kind === "error" ? "text-destructive" : "text-muted-foreground"} role="status">
@@ -76,7 +78,7 @@ export function SkillProposalCard({ payload, act = actViaApi }: SkillProposalCar
             onClick={() => void decide("adopted")}
             type="button"
           >
-            采纳
+            {t("common.adopt")}
           </button>
           <button
             className="skill-proposal-card__discard rounded px-1 text-muted-foreground underline underline-offset-2 disabled:opacity-50"
@@ -84,7 +86,7 @@ export function SkillProposalCard({ payload, act = actViaApi }: SkillProposalCar
             onClick={() => void decide("discarded")}
             type="button"
           >
-            忽略
+            {t("common.ignore")}
           </button>
         </div>
       )}

@@ -239,6 +239,54 @@ function read(rel) {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* dictionary lookups → their Chinese text (CR-20260928-ui-strings-i18n) */
+/* ------------------------------------------------------------------ */
+/*
+ * Components no longer carry their own strings: `t("key")` reaches into src/lib/i18n.ts.
+ * The rules below look for the words a control carries (an aria-label, a transcript line),
+ * so they are run against the source with every lookup replaced by the zh value —
+ * `{t("k")}` → `"…"`, `t("k", {…})` → `` `…` `` (a template, as the original code was),
+ * `t("k")` → `"…"`. Unknown keys are left as they are. The rules themselves are unchanged.
+ */
+const ZH_TABLE = (() => {
+  const src = read("src/lib/i18n.ts") ?? "";
+  const start = src.indexOf("export const zh = {");
+  const end = src.indexOf("} as const satisfies Record<string, string>;", start);
+  const table = {};
+  if (start < 0 || end < 0) return table;
+  for (const m of src.slice(start, end).matchAll(/"([\w.]+)":\s*("(?:[^"\\]|\\.)*")/g)) {
+    try {
+      table[m[1]] = JSON.parse(m[2]);
+    } catch {
+      /* not a plain string value; leave the key unresolved */
+    }
+  }
+  return table;
+})();
+
+const VARS = String.raw`\{(?:[^{}]|\{[^{}]*\})*\}`;
+const RESOLVE_STEPS = [
+  [new RegExp(String.raw`\{t\("([\w.]+)",\s*` + VARS + String.raw`\)\}`, "g"), (zh) => "{`" + zh + "`}"],
+  [/\{t\("([\w.]+)"\)\}/g, (zh) => JSON.stringify(zh)],
+  [new RegExp(String.raw`\bt\("([\w.]+)",\s*` + VARS + String.raw`\)`, "g"), (zh) => "`" + zh + "`"],
+  [/\bt\("([\w.]+)"\)/g, (zh) => JSON.stringify(zh)],
+];
+
+function resolveUiStrings(src) {
+  if (!src) return src;
+  let out = src;
+  for (const [re, render] of RESOLVE_STEPS) {
+    out = out.replace(re, (whole, key) => (ZH_TABLE[key] === undefined ? whole : render(ZH_TABLE[key])));
+  }
+  return out;
+}
+
+/** Browser-facing source as the rules should see it: strings back in place of dictionary keys. */
+function readUi(rel) {
+  return resolveUiStrings(read(rel));
+}
+
 function buildContext() {
   const cssRaw = read("src/app/globals.css") ?? "";
   const css = stripComments(cssRaw);
@@ -319,18 +367,18 @@ function buildContext() {
   const filesRef = {};
   const files = {
     "globals.css": cssRaw,
-    "layout.tsx": read("src/app/layout.tsx"),
-    "page.tsx": read("src/app/page.tsx"),
-    "settings/models/page.tsx": read("src/app/settings/models/page.tsx"),
-    "FloatingChat.tsx": read("src/components/FloatingChat.tsx"),
-    "ModelSettings.tsx": read("src/components/ModelSettings.tsx"),
-    "SettingsDialog.tsx": read("src/components/SettingsDialog.tsx"),
-    "AccountDialog.tsx": read("src/components/AccountDialog.tsx"),
-    "CornerMenu.tsx": read("src/components/CornerMenu.tsx"),
-    "DisplayScreen.tsx": read("src/components/DisplayScreen.tsx"),
-    "ThemeToggle.tsx": read("src/components/ThemeToggle.tsx"),
-    "KnowledgeList.tsx": read("src/components/KnowledgeList.tsx"),
-    "WakeSettings.tsx": read("src/components/WakeSettings.tsx"),
+    "layout.tsx": readUi("src/app/layout.tsx"),
+    "page.tsx": readUi("src/app/page.tsx"),
+    "settings/models/page.tsx": readUi("src/app/settings/models/page.tsx"),
+    "FloatingChat.tsx": readUi("src/components/FloatingChat.tsx"),
+    "ModelSettings.tsx": readUi("src/components/ModelSettings.tsx"),
+    "SettingsDialog.tsx": readUi("src/components/SettingsDialog.tsx"),
+    "AccountDialog.tsx": readUi("src/components/AccountDialog.tsx"),
+    "CornerMenu.tsx": readUi("src/components/CornerMenu.tsx"),
+    "DisplayScreen.tsx": readUi("src/components/DisplayScreen.tsx"),
+    "ThemeToggle.tsx": readUi("src/components/ThemeToggle.tsx"),
+    "KnowledgeList.tsx": readUi("src/components/KnowledgeList.tsx"),
+    "WakeSettings.tsx": readUi("src/components/WakeSettings.tsx"),
     "markdown.tsx": read("src/lib/markdown.tsx"),
   };
   Object.assign(filesRef, files);

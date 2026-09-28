@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { TURN_USAGE_EVENT, USAGE_CHANGED_EVENT } from "@/lib/ui-events";
 import type { TokenUsage } from "@/lib/types";
+import { useT } from "@/components/LanguageProvider";
 
 /**
  * Search backend config and the running token total (REQ-F-038, REQ-F-037; TASK-074).
@@ -56,6 +57,7 @@ async function testViaApi(baseUrl: string) {
 }
 
 export function SearchSettings({ load = loadFromApi, save = saveToApi, test = testViaApi }: SearchSettingsProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [enabled, setEnabled] = useState(true);
   const [baseUrl, setBaseUrl] = useState("");
@@ -99,42 +101,44 @@ export function SearchSettings({ load = loadFromApi, save = saveToApi, test = te
 
   const persist = async (next: SearchSettingsValue) => {
     const result = await save(next);
-    setStatus(result.ok ? "已保存。" : (result.message ?? "保存失败。"));
+    setStatus(result.ok ? t("common.saved") : (result.message ?? t("common.saveFailed")));
   };
 
-  const summary = `联网：${enabled ? "开" : "关"}${baseUrl ? ` · ${baseUrl.replace(/^https?:\/\//, "")}` : " · 未设地址"}`;
+  const summary =
+    t("search.summary", { state: enabled ? t("common.on") : t("common.off") }) +
+    (baseUrl ? ` · ${baseUrl.replace(/^https?:\/\//, "")}` : t("search.noAddress"));
 
   return (
-    <section className="search-settings flex flex-col gap-1.5 rounded-md border border-border p-2" aria-label="搜索与用量">
+    <section className="search-settings flex flex-col gap-1.5 rounded-md border border-border p-2" aria-label={t("search.title")}>
       <h3 className="search-settings__title text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        搜索与用量
+        {t("search.title")}
       </h3>
 
       {/* Entry row: same shape as 「模型」 / 「账号登录」, so the drawer reads as one list. */}
       <Button type="button" variant="ghost" className="w-full justify-start gap-2" onClick={() => setOpen(true)}>
         <Globe aria-hidden="true" className="size-4" />
-        搜索设置
+        {t("search.settingsHeading")}
       </Button>
       <p className="search-settings__summary px-3 text-xs text-muted-foreground" aria-live="polite">
         {summary}
       </p>
 
       <p className="search-settings__usage px-3 text-xs text-muted-foreground">
-        本轮用量：
-        {turnUsage ? `输入 ${turnUsage.inputTokens} / 输出 ${turnUsage.outputTokens} tokens` : "尚无数据"}
+        {t("search.turnUsageLabel")}
+        {turnUsage ? t("search.usage", { input: turnUsage.inputTokens, output: turnUsage.outputTokens }) : t("search.noData")}
         <br />
-        本会话用量：
+        {t("search.sessionUsageLabel")}
         {usage
-          ? `输入 ${usage.inputTokens} / 输出 ${usage.outputTokens} tokens${usage.estimated ? "（估算）" : ""}`
-          : "尚无数据"}
+          ? t("search.usage", { input: usage.inputTokens, output: usage.outputTokens }) + (usage.estimated ? t("search.estimated") : "")
+          : t("search.noData")}
       </p>
 
-      <Dialog open={open} title="搜索设置" onClose={() => setOpen(false)}>
+      <Dialog open={open} title={t("search.settingsHeading")} onClose={() => setOpen(false)}>
         <div className="search-settings__form flex flex-col gap-3">
           <label className="search-settings__toggle flex items-center justify-between gap-2 text-sm">
-            <span>联网</span>
+            <span>{t("search.web")}</span>
             <Switch
-              aria-label="联网总开关"
+              aria-label={t("search.webToggleAria")}
               checked={enabled}
               onCheckedChange={(next) => {
                 setEnabled(next);
@@ -144,9 +148,9 @@ export function SearchSettings({ load = loadFromApi, save = saveToApi, test = te
           </label>
 
           <label className="search-settings__url flex flex-col gap-1 text-sm">
-            <span className="text-xs text-muted-foreground">SearXNG 地址</span>
+            <span className="text-xs text-muted-foreground">{t("search.searxngUrl")}</span>
             <input
-              aria-label="搜索服务地址"
+              aria-label={t("search.serviceUrlAria")}
               className="rounded-md border border-input bg-background px-2 py-1 text-sm"
               placeholder="http://127.0.0.1:8080"
               value={baseUrl}
@@ -159,13 +163,13 @@ export function SearchSettings({ load = loadFromApi, save = saveToApi, test = te
               helps on some blocked pages, so it has to be refusable. */}
           <label className="search-settings__browser flex items-center justify-between gap-2 text-sm">
             <span>
-              被拦截时用浏览器重试
+              {t("search.browserFallback")}
               <span className="mt-0.5 block text-xs text-muted-foreground">
-                对纯脚本渲染的页面有效；Cloudflare 一类人机校验仍读不到
+                {t("search.browserFallbackHint")}
               </span>
             </span>
             <Switch
-              aria-label="被拦截时用浏览器重试"
+              aria-label={t("search.browserFallback")}
               checked={browserFallback}
               onCheckedChange={(next) => {
                 setBrowserFallback(next);
@@ -178,16 +182,16 @@ export function SearchSettings({ load = loadFromApi, save = saveToApi, test = te
             type="button"
             className="search-settings__test self-start rounded px-1 text-xs underline underline-offset-2"
             onClick={async () => {
-              setStatus("正在测试…");
+              setStatus(t("search.testing"));
               try {
                 const result = await test(baseUrl);
                 setStatus(result.message);
               } catch {
-                setStatus("测试失败：网络错误。");
+                setStatus(t("search.testFailedNetwork"));
               }
             }}
           >
-            测试连接
+            {t("search.testConnection")}
           </button>
 
           {status ? (

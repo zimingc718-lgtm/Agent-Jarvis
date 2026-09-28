@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useT } from "@/components/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n";
 
 /**
  * 资料库审批面板（REQ-F-220 ③，CR-20260915-library-adoption CP-3）。
@@ -58,11 +60,11 @@ type LibraryPanelProps = {
   loadBrowse?: (offset: number) => Promise<BrowsePageView>;
 };
 
-const FILTER_LABEL: Record<Filter, string> = {
-  pending: "待采纳",
-  adopted: "已采纳",
-  rejected: "已拒绝",
-  all: "全部",
+const FILTER_LABEL: Record<Filter, MessageKey> = {
+  pending: "library.filter.pending",
+  adopted: "library.filter.adopted",
+  rejected: "library.filter.rejected",
+  all: "library.filter.all",
 };
 
 async function loadFromApi(filter: Filter): Promise<LibraryPanelValue> {
@@ -72,6 +74,16 @@ async function loadFromApi(filter: Filter): Promise<LibraryPanelValue> {
     throw new Error(`library fetch failed (${response.status})`);
   }
   return (await response.json()) as LibraryPanelValue;
+}
+
+/** A refused decision: the server's message when it gave one, otherwise the status for the component to word. */
+export class DecideFailedError extends Error {
+  constructor(
+    message: string | null,
+    readonly status: number
+  ) {
+    super(message ?? "");
+  }
 }
 
 async function decideViaApi(ids: string[], status: "adopted" | "rejected" | "pending"): Promise<void> {
@@ -85,7 +97,7 @@ async function decideViaApi(ids: string[], status: "adopted" | "rejected" | "pen
       .json()
       .then((body: { message?: string }) => body.message)
       .catch(() => null);
-    throw new Error(message ?? `裁定失败（${response.status}）`);
+    throw new DecideFailedError(message ?? null, response.status);
   }
 }
 
@@ -106,9 +118,10 @@ export async function loadBrowseFromApi(offset: number): Promise<BrowsePageView>
   return (await response.json()) as BrowsePageView;
 }
 
-const MODE_LABEL: Record<Mode, string> = { review: "审批", browse: "浏览" };
+const MODE_LABEL: Record<Mode, MessageKey> = { review: "library.mode.review", browse: "library.mode.browse" };
 
 export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBrowse = loadBrowseFromApi }: LibraryPanelProps) {
+  const t = useT();
   const [mode, setMode] = useState<Mode>("review");
   const [filter, setFilter] = useState<Filter>("pending");
   const [value, setValue] = useState<LibraryPanelValue | null>(null);
@@ -124,7 +137,7 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
         setValue(await load(next));
         setError(null);
       } catch {
-        setError("读不到资料库清单。服务可能正在重启，稍后再打开一次。");
+        setError(t("library.listLoadFailed"));
       }
     },
     [load]
@@ -150,7 +163,7 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
       })
       .catch(() => {
         if (!cancelled) {
-          setBrowseError("读不到浏览列表。服务可能正在重启，稍后再打开一次。");
+          setBrowseError(t("library.browseLoadFailed"));
         }
       });
     return () => {
@@ -182,7 +195,13 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
         await decide(ids, status);
         await reload(filter);
       } catch (problem) {
-        setError(problem instanceof Error ? problem.message : "裁定失败。");
+        setError(
+          problem instanceof DecideFailedError
+            ? problem.message || t("library.decideFailedStatus", { status: problem.status })
+            : problem instanceof Error
+              ? problem.message
+              : t("library.decideFailed")
+        );
       } finally {
         setBusy(false);
       }
@@ -198,12 +217,12 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
     );
   }
   if (!value) {
-    return <p className="library-panel__loading text-sm text-muted-foreground">正在读取资料库…</p>;
+    return <p className="library-panel__loading text-sm text-muted-foreground">{t("library.loading")}</p>;
   }
 
   return (
     <div className="library-panel flex flex-col gap-4">
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="视图">
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("library.viewAria")}>
         {(["review", "browse"] as Mode[]).map((option) => (
           <button
             aria-pressed={mode === option}
@@ -214,7 +233,7 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
             onClick={() => setMode(option)}
             type="button"
           >
-            {MODE_LABEL[option]}
+            {t(MODE_LABEL[option])}
           </button>
         ))}
       </div>
@@ -224,14 +243,18 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
       ) : (
         <>
           <p className="library-panel__summary text-sm text-muted-foreground">
-            共 {value.counts.total} 份 · 待采纳 {value.counts.pending} · 已采纳 {value.counts.adopted} · 已拒绝{" "}
-            {value.counts.rejected}
+            {t("library.summary", {
+              total: value.counts.total,
+              pending: value.counts.pending,
+              adopted: value.counts.adopted,
+              rejected: value.counts.rejected,
+            })}
             <span className="mt-1 block text-xs">
-              只有已采纳的资料能在对话里被检索和引用；待采纳的会被挡住，但会告诉你有多少份被挡。
+              {t("library.reviewHint")}
             </span>
           </p>
 
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="筛选">
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("library.filterAria")}>
             {(["pending", "adopted", "rejected", "all"] as Filter[]).map((option) => (
               <button
                 aria-pressed={filter === option}
@@ -242,7 +265,7 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
                 onClick={() => setFilter(option)}
                 type="button"
               >
-                {FILTER_LABEL[option]}
+                {t(FILTER_LABEL[option])}
               </button>
             ))}
           </div>
@@ -255,7 +278,7 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
 
           {groups.length === 0 ? (
             <p className="library-panel__empty text-sm text-muted-foreground">
-              {filter === "pending" ? "待采纳区是空的——都审完了。" : `没有${FILTER_LABEL[filter]}的资料。`}
+              {filter === "pending" ? t("library.pendingEmpty") : t("library.filterEmpty", { filter: t(FILTER_LABEL[filter]) })}
             </p>
           ) : null}
 
@@ -263,7 +286,7 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
             <section aria-label={key} className="flex flex-col gap-1.5" key={key}>
               <header className="flex flex-wrap items-baseline gap-2">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{key}</h3>
-                <span className="text-xs text-muted-foreground">{items.length} 份</span>
+                <span className="text-xs text-muted-foreground">{t("library.fileCount", { count: items.length })}</span>
                 {filter === "pending" ? (
                   <button
                     className="library-panel__bulk rounded border border-border px-2 py-0.5 text-xs"
@@ -271,7 +294,7 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
                     onClick={() => void act(items.map((item) => item.id), "adopted")}
                     type="button"
                   >
-                    本组全部通过
+                    {t("library.approveGroup")}
                   </button>
                 ) : null}
               </header>
@@ -283,7 +306,7 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
                       {item.no ? <span className="text-xs text-muted-foreground">{item.no}</span> : null}
                       {item.level ? <span className="text-xs text-muted-foreground">{item.level}</span> : null}
                       <span className="text-xs text-muted-foreground">
-                        {item.ext.slice(1).toUpperCase() || "文件"} · {sizeOf(item.bytes)}
+                        {item.ext.slice(1).toUpperCase() || t("library.file")} · {sizeOf(item.bytes)}
                       </span>
                     </span>
                     <span className="mt-0.5 block text-xs text-muted-foreground">
@@ -309,7 +332,7 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
                           onClick={() => void act([item.id], "adopted")}
                           type="button"
                         >
-                          通过
+                          {t("library.approve")}
                         </button>
                       ) : null}
                       {item.status !== "rejected" ? (
@@ -319,7 +342,7 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
                           onClick={() => void act([item.id], "rejected")}
                           type="button"
                         >
-                          拒绝
+                          {t("library.reject")}
                         </button>
                       ) : null}
                       {item.status !== "pending" ? (
@@ -329,12 +352,12 @@ export function LibraryPanel({ load = loadFromApi, decide = decideViaApi, loadBr
                           onClick={() => void act([item.id], "pending")}
                           type="button"
                         >
-                          撤回判断
+                          {t("library.undo")}
                         </button>
                       ) : null}
                       {item.status !== "pending" && item.decidedAt ? (
                         <span className="text-xs text-muted-foreground">
-                          {item.status === "adopted" ? "已采纳" : "已拒绝"} · {item.decidedAt.slice(0, 10)}
+                          {item.status === "adopted" ? t("library.filter.adopted") : t("library.filter.rejected")} · {item.decidedAt.slice(0, 10)}
                         </span>
                       ) : null}
                     </span>
@@ -356,17 +379,18 @@ export type LibraryBrowseViewProps = {
   onPage: (offset: number) => void;
 };
 
-const KIND_LABEL: Record<BrowseCardView["kind"], string> = { library: "资料库原件", note: "知识条目" };
+const KIND_LABEL: Record<BrowseCardView["kind"], MessageKey> = { library: "library.kind.original", note: "library.kind.entry" };
 
 /**
  * 统一浏览：已采纳原件 + 真实知识条目按同一张卡片形状呈现，分页（CP-2）。与上面的审批视图
  * 是两套独立状态——切换模式不影响对方已经取到的数据，回切时不必重新拉取。
  *
  * 导出给 `KnowledgeDashboard.tsx` 复用（CR-20260918-library-in-board CP-1）：知识看板要把
- * 这同一份"资料库"内容直接嵌进板面，而不是另起一套渲染逻辑——两处保持同一份实现，不会
+ * 这同一份t("library.title")内容直接嵌进板面，而不是另起一套渲染逻辑——两处保持同一份实现，不会
  * 走着走着就长出两份互相漂移的卡片样式。
  */
 export function LibraryBrowseView({ page, error, offset, onPage }: LibraryBrowseViewProps) {
+  const t = useT();
   if (error && !page) {
     return (
       <p className="library-panel__browse-error text-sm text-destructive" role="alert">
@@ -375,7 +399,7 @@ export function LibraryBrowseView({ page, error, offset, onPage }: LibraryBrowse
     );
   }
   if (!page) {
-    return <p className="library-panel__browse-loading text-sm text-muted-foreground">正在读取…</p>;
+    return <p className="library-panel__browse-loading text-sm text-muted-foreground">{t("common.loadingEllipsis")}</p>;
   }
 
   // `page` 来自网络响应，类型断言不做运行时校验——一个格式不对但状态码 200 的响应不该
@@ -389,7 +413,7 @@ export function LibraryBrowseView({ page, error, offset, onPage }: LibraryBrowse
   return (
     <div className="library-panel__browse flex flex-col gap-3">
       <p className="library-panel__browse-summary text-sm text-muted-foreground">
-        共 {page.total} 份
+        {t("library.total", { count: page.total })}
         {typeEntries.length > 0 ? (
           <span className="mt-1 block text-xs">
             {typeEntries.map(([type, count]) => `${type} ${count}`).join(" · ")}
@@ -404,16 +428,16 @@ export function LibraryBrowseView({ page, error, offset, onPage }: LibraryBrowse
       ) : null}
 
       {cards.length === 0 ? (
-        <p className="library-panel__browse-empty text-sm text-muted-foreground">还没有已采纳的资料或知识条目。</p>
+        <p className="library-panel__browse-empty text-sm text-muted-foreground">{t("library.adoptedEmpty")}</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
           {cards.map((card) => (
             <li className="rounded-md border border-border px-3 py-2" key={`${card.kind}-${card.id}`}>
               <span className="flex flex-wrap items-baseline gap-2">
                 <span className="text-sm font-medium">{card.title}</span>
-                <span className="text-xs text-muted-foreground">{KIND_LABEL[card.kind]}</span>
+                <span className="text-xs text-muted-foreground">{t(KIND_LABEL[card.kind])}</span>
                 {card.docType ? <span className="text-xs text-muted-foreground">{card.docType}</span> : null}
-                {card.entity ? <span className="text-xs text-muted-foreground">归属 {card.entity}</span> : null}
+                {card.entity ? <span className="text-xs text-muted-foreground">{t("library.belongsTo", { entity: card.entity })}</span> : null}
                 <span className="text-xs text-muted-foreground">{sizeOf(card.bytes)}</span>
               </span>
               <span className="mt-0.5 flex flex-wrap items-baseline gap-2 text-xs text-muted-foreground">
@@ -425,7 +449,7 @@ export function LibraryBrowseView({ page, error, offset, onPage }: LibraryBrowse
                     rel="noreferrer noopener"
                     target="_blank"
                   >
-                    查看原文
+                    {t("library.viewOriginal")}
                   </a>
                 ) : null}
                 {card.sourceUrl ? (
@@ -450,7 +474,7 @@ export function LibraryBrowseView({ page, error, offset, onPage }: LibraryBrowse
             onClick={() => onPage(Math.max(0, offset - (page.limit || BROWSE_LIMIT)))}
             type="button"
           >
-            上一页
+            {t("common.prevPage")}
           </button>
           <button
             className="rounded border border-border px-2 py-0.5 disabled:opacity-50"
@@ -458,7 +482,7 @@ export function LibraryBrowseView({ page, error, offset, onPage }: LibraryBrowse
             onClick={() => onPage(offset + (page.limit || BROWSE_LIMIT))}
             type="button"
           >
-            下一页
+            {t("common.nextPage")}
           </button>
         </span>
       </div>

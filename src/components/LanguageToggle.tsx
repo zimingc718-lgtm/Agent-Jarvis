@@ -1,24 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Languages } from "lucide-react";
-import { HTML_LANG, type UiLanguage } from "@/lib/language";
+import { useLanguage, useT } from "@/components/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n";
+import type { UiLanguage } from "@/lib/language";
 import { LANGUAGE_CHANGED_EVENT } from "@/lib/ui-events";
 import { cn } from "@/lib/utils";
 
 /**
- * ☰「语言」switch (REQ-F-330 ②③; CR-20260927-reply-language). Same shape as `ThemeToggle`,
- * but the choice lives on the server (`PUT /api/settings/language`) — it decides what the
- * model replies in for every browser, not a per-browser preference. `<html lang>` follows
- * it. The UI's own strings switching is step 2 of INPUT-2026-09-27-002 and is said so here.
+ * ☰「语言」switch (REQ-F-330 ②③, REQ-F-340; CR-20260927-reply-language, CR-20260928-ui-strings-i18n).
+ * Same shape as `ThemeToggle`, but the choice lives on the server (`PUT /api/settings/language`):
+ * it decides what the model replies in and what language the interface is in, for every
+ * browser. The live value comes from `LanguageProvider`; this component only asks the server
+ * to save the change and reverts the provider if that fails.
  */
 
 type LanguageToggleProps = {
-  /** SSR-resolved value so the switch is right on first paint. */
-  initialLanguage?: UiLanguage;
   /** Test seam. */
   save?: (language: UiLanguage) => Promise<{ ok: boolean; message?: string }>;
 };
+
+type SaveStatus = { kind: "switched" } | { kind: "failed"; message?: string } | { kind: "network" };
 
 async function saveViaApi(language: UiLanguage) {
   const response = await fetch("/api/settings/language", {
@@ -30,19 +33,16 @@ async function saveViaApi(language: UiLanguage) {
   return { ok: response.ok, message: body.message };
 }
 
-const OPTIONS: { value: UiLanguage; label: string }[] = [
-  { value: "zh", label: "中文" },
-  { value: "en", label: "English" },
+const OPTIONS: { value: UiLanguage; label: MessageKey }[] = [
+  { value: "zh", label: "language.zh" },
+  { value: "en", label: "language.en" },
 ];
 
-export function LanguageToggle({ initialLanguage = "zh", save = saveViaApi }: LanguageToggleProps) {
-  const [language, setLanguage] = useState<UiLanguage>(initialLanguage);
-  const [status, setStatus] = useState<string | null>(null);
+export function LanguageToggle({ save = saveViaApi }: LanguageToggleProps) {
+  const { language, setLanguage } = useLanguage();
+  const t = useT();
+  const [status, setStatus] = useState<SaveStatus | null>(null);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    document.documentElement.lang = HTML_LANG[language];
-  }, [language]);
 
   async function apply(next: UiLanguage) {
     if (busy || next === language) {
@@ -56,22 +56,32 @@ export function LanguageToggle({ initialLanguage = "zh", save = saveViaApi }: La
       const result = await save(next);
       if (result.ok) {
         window.dispatchEvent(new CustomEvent(LANGUAGE_CHANGED_EVENT, { detail: { language: next } }));
-        setStatus(next === "en" ? "Jarvis will reply in English." : "Jarvis 将用中文回复。");
+        setStatus({ kind: "switched" });
       } else {
         setLanguage(previous);
-        setStatus(result.message ?? "保存失败。");
+        setStatus({ kind: "failed", message: result.message });
       }
     } catch {
       setLanguage(previous);
-      setStatus("保存失败：网络错误。");
+      setStatus({ kind: "network" });
     } finally {
       setBusy(false);
     }
   }
 
+  // Rendered through `t` so the note is in the language the interface has just switched to.
+  const statusText =
+    status === null
+      ? null
+      : status.kind === "switched"
+        ? t("language.switched")
+        : status.kind === "failed"
+          ? (status.message ?? t("common.saveFailed"))
+          : t("common.saveFailedNetwork");
+
   return (
     <div className="language-toggle flex flex-col gap-1">
-      <div className="grid grid-cols-2 gap-1 rounded-md bg-muted p-1" role="group" aria-label="语言">
+      <div className="grid grid-cols-2 gap-1 rounded-md bg-muted p-1" role="group" aria-label={t("language.aria")}>
         {OPTIONS.map(({ value, label }) => {
           const active = language === value;
           return (
@@ -88,15 +98,15 @@ export function LanguageToggle({ initialLanguage = "zh", save = saveViaApi }: La
               )}
             >
               <Languages aria-hidden="true" className="size-4" />
-              {label}
+              {t(label)}
             </button>
           );
         })}
       </div>
-      <p className="language-toggle__hint px-1 text-xs text-muted-foreground">决定 Jarvis 的回复语言；界面文案的英文版下一步做。</p>
-      {status ? (
+      <p className="language-toggle__hint px-1 text-xs text-muted-foreground">{t("language.hint")}</p>
+      {statusText ? (
         <p className="language-toggle__status px-1 text-xs text-muted-foreground" role="status">
-          {status}
+          {statusText}
         </p>
       ) : null}
     </div>

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n";
 
 /**
  * 行业技术指标对比（CR-20260918-industry-spec-comparison，REQ-F-250）。
@@ -23,10 +25,10 @@ export type SpecEntityKind = "competitor" | "authority" | "customer";
 export type SpecEntity = { name: string; title: string; kind: SpecEntityKind; params: SpecParam[] };
 export type IndustrySpecComparisonData = { entities: SpecEntity[] };
 
-const KIND_LABEL: Record<SpecEntityKind, string> = {
-  competitor: "友商",
-  authority: "规则与准入方",
-  customer: "客户",
+const KIND_LABEL: Record<SpecEntityKind, MessageKey> = {
+  competitor: "common.kind.competitor",
+  authority: "common.kind.regulator",
+  customer: "common.kind.customer",
 };
 
 type IndustrySpecComparisonProps = {
@@ -53,6 +55,7 @@ async function defaultLoad(): Promise<IndustrySpecComparisonData> {
 }
 
 export function IndustrySpecComparison({ load = defaultLoad }: IndustrySpecComparisonProps) {
+  const t = useT();
   const [data, setData] = useState<IndustrySpecComparisonData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,7 +70,7 @@ export function IndustrySpecComparison({ load = defaultLoad }: IndustrySpecCompa
       })
       .catch(() => {
         if (!cancelled) {
-          setError("读不到行业指标数据。服务可能正在重启，稍后再打开一次。");
+          setError(t("industry.loadFailed"));
         }
       });
     return () => {
@@ -83,12 +86,12 @@ export function IndustrySpecComparison({ load = defaultLoad }: IndustrySpecCompa
     );
   }
   if (!data) {
-    return <p className="industry-spec-comparison__loading text-sm text-muted-foreground">正在读取行业指标数据…</p>;
+    return <p className="industry-spec-comparison__loading text-sm text-muted-foreground">{t("industry.loading")}</p>;
   }
   if (data.entities.length === 0) {
     return (
       <p className="industry-spec-comparison__empty text-sm text-muted-foreground">
-        还没有登记友商、规则与准入方或客户——先在知识看板新增一个。
+        {t("industry.empty")}
       </p>
     );
   }
@@ -104,27 +107,27 @@ export function IndustrySpecComparison({ load = defaultLoad }: IndustrySpecCompa
   }
 
   return (
-    <section aria-label="行业技术指标对比" className="industry-spec-comparison flex flex-col gap-3 p-6">
+    <section aria-label={t("industry.title")} className="industry-spec-comparison flex flex-col gap-3 p-6">
       <div>
-        <h2 className="text-lg font-semibold tracking-tight">行业技术指标对比</h2>
+        <h2 className="text-lg font-semibold tracking-tight">{t("industry.title")}</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          对比维度取自友商、规则与准入方、客户三类跟踪对象已登记的技术参数——门槛要求与产品规格摆在同一行对齐比较。
+          {t("industry.subtitle")}
         </p>
       </div>
       {dimensions.length === 0 ? (
         <p className="industry-spec-comparison__no-params text-sm text-muted-foreground">
-          这些对象还没有登记任何技术参数，可以在知识看板里补充，或让 Jarvis 从已入库的材料里抽。
+          {t("industry.noParams")}
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-max border-collapse text-sm">
             <thead>
               <tr>
-                <th className="border-b border-border px-3 py-2 text-left font-medium text-muted-foreground">维度</th>
+                <th className="border-b border-border px-3 py-2 text-left font-medium text-muted-foreground">{t("common.dimension")}</th>
                 {data.entities.map((entity) => (
                   <th className="border-b border-border px-3 py-2 text-left font-medium" key={entity.name}>
                     <div>{entity.title}</div>
-                    <div className="text-[10px] font-normal text-muted-foreground">{KIND_LABEL[entity.kind]}</div>
+                    <div className="text-[10px] font-normal text-muted-foreground">{t(KIND_LABEL[entity.kind])}</div>
                   </th>
                 ))}
               </tr>

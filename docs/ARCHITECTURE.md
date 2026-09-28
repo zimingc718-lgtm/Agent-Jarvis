@@ -1,6 +1,6 @@
 # Agent-Jarvis 架构图
 
-> 截至 2026-09-27（main `32b3cce`，CR-20260927-reply-language 分支基点）。本文件是架构图的**源**；可分享的页面版由它派生（https://claude.ai/artifact/TLFbGtPytg96k9L5PazCzA ，私有链接，改后重新发布）。
+> 截至 2026-09-28（main `5b2fa9a`，CR-20260928-ui-strings-i18n 分支基点）。本文件是架构图的**源**；可分享的页面版由它派生（https://claude.ai/artifact/TLFbGtPytg96k9L5PazCzA ，私有链接，改后重新发布）。
 > **维护规则见文末**：凡动了模块、路由、表、依赖或部署形态的 CR，都要在同一变更里更新本文件；`tests/architecture-doc.test.ts` 逐项核对附录清单，漏了直接红。
 
 一个 Node.js 进程同时提供页面与 API：浮窗对话把用户消息交给工具循环，模型在循环里读技能、查知识库、读网页与文档、提出写入提议；写入先进待确认队列，用户点采纳才生效，每次工具调用都落到操作记录。数据全部在 `.data/`（SQLite + 文件），本机与 Railway 各跑一份同样的构建。
@@ -13,13 +13,13 @@
 
 ### 1.1 浏览器界面
 
-一页三个面：全屏展示屏为底，对话与 ☰ 抽屉浮在其上（z-index 0 / 20 / 30）。组件之间只用 `window` 事件对话（`ui-events.ts`），互不 import。
+一页三个面：全屏展示屏为底，对话与 ☰ 抽屉浮在其上（z-index 0 / 20 / 30）。组件之间只用 `window` 事件对话（`ui-events.ts`），互不 import。界面文案全部出自 `src/lib/i18n.ts` 的 zh / en 字典：`page.tsx` 用服务端保存的语言（`ui.language`）渲染首帧并注入 `LanguageProvider`，组件经 `useT()` 取词，☰ 切换即时重渲染；`tests/ui-strings-guard.test.ts` 禁止组件里再出现中文字面量。
 
 | 面 | 职责 | 组件 |
 |---|---|---|
 | 展示屏 | 标题视图 / 洞察报告 / 文档；会话态看板：知识看板、竞品、行业指标对照、组织架构；设置面板可唤到屏上 | `DisplayScreen`、`KnowledgeDashboard`、`LibraryPanel`、`CompetitorBoard`、`IndustrySpecComparison`、`OrgChartBoard`、`ToolPanel`、`ModelSettings` |
 | 浮窗对话 | 消费 SSE：正文、工具步骤行、压缩边界、来源；实体提议卡 / 技能提议卡；拖放上传技能与资料；状态灯、停止、新对话、折叠 | `FloatingChat`、`EntityProposalCard`、`SkillProposalCard` |
-| ☰ 抽屉 | 外观（主题、回复语言）、模型、账号、技能（含待确认）、知识库（含待采纳）、文档设置、搜索与用量、主动唤醒、操作记录 | `CornerMenu`、`MenuSection`、`ThemeToggle`、`LanguageToggle`、`SettingsDialog`、`AccountDialog`、`SkillList`、`KnowledgeList`、`DocumentSettings`、`SearchSettings`、`WakeSettings`、`ActionLog`、`Dialog`、`ConfigWarning` |
+| ☰ 抽屉 | 外观（主题、语言——同时决定界面语言与回复语言）、模型、账号、技能（含待确认）、知识库（含待采纳）、文档设置、搜索与用量、主动唤醒、操作记录 | `CornerMenu`、`MenuSection`、`ThemeToggle`、`LanguageProvider`、`LanguageToggle`、`SettingsDialog`、`AccountDialog`、`SkillList`、`KnowledgeList`、`DocumentSettings`、`SearchSettings`、`WakeSettings`、`ActionLog`、`Dialog`、`ConfigWarning` |
 
 首帧由 RSC 注水（`src/app/page.tsx` 读服务端状态作初始 props）；之后经 `fetch` + `ReadableStream` 消费 SSE，`AbortController` 停止。
 
@@ -59,7 +59,7 @@
 | 文档与资料库 | 本地目录只读检索与读取；资料库采纳与浏览 | `documents.ts` `library.ts` `markitdown.ts`（PDF/DOCX → HTML 子进程）`document-format.ts`（按排版技能重排、按内容缓存）`pdf-text.ts` · `tools/document-tools.ts` |
 | 联网 | `web_search`（SearXNG）`read_url`（地址校验、PDF 抽取、被拦截时浏览器回退） | `tools/web-tools.ts` `tools/url-guard.ts` `tools/browser-fetch.ts` |
 | 展示与主动性 | `show_home` `show_insight` `save_insight` 与各看板阶段 | `display.ts` `display-document.ts` `insight-export.ts` · `tools/display-tools.ts`；`wake.ts` 主动唤醒（按日上限一次非流式调用） |
-| 横切 | — | `store.ts` `store-singleton.ts` `migrations.ts`（`PRAGMA user_version` 迁移框架）`user-data-paths.ts`（按用户数据根）`language.ts`（回复语言设置与指令）`transcript.ts` `send-failure.ts` `supervisor-policy.ts` `types.ts` `ui-events.ts` `utils.ts` `auth.ts` |
+| 横切 | — | `store.ts` `store-singleton.ts` `migrations.ts`（`PRAGMA user_version` 迁移框架）`user-data-paths.ts`（按用户数据根）`language.ts`（语言设置与回复指令）`i18n.ts`（界面文案字典 zh / en 与 `t`）`transcript.ts` `send-failure.ts` `supervisor-policy.ts` `types.ts` `ui-events.ts` `utils.ts` `auth.ts` |
 
 ### 1.5 数据
 
@@ -145,11 +145,11 @@ flowchart LR
 
 ## 附录 · 清单（守卫测试逐项核对）
 
-**`src/lib`**：`adapters.ts` `agent-loop.ts` `api-guard.ts` `auth.ts` `auth-guard.ts` `chat.ts` `crypto.ts` `display.ts` `display-document.ts` `document-format.ts` `documents.ts` `entities.ts` `entity-history.ts` `entity-proposals.ts` `extract.ts` `html-text.ts` `ingest.ts` `insight-export.ts` `knowledge.ts` `language.ts` `library.ts` `markitdown.ts` `migrations.ts` `pdf-text.ts` `providers.ts` `runtime-config.ts` `send-failure.ts` `skill-proposals.ts` `skills.ts` `sources.ts` `store.ts` `store-singleton.ts` `supervisor-policy.ts` `sweep.ts` `transcript.ts` `types.ts` `ui-events.ts` `user-data-paths.ts` `utils.ts` `wake.ts` `zip.ts`
+**`src/lib`**：`adapters.ts` `agent-loop.ts` `api-guard.ts` `auth.ts` `auth-guard.ts` `chat.ts` `crypto.ts` `display.ts` `display-document.ts` `document-format.ts` `documents.ts` `entities.ts` `entity-history.ts` `entity-proposals.ts` `extract.ts` `html-text.ts` `i18n.ts` `ingest.ts` `insight-export.ts` `knowledge.ts` `language.ts` `library.ts` `markitdown.ts` `migrations.ts` `pdf-text.ts` `providers.ts` `runtime-config.ts` `send-failure.ts` `skill-proposals.ts` `skills.ts` `sources.ts` `store.ts` `store-singleton.ts` `supervisor-policy.ts` `sweep.ts` `transcript.ts` `types.ts` `ui-events.ts` `user-data-paths.ts` `utils.ts` `wake.ts` `zip.ts`
 
 **`src/lib/tools`**：`browser-fetch.ts` `budget.ts` `display-tools.ts` `document-tools.ts` `entity-tools.ts` `knowledge-tools.ts` `registry.ts` `skill-tools.ts` `url-guard.ts` `web-tools.ts`
 
-**`src/components`（顶层）**：`AccountDialog` `ActionLog` `CompetitorBoard` `ConfigWarning` `CornerMenu` `Dialog` `DisplayScreen` `DocumentSettings` `EntityProposalCard` `FloatingChat` `IndustrySpecComparison` `KnowledgeDashboard` `KnowledgeList` `LanguageToggle` `LibraryPanel` `MenuSection` `ModelSettings` `OrgChartBoard` `SearchSettings` `SettingsDialog` `SkillList` `SkillProposalCard` `ThemeToggle` `ToolPanel` `WakeSettings`
+**`src/components`（顶层）**：`AccountDialog` `ActionLog` `CompetitorBoard` `ConfigWarning` `CornerMenu` `Dialog` `DisplayScreen` `DocumentSettings` `EntityProposalCard` `FloatingChat` `IndustrySpecComparison` `KnowledgeDashboard` `KnowledgeList` `LanguageProvider` `LanguageToggle` `LibraryPanel` `MenuSection` `ModelSettings` `OrgChartBoard` `SearchSettings` `SettingsDialog` `SkillList` `SkillProposalCard` `ThemeToggle` `ToolPanel` `WakeSettings`
 
 **API 路由**：见 1.2（37 条）。
 

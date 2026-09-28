@@ -11,6 +11,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { LibraryBrowseView, loadBrowseFromApi, type BrowsePageView } from "@/components/LibraryPanel";
+import { useLocale, useT } from "@/components/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n";
 
 /**
  * The knowledge board (CR-20260911-home-dashboard; design in `design/`).
@@ -81,7 +83,11 @@ export type HistoryEntry = { at: string; url: string; change: string };
  */
 const GENERAL_ENTITY = "__通用__";
 
-const PARAM_STATE_LABEL: Record<ParamState, string> = { unknown: "未判定", meets: "满足", unmet: "不满足" };
+const PARAM_STATE_LABEL: Record<ParamState, MessageKey> = {
+  unknown: "board.paramState.undetermined",
+  meets: "board.paramState.met",
+  unmet: "board.paramState.unmet",
+};
 
 /** 有出处、但那份出处没有被逐字核对过（REQ-F-180 ⑥）。 */
 function isInferred(entity: DashboardEntity, field: string): boolean {
@@ -89,12 +95,13 @@ function isInferred(entity: DashboardEntity, field: string): boolean {
 }
 
 function InferredTag() {
+  const t = useT();
   return (
     <span
       className="knowledge-dashboard__inferred shrink-0 rounded bg-amber-500/15 px-1 text-amber-700 dark:text-amber-500"
-      title="没有可核对的条目原文，本条记为推断"
+      title={t("board.inferredTitle")}
     >
-      推断
+      {t("board.inferred")}
     </span>
   );
 }
@@ -161,20 +168,24 @@ const SWEEP_INTERVAL_MAX = 24 * 60;
 /** Auto-save waits for a pause in typing; Enter and blur bypass it and commit at once. */
 const SWEEP_INTERVAL_SAVE_DEBOUNCE_MS = 500;
 
-function formatWhen(iso: string): string {
+function formatWhen(iso: string, locale: string): string {
   const at = new Date(iso);
-  return Number.isNaN(at.getTime()) ? iso : at.toLocaleString("zh-CN", { hour12: false });
+  return Number.isNaN(at.getTime()) ? iso : at.toLocaleString(locale, { hour12: false });
 }
 const EMPTY_OVERVIEW: OverviewData = { total: 0, byEntity: {}, byType: {}, unowned: 0, misses: [] };
 
-const KIND_LABEL = { competitor: "友商", authority: "规则与准入方", customer: "客户" } as const;
+const KIND_LABEL = {
+  competitor: "common.kind.competitor",
+  authority: "common.kind.regulator",
+  customer: "common.kind.customer",
+} as const satisfies Record<string, MessageKey>;
 const HEALTH_TEXT = {
-  fresh: "采集正常",
-  stale: "信息陈旧",
-  failed_fetch: "抓取失败",
-  parse_failed: "解析失败",
-  unconfigured: "未配置采集源",
-} as const;
+  fresh: "board.source.ok",
+  stale: "board.source.stale",
+  failed_fetch: "board.source.fetchFailed",
+  parse_failed: "board.source.parseFailed",
+  unconfigured: "board.source.unconfigured",
+} as const satisfies Record<string, MessageKey>;
 /** Warning and error read differently: a stale source is old, a failed one is broken. */
 const HEALTH_COLOR = {
   fresh: "text-muted-foreground",
@@ -200,7 +211,8 @@ async function saveSweepViaApi(patch: Partial<SweepState>): Promise<SweepState> 
   });
   const data = (await response.json().catch(() => ({}))) as Partial<SweepState> & { message?: string };
   if (!response.ok) {
-    throw new Error(data.message ?? "保存失败");
+    // No wording here: an empty message tells the component to say "save failed" in the interface language.
+    throw new Error(data.message ?? "");
   }
   return { ...EMPTY_SWEEP, ...data };
 }
@@ -212,7 +224,8 @@ async function runSweepViaApi(force: boolean): Promise<SweepRun> {
     body: JSON.stringify({ force }),
   });
   const data = (await response.json().catch(() => ({}))) as Partial<SweepRun> & { message?: string };
-  return { ran: data.ran === true, reason: data.reason ?? data.message ?? "巡检未执行。", remaining: data.remaining ?? 0 };
+  // An empty reason means "the sweep did not run"; the component words it (REQ-F-340).
+  return { ran: data.ran === true, reason: data.reason ?? data.message ?? "", remaining: data.remaining ?? 0 };
 }
 
 async function actViaApi(method: "POST" | "DELETE" | "PATCH", url: string, body?: unknown) {
@@ -265,6 +278,8 @@ export function KnowledgeDashboard({
   isVisible = defaultIsVisible,
   loadHistory = defaultLoadHistory,
 }: Props) {
+  const t = useT();
+  const locale = useLocale();
   const [board, setBoard] = useState<DashboardData>(initialData);
   const [overview, setOverview] = useState<OverviewData>(initialOverview);
   const [browseOffset, setBrowseOffset] = useState(0);
@@ -324,7 +339,7 @@ export function KnowledgeDashboard({
       })
       .catch(() => {
         if (!cancelled) {
-          setBrowseError("读不到资料库列表。服务可能正在重启，稍后再打开一次。");
+          setBrowseError(t("board.libraryLoadFailed"));
         }
       });
     return () => {
@@ -367,7 +382,11 @@ export function KnowledgeDashboard({
           if (cancelled || !outcome.ran) {
             return;
           }
-          setNotice(outcome.remaining > 0 ? `${outcome.reason}还有 ${outcome.remaining} 个源排队。` : outcome.reason);
+          setNotice(
+            outcome.remaining > 0
+              ? t("board.sweepQueued", { reason: outcome.reason || t("board.sweepNotRun"), remaining: outcome.remaining })
+              : outcome.reason || t("board.sweepNotRun")
+          );
           reload();
           return loadSweep().then(applySweep);
         })
@@ -381,7 +400,7 @@ export function KnowledgeDashboard({
       cancelled = true;
       clearInterval(timer);
     };
-  }, [sweep.enabled, isVisible, runSweepRound, reload, loadSweep, applySweep]);
+  }, [sweep.enabled, isVisible, runSweepRound, reload, loadSweep, applySweep, t]);
 
   /** Cancel any pending interval-save debounce on unmount so it cannot fire (or setState) after. */
   useEffect(
@@ -406,9 +425,9 @@ export function KnowledgeDashboard({
     void saveSweep({ intervalMinutes: value })
       .then((result) => {
         applySweep(result);
-        setNotice(`巡检间隔已保存为 ${result.intervalMinutes} 分钟。`);
+        setNotice(t("board.intervalSaved", { minutes: result.intervalMinutes }));
       })
-      .catch((error: Error) => setNotice(error.message));
+      .catch((error: Error) => setNotice(error.message || t("board.saveFailed")));
   };
 
   /** Auto-save after a pause in typing — the number input's own version of 改即存. */
@@ -427,12 +446,12 @@ export function KnowledgeDashboard({
     setNotice(null);
     try {
       const result = await act(method, url, body);
-      setNotice(result.ok ? label : (result.message ?? "操作失败。"));
+      setNotice(result.ok ? label : (result.message ?? t("common.actionFailed")));
       if (result.ok) {
         reload();
       }
     } catch {
-      setNotice("操作失败：网络错误。");
+      setNotice(t("common.actionFailedNetwork"));
     } finally {
       setBusy(null);
     }
@@ -493,25 +512,25 @@ export function KnowledgeDashboard({
               <span
                 className={`rounded px-1.5 text-xs ${entity.unmet > 0 ? "bg-destructive/10 text-destructive" : "bg-muted text-foreground"}`}
               >
-                {entity.unmet > 0 ? `未对上 ${entity.unmet}/${entity.params.length}` : `${entity.params.length} 条要求`}
+                {entity.unmet > 0 ? t("board.unmetOf", { unmet: entity.unmet, total: entity.params.length }) : t("board.requirementsCount", { count: entity.params.length })}
               </span>
             ) : null}
             {entity.nextDate ? (
               <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-                {entity.nextLabel || "下一步"} {entity.nextDate}
+                {entity.nextLabel || t("board.nextStep")} {entity.nextDate}
                 {isInferred(entity, "nextDate") ? <InferredTag /> : null}
               </span>
             ) : null}
           </span>
           {entity.summary ? <span className="truncate text-xs text-muted-foreground">{entity.summary}</span> : null}
           <span className={`flex items-center gap-1 text-xs ${entity.unread ? "text-foreground" : "text-muted-foreground"}`}>
-            <span className="truncate">{entity.change || "无新变更"}</span>
+            <span className="truncate">{entity.change || t("board.noChanges")}</span>
             {isInferred(entity, "change") ? <InferredTag /> : null}
           </span>
           <span className={`flex items-center gap-1.5 text-xs ${HEALTH_COLOR[entity.health]}`}>
             <SignalIcon className="shrink-0" />
-            {HEALTH_TEXT[entity.health]}
-            <span className="text-muted-foreground">{`· 库内 ${docs} 篇`}</span>
+            {t(HEALTH_TEXT[entity.health])}
+            <span className="text-muted-foreground">{t("board.docsInLibrary", { docs })}</span>
           </span>
         </button>
 
@@ -519,16 +538,16 @@ export function KnowledgeDashboard({
           <div className="knowledge-dashboard__detail mt-2 flex flex-col gap-2 border-t border-border pt-2">
             {/* 新消息清单：点击进源链接（CR-20260918-change-history-and-sources CP-1）。折叠态
                 的单行 entity.change 保持不动（快速一瞥），这里是打开卡片后的完整列表。 */}
-            <p className="text-xs font-medium text-muted-foreground">最近消息</p>
+            <p className="text-xs font-medium text-muted-foreground">{t("board.recentMessages")}</p>
             {historyBusy === entity.name ? (
-              <p className="text-xs text-muted-foreground">加载中…</p>
+              <p className="text-xs text-muted-foreground">{t("common.loadingShort")}</p>
             ) : (history[entity.name]?.length ?? 0) === 0 ? (
-              <p className="text-xs text-muted-foreground">还没有采集到变化。</p>
+              <p className="text-xs text-muted-foreground">{t("board.noChangesCollected")}</p>
             ) : (
               <ul className="knowledge-dashboard__history flex flex-col gap-1">
                 {history[entity.name]!.map((item, index) => (
                   <li className="flex items-start gap-2 text-xs" key={`${item.at}-${index}`}>
-                    <span className="shrink-0 text-muted-foreground">{formatWhen(item.at)}</span>
+                    <span className="shrink-0 text-muted-foreground">{formatWhen(item.at, locale)}</span>
                     <a
                       className="min-w-0 flex-1 truncate text-primary underline underline-offset-2"
                       href={item.url}
@@ -541,30 +560,30 @@ export function KnowledgeDashboard({
                 ))}
               </ul>
             )}
-            <p className="text-xs font-medium text-muted-foreground">技术参数与要求</p>
+            <p className="text-xs font-medium text-muted-foreground">{t("board.paramsHeading")}</p>
             {(entity.params?.length ?? 0) === 0 ? (
               <p className="text-xs text-muted-foreground">
-                还没有登记。可以在对话里让 Jarvis 从已入库的材料里抽，或者在下面直接写一条。
+                {t("board.paramsEmpty")}
               </p>
             ) : (
               <ul className="flex flex-col gap-1">
                 {entity.params.map((param) => (
                   <li className="flex items-center gap-2 text-xs" key={param.name}>
                     <span className="min-w-0 flex-1 truncate">
-                      {param.name} = {param.value || "（无值）"}
+                      {param.name} = {param.value || t("board.noValue")}
                     </span>
                     {/* 推断项必须一眼可辨（REQ-F-180 ⑥）。没有标记的才是核对过原文的那一类，
                         所以标记打在「没验证过」这一侧——沉默永远意味着更弱的那个断言。 */}
                     {isInferred(entity, param.name) ? <InferredTag /> : null}
                     {/* Only a person sets this: no source page says whether WE meet it. */}
                     <button
-                      aria-label={`${entity.title} 的 ${param.name}：我方${PARAM_STATE_LABEL[param.status]}，点击切换`}
+                      aria-label={t("board.paramToggleAria", { entity: entity.title, param: param.name, state: t(PARAM_STATE_LABEL[param.status]) })}
                       className={`knowledge-dashboard__param-status shrink-0 rounded px-1 underline underline-offset-2 disabled:opacity-50 ${PARAM_STATE_CLASS[param.status]}`}
                       disabled={busy === `param:${entity.name}`}
                       onClick={() =>
                         void run(
                           `param:${entity.name}`,
-                          `已标记「${param.name}」为${PARAM_STATE_LABEL[NEXT_PARAM_STATE[param.status]]}。`,
+                          t("board.paramMarked", { param: param.name, state: t(PARAM_STATE_LABEL[NEXT_PARAM_STATE[param.status]]) }),
                           "PATCH",
                           `/api/entities/${encodeURIComponent(entity.name)}`,
                           { action: "paramStatus", param: param.name, status: NEXT_PARAM_STATE[param.status] }
@@ -572,21 +591,21 @@ export function KnowledgeDashboard({
                       }
                       type="button"
                     >
-                      我方{PARAM_STATE_LABEL[param.status]}
+                      {t("board.ours", { state: t(PARAM_STATE_LABEL[param.status]) })}
                     </button>
                     <button
-                      aria-label={`删除 ${entity.title} 的参数 ${param.name}`}
+                      aria-label={t("board.deleteParamAria", { entity: entity.title, param: param.name })}
                       className="knowledge-dashboard__remove-param shrink-0 rounded px-1 text-destructive underline underline-offset-2 disabled:opacity-50"
                       disabled={busy === `param:${entity.name}`}
                       onClick={() =>
-                        void run(`param:${entity.name}`, "已删除参数。", "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
+                        void run(`param:${entity.name}`, t("board.paramDeleted"), "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
                           action: "removeParam",
                           param: param.name,
                         })
                       }
                       type="button"
                     >
-                      删除
+                      {t("common.delete")}
                     </button>
                   </li>
                 ))}
@@ -603,7 +622,7 @@ export function KnowledgeDashboard({
                 if (!paramName) {
                   return;
                 }
-                void run(`param:${entity.name}`, "已写入参数。", "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
+                void run(`param:${entity.name}`, t("board.paramWritten"), "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
                   action: "setParam",
                   param: paramName,
                   value: valueInput?.value.trim() ?? "",
@@ -615,24 +634,24 @@ export function KnowledgeDashboard({
               }}
             >
               <input
-                aria-label={`为 ${entity.title} 添加技术要求`}
+                aria-label={t("board.addRequirementAria", { entity: entity.title })}
                 className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1"
                 name="param"
-                placeholder="要求名，如 LVRT 持续时间"
+                placeholder={t("board.requirementNamePlaceholder")}
               />
               <input
-                aria-label={`${entity.title} 的要求取值`}
+                aria-label={t("board.requirementValueAria", { entity: entity.title })}
                 className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1"
                 name="value"
-                placeholder="取值，如 150 ms"
+                placeholder={t("board.requirementValuePlaceholder")}
               />
               <button className="shrink-0 rounded px-1 underline underline-offset-2" type="submit">
-                写入
+                {t("board.write")}
               </button>
             </form>
             {entity.capacity ? (
               <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                容量：{entity.capacity}
+                {t("board.capacity", { value: entity.capacity })}
                 {isInferred(entity, "capacity") ? <InferredTag /> : null}
               </p>
             ) : null}
@@ -645,48 +664,48 @@ export function KnowledgeDashboard({
                   className="knowledge-dashboard__sources-trigger self-start rounded px-1 text-xs underline underline-offset-2"
                   type="button"
                 >
-                  采集源设置（{entity.sources.length}）
+                  {t("board.sourcesSettings", { count: entity.sources.length })}
                 </button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>{entity.title} 的采集源</DialogTitle>
-                  <DialogDescription>登记官网、权威媒体等地址；巡检会定期抓取比对，发现变化即写入上方的消息列表。</DialogDescription>
+                  <DialogTitle>{t("board.sourcesOf", { entity: entity.title })}</DialogTitle>
+                  <DialogDescription>{t("board.sourcesHint")}</DialogDescription>
                 </DialogHeader>
                 {entity.sources.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">未配置。没有源时，这张卡的安静不代表任何事实。</p>
+                  <p className="text-xs text-muted-foreground">{t("board.sourcesEmpty")}</p>
                 ) : (
                   <ul className="flex flex-col gap-1">
                     {entity.sources.map((url) => (
                       <li className="flex items-center gap-2 text-xs" key={url}>
                         <span className="min-w-0 flex-1 truncate">{url}</span>
                         <button
-                          aria-label={`立即采集 ${entity.title} 的 ${url}`}
+                          aria-label={t("board.collectNowAria", { entity: entity.title, url })}
                           className="knowledge-dashboard__fetch-source shrink-0 rounded px-1 underline underline-offset-2 disabled:opacity-50"
                           disabled={busy === `src:${entity.name}`}
                           onClick={() =>
-                            void run(`src:${entity.name}`, "已采集。", "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
+                            void run(`src:${entity.name}`, t("board.collected"), "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
                               action: "fetch",
                               url,
                             })
                           }
                           type="button"
                         >
-                          立即采集
+                          {t("board.collectNow")}
                         </button>
                         <button
-                          aria-label={`移除 ${entity.title} 的采集源 ${url}`}
+                          aria-label={t("board.removeSourceAria", { entity: entity.title, url })}
                           className="knowledge-dashboard__remove-source shrink-0 rounded px-1 text-destructive underline underline-offset-2 disabled:opacity-50"
                           disabled={busy === `src:${entity.name}`}
                           onClick={() =>
-                            void run(`src:${entity.name}`, "已移除采集源。", "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
+                            void run(`src:${entity.name}`, t("board.sourceRemoved"), "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
                               action: "removeSource",
                               url,
                             })
                           }
                           type="button"
                         >
-                          移除
+                          {t("common.remove")}
                         </button>
                       </li>
                     ))}
@@ -699,7 +718,7 @@ export function KnowledgeDashboard({
                     const input = event.currentTarget.elements.namedItem("url") as HTMLInputElement | null;
                     const url = input?.value.trim();
                     if (url) {
-                      void run(`src:${entity.name}`, "已添加采集源。", "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
+                      void run(`src:${entity.name}`, t("board.sourceAdded"), "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
                         action: "addSource",
                         url,
                       });
@@ -708,13 +727,13 @@ export function KnowledgeDashboard({
                   }}
                 >
                   <input
-                    aria-label={`为 ${entity.title} 添加采集源`}
+                    aria-label={t("board.addSourceAria", { entity: entity.title })}
                     className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1 text-xs"
                     name="url"
                     placeholder="https://"
                   />
                   <button className="shrink-0 rounded px-1 text-xs underline underline-offset-2" type="submit">
-                    添加
+                    {t("common.add")}
                   </button>
                 </form>
                 {/* 自动配置走既有的「交给对话」路径（onAsk 已经是本卡「问 Jarvis」按钮在用的同一
@@ -725,11 +744,11 @@ export function KnowledgeDashboard({
                   <button
                     className="knowledge-dashboard__auto-sources self-start rounded px-1 text-xs text-primary underline underline-offset-2"
                     onClick={() =>
-                      onAsk(`请帮「${entity.title}」自动查找官网、权威媒体等正式信息来源，找到后登记为采集源。`)
+                      onAsk(t("board.autoSourcesPrompt", { entity: entity.title }))
                     }
                     type="button"
                   >
-                    自动配置来源（交给对话）
+                    {t("board.autoSources")}
                   </button>
                 ) : null}
               </DialogContent>
@@ -738,28 +757,28 @@ export function KnowledgeDashboard({
             {onAsk ? (
               <button
                 className="knowledge-dashboard__ask self-start rounded px-1 text-xs text-primary underline underline-offset-2"
-                onClick={() => onAsk(`关于「${entity.title}」，`)}
+                onClick={() => onAsk(t("board.askAboutPrefix", { entity: entity.title }))}
                 type="button"
               >
-                问 Jarvis 关于这个对象
+                {t("board.askJarvis")}
               </button>
             ) : null}
             {/* Deleting the whole card is heavier than removing one param or source, so it
                 sits behind the same expand step as those, plus a confirm — not on the
                 collapsed header where a stray click could reach it. */}
             <button
-              aria-label={`删除跟踪对象「${entity.title}」`}
+              aria-label={t("board.deleteEntityAria", { entity: entity.title })}
               className="knowledge-dashboard__delete-entity self-start rounded px-1 text-xs text-destructive underline underline-offset-2 disabled:opacity-50"
               disabled={busy === `delete:${entity.name}`}
               onClick={() => {
-                if (!window.confirm(`删除「${entity.title}」？会移出看板，仍留一份归档可以找回。`)) {
+                if (!window.confirm(t("board.deleteEntityConfirm", { entity: entity.title }))) {
                   return;
                 }
-                void run(`delete:${entity.name}`, `已删除「${entity.title}」。`, "DELETE", `/api/entities/${encodeURIComponent(entity.name)}`);
+                void run(`delete:${entity.name}`, t("board.entityDeleted", { entity: entity.title }), "DELETE", `/api/entities/${encodeURIComponent(entity.name)}`);
               }}
               type="button"
             >
-              删除这张卡片
+              {t("board.deleteCard")}
             </button>
           </div>
         ) : null}
@@ -788,36 +807,36 @@ export function KnowledgeDashboard({
               if (!value) {
                 return;
               }
-              void run(`new:${kind}`, `已添加「${value}」。`, "POST", "/api/entities", { kind, title: value });
+              void run(`new:${kind}`, t("board.added", { value }), "POST", "/api/entities", { kind, title: value });
               setOpen(false);
             }}
           >
             <input
-              aria-label={`新增${title}`}
+              aria-label={t("board.addKind", { kind: title })}
               autoFocus
               className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1"
               name="title"
-              placeholder={`新增${title}，填名称`}
+              placeholder={t("board.addKindNameAria", { kind: title })}
             />
             <button
               className="shrink-0 rounded px-1 underline underline-offset-2 disabled:opacity-50"
               disabled={busy === `new:${kind}`}
               type="submit"
             >
-              添加
+              {t("common.add")}
             </button>
             <button
-              aria-label={`取消新增${title}`}
+              aria-label={t("board.cancelAddKind", { kind: title })}
               className="shrink-0 rounded px-1 text-muted-foreground underline underline-offset-2"
               onClick={() => setOpen(false)}
               type="button"
             >
-              取消
+              {t("common.cancel")}
             </button>
           </form>
         ) : (
           <button
-            aria-label={`新增${title}`}
+            aria-label={t("board.addKind", { kind: title })}
             className="knowledge-dashboard__add-toggle text-lg text-muted-foreground hover:text-foreground"
             onClick={() => setOpen(true)}
             type="button"
@@ -838,7 +857,7 @@ export function KnowledgeDashboard({
       {rows.length === 0 ? (
         // The chat is one way in, not the only one: proposing through the model needs a
         // configured provider, and an empty board should not depend on that.
-        <p className="text-xs text-muted-foreground">还没有{title}。可以点 + 直接添加，也可以在对话里让 Jarvis 提议。</p>
+        <p className="text-xs text-muted-foreground">{t("board.laneEmpty", { kind: title })}</p>
       ) : null}
       <ul className={grid ? "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" : "flex flex-col gap-2"}>
         {rows.map(card)}
@@ -848,26 +867,26 @@ export function KnowledgeDashboard({
   );
 
   return (
-    <section aria-label="知识看板" className="knowledge-dashboard mx-auto flex w-full max-w-6xl flex-col gap-5 px-6 py-7">
+    <section aria-label={t("board.title")} className="knowledge-dashboard mx-auto flex w-full max-w-6xl flex-col gap-5 px-6 py-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold tracking-tight">知识看板</h2>
+        <h2 className="text-sm font-semibold tracking-tight">{t("board.title")}</h2>
         <div className="flex flex-wrap items-center gap-2 text-xs">
           {/* The spine reads first: what have we not matched. */}
           <span
             className={`rounded px-2 py-0.5 ${unmetTotal > 0 ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}
           >
-            {paramTotal === 0 ? "还没有登记技术要求" : `${unmetTotal} 条要求未对上 · 共 ${paramTotal} 条`}
+            {paramTotal === 0 ? t("board.noRequirements") : t("board.unmetSummary", { unmet: unmetTotal, total: paramTotal })}
           </span>
-          <span className="rounded bg-accent px-2 py-0.5 text-accent-foreground">{unreadCount} 项未读变更</span>
+          <span className="rounded bg-accent px-2 py-0.5 text-accent-foreground">{t("board.unreadChanges", { count: unreadCount })}</span>
           <span className={`rounded px-2 py-0.5 ${brokenCount > 0 ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
-            {brokenCount} 个采集异常
+            {t("board.brokenSources", { count: brokenCount })}
           </span>
-          <span className="rounded bg-muted px-2 py-0.5 text-muted-foreground">{waiting} 条待采纳</span>
+          <span className="rounded bg-muted px-2 py-0.5 text-muted-foreground">{t("board.waitingCount", { count: waiting })}</span>
         </div>
       </div>
 
       <section
-        aria-label="定时巡检"
+        aria-label={t("board.scheduledSweep")}
         className="knowledge-dashboard__sweep flex flex-wrap items-center gap-3 rounded-md border border-border bg-card px-3 py-2 text-xs"
       >
         <label className="flex items-center gap-1.5">
@@ -878,16 +897,16 @@ export function KnowledgeDashboard({
               setSweep((current) => ({ ...current, enabled }));
               void saveSweep({ enabled })
                 .then(applySweep)
-                .catch(() => setNotice("巡检开关保存失败。"));
+                .catch(() => setNotice(t("board.sweepToggleFailed")));
             }}
             type="checkbox"
           />
-          定时巡检
+          {t("board.scheduledSweep")}
         </label>
         <label className="flex items-center gap-1.5 text-muted-foreground">
-          每
+          {t("board.every")}
           <input
-            aria-label="巡检间隔（分钟）"
+            aria-label={t("board.sweepIntervalAria")}
             className="w-16 rounded border border-input bg-background px-1 py-0.5 text-right"
             max={SWEEP_INTERVAL_MAX}
             min={SWEEP_INTERVAL_MIN}
@@ -912,7 +931,7 @@ export function KnowledgeDashboard({
             type="number"
             value={sweep.intervalMinutes}
           />
-          分钟（{SWEEP_INTERVAL_MIN}–{SWEEP_INTERVAL_MAX}），一轮最多 {sweep.maxPerRound} 个源
+          {t("board.sweepIntervalHint", { min: SWEEP_INTERVAL_MIN, max: SWEEP_INTERVAL_MAX, perRound: sweep.maxPerRound })}
         </label>
         <button
           className="knowledge-dashboard__sweep-now rounded px-1 underline underline-offset-2 disabled:opacity-50"
@@ -922,49 +941,53 @@ export function KnowledgeDashboard({
             setNotice(null);
             void runSweepRound(true)
               .then((outcome) => {
-                setNotice(outcome.remaining > 0 ? `${outcome.reason}还有 ${outcome.remaining} 个源排队。` : outcome.reason);
+                setNotice(
+            outcome.remaining > 0
+              ? t("board.sweepQueued", { reason: outcome.reason || t("board.sweepNotRun"), remaining: outcome.remaining })
+              : outcome.reason || t("board.sweepNotRun")
+          );
                 reload();
                 return loadSweep().then(applySweep);
               })
-              .catch(() => setNotice("巡检失败：网络错误。"))
+              .catch(() => setNotice(t("board.sweepFailedNetwork")))
               .finally(() => setBusy(null));
           }}
           type="button"
         >
-          立即巡检一轮
+          {t("board.sweepNow")}
         </button>
         {/* "Never collected" and "they have been quiet" look the same; say which it is. */}
-        <span className="text-muted-foreground">{sweep.lastRun ? `上次巡检 ${formatWhen(sweep.lastRun)}` : "还没有巡检过"}</span>
+        <span className="text-muted-foreground">{sweep.lastRun ? t("board.lastSweep", { when: formatWhen(sweep.lastRun, locale) }) : t("board.neverSwept")}</span>
       </section>
 
       {waiting > 0 ? (
         <section
-          aria-label="待采纳的提议"
+          aria-label={t("board.pendingProposals")}
           className="knowledge-dashboard__pending flex flex-col gap-2 rounded-md border border-amber-500/40 bg-amber-500/5 p-3"
         >
-          <p className="text-xs font-medium">待采纳（{waiting}）— 模型提议，采纳后才进看板</p>
+          <p className="text-xs font-medium">{t("board.pendingHeading", { count: waiting })}</p>
           <ul className="flex flex-col gap-1.5">
             {board.pending.map((entity) => (
               <li className="flex flex-wrap items-center gap-2 text-xs" key={`p-${entity.name}`}>
-                <span className="font-medium">新对象：{entity.title}</span>
-                <span className="text-muted-foreground">{KIND_LABEL[entity.kind]}</span>
+                <span className="font-medium">{t("board.newEntity", { title: entity.title })}</span>
+                <span className="text-muted-foreground">{t(KIND_LABEL[entity.kind])}</span>
                 <button
-                  aria-label={`采纳新对象「${entity.title}」`}
+                  aria-label={t("board.adoptNewAria", { entity: entity.title })}
                   className="knowledge-dashboard__adopt rounded px-1 underline underline-offset-2 disabled:opacity-50"
                   disabled={busy === `pe:${entity.name}`}
-                  onClick={() => void run(`pe:${entity.name}`, `已采纳「${entity.title}」。`, "POST", `/api/entities/pending/${encodeURIComponent(entity.name)}`)}
+                  onClick={() => void run(`pe:${entity.name}`, t("board.adoptedEntity", { entity: entity.title }), "POST", `/api/entities/pending/${encodeURIComponent(entity.name)}`)}
                   type="button"
                 >
-                  采纳
+                  {t("common.adopt")}
                 </button>
                 <button
-                  aria-label={`忽略新对象「${entity.title}」`}
+                  aria-label={t("board.ignoreNewAria", { entity: entity.title })}
                   className="rounded px-1 text-muted-foreground underline underline-offset-2 disabled:opacity-50"
                   disabled={busy === `pe:${entity.name}`}
-                  onClick={() => void run(`pe:${entity.name}`, `已忽略「${entity.title}」。`, "DELETE", `/api/entities/pending/${encodeURIComponent(entity.name)}`)}
+                  onClick={() => void run(`pe:${entity.name}`, t("board.ignoredEntity", { entity: entity.title }), "DELETE", `/api/entities/pending/${encodeURIComponent(entity.name)}`)}
                   type="button"
                 >
-                  忽略
+                  {t("common.ignore")}
                 </button>
               </li>
             ))}
@@ -974,25 +997,25 @@ export function KnowledgeDashboard({
                   {proposal.entity} · {proposal.field} → {proposal.value}
                 </span>
                 <a className="text-muted-foreground underline underline-offset-2" href={proposal.url} rel="noreferrer noopener" target="_blank">
-                  出处
+                  {t("board.sourceLabel")}
                 </a>
                 <button
-                  aria-label={`采纳修改 ${proposal.entity} 的 ${proposal.field}`}
+                  aria-label={t("board.adoptChangeAria", { entity: proposal.entity, field: proposal.field })}
                   className="knowledge-dashboard__adopt-proposal rounded px-1 underline underline-offset-2 disabled:opacity-50"
                   disabled={busy === `pp:${proposal.id}`}
-                  onClick={() => void run(`pp:${proposal.id}`, "已采纳该修改。", "POST", `/api/entities/proposals/${encodeURIComponent(proposal.id)}`)}
+                  onClick={() => void run(`pp:${proposal.id}`, t("board.changeAdopted"), "POST", `/api/entities/proposals/${encodeURIComponent(proposal.id)}`)}
                   type="button"
                 >
-                  采纳
+                  {t("common.adopt")}
                 </button>
                 <button
-                  aria-label={`忽略修改 ${proposal.entity} 的 ${proposal.field}`}
+                  aria-label={t("board.ignoreChangeAria", { entity: proposal.entity, field: proposal.field })}
                   className="rounded px-1 text-muted-foreground underline underline-offset-2 disabled:opacity-50"
                   disabled={busy === `pp:${proposal.id}`}
-                  onClick={() => void run(`pp:${proposal.id}`, "已忽略该修改。", "DELETE", `/api/entities/proposals/${encodeURIComponent(proposal.id)}`)}
+                  onClick={() => void run(`pp:${proposal.id}`, t("board.changeIgnored"), "DELETE", `/api/entities/proposals/${encodeURIComponent(proposal.id)}`)}
                   type="button"
                 >
-                  忽略
+                  {t("common.ignore")}
                 </button>
               </li>
             ))}
@@ -1000,11 +1023,11 @@ export function KnowledgeDashboard({
         </section>
       ) : null}
 
-      {lane("友商", "顺序固定，不按新鲜度重排", competitors, true, "competitor")}
+      {lane(t("common.kind.competitor"), t("board.kindHint.competitor"), competitors, true, "competitor")}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {lane("规则与准入方", "状态是容量与窗口", authorities, false, "authority")}
-        {lane("客户", "容量与其技术发布", customers, false, "customer")}
+        {lane(t("common.kind.regulator"), t("board.kindHint.regulator"), authorities, false, "authority")}
+        {lane(t("common.kind.customer"), t("board.kindHint.customer"), customers, false, "customer")}
       </div>
 
       {/* CR-20260918-library-in-board CP-1：知识看板里原来只有统计数字的「知识库」板块，
@@ -1014,20 +1037,20 @@ export function KnowledgeDashboard({
           统计box 由 LibraryBrowseView 自带的类型统计取代（覆盖面更大：含已采纳原件，不止
           知识条目）；REQ-F-170 ②③ 要求的「无归属/通用」两个数**原样保留**——那是已批准的
           既有要求，与本次改动无关，不因为共处同一节就顺手删掉。 */}
-      <section aria-label="资料库" className="knowledge-dashboard__library flex flex-col gap-3">
+      <section aria-label={t("library.title")} className="knowledge-dashboard__library flex flex-col gap-3">
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="text-sm font-semibold tracking-tight">资料库</h3>
+          <h3 className="text-sm font-semibold tracking-tight">{t("library.title")}</h3>
           <span className="text-xs text-muted-foreground">
-            共 {overview.total} 条 · 无归属 {overview.unowned} 条
+            {t("board.overviewTotals", { total: overview.total, unowned: overview.unowned })}
             {/* 具名分组，不并进「无归属」（REQ-F-170 ③）：那是空串桶，这是模型明确说
                 「不属于任何对象」的一桶。两者混在一起，就看不出模型是不是在偷懒。 */}
-            {generalCount > 0 ? ` · 通用 ${generalCount} 条` : ""}
+            {generalCount > 0 ? t("board.generalCount", { count: generalCount }) : ""}
           </span>
         </div>
         <div className="rounded-md border border-border bg-card p-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">内容缺口 · 搜索无结果</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("board.gapsHeading")}</p>
           {overview.misses.length === 0 ? (
-            <p className="mt-1 text-xs text-muted-foreground">还没有查不到的检索。这里只记录真实搜过但库里没有的词。</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t("board.gapsEmpty")}</p>
           ) : (
             <ul className="mt-1 flex flex-col gap-1">
               {overview.misses.map((miss) => (

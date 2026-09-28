@@ -36,6 +36,8 @@ import { cn } from "@/lib/utils";
 import { Markdown } from "@/lib/markdown";
 import { EntityProposalCard, type EntityProposalPayload } from "@/components/EntityProposalCard";
 import { SkillProposalCard, type SkillProposalPayload } from "@/components/SkillProposalCard";
+import { useT } from "@/components/LanguageProvider";
+import { translator, type MessageKey, type Translate } from "@/lib/i18n";
 
 export type FloatingMessage = {
   id: string;
@@ -161,6 +163,7 @@ export function insertCompactionMarker(
  * cannot inspect is worse than a one-line divider.
  */
 function CompactionMarker({ row }: { row: FloatingMessage }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   return (
     <div className="floating-chat__compaction my-1 w-full" data-role="summary">
@@ -169,11 +172,11 @@ function CompactionMarker({ row }: { row: FloatingMessage }) {
         <button
           type="button"
           aria-expanded={open}
-          aria-label={open ? "收起早前对话的摘要" : "展开早前对话的摘要"}
+          aria-label={open ? t("chat.collapseSummary") : t("chat.expandSummary")}
           className="floating-chat__compaction-toggle rounded px-1 text-[11px] text-muted-foreground underline underline-offset-2"
           onClick={() => setOpen((current) => !current)}
         >
-          早前对话已压缩为摘要
+          {t("chat.summaryLabel")}
         </button>
         <span aria-hidden="true" className="h-px flex-1 bg-border" />
       </div>
@@ -193,6 +196,7 @@ function CompactionMarker({ row }: { row: FloatingMessage }) {
  * "generation failed" bubble: it is a tool result (REQ-F-016 clarification).
  */
 function ToolStepRow({ step }: { step: FloatingMessage }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const state = step.stepState ?? "running";
   const detail = step.content.trim();
@@ -213,11 +217,11 @@ function ToolStepRow({ step }: { step: FloatingMessage }) {
           <button
             type="button"
             aria-expanded={open}
-            aria-label={open ? `收起 ${step.toolName} 的结果` : `展开 ${step.toolName} 的结果`}
+            aria-label={open ? t("chat.collapseToolResult", { tool: step.toolName ?? "" }) : t("chat.expandToolResult", { tool: step.toolName ?? "" })}
             className="floating-chat__step-toggle ml-auto rounded px-1 underline underline-offset-2"
             onClick={() => setOpen((current) => !current)}
           >
-            {open ? "收起" : "详情"}
+            {open ? t("common.collapse") : t("common.details")}
           </button>
         ) : null}
       </div>
@@ -234,13 +238,13 @@ function ToolStepRow({ step }: { step: FloatingMessage }) {
  */
 type LightState = "checking" | "off" | "ready" | "busy" | "tool" | "done";
 
-const LIGHT_LABEL: Record<LightState, string> = {
-  checking: "正在检测模型连接",
-  off: "没有可用的模型",
-  ready: "模型就绪",
-  busy: "正在生成回复",
-  tool: "正在执行工具",
-  done: "回复已就绪",
+const LIGHT_LABEL: Record<LightState, MessageKey> = {
+  checking: "chat.status.probing",
+  off: "chat.status.noProvider",
+  ready: "chat.status.ready",
+  busy: "chat.status.generating",
+  tool: "chat.status.runningTools",
+  done: "chat.status.done",
 };
 
 /**
@@ -290,7 +294,7 @@ type FloatingChatProps = {
   wake?: () => Promise<WakeClientOutcome>;
   initialConversationId?: string | null;
   initialMessages?: FloatingMessage[];
-  onStream?: (request: ChatStreamRequest) => AsyncIterable<ChatStreamEvent>;
+  onStream?: (request: ChatStreamRequest, t: Translate) => AsyncIterable<ChatStreamEvent>;
   /** Test seam: resolves to whether any enabled provider answered the probe. */
   probeProviders?: () => Promise<boolean>;
 };
@@ -357,7 +361,10 @@ function writeChatCollapsed(collapsed: boolean): void {
   }
 }
 
-export async function* streamChatDeltas(request: ChatStreamRequest): AsyncIterable<ChatStreamEvent> {
+export async function* streamChatDeltas(
+  request: ChatStreamRequest,
+  t: Translate = translator("zh")
+): AsyncIterable<ChatStreamEvent> {
   const response = await fetch("/api/chat/stream", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -372,10 +379,10 @@ export async function* streamChatDeltas(request: ChatStreamRequest): AsyncIterab
 
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { message?: string } | null;
-    throw new PreStreamError(body?.message ?? "对话请求失败。");
+    throw new PreStreamError(body?.message ?? t("chat.requestFailed"));
   }
   if (!response.body) {
-    throw new PreStreamError("服务端没有返回响应流。");
+    throw new PreStreamError(t("chat.noStream"));
   }
 
   const reader = response.body.getReader();
@@ -431,6 +438,7 @@ export function FloatingChat({
   loadWake = loadWakeFromApi,
   wake = wakeViaApi,
 }: FloatingChatProps) {
+  const t = useT();
   const restored = !sessionEnded() && initialMessages.length > 0;
 
   /** 本轮累计用量，随流结束落定；新对话清空（REQ-NF-060 ④）。 */
@@ -690,7 +698,7 @@ export function FloatingChat({
     const pendingId = crypto.randomUUID();
     setMessages((current) => [
       ...current,
-      { id: pendingId, role: "system", content: `正在注册技能「${label}」…` },
+      { id: pendingId, role: "system", content: t("chat.registeringSkill", { label }) },
     ]);
     const replace = (content: string) =>
       setMessages((current) => current.map((item) => (item.id === pendingId ? { ...item, content } : item)));
@@ -699,7 +707,7 @@ export function FloatingChat({
       const form = new FormData();
       if (input.kind === "folder") {
         if (input.files.length === 0) {
-          replace("该文件夹没有可读取的文本文件，未注册。");
+          replace(t("chat.noReadableText"));
           return;
         }
         form.set("folderName", input.folderName);
@@ -719,19 +727,19 @@ export function FloatingChat({
         excluded?: Array<{ path: string; reason: string }>;
       };
       if (!response.ok) {
-        replace(data.message ?? "技能注册失败。");
+        replace(data.message ?? t("chat.skillRegisterFailed"));
         return;
       }
-      const hint = data.docGenerated ? "" : "（未生成描述，可在对话中补充）";
-      replace(`已注册技能：${data.name} — ${data.description}${hint}`);
+      const hint = data.docGenerated ? "" : t("chat.noDescriptionHint");
+      replace(t("chat.skillRegistered", { name: data.name ?? "", description: data.description ?? "", hint }));
       // REQ-F-020 ⑤: never drop content silently.
       if (data.excluded?.length) {
-        appendSystemMessage(describeExcluded(data.excluded));
+        appendSystemMessage(describeExcluded(data.excluded, t));
       }
       // REQ-F-028 ④: the ☰ menu's skill list picks this up without a reload.
       window.dispatchEvent(new Event(SKILLS_CHANGED_EVENT));
     } catch {
-      replace("技能注册失败。");
+      replace(t("chat.skillRegisterFailed"));
     }
   }
 
@@ -748,7 +756,7 @@ export function FloatingChat({
     event.preventDefault();
     setDragActive(false);
 
-    const dropped = classifyDrop(event.dataTransfer);
+    const dropped = classifyDrop(event.dataTransfer, t);
     if (dropped.kind === "folder") {
       void collectFolderFiles(dropped.entry).then((files) =>
         submitSkillUpload({ kind: "folder", folderName: dropped.name, files })
@@ -758,7 +766,7 @@ export function FloatingChat({
     } else if (dropped.kind === "note") {
       void submitKnowledgeFile(dropped.file);
     } else {
-      appendSystemMessage(`只能接收技能文件夹、zip 压缩包或文本笔记（.md / .txt），本次未处理：${dropped.reason}`);
+      appendSystemMessage(t("chat.dropRejected", { reason: dropped.reason }));
     }
   }
 
@@ -770,7 +778,7 @@ export function FloatingChat({
   async function submitKnowledgeFile(file: File) {
     applyCollapsed(false);
     const pendingId = crypto.randomUUID();
-    setMessages((current) => [...current, { id: pendingId, role: "system", content: `正在存入知识库「${file.name}」…` }]);
+    setMessages((current) => [...current, { id: pendingId, role: "system", content: t("chat.savingKnowledge", { name: file.name }) }]);
     const replace = (content: string) =>
       setMessages((current) => current.map((item) => (item.id === pendingId ? { ...item, content } : item)));
     try {
@@ -779,13 +787,13 @@ export function FloatingChat({
       const response = await fetch("/api/knowledge", { method: "POST", body: form });
       const data = (await response.json().catch(() => ({}))) as { entry?: { title: string }; message?: string };
       if (!response.ok || !data.entry) {
-        replace(data.message ?? "存入知识库失败。");
+        replace(data.message ?? t("chat.saveKnowledgeFailed"));
         return;
       }
-      replace(`已存入知识库：${data.entry.title}`);
+      replace(t("chat.savedKnowledge", { title: data.entry.title }));
       window.dispatchEvent(new Event(KNOWLEDGE_CHANGED_EVENT));
     } catch {
-      replace("存入知识库失败。");
+      replace(t("chat.saveKnowledgeFailed"));
     }
   }
 
@@ -803,12 +811,12 @@ export function FloatingChat({
         body: JSON.stringify({ content, source: "conversation" }),
       });
       const data = (await response.json().catch(() => ({}))) as { entry?: { title: string }; message?: string };
-      appendSystemMessage(response.ok && data.entry ? `已存入知识库：${data.entry.title}` : (data.message ?? "存入知识库失败。"));
+      appendSystemMessage(response.ok && data.entry ? t("chat.savedKnowledge", { title: data.entry.title }) : (data.message ?? t("chat.saveKnowledgeFailed")));
       if (response.ok) {
         window.dispatchEvent(new Event(KNOWLEDGE_CHANGED_EVENT));
       }
     } catch {
-      appendSystemMessage("存入知识库失败。");
+      appendSystemMessage(t("chat.saveKnowledgeFailed"));
     } finally {
       setSavingKnowledgeId(null);
     }
@@ -905,7 +913,7 @@ export function FloatingChat({
         message,
         conversationId: conversationId ?? undefined,
         signal: controller.signal,
-      })) {
+      }, t)) {
         if (chunk.type === "start") {
           setConversationId(chunk.conversationId);
           markSessionEnded(false);
@@ -932,7 +940,7 @@ export function FloatingChat({
           // Fires once per write, so the notice is said once per send while the flag can be
           // set every time — chunked reports emit it for each block.
           if (!producedInsight) {
-            appendSystemMessage("已生成洞察，可在展示屏查看。");
+            appendSystemMessage(t("chat.insightReady"));
           }
           producedInsight = true;
           window.dispatchEvent(new Event(DISPLAY_CHANGED_EVENT));
@@ -975,7 +983,7 @@ export function FloatingChat({
           setTurnUsage(chunk.usage);
           window.dispatchEvent(new CustomEvent(TURN_USAGE_EVENT, { detail: chunk.usage }));
         } else if (chunk.type === "truncated") {
-          appendSystemMessage(`已达 ${chunk.steps} 步上限，已停止。已完成的部分保留，可继续追问。`);
+          appendSystemMessage(t("chat.stepLimit", { steps: chunk.steps }));
         } else if (chunk.type === "tools-unavailable") {
           appendSystemMessage(chunk.reason);
         } else if (chunk.type === "notice") {
@@ -989,7 +997,7 @@ export function FloatingChat({
         } else if (chunk.type === "knowledge_pending") {
           // REQ-F-046 ③: a proposal is news the user must act on, so it is said in the
           // transcript AND the ☰ list refreshes to show the 采纳 / 忽略 controls.
-          appendSystemMessage(`模型提议了知识条目「${chunk.title}」，已放入待采纳区——在 ☰ 菜单「知识库」中采纳或忽略。`);
+          appendSystemMessage(t("chat.knowledgeProposed", { title: chunk.title }));
           window.dispatchEvent(new Event(KNOWLEDGE_CHANGED_EVENT));
         } else if (chunk.type === "entity_pending") {
           // Same shape as `knowledge_pending`, and deliberately the same refresh event:
@@ -1010,7 +1018,7 @@ export function FloatingChat({
           if (payload) {
             setMessages((current) => [...current, { id: crypto.randomUUID(), role: "system", content: "", entityProposal: payload }]);
           } else {
-            appendSystemMessage(`模型提议修改「${chunk.title}」，已放入待采纳区——在看板上采纳或忽略。`);
+            appendSystemMessage(t("chat.entityChangeProposed", { title: chunk.title }));
           }
           window.dispatchEvent(new Event(KNOWLEDGE_CHANGED_EVENT));
         } else if (chunk.type === "skill_pending") {
@@ -1182,7 +1190,7 @@ export function FloatingChat({
             aria-hidden="true"
           />
           <span className="floating-chat__sr sr-only" role="status">
-            {LIGHT_LABEL[lightState]}
+            {t(LIGHT_LABEL[lightState])}
           </span>
 
           {/* REQ-F-020 ①: an explicit intake path next to the drop target — drag-and-drop
@@ -1191,7 +1199,7 @@ export function FloatingChat({
             ref={folderInputRef}
             type="file"
             hidden
-            aria-label="选择技能文件夹"
+            aria-label={t("chat.pickSkillFolder")}
             onChange={handleFolderPicked}
             {...({ webkitdirectory: "", directory: "" } as Record<string, string>)}
           />
@@ -1199,7 +1207,7 @@ export function FloatingChat({
             ref={archiveInputRef}
             type="file"
             hidden
-            aria-label="选择技能 zip 压缩包"
+            aria-label={t("chat.pickSkillZip")}
             accept=".zip,application/zip"
             onChange={handleArchivePicked}
           />
@@ -1207,17 +1215,17 @@ export function FloatingChat({
             <DropdownMenuTrigger asChild>
               <Button type="button" variant="ghost" size="sm" className="floating-chat__upload gap-1.5">
                 <Upload aria-hidden="true" className="size-4" />
-                上传
+                {t("chat.upload")}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
               <DropdownMenuItem onSelect={() => folderInputRef.current?.click()}>
                 <FolderUp aria-hidden="true" className="size-4" />
-                文件夹
+                {t("chat.folder")}
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => archiveInputRef.current?.click()}>
                 <FileArchive aria-hidden="true" className="size-4" />
-                zip 压缩包
+                {t("chat.zip")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -1226,7 +1234,7 @@ export function FloatingChat({
               CR-20260918-unified-floating-console 之前这是独立的一行，挂在记录区下方；现在
               和状态灯/上传并作一行，理由见该 CR：状态灯/上传/模型/技能/工具/资料库都是"控制台
               本身的常驻入口"，不该因为记录区在不在屏幕上而拆成两行。 */}
-          <span className="text-xs text-muted-foreground">在屏上打开：</span>
+          <span className="text-xs text-muted-foreground">{t("chat.openOnScreen")}</span>
           {(["models", "skills", "tools", "library"] as SettingsPanel[]).map((panel) => (
             <button
               className="floating-chat__panel rounded border border-border px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground"
@@ -1238,16 +1246,16 @@ export function FloatingChat({
             </button>
           ))}
 
-          {/* 本轮用量常驻（REQ-NF-060 ④）。与展开/收起按钮都是"贴右边"的尾部元素——两个都给
+          {/* 本轮用量常驻（REQ-NF-060 ④）。与展开/收起按钮都是t("chat.dockRight")的尾部元素——两个都给
               ml-auto：flex 的自动外边距只会被先出现的那个消耗掉，后一个即便也标了 ml-auto，
               这时也没有多余空间可占，等效贴着前一个，不需要额外判断谁在谁不在时该由谁顶上。 */}
           {turnUsage ? (
             <span
               className="floating-chat__turn-usage ml-auto text-xs tabular-nums text-muted-foreground"
               aria-live="polite"
-              title="本轮累计（输入 / 输出 tokens）"
+              title={t("chat.turnUsageAria")}
             >
-              本轮 ↑{turnUsage.inputTokens.toLocaleString()} ↓{turnUsage.outputTokens.toLocaleString()}
+              {t("chat.turnUsage", { input: turnUsage.inputTokens.toLocaleString(), output: turnUsage.outputTokens.toLocaleString() })}
             </span>
           ) : null}
 
@@ -1258,7 +1266,7 @@ export function FloatingChat({
               size="icon"
               className="floating-chat__toggle ml-auto"
               aria-expanded={showTranscript}
-              aria-label={showTranscript ? "收起对话" : "展开对话"}
+              aria-label={showTranscript ? t("chat.collapseChat") : t("chat.expandChat")}
               onClick={() => applyCollapsed(showTranscript)}
             >
               <ChevronDown
@@ -1326,19 +1334,19 @@ export function FloatingChat({
                     <button
                       type="button"
                       className="floating-chat__save-knowledge mt-1 inline-flex items-center gap-1 rounded px-1 text-xs text-muted-foreground underline underline-offset-2 disabled:opacity-50"
-                      aria-label="把这条回复存入知识库"
+                      aria-label={t("chat.saveReplyAria")}
                       disabled={savingKnowledgeId === message.id}
                       onClick={() => void saveReplyToKnowledge(message)}
                     >
                       <BookmarkPlus aria-hidden="true" className="size-3" />
-                      存入知识库
+                      {t("chat.saveReply")}
                     </button>
                   ) : null}
                   {message.status === "error" ? (
-                    <span className="floating-chat__flag text-xs opacity-80"> （生成失败）</span>
+                    <span className="floating-chat__flag text-xs opacity-80"> {t("chat.generationFailed")}</span>
                   ) : null}
                   {message.status === "stopped" ? (
-                    <span className="floating-chat__flag text-xs opacity-80"> （已停止）</span>
+                    <span className="floating-chat__flag text-xs opacity-80"> {t("chat.stopped")}</span>
                   ) : null}
                   {message.sources?.length ? (
                     <ul className="floating-chat__sources mt-2 space-y-1 border-t border-border/60 pt-2 text-xs">
@@ -1384,12 +1392,12 @@ export function FloatingChat({
           {isStreaming ? (
             <Button type="button" variant="outline" className="min-h-11 gap-1.5" onClick={handleStop}>
               <Square aria-hidden="true" className="size-4" />
-              停止
+              {t("chat.stop")}
             </Button>
           ) : hasInput ? (
             <Button type="submit" className="min-h-11 gap-1.5">
               <SendHorizontal aria-hidden="true" className="size-4" />
-              发送
+              {t("chat.send")}
             </Button>
           ) : (
             <Button
@@ -1399,7 +1407,7 @@ export function FloatingChat({
               onClick={handleNewConversation}
             >
               <MessageSquarePlus aria-hidden="true" className="size-4" />
-              新对话
+              {t("chat.newConversation")}
             </Button>
           )}
         </form>
@@ -1442,28 +1450,34 @@ type DropClassification =
 
 const NOTE_EXTENSIONS = /\.(md|markdown|txt)$/i;
 
-const EXCLUDED_REASON_TEXT: Record<string, string> = {
-  binary: "二进制文件",
-  "too-large": "文件过大",
-  "not-injected": "扩展名不在白名单，已保存但不进入对话上下文",
-  "unsupported-zip-method": "压缩包内不支持的压缩方式",
+const EXCLUDED_REASON_KEY: Record<string, MessageKey> = {
+  binary: "chat.excluded.binary",
+  "too-large": "chat.excluded.tooLarge",
+  "not-injected": "chat.excluded.notInjected",
+  "unsupported-zip-method": "chat.excluded.unsupportedZip",
 };
 
 /** REQ-F-020 ⑤: say what was left out and why, instead of dropping it silently. */
-export function describeExcluded(excluded: Array<{ path: string; reason: string }>): string {
+export function describeExcluded(
+  excluded: Array<{ path: string; reason: string }>,
+  t: Translate = translator("zh")
+): string {
   const shown = excluded
     .slice(0, 5)
-    .map((item) => `${item.path}（${EXCLUDED_REASON_TEXT[item.reason] ?? item.reason}）`)
-    .join("、");
-  const rest = excluded.length > 5 ? ` 等 ${excluded.length} 个文件` : "";
-  return `以下文件未纳入技能内容：${shown}${rest}`;
+    .map((item) => {
+      const key = EXCLUDED_REASON_KEY[item.reason];
+      return t("chat.excludedItem", { path: item.path, reason: key ? t(key) : item.reason });
+    })
+    .join(t("chat.listSeparator"));
+  const rest = excluded.length > 5 ? t("chat.excludedMore", { count: excluded.length }) : "";
+  return t("chat.excludedPrefix", { list: shown + rest });
 }
 
 /**
  * Classify a drop **synchronously** — the DataTransfer item list is cleared once
  * the handler returns, so entries must be pulled out before any await.
  */
-export function classifyDrop(dataTransfer: DataTransfer): DropClassification {
+export function classifyDrop(dataTransfer: DataTransfer, t: Translate = translator("zh")): DropClassification {
   const directories: FileSystemDirectoryEntry[] = [];
   const files: File[] = [];
 
@@ -1492,15 +1506,15 @@ export function classifyDrop(dataTransfer: DataTransfer): DropClassification {
     return { kind: "note", file: files[0] };
   }
   if (directories.length > 1) {
-    return { kind: "none", reason: "一次只能拖入一个技能文件夹" };
+    return { kind: "none", reason: t("chat.oneFolderOnly") };
   }
   if (files.length > 1) {
-    return { kind: "none", reason: "一次只能拖入一个 zip 压缩包或一个文本笔记" };
+    return { kind: "none", reason: t("chat.oneZipOnly") };
   }
   if (files.length === 1) {
-    return { kind: "none", reason: `「${files[0].name}」不是 zip 压缩包，也不是 .md / .txt 文本笔记` };
+    return { kind: "none", reason: t("chat.notZipOrNote", { name: files[0].name }) };
   }
-  return { kind: "none", reason: "没有识别到文件夹、zip 压缩包或文本笔记" };
+  return { kind: "none", reason: t("chat.nothingRecognized") };
 }
 
 async function collectFolderFiles(root: FileSystemDirectoryEntry): Promise<DroppedFile[]> {

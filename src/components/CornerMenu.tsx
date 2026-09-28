@@ -2,6 +2,7 @@
 
 import { KeyboardEvent as ReactKeyboardEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { useT } from "@/components/LanguageProvider";
 
 /**
  * REQ-F-015 / REQ-F-053 / DEC-014 / DEC-032 ⑤: a fixed bottom-left ☰ trigger that opens a
@@ -28,6 +29,7 @@ const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export function CornerMenu({ children }: { children: ReactNode }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -102,7 +104,7 @@ export function CornerMenu({ children }: { children: ReactNode }) {
             className="corner-menu__panel fixed inset-y-0 left-0 flex w-[min(320px,calc(100vw-2rem))] flex-col gap-3 overflow-y-auto overscroll-contain border-r border-border bg-popover p-3 pb-24 text-popover-foreground shadow-xl motion-safe:animate-in motion-safe:slide-in-from-left motion-safe:duration-200"
             role="dialog"
             aria-modal="true"
-            aria-label="Agent-Jarvis 菜单"
+            aria-label={t("corner.menuAria")}
           >
             {children}
           </div>
@@ -114,7 +116,7 @@ export function CornerMenu({ children }: { children: ReactNode }) {
         className="corner-menu__trigger relative inline-flex size-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-lg transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={open ? "关闭菜单" : "打开菜单"}
+        aria-label={open ? t("corner.close") : t("corner.open")}
         onClick={() => setOpen((v) => !v)}
       >
         {open ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}

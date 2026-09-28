@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { WAKE_CHANGED_EVENT, WAKE_NOTICE_EVENT, type WakeClientOutcome, type WakeClientSettings } from "@/lib/ui-events";
+import { useT } from "@/components/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n";
 
 /**
  * Proactive wake-up controls in the ☰ menu (REQ-F-060 ①②③⑤, REQ-NF-020 ②; TASK-102).
@@ -52,12 +54,13 @@ async function wakeViaApi(): Promise<WakeClientOutcome> {
   return (await response.json()) as WakeClientOutcome;
 }
 
-const OUTCOME_TEXT: Record<Exclude<WakeClientOutcome["kind"], "skipped">, string> = {
-  noop: "本次唤醒：没有需要提醒的事。",
-  notice: "已在对话里给出一条主动提醒。",
+const OUTCOME_TEXT: Record<Exclude<WakeClientOutcome["kind"], "skipped">, MessageKey> = {
+  noop: "wake.nothingToRemind",
+  notice: "wake.reminded",
 };
 
 export function WakeSettings({ load = loadFromApi, save = saveToApi, wake = wakeViaApi }: WakeSettingsProps) {
+  const t = useT();
   const [enabled, setEnabled] = useState(false);
   const [intervalMinutes, setIntervalMinutes] = useState("30");
   const [dailyTokenCap, setDailyTokenCap] = useState("20000");
@@ -90,7 +93,7 @@ export function WakeSettings({ load = loadFromApi, save = saveToApi, wake = wake
 
   const persist = async (input: Partial<Pick<WakeClientSettings, "enabled" | "intervalMinutes" | "dailyTokenCap">>) => {
     const result = await save(input);
-    setStatus(result.ok ? "已保存。" : (result.message ?? "保存失败。"));
+    setStatus(result.ok ? t("common.saved") : (result.message ?? t("common.saveFailed")));
     if (result.ok && result.settings) {
       apply(result.settings);
       // The chat owns the timer; tell it the schedule changed (REQ-F-060 ④).
@@ -100,33 +103,33 @@ export function WakeSettings({ load = loadFromApi, save = saveToApi, wake = wake
 
   const wakeNow = async () => {
     setWaking(true);
-    setStatus("正在唤醒…");
+    setStatus(t("wake.waking"));
     try {
       const outcome = await wake();
       setUsage(outcome.usage);
       if (outcome.kind === "skipped") {
         setStatus(outcome.message);
       } else {
-        setStatus(OUTCOME_TEXT[outcome.kind]);
+        setStatus(t(OUTCOME_TEXT[outcome.kind]));
         if (outcome.kind === "notice") {
           window.dispatchEvent(new CustomEvent(WAKE_NOTICE_EVENT, { detail: { text: outcome.text, messageId: outcome.messageId } }));
         }
       }
     } catch (error) {
-      setStatus(`唤醒失败：${error instanceof Error ? error.message : "网络错误"}`);
+      setStatus(t("wake.failed", { message: error instanceof Error ? error.message : t("common.networkError") }));
     } finally {
       setWaking(false);
     }
   };
 
   return (
-    <section className="wake-settings flex flex-col gap-2 rounded-md border border-border p-2" aria-label="主动唤醒">
-      <h3 className="wake-settings__title text-xs font-semibold uppercase tracking-wide text-muted-foreground">主动唤醒</h3>
+    <section className="wake-settings flex flex-col gap-2 rounded-md border border-border p-2" aria-label={t("wake.title")}>
+      <h3 className="wake-settings__title text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("wake.title")}</h3>
 
       <label className="wake-settings__toggle flex items-center justify-between gap-2 text-sm">
-        <span>空闲时主动提醒</span>
+        <span>{t("wake.idleRemind")}</span>
         <Switch
-          aria-label="主动唤醒开关"
+          aria-label={t("wake.toggleAria")}
           checked={enabled}
           onCheckedChange={(next) => {
             setEnabled(next);
@@ -136,9 +139,9 @@ export function WakeSettings({ load = loadFromApi, save = saveToApi, wake = wake
       </label>
 
       <label className="wake-settings__interval flex items-center justify-between gap-2 text-sm">
-        <span className="text-xs text-muted-foreground">间隔（分钟）</span>
+        <span className="text-xs text-muted-foreground">{t("wake.interval")}</span>
         <input
-          aria-label="唤醒间隔（分钟）"
+          aria-label={t("wake.intervalAria")}
           className="w-20 rounded-md border border-input bg-background px-2 py-1 text-right text-sm"
           inputMode="numeric"
           value={intervalMinutes}
@@ -148,9 +151,9 @@ export function WakeSettings({ load = loadFromApi, save = saveToApi, wake = wake
       </label>
 
       <label className="wake-settings__cap flex items-center justify-between gap-2 text-sm">
-        <span className="text-xs text-muted-foreground">每日 token 上限</span>
+        <span className="text-xs text-muted-foreground">{t("wake.dailyLimit")}</span>
         <input
-          aria-label="每日唤醒 token 上限"
+          aria-label={t("wake.dailyLimitAria")}
           className="w-24 rounded-md border border-input bg-background px-2 py-1 text-right text-sm"
           inputMode="numeric"
           value={dailyTokenCap}
@@ -161,8 +164,8 @@ export function WakeSettings({ load = loadFromApi, save = saveToApi, wake = wake
 
       <p className="wake-settings__usage text-xs text-muted-foreground">
         {usage
-          ? `今日唤醒用量：${usage.inputTokens + usage.outputTokens} token（${usage.runs} 次，${usage.notices} 条提醒，估算）`
-          : "今日唤醒用量：—"}
+          ? t("wake.usage", { tokens: usage.inputTokens + usage.outputTokens, runs: usage.runs, notices: usage.notices })
+          : t("wake.usageNone")}
       </p>
 
       <button
@@ -171,7 +174,7 @@ export function WakeSettings({ load = loadFromApi, save = saveToApi, wake = wake
         disabled={waking}
         onClick={() => void wakeNow()}
       >
-        现在唤醒
+        {t("wake.now")}
       </button>
 
       {status ? (

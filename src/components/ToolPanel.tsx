@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n";
 
 /**
  * 现在有哪些工具是活的（REQ-F-200 ③）。
@@ -45,9 +47,10 @@ async function loadFromApi(): Promise<ToolPanelValue> {
   return (await response.json()) as ToolPanelValue;
 }
 
-const PRIORITY_LABEL: Record<number, string> = { 1: "必备", 2: "常规", 3: "管理" };
+const PRIORITY_LABEL: Record<number, MessageKey> = { 1: "tools.group.required", 2: "tools.group.general", 3: "tools.group.management" };
 
 export function ToolPanel({ load = loadFromApi }: ToolPanelProps) {
+  const t = useT();
   const [value, setValue] = useState<ToolPanelValue | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,7 +64,7 @@ export function ToolPanel({ load = loadFromApi }: ToolPanelProps) {
       })
       .catch(() => {
         if (!cancelled) {
-          setError("读不到工具清单。服务可能正在重启，稍后再打开一次。");
+          setError(t("tools.loadFailed"));
         }
       });
     return () => {
@@ -77,7 +80,7 @@ export function ToolPanel({ load = loadFromApi }: ToolPanelProps) {
     );
   }
   if (!value) {
-    return <p className="tool-panel__loading text-sm text-muted-foreground">正在读取工具清单…</p>;
+    return <p className="tool-panel__loading text-sm text-muted-foreground">{t("tools.loading")}</p>;
   }
 
   const live = value.tools.filter((tool) => tool.registered);
@@ -86,19 +89,24 @@ export function ToolPanel({ load = loadFromApi }: ToolPanelProps) {
   return (
     <div className="tool-panel flex flex-col gap-4">
       <p className="tool-panel__summary text-sm text-muted-foreground">
-        本轮可调用 {live.length} 个，未注册 {idle.length} 个 · 技能 {value.context.skillCount} 个 · 知识{" "}
-        {value.context.knowledgeCount} 条 · 联网{value.context.webEnabled ? "已开" : "已关"}
-        {value.context.providerName ? ` · Provider ${value.context.providerName}` : " · 尚未配置 Provider"}
+        {t("tools.summary", {
+          live: live.length,
+          idle: idle.length,
+          skills: value.context.skillCount,
+          knowledge: value.context.knowledgeCount,
+          web: value.context.webEnabled ? t("tools.on") : t("tools.off"),
+        })}
+        {value.context.providerName ? t("tools.providerSuffix", { name: value.context.providerName }) : t("tools.noProvider")}
       </p>
 
-      <section className="flex flex-col gap-1.5" aria-label="可调用的工具">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">可调用</h3>
+      <section className="flex flex-col gap-1.5" aria-label={t("tools.availableAria")}>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("tools.available")}</h3>
         <ul className="flex flex-col gap-1">
           {live.map((tool) => (
             <li className="rounded-md border border-border px-3 py-2" key={tool.name}>
               <span className="flex items-baseline gap-2">
                 <code className="text-sm font-medium">{tool.name}</code>
-                <span className="text-xs text-muted-foreground">{PRIORITY_LABEL[tool.priority] ?? "常规"}</span>
+                <span className="text-xs text-muted-foreground">{t(PRIORITY_LABEL[tool.priority] ?? "tools.group.general")}</span>
               </span>
               <span className="mt-0.5 block text-xs text-muted-foreground">{tool.description}</span>
             </li>
@@ -107,10 +115,10 @@ export function ToolPanel({ load = loadFromApi }: ToolPanelProps) {
       </section>
 
       {idle.length > 0 ? (
-        <section className="flex flex-col gap-1.5" aria-label="未注册的工具">
+        <section className="flex flex-col gap-1.5" aria-label={t("tools.unregisteredAria")}>
           {/* 列出来而不是滤掉：「没注册」和「不存在」是两件事。 */}
           <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            本轮未注册（条件不满足）
+            {t("tools.unregistered")}
           </h3>
           <ul className="flex flex-col gap-1">
             {idle.map((tool) => (

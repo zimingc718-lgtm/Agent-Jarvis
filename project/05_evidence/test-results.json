@@ -1678,7 +1678,7 @@
       "real_entry": false,
       "date": "2026-09-28",
       "entry": "assistant",
-      "notes": "前缀指令 + 开关组件（REQ-F-330 ①②，DEC-450，TASK-570）。chat-stream +1：默认前缀含「回复语言：中文」，设置 en 后含 Reply language: English 且互斥；language-toggle 2 例：两选项与 SSR 初值、点 English 保存/派发事件/html lang 变 en，保存失败回退并显示服务端说明、点当前值不发请求。真实入口（TEST-572）另记。"
+      "notes": "（CR-20260928-ui-strings-i18n 修订：改在 LanguageProvider 内渲染，断言开关自身提示与状态随所选语言变化；2 例 PASS。）前缀指令 + 开关组件（REQ-F-330 ①②，DEC-450，TASK-570）。chat-stream +1：默认前缀含「回复语言：中文」，设置 en 后含 Reply language: English 且互斥；language-toggle 2 例：两选项与 SSR 初值、点 English 保存/派发事件/html lang 变 en，保存失败回退并显示服务端说明、点当前值不发请求。真实入口（TEST-572）另记。"
     },
     {
       "id": "TEST-572",
@@ -1688,13 +1688,40 @@
       "date": "2026-09-27",
       "entry": "user",
       "notes": "真实入口（REQ-F-330，TASK-570）。2026-09-27 在用户运行中的本机服务上经真实 POST /api/chat/stream 与 GET/PUT /api/settings/language 走完：同一中文问题三次——默认 zh 中文正文；PUT en 后 GET 读到 en，英文正文（去掉加粗技能名后 CJK 0 / 拉丁 1435）且 list_skills 照常；PUT zh 切回中文。首次尝试（只有前缀顶部一行）en 下滑回中文判 FAIL，加末尾提醒后重建重跑通过。命令列指向机器对照 TEST-571；由协调会话经 HTTP 驱动，☰ 开关目视留给用户，见 EV §4。"
+    },
+    {
+      "id": "TEST-580",
+      "result": "PASS",
+      "command": "npx vitest run tests/i18n-dictionary.test.ts tests/language-provider.test.tsx",
+      "real_entry": false,
+      "date": "2026-09-28",
+      "entry": "assistant",
+      "notes": "字典 4 例 + Provider 2 例（REQ-F-340 ①②，DEC-460 ①②，TASK-580）。zh / en 426 键逐键一致、占位符一致、en 无中文（例外仅「中文」标签）；t 插值 / 未知占位符保留 / count===1 取 _one；无 Provider 默认中文，SSR 初值，切换后消费者重渲染且 <html lang> 跟随。"
+    },
+    {
+      "id": "TEST-581",
+      "result": "PASS",
+      "command": "npx vitest run tests/ui-strings-guard.test.ts",
+      "real_entry": false,
+      "date": "2026-09-28",
+      "entry": "assistant",
+      "notes": "守卫 2 例（REQ-F-340 ④，DEC-460 ⑤，TASK-580）。TypeScript 语法树扫描 src/components 与 src/app（除 api/）的字符串 / 模板 / JSX 文本，含中文即红并给出 file:line；白名单仅数据键 __通用__。第一次运行找出正则摸底漏掉的 36 个与表达式相邻的 JSX 片段，收进字典后为零。"
+    },
+    {
+      "id": "TEST-582",
+      "result": "PASS",
+      "command": "npx vitest run tests/language-provider.test.tsx",
+      "real_entry": true,
+      "date": "2026-09-28",
+      "entry": "user",
+      "notes": "真实入口（REQ-F-340，TASK-580）。2026-09-28 在用户运行中的本机服务（构建 oQB8g1T-1e2Lr14uWjeiT）上经真实 GET / 与 GET/PUT /api/settings/language 走完：默认 zh 首屏含 10/10 中文界面哨兵词；PUT en 后 GET 读到 en，首屏含 10/10 英文哨兵词、0 中文界面哨兵词（剩余 CJK 1865 个全部来自用户数据）；PUT zh 切回恢复。命令列指向机器对照 TEST-580；☰ 即时切换的目视留给用户，见 EV §4。"
     }
   ],
   "executed_commands": [
     {
       "command": "npx vitest run",
       "result": "PASS",
-      "summary": "2026-09-27 CR-20260927-reply-language 最终代码：105 文件 960/960 全部通过（既有 flaky floating-chat ④ 本轮未复现）；此前一轮 959/960，失败同为既有 flaky floating-chat ④"
+      "summary": "2026-09-28 CR-20260928-ui-strings-i18n 最终代码：108 文件 968/968 全部通过；第一轮 105/108 文件、961/968（UI 契约 4 规则 + 测试缝 6 断言），修正后全绿"
     },
     {
       "command": "npx vitest run",

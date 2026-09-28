@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/components/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n";
 
 export type Theme = "light" | "dark";
 
@@ -20,12 +22,13 @@ export function readTheme(): Theme {
   return "light";
 }
 
-const OPTIONS: { value: Theme; label: string; Icon: typeof Sun }[] = [
-  { value: "light", label: "浅色", Icon: Sun },
-  { value: "dark", label: "深色", Icon: Moon },
+const OPTIONS: { value: Theme; label: MessageKey; Icon: typeof Sun }[] = [
+  { value: "light", label: "theme.light", Icon: Sun },
+  { value: "dark", label: "theme.dark", Icon: Moon },
 ];
 
 export function ThemeToggle() {
+  const t = useT();
   // Start from the light default so server and client markup agree, then adopt
   // whatever the bootstrap script resolved to after mount.
   const [theme, setTheme] = useState<Theme>("light");
@@ -49,7 +52,7 @@ export function ThemeToggle() {
     <div
       className="theme-toggle grid grid-cols-2 gap-1 rounded-md bg-muted p-1"
       role="group"
-      aria-label="外观主题"
+      aria-label={t("theme.aria")}
     >
       {OPTIONS.map(({ value, label, Icon }) => {
         const active = theme === value;
@@ -68,7 +71,7 @@ export function ThemeToggle() {
             )}
           >
             <Icon aria-hidden="true" className="size-4" />
-            {label}
+            {t(label)}
           </button>
         );
       })}

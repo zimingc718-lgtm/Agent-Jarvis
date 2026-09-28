@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/LanguageProvider";
 
 /**
  * 组织架构 / 研发阵型看板（CR-20260918-org-chart-board，REQ-F-260）。
@@ -79,11 +80,12 @@ function PersonCard({ person }: { person: Person }) {
 }
 
 function CompanySection({ company }: { company: OrgChartEntity }) {
+  const t = useT();
   // 按团队/阵型分组，未标团队的归入「其他」；组的先后顺序是人员首次出现的顺序，跟看板
   // 「参数不重排」同一条道理——今天看到的顺序，明天还应该在那。
   const groups: { team: string; people: Person[] }[] = [];
   for (const person of company.people) {
-    const team = person.team || "其他";
+    const team = person.team || t("org.other");
     const group = groups.find((g) => g.team === team);
     if (group) {
       group.people.push(person);
@@ -92,7 +94,7 @@ function CompanySection({ company }: { company: OrgChartEntity }) {
     }
   }
   return (
-    <section className="org-chart-board__company flex flex-col gap-3" aria-label={`${company.title} 组织架构`}>
+    <section className="org-chart-board__company flex flex-col gap-3" aria-label={t("org.companyChartAria", { company: company.title })}>
       <h3 className="text-base font-semibold tracking-tight">{company.title}</h3>
       {groups.map((group) => (
         <div key={group.team} className="org-chart-board__team">
@@ -109,6 +111,7 @@ function CompanySection({ company }: { company: OrgChartEntity }) {
 }
 
 export function OrgChartBoard({ load = defaultLoad }: OrgChartBoardProps) {
+  const t = useT();
   const [data, setData] = useState<OrgChartBoardData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -123,7 +126,7 @@ export function OrgChartBoard({ load = defaultLoad }: OrgChartBoardProps) {
       })
       .catch(() => {
         if (!cancelled) {
-          setError("读不到组织架构数据。服务可能正在重启，稍后再打开一次。");
+          setError(t("org.loadFailed"));
         }
       });
     return () => {
@@ -139,22 +142,22 @@ export function OrgChartBoard({ load = defaultLoad }: OrgChartBoardProps) {
     );
   }
   if (!data) {
-    return <p className="org-chart-board__loading text-sm text-muted-foreground">正在读取组织架构数据…</p>;
+    return <p className="org-chart-board__loading text-sm text-muted-foreground">{t("org.loading")}</p>;
   }
   if (data.companies.length === 0) {
     return (
       <p className="org-chart-board__empty text-sm text-muted-foreground">
-        还没有登记任何组织架构信息——可以直接在对话里说「帮我查一下维谛的组织架构」，我会带来源登记人员。
+        {t("org.empty")}
       </p>
     );
   }
 
   return (
-    <div aria-label="组织架构/研发阵型看板" className="org-chart-board flex flex-col gap-6 p-6">
+    <div aria-label={t("org.title")} className="org-chart-board flex flex-col gap-6 p-6">
       <div>
-        <h2 className="text-lg font-semibold tracking-tight">组织架构/研发阵型看板</h2>
+        <h2 className="text-lg font-semibold tracking-tight">{t("org.title")}</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          按公司分区，同一公司内按团队/阵型分组。每个人的信息都带来源链接——没有来源不会出现在这里。
+          {t("org.subtitle")}
         </p>
       </div>
       {data.companies.map((company) => (

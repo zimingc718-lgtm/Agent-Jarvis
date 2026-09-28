@@ -6,6 +6,7 @@ import { CornerMenu } from "@/components/CornerMenu";
 import { DisplayScreen } from "@/components/DisplayScreen";
 import { FloatingChat, type FloatingMessage } from "@/components/FloatingChat";
 import { KnowledgeList } from "@/components/KnowledgeList";
+import { LanguageProvider } from "@/components/LanguageProvider";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { MenuSection } from "@/components/MenuSection";
 import { DocumentSettings } from "@/components/DocumentSettings";
@@ -17,6 +18,7 @@ import { WakeSettings } from "@/components/WakeSettings";
 import { authOptions, getGoogleOAuthConfig } from "@/lib/auth";
 import { requireUserId } from "@/lib/auth-guard";
 import { resolveDisplayView } from "@/lib/display";
+import { translator } from "@/lib/i18n";
 import { listKnowledge, listPending } from "@/lib/knowledge";
 import { readLanguage } from "@/lib/language";
 import { buildTranscript } from "@/lib/transcript";
@@ -46,8 +48,11 @@ export default async function HomePage() {
     : [];
 
   const dataRoots = storeReady ? await resolveUserDataRoots(auth.userId) : null;
-  // REQ-F-330 ③: the ☰ switch is right on first paint, not after a fetch.
+  // REQ-F-330 ③ / REQ-F-340 ③: the ☰ switch and the whole first paint are in the saved
+  // language, not after a fetch. `t` here is for the server-rendered bits; everything under
+  // `LanguageProvider` re-renders on its own when the switch changes.
   const initialLanguage = storeReady ? readLanguage(getStore()) : "zh";
+  const t = translator(initialLanguage);
 
   // REQ-F-044 ③: the ☰ list is correct on first open, not after a fetch.
   const knowledge = dataRoots
@@ -66,6 +71,7 @@ export default async function HomePage() {
   }
 
   return (
+    <LanguageProvider initialLanguage={initialLanguage}>
     <main className="home relative min-h-screen bg-background text-foreground">
       {/* CR-20260909-display-screen: the home page IS a full-screen display screen;
           the chat and ☰ menu float above it (z-index: base / 20 / 30). */}
@@ -80,12 +86,13 @@ export default async function HomePage() {
       {/* REQ-F-053 ③: the drawer is a list of same-shaped groups — untitled chrome gets a
           MenuSection; the self-titled entries below already render the same card. */}
       <CornerMenu>
-        <MenuSection title="外观">
+        <MenuSection titleKey="menu.appearance">
           <ThemeToggle />
-          {/* REQ-F-330 ②: reply language, saved server-side (CR-20260927-reply-language). */}
-          {storeReady ? <LanguageToggle initialLanguage={initialLanguage} /> : null}
+          {/* REQ-F-330 ② / REQ-F-340: one switch for the reply language and the interface
+              language, saved server-side (CR-20260927-reply-language, CR-20260928-ui-strings-i18n). */}
+          {storeReady ? <LanguageToggle /> : null}
         </MenuSection>
-        <MenuSection title="模型与账号">
+        <MenuSection titleKey="menu.modelsAndAccount">
           <SettingsDialog templates={templates} providers={savedProviders} storage={storage} />
           <AccountDialog authenticated={auth.ok} googleOAuth={googleOAuth} />
         </MenuSection>
@@ -103,7 +110,7 @@ export default async function HomePage() {
       {auth.ok && !storage.configured ? (
         /* pb-36 keeps the message clear of the fixed bottom console. */
         <div className="home__message mx-auto max-w-3xl px-6 pt-8 pb-36">
-          <ConfigWarning title="本地存储未配置" missing={storage.missing} hint={STORAGE_CONFIG_HINT} />
+          <ConfigWarning title={t("page.storageNotConfigured")} missing={storage.missing} hint={STORAGE_CONFIG_HINT} />
         </div>
       ) : null}
 
@@ -116,11 +123,10 @@ export default async function HomePage() {
       ) : !auth.ok ? (
         <div className="home__message mx-auto max-w-3xl px-6 pt-8 pb-36 text-center">
           <h1 className="home__title text-3xl font-semibold tracking-tight sm:text-4xl">Agent-Jarvis</h1>
-          <p className="home__hint mt-3 text-base text-muted-foreground">
-            登录 Agent-Jarvis 后即可开始对话。
-          </p>
+          <p className="home__hint mt-3 text-base text-muted-foreground">{t("page.signInHint")}</p>
         </div>
       ) : null}
     </main>
+    </LanguageProvider>
   );
 }

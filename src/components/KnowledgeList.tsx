@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { KNOWLEDGE_CHANGED_EVENT } from "@/lib/ui-events";
+import { useT } from "@/components/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n";
 
 export type KnowledgeListEntry = { name: string; title: string; source: string; createdAt: string; bytes: number };
 export type KnowledgeListData = { entries: KnowledgeListEntry[]; pending: KnowledgeListEntry[] };
@@ -31,11 +33,11 @@ async function requestApi(method: "POST" | "DELETE", url: string) {
   return { ok: response.ok, message: body.message };
 }
 
-const SOURCE_LABEL: Record<string, string> = {
-  manual: "手动",
-  file: "文件",
-  conversation: "对话",
-  model: "模型提议",
+const SOURCE_LABEL: Record<string, MessageKey> = {
+  manual: "knowledge.source.manual",
+  file: "knowledge.source.file",
+  conversation: "knowledge.source.chat",
+  model: "knowledge.source.proposal",
 };
 
 /**
@@ -56,6 +58,7 @@ export function KnowledgeList({
   fetchKnowledge = fetchFromApi,
   request = requestApi,
 }: KnowledgeListProps) {
+  const t = useT();
   const [data, setData] = useState<KnowledgeListData>(initial);
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -91,41 +94,41 @@ export function KnowledgeList({
     setNotice(null);
     try {
       const result = await request(method, url);
-      setNotice(result.ok ? done : (result.message ?? `${label}失败。`));
+      setNotice(result.ok ? done : (result.message ?? t("knowledge.actionFailed", { label })));
       if (result.ok) {
         refresh();
       }
     } catch {
-      setNotice(`${label}失败：网络错误。`);
+      setNotice(t("knowledge.actionFailedNetwork", { label }));
     } finally {
       setBusy(null);
     }
   };
 
   const adopt = (entry: KnowledgeListEntry) =>
-    act("采纳", "POST", `/api/knowledge/pending/${encodeURIComponent(entry.name)}`, `已采纳「${entry.title}」。`, `p:${entry.name}`);
+    act(t("common.adopt"), "POST", `/api/knowledge/pending/${encodeURIComponent(entry.name)}`, t("knowledge.adopted", { title: entry.title }), `p:${entry.name}`);
   const discard = (entry: KnowledgeListEntry) =>
-    act("忽略", "DELETE", `/api/knowledge/pending/${encodeURIComponent(entry.name)}`, `已忽略「${entry.title}」。`, `p:${entry.name}`);
+    act(t("common.ignore"), "DELETE", `/api/knowledge/pending/${encodeURIComponent(entry.name)}`, t("knowledge.ignored", { title: entry.title }), `p:${entry.name}`);
   const remove = (entry: KnowledgeListEntry) => {
-    if (!window.confirm(`删除知识条目「${entry.title}」？该操作不可撤销。`)) {
+    if (!window.confirm(t("knowledge.deleteConfirm", { title: entry.title }))) {
       return;
     }
-    void act("删除", "DELETE", `/api/knowledge/${encodeURIComponent(entry.name)}`, `已删除「${entry.title}」。`, `e:${entry.name}`);
+    void act(t("common.delete"), "DELETE", `/api/knowledge/${encodeURIComponent(entry.name)}`, t("knowledge.deleted", { title: entry.title }), `e:${entry.name}`);
   };
 
   return (
-    <section className="knowledge-list flex flex-col gap-1.5 rounded-md border border-border p-2" aria-label="本地知识库">
-      <h3 className="knowledge-list__title text-xs font-semibold uppercase tracking-wide text-muted-foreground">知识库</h3>
+    <section className="knowledge-list flex flex-col gap-1.5 rounded-md border border-border p-2" aria-label={t("knowledge.aria")}>
+      <h3 className="knowledge-list__title text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("knowledge.title")}</h3>
 
       {data.pending.length > 0 ? (
-        <div className="knowledge-list__pending rounded border border-amber-500/40 bg-amber-500/5" role="region" aria-label="待采纳的知识提议">
+        <div className="knowledge-list__pending rounded border border-amber-500/40 bg-amber-500/5" role="region" aria-label={t("knowledge.pendingAria")}>
           <button
             type="button"
             className="knowledge-list__pending-toggle flex w-full items-center justify-between px-1.5 py-1 text-left text-xs font-medium"
             aria-expanded={pendingOpen}
             onClick={() => setPendingOpen((open) => !open)}
           >
-            <span>待采纳（{data.pending.length}）— 模型提议，采纳后才会被检索</span>
+            <span>{t("knowledge.pendingHeading", { count: data.pending.length })}</span>
             <ChevronDown
               aria-hidden="true"
               className={cn("size-3.5 shrink-0 transition-transform", pendingOpen && "rotate-180")}
@@ -140,20 +143,20 @@ export function KnowledgeList({
                     <button
                       type="button"
                       className="knowledge-list__adopt rounded px-1 text-xs underline underline-offset-2 disabled:opacity-50"
-                      aria-label={`采纳知识提议「${entry.title}」`}
+                      aria-label={t("knowledge.adoptAria", { title: entry.title })}
                       disabled={busy === `p:${entry.name}`}
                       onClick={() => void adopt(entry)}
                     >
-                      采纳
+                      {t("common.adopt")}
                     </button>
                     <button
                       type="button"
                       className="knowledge-list__discard rounded px-1 text-xs text-muted-foreground underline underline-offset-2 disabled:opacity-50"
-                      aria-label={`忽略知识提议「${entry.title}」`}
+                      aria-label={t("knowledge.ignoreAria", { title: entry.title })}
                       disabled={busy === `p:${entry.name}`}
                       onClick={() => void discard(entry)}
                     >
-                      忽略
+                      {t("common.ignore")}
                     </button>
                   </span>
                 </li>
@@ -164,24 +167,24 @@ export function KnowledgeList({
       ) : null}
 
       {data.entries.length === 0 ? (
-        <p className="knowledge-list__empty text-sm text-muted-foreground">知识库为空。拖入 .md / .txt 文件，或在回复上点「存入知识库」。</p>
+        <p className="knowledge-list__empty text-sm text-muted-foreground">{t("knowledge.empty")}</p>
       ) : (
         <ul className="knowledge-list__items flex flex-col gap-1">
           {data.entries.map((entry) => (
             <li key={entry.name} className="knowledge-list__item flex flex-col">
               <span className="knowledge-list__name text-sm font-medium">{entry.title}</span>
               <span className="knowledge-list__meta text-xs text-muted-foreground">
-                {SOURCE_LABEL[entry.source] ?? entry.source} · {entry.name}
+                {SOURCE_LABEL[entry.source] ? t(SOURCE_LABEL[entry.source]) : entry.source} · {entry.name}
               </span>
               <span className="knowledge-list__actions mt-1 flex gap-2">
                 <button
                   type="button"
                   className="knowledge-list__delete rounded px-1 text-xs text-destructive underline underline-offset-2 disabled:opacity-50"
-                  aria-label={`删除知识条目「${entry.title}」`}
+                  aria-label={t("knowledge.deleteAria", { title: entry.title })}
                   disabled={busy === `e:${entry.name}`}
                   onClick={() => remove(entry)}
                 >
-                  删除
+                  {t("common.delete")}
                 </button>
               </span>
             </li>
