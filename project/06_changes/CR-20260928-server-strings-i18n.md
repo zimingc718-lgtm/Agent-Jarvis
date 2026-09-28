@@ -2,7 +2,7 @@
 
 - 级别: L2（标准档：全部 CP 双向门——一个服务端字典、一个请求级翻译器、类型化错误多一个 `code`、路由与编排层的字面量改为查表；不改数据含义、不改任何接口形状（`message` 字段仍是字符串），`git revert` 即回滚；英文措辞与模型对摘要 / 唤醒语言的遵从度须人看，登记为人工发现项）
 - 提出人: user（INPUT-2026-09-28-002；INPUT-2026-09-27-002 第三步）
-- 状态: P2-P4 与真实入口完成，待 snapshot 与合并（R1 由用户四点裁定终裁；R1-R4 全 PASS；新增测试 10 例（TEST-590 4 / TEST-591 4 / TEST-592 2），TEST-581 扫描范围扩大；`tsc` 0 错误；全量 111 文件 / 978 例：976 通过，2 例在全量负载下超时（既有 flaky tests/floating-chat.test.tsx skill intake ④ 与 tests/knowledge-dashboard.test.tsx ①），两文件单独重跑 78/78 通过；TEST-593 三步已于 2026-09-28 在用户运行中的本机服务（分支构建 `kQJFQcIfS8LGB18ZjELjh`）上经真实接口请求走完，见 EV §4；合并 main 且 `verify` PASS 后转 CLOSED）
+- 状态: CLOSED（2026-09-28 闭环：TASK-590 DONE，TEST-590/591/592 PASS、TEST-593 真实入口 PASS（`entry: user`），TEST-581 扫描范围扩大后 PASS；L2 标准档，R1 由用户四点裁定终裁，R2–R4 全 PASS、R4 CP-1 由 CONDITIONAL 转 APPROVED；`tsc` 0 错误，全量 111 文件 / 978 例：976 通过，2 例在全量负载下超时（既有 flaky floating-chat ④ 与 knowledge-dashboard ①）单独重跑 78/78 通过，治理单测通过；TEST-593 于 2026-09-28 在用户运行中的本机服务（分支构建 `kQJFQcIfS8LGB18ZjELjh`）上经真实接口请求走完，见 EV §4；snapshot ledger seq 147 后快进合入 main（`3838d37`），合并后 `verify` PASS；本机服务已在跑本 CR 的构建，无需再重建）
 - 占用 ID: REQ-F-350, DEC-470, TASK-590, TEST-590, TEST-591, TEST-592, TEST-593
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: REQ-F-340（界面双语的边界从「浏览器渲染的文案」扩到「经接口与流回到界面的服务端文案」）、REQ-F-330（回复语言设置同时决定压缩摘要与唤醒提醒的语言）
