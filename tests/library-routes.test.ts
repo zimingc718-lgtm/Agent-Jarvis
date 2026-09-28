@@ -29,6 +29,7 @@ const listRoute = await import("@/app/api/library/route");
 const decideRoute = await import("@/app/api/library/decide/route");
 const browseRoute = await import("@/app/api/library/browse/route");
 const { saveKnowledge } = await import("@/lib/knowledge");
+const { getStore } = await import("@/lib/store-singleton");
 
 function get(url: string): Request {
   return new Request(url, { headers: { accept: "application/json" } });
@@ -61,6 +62,13 @@ beforeEach(() => {
 afterAll(() => {
   delete process.env.JARVIS_LIBRARY_PATH;
   delete process.env.JARVIS_LIBRARY_STATE_PATH;
+  // Routes now open the store to read the interface language (CR-20260928-server-strings-i18n);
+  // its SQLite file lives in `dir`, and Windows refuses to remove a directory with an open handle.
+  try {
+    getStore().close();
+  } catch {
+    /* never opened or already closed */
+  }
   rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 });
 

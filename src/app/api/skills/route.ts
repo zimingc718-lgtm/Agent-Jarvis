@@ -7,6 +7,8 @@ import { isSkillTextPath, makeCompleter, registerSkill, SKILLS_ROOT, type Upload
 import { SkillNameConflictError } from "@/lib/store";
 import { getStore } from "@/lib/store-singleton";
 import { deriveFolderName, readZipEntries, ZipError } from "@/lib/zip";
+import { messageFor } from "@/lib/coded-error";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /** Files larger than this are almost certainly binary — skip them (they are stored, not injected). */
 const MAX_UPLOAD_FILE_BYTES = 512 * 1024;
@@ -36,6 +38,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -66,9 +69,9 @@ export async function POST(request: Request) {
     } catch (error) {
       if (error instanceof ZipError) {
         // Nothing has been written at this point — a rejected archive leaves no trace.
-        return NextResponse.json({ message: error.message }, { status: 400 });
+        return NextResponse.json({ message: messageFor(t, error) }, { status: 400 });
       }
-      return NextResponse.json({ message: "压缩包解析失败。" }, { status: 400 });
+      return NextResponse.json({ message: t("api.zipParseFailed") }, { status: 400 });
     }
     excluded.push(...unpacked.skipped);
     const derived = deriveFolderName(unpacked.entries, archive.name);
@@ -114,7 +117,7 @@ export async function POST(request: Request) {
 
   if (files.length === 0) {
     return NextResponse.json(
-      { message: "没有可读取的文本文件，未注册。", excluded },
+      { message: t("api.noReadableText"), excluded },
       { status: 400 }
     );
   }
@@ -147,10 +150,10 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof SkillNameConflictError) {
       return NextResponse.json(
-        { message: `已存在同名技能「${error.skillName}」，请重命名后重试。` },
+        { message: t("api.skillNameConflictRetry", { name: error.skillName }) },
         { status: 409 }
       );
     }
-    return NextResponse.json({ message: "技能注册失败。" }, { status: 500 });
+    return NextResponse.json({ message: t("api.skillRegisterFailed") }, { status: 500 });
   }
 }

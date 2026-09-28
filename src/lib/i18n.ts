@@ -1,3 +1,4 @@
+import { lookup, type Vars } from "./i18n-core";
 import type { UiLanguage } from "./language";
 
 /**
@@ -494,6 +495,14 @@ export const zh = {
   "search.turnUsageLabel": "本轮用量：",
   "search.sessionUsageLabel": "本会话用量：",
   "skillCard.proposeText": "模型提议注册技能「{name}」：",
+
+  // ---- browser-run lib code and page-level hints (CR-20260928-server-strings-i18n) ----
+  "sendFailure.serverGone":
+    "{at} 与本机服务的连接中断，且服务当前没有响应。常见原因是它被重启，或在内存紧张时被系统停掉。请重新启动服务后重试——这一轮没有任何内容被保存。",
+  "sendFailure.transferBroken": "{at} 请求在传输中断开，但服务仍在运行，可以直接重试。这一轮没有任何内容被保存。",
+  "page.storageHint": "该密钥用于加密保存 Provider 凭据。请在 .env.local 中设置后重启开发服务器，参见 docs/LOCAL_CONFIGURATION.md。",
+  "models.noteSecretUndecryptable": "凭据无法解密，请重新输入 API Key（JARVIS_SECRET_KEY 可能已更改）。",
+  "models.noteMissingKey": "缺少 API Key。",
 } as const satisfies Record<string, string>;
 
 export type MessageKey = keyof typeof zh;
@@ -996,29 +1005,24 @@ export const en = {
   "search.turnUsageLabel": "This turn: ",
   "search.sessionUsageLabel": "This session: ",
   "skillCard.proposeText": "The model proposes registering the skill “{name}”: ",
+
+  // ---- browser-run lib code and page-level hints (CR-20260928-server-strings-i18n) ----
+  "sendFailure.serverGone":
+    "{at} The connection to the local service dropped and it is not responding now. It was probably restarted, or stopped by the system under memory pressure. Restart the service and try again — nothing from this turn was saved.",
+  "sendFailure.transferBroken": "{at} The request broke off in transit, but the service is still running; just retry. Nothing from this turn was saved.",
+  "page.storageHint": "This key encrypts stored provider credentials. Set it in .env.local and restart the dev server; see docs/LOCAL_CONFIGURATION.md.",
+  "models.noteSecretUndecryptable": "The credential cannot be decrypted; re-enter the API key (JARVIS_SECRET_KEY may have changed).",
+  "models.noteMissingKey": "Missing API key.",
 } as const satisfies Record<MessageKey, string>;
 
 export const MESSAGES: Record<UiLanguage, Record<MessageKey, string>> = { zh, en };
 
-export type Vars = Record<string, string | number>;
+export type { Vars } from "./i18n-core";
 export type Translate = (key: MessageKey, vars?: Vars) => string;
-
-const PLACEHOLDER = /\{(\w+)\}/g;
 
 /** Look a key up in `language`, apply `{name}` substitutions, prefer `<key>_one` for `count === 1`. */
 export function t(language: UiLanguage, key: MessageKey, vars?: Vars): string {
-  const table = MESSAGES[language] ?? MESSAGES.zh;
-  let template: string = table[key] ?? MESSAGES.zh[key] ?? key;
-  if (vars && vars.count === 1) {
-    const singular = (table as Record<string, string | undefined>)[`${key}_one`];
-    if (singular !== undefined) {
-      template = singular;
-    }
-  }
-  if (!vars) {
-    return template;
-  }
-  return template.replace(PLACEHOLDER, (match, name: string) => (name in vars ? String(vars[name]) : match));
+  return lookup(MESSAGES, language, key, vars);
 }
 
 /** `t` with the language bound — what `useT()` hands to components and what `page.tsx` uses on the server. */

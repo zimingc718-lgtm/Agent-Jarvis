@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { dropOrphanToolResults, repairDanglingToolCalls, runToolLoop } from "./agent-loop";
 import { listKnowledge } from "./knowledge";
-import { languageInstruction, languageReminder, readLanguage } from "./language";
+import { languageInstruction, languageReminder, readLanguage, type UiLanguage } from "./language";
 import { resolveUserDataRoots, type UserDataRoots } from "./user-data-paths";
 import { estimateMessagesTokens, estimateTokens, sendProviderStream, type StreamProviderConfig, type ToolSpec } from "./adapters";
 import { resolveDisplayView } from "./display";
@@ -31,6 +31,9 @@ import { createDocumentTools } from "./tools/document-tools";
 import { createEntityTools } from "./tools/entity-tools";
 import { createWebTools, readWebSettings } from "./tools/web-tools";
 import type { ChatDelta, ChatMessage, ProviderRuntimeConfig, Source } from "./types";
+import { type Coded, withCode, zhMessage } from "./coded-error";
+import type { Vars } from "./i18n-core";
+import { serverTranslator, tServer, type ServerMessageKey, type ServerTranslate } from "./i18n-server";
 
 export const DEFAULT_SYSTEM_PROMPT =
   "You are Agent-Jarvis, a concise assistant running locally on the user's machine. Answer directly and keep prior turns of this conversation in mind.";
@@ -107,6 +110,11 @@ export class ChatServiceError extends Error {
   constructor(status: number, message: string) {
     super(message);
     this.status = status;
+  }
+
+  /** Same Chinese `message` as before, plus the dictionary code the route uses to word it in the interface language (DEC-470 ③). */
+  static coded(status: number, code: ServerMessageKey, params?: Vars): ChatServiceError & Coded {
+    return withCode(new ChatServiceError(status, zhMessage(code, params)), code, params);
   }
 }
 
@@ -188,14 +196,14 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     }
   } catch (error) {
     if (error instanceof ProviderSecretError) {
-      throw new ChatServiceError(400, "无法读取该 Provider 的凭据，请在模型设置中重新输入 API Key。");
+      throw ChatServiceError.coded(400, "turn.providerSecret");
     }
     throw error;
   }
   if (!provider) {
     throw input.providerId
       ? new ChatServiceError(404, "Selected model provider is not connected.")
-      : new ChatServiceError(409, "没有可用的模型 Provider。请在「模型」中启用一个并通过连接测试。");
+      : ChatServiceError.coded(409, "turn.noProvider");
   }
 
   let conversationId: string;
@@ -276,6 +284,8 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
   // user flips the ☰ switch. Tool descriptions and results stay Chinese (user ruling ④);
   // the instruction tells the model to read them and still answer in the chosen language.
   const language = readLanguage(input.store);
+  // Server-side wording for this turn's notices (REQ-F-350): same setting as the reply language.
+  const ts = serverTranslator(language);
   const stablePrefix = buildStablePrefix({
     identity: [input.systemPrompt ?? DEFAULT_SYSTEM_PROMPT, languageInstruction(language)].join("\n"),
     skillCatalogue: catalogue.text,
@@ -338,12 +348,12 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
   let compaction: CompactionOutcome = "not-attempted";
   const preamble: ChatDelta[] = [];
   if (supersededPrevious) {
-    preamble.push({ type: "notice", text: "上一轮尚未结束，已先将其中止，再处理这条消息。" });
+    preamble.push({ type: "notice", text: ts("turn.superseded") });
   }
   if (dropped > 0) {
     preamble.push({
       type: "notice",
-      text: `已跳过 ${dropped} 条错位的工具结果（上一轮被中止时留下的），按修复后的历史继续。`,
+      text: ts("turn.droppedOrphans", { count: dropped }),
     });
   }
   const plan = planCompaction({ messages: turnMessages, currentTurn, contextWindow: window });
@@ -353,6 +363,7 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     // turns before it and silently drop them from the next replay.
     const anchorId = lastRowIdByTurn.get(plan.through) ?? null;
     const summary = await summarizeSpan({
+      language,
       store: input.store,
       conversationId,
       provider,
@@ -397,14 +408,14 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
         type: "notice",
         text:
           retainedTurns === 0
-            ? `本轮上下文超出预算，已省略全部 ${affected} 条工具结果的正文以继续。需要其中内容请让我重新读取。`
-            : `本轮上下文超出预算，已缩短 ${affected} 条较早的工具结果（保留最近 ${retainedTurns} 轮）。需要被略去的部分请让我重新读取。`,
+            ? ts("turn.overflowDroppedAll", { count: affected })
+            : ts("turn.overflowNarrowed", { count: affected, turns: retainedTurns }),
       });
     }
   } catch (error) {
     releaseTurn();
     if (error instanceof ContextOverflowError) {
-      throw new ChatServiceError(413, describeOverflow(error.message, compaction));
+      throw new ChatServiceError(413, describeOverflow(error.message, compaction, ts));
     }
     throw error;
   }
@@ -467,15 +478,11 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     toolsUsable,
     // ③ 换了模型必须说出来（REQ-F-210 ③）：静默换模型比换错模型更坏——用户会拿着
     // 一份不知道出自谁的答案去做判断。
-    providerNotice: capabilitySwitch
-      ? `「${capabilitySwitch.from}」不支持工具调用，本轮改用「${capabilitySwitch.to}」执行。`
-      : "",
+    providerNotice: capabilitySwitch ? ts("turn.capabilitySwitch", { from: capabilitySwitch.from, to: capabilitySwitch.to }) : "",
     readFailoverNote: () =>
-      failoverNote ? `「${failoverNote.from}」未能应答（${failoverNote.why}），本轮改用「${failoverNote.to}」。` : "",
-    toolsUnavailableReason:
-      support === "unknown"
-        ? "当前模型尚未探测工具调用能力，本轮按普通对话进行。可在「模型」中点「测试」完成探测。"
-        : "当前模型不支持工具调用，本轮按普通对话进行。",
+      failoverNote ? ts("turn.failover", { from: failoverNote.from, why: failoverNote.why, to: failoverNote.to }) : "",
+    toolsUnavailableReason: support === "unknown" ? ts("turn.toolsUnprobed") : ts("turn.toolsUnsupported"),
+    toolsRejectedReason: ts("turn.toolsUnsupported"),
     /**
      * Learn the provider's tool capability from what actually happened, so an unprobed
      * provider converges after one turn instead of re-asking forever
@@ -490,6 +497,7 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     run: (emit, persist) =>
       runToolLoop({
         registry,
+        t: ts,
         toolSpecs: toolFit.specs,
         toolContext: { ...toolContext, signal: turnSignal },
         messages: assembled,
@@ -594,20 +602,15 @@ type CompactionOutcome = "not-attempted" | "applied" | "failed";
  * REQ-NF-007 ④ (CP-8): the refusal names what was already tried, so the user is not told
  * to open a new conversation as if compaction had never been attempted.
  */
-function describeOverflow(base: string, compaction: CompactionOutcome): string {
+function describeOverflow(base: string, compaction: CompactionOutcome, ts: ServerTranslate): string {
   if (compaction === "applied") {
-    return `已压缩早前对话并收窄工具结果，${base}`;
+    return ts("turn.overflowAfterCompaction", { base });
   }
   if (compaction === "failed") {
-    return `压缩早前对话未成功，已按原样收窄工具结果，${base}`;
+    return ts("turn.overflowCompactionFailed", { base });
   }
   return base;
 }
-
-const SUMMARY_SYSTEM_PROMPT =
-  "你在压缩一段对话历史，供后续轮次作为背景使用。请写一份简洁的中文摘要，必须保留：" +
-  "已经做出的决定、明确的约束与偏好、专有名词与标识符（文件名、接口名、编号）、以及尚未完成的事项。" +
-  "不要复述寒暄，不要添加原文没有的内容。只输出摘要正文。";
 
 /**
  * Fold `messages` up to `through` into one summary, persist it, and return it
@@ -618,6 +621,8 @@ const SUMMARY_SYSTEM_PROMPT =
  */
 async function summarizeSpan(input: {
   store: Store;
+  /** The summary is written in the reply language (REQ-F-350 ruling ④). */
+  language: UiLanguage;
   conversationId: string;
   provider: ProviderRuntimeConfig;
   /** The model this turn resolved to — the summary uses the very same one (CP-2). */
@@ -651,7 +656,7 @@ async function summarizeSpan(input: {
   try {
     summary = await completer(
       [
-        { role: "system", content: SUMMARY_SYSTEM_PROMPT },
+        { role: "system", content: tServer(input.language, "turn.summaryPrompt") },
         { role: "user", content: transcript },
       ],
       { maxTokens: SUMMARY_MAX_TOKENS, timeoutMs: 30_000 }
@@ -709,6 +714,8 @@ function createStreamingResponse(input: {
   /** 流结束时回看有没有发生过失败下沉——它在第一次调用之中才知道。 */
   readFailoverNote: () => string;
   toolsUnavailableReason: string;
+  /** What to say when the provider itself rejects the `tools` field mid-stream (adapter notice, reworded here). */
+  toolsRejectedReason: string;
   store: Store;
   estimateFallback: () => number;
   run: (
@@ -738,8 +745,11 @@ function createStreamingResponse(input: {
           return;
         }
         if (delta.type === "tools-unavailable") {
-          // The adapter dropped `tools` after the provider rejected the field.
+          // The adapter dropped `tools` after the provider rejected the field. Its reason is
+          // reworded here so the transcript speaks the interface language (REQ-F-350).
           toolsRejected = true;
+          send({ type: "tools-unavailable", reason: input.toolsRejectedReason });
+          return;
         }
         send(delta);
       };

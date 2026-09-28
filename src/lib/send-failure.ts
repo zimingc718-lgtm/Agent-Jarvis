@@ -14,6 +14,8 @@
  * that changes what the user should do next — is the server still running?
  */
 
+import { translator, type Translate } from "./i18n";
+
 /** Endpoint used only to decide whether the server is answering at all. */
 export const HEALTH_PATH = "/api/display";
 export const HEALTH_TIMEOUT_MS = 3_000;
@@ -37,14 +39,16 @@ export function isNetworkFailure(error: unknown): boolean {
 
 export async function describeSendFailure(
   error: unknown,
-  deps: { probe?: () => Promise<boolean>; now?: () => Date } = {}
+  deps: { probe?: () => Promise<boolean>; now?: () => Date; t?: Translate } = {}
 ): Promise<SendFailure> {
   const now = (deps.now ?? (() => new Date()))();
   const at = stamp(now);
+  // Interface language (REQ-F-350): the caller passes its `useT()`; tests and old callers get Chinese.
+  const t = deps.t ?? translator("zh");
 
   if (!isNetworkFailure(error)) {
     // The server answered with something. Its own words are better than ours.
-    return { kind: "reported", message: error instanceof Error ? error.message : "对话请求失败。" };
+    return { kind: "reported", message: error instanceof Error ? error.message : t("chat.requestFailed") };
   }
 
   const probe = deps.probe ?? defaultProbe;
@@ -53,14 +57,12 @@ export async function describeSendFailure(
   if (!alive) {
     return {
       kind: "server-gone",
-      message:
-        `${at} 与本机服务的连接中断，且服务当前没有响应。` +
-        `常见原因是它被重启，或在内存紧张时被系统停掉。请重新启动服务后重试——这一轮没有任何内容被保存。`,
+      message: t("sendFailure.serverGone", { at }),
     };
   }
   return {
     kind: "transfer-broken",
-    message: `${at} 请求在传输中断开，但服务仍在运行，可以直接重试。这一轮没有任何内容被保存。`,
+    message: t("sendFailure.transferBroken", { at }),
   };
 }
 

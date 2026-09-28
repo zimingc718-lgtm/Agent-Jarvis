@@ -1,5 +1,8 @@
 import { registerSkill, SKILLS_ROOT, type RegisterSkillResult } from "./skills";
 import { SkillNameConflictError, type SkillProposalRecord, type Store } from "./store";
+import { zhMessage } from "./coded-error";
+import type { Vars } from "./i18n-core";
+import type { ServerMessageKey } from "./i18n-server";
 
 /**
  * The approval step for model-proposed skills (REQ-F-320 ①, DEC-430 ②;
@@ -20,12 +23,12 @@ export function buildSkillDoc(name: string, description: string, body: string): 
 
 export type SkillProposalDecision =
   | { ok: true; skill: RegisterSkillResult; proposal: SkillProposalRecord }
-  | { ok: false; status: 404 | 409 | 500; message: string };
+  | { ok: false; status: 404 | 409 | 500; code: ServerMessageKey; params?: Vars; message: string };
 
 export async function adoptSkillProposal(store: Store, userId: string, id: string): Promise<SkillProposalDecision> {
   const proposal = store.getSkillProposal(userId, id);
   if (!proposal || proposal.status !== "pending") {
-    return { ok: false, status: 404, message: `没有编号为「${id}」的待确认技能提议，或它已被处理。` };
+    return { ok: false, status: 404, code: "skillProposal.notFound", params: { id }, message: zhMessage("skillProposal.notFound", { id }) };
   }
   try {
     // `complete: null` — an authored SKILL.md with frontmatter never needs generation
@@ -46,10 +49,12 @@ export async function adoptSkillProposal(store: Store, userId: string, id: strin
       return {
         ok: false,
         status: 409,
-        message: `已存在同名技能「${proposal.name}」，未注册。请先在 ☰ →「技能」里删除/改名旧的那个，再采纳。`,
+        code: "skillProposal.nameConflict",
+        params: { name: proposal.name },
+        message: zhMessage("skillProposal.nameConflict", { name: proposal.name }),
       };
     }
-    return { ok: false, status: 500, message: "注册技能失败，未写入。" };
+    return { ok: false, status: 500, code: "skillProposal.registerFailed", message: zhMessage("skillProposal.registerFailed") };
   }
 }
 

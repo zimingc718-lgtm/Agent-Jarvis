@@ -18,20 +18,12 @@ import {
   DISPLAY_CHANGED_EVENT,
   DISPLAY_STAGE_EVENT,
   SETTINGS_PANEL_EVENT,
+  SETTINGS_PANEL_KEY,
   type DisplayStage,
   type DisplayView,
   type SettingsPanel,
 } from "@/lib/ui-events";
 import { useT } from "@/components/LanguageProvider";
-import type { MessageKey } from "@/lib/i18n";
-
-/** Heading and aria label of each on-screen settings panel (REQ-F-200 ②), through the dictionary (REQ-F-340). */
-const PANEL_KEY: Record<SettingsPanel, MessageKey> = {
-  models: "display.panel.models",
-  skills: "display.panel.skills",
-  tools: "display.panel.tools",
-  library: "display.panel.library",
-};
 
 /**
  * The opening (CR-20260912-display-stage; user ruling 2026-09-11).
@@ -256,7 +248,7 @@ export function DisplayScreen({
     return (
       <section
         className="display-screen display-screen--settings fixed inset-0 z-0 flex flex-col overflow-y-auto bg-background"
-        aria-label={t("display.panelSettingsAria", { panel: t(PANEL_KEY[panel]) })}
+        aria-label={t("display.panelSettingsAria", { panel: t(SETTINGS_PANEL_KEY[panel]) })}
       >
         <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2">
           <button
@@ -267,7 +259,7 @@ export function DisplayScreen({
             <ArrowLeft aria-hidden="true" className="mr-1 inline size-3.5" />
             {t("common.back")}
           </button>
-          <h2 className="text-sm font-medium">{t(PANEL_KEY[panel])}</h2>
+          <h2 className="text-sm font-medium">{t(SETTINGS_PANEL_KEY[panel])}</h2>
         </div>
         <div className="mx-auto w-full max-w-3xl px-4 py-4">
           {panel === "tools" ? <ToolPanel /> : null}

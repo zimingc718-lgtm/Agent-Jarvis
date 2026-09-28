@@ -16,6 +16,8 @@ import {
 } from "@/lib/documents";
 import { resolveArchiveDir, SETTING_ARCHIVE_DIR } from "@/lib/insight-export";
 import { resolveFormatterSkill, SETTING_FORMAT_SKILL } from "@/lib/document-format";
+import { messageFor } from "@/lib/coded-error";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * Local document folders (REQ-F-110 ①, TASK-170 ④).
@@ -59,6 +61,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -70,18 +73,18 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => ({}))) as { path?: unknown };
   if (typeof body.path !== "string") {
-    return NextResponse.json({ message: "缺少 path。" }, { status: 400 });
+    return NextResponse.json({ message: t("api.missingPath") }, { status: 400 });
   }
 
   const checked = await validateRoot(body.path);
   if (!checked.ok) {
-    return NextResponse.json({ message: checked.message }, { status: 400 });
+    return NextResponse.json({ message: t(checked.code) }, { status: 400 });
   }
 
   const store = getStore();
   const roots = parseRoots(store.getSetting(SETTING_DOCUMENT_ROOTS));
   if (roots.some((root) => root.path === checked.path)) {
-    return NextResponse.json({ message: "这个文件夹已经加过了。" }, { status: 400 });
+    return NextResponse.json({ message: t("api.folderAlreadyAdded") }, { status: 400 });
   }
   const next = [...roots, { label: labelFor(checked.path, roots.map((root) => root.label)), path: checked.path }];
   store.setSetting(SETTING_DOCUMENT_ROOTS, serializeRoots(next));
@@ -96,6 +99,7 @@ export async function POST(request: Request) {
  * 出现的地方离设置它的地方很远。空串表示清除。
  */
 export async function PATCH(request: Request) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -109,7 +113,7 @@ export async function PATCH(request: Request) {
   const hasArchive = typeof body.archive === "string";
   const hasFormatSkill = typeof body.formatSkill === "string";
   if (!hasArchive && !hasFormatSkill) {
-    return NextResponse.json({ message: "缺少 archive 或 formatSkill。" }, { status: 400 });
+    return NextResponse.json({ message: t("api.missingArchiveOrSkill") }, { status: 400 });
   }
   const store = getStore();
 
@@ -120,7 +124,7 @@ export async function PATCH(request: Request) {
     if (!wantedSkill) {
       store.setSetting(SETTING_FORMAT_SKILL, null);
     } else if (!store.listSkills(auth.userId).some((skill) => skill.id === wantedSkill)) {
-      return NextResponse.json({ message: "没有这个技能，请先在「技能」里上传并注册。" }, { status: 400 });
+      return NextResponse.json({ message: t("api.formatSkillUnknown") }, { status: 400 });
     } else {
       store.setSetting(SETTING_FORMAT_SKILL, wantedSkill);
     }
@@ -135,7 +139,7 @@ export async function PATCH(request: Request) {
         const target = await resolveArchiveDir(wanted, store.getSetting(SETTING_DOCUMENT_ROOTS));
         store.setSetting(SETTING_ARCHIVE_DIR, target.dir);
       } catch (error) {
-        const message = error instanceof DocumentPathError ? error.message : "归档目录无法使用。";
+        const message = error instanceof DocumentPathError ? messageFor(t, error) : t("api.archiveUnusable");
         return NextResponse.json({ message }, { status: 400 });
       }
     }
@@ -144,6 +148,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -155,13 +160,13 @@ export async function DELETE(request: Request) {
 
   const label = new URL(request.url).searchParams.get("label");
   if (!label) {
-    return NextResponse.json({ message: "缺少 label。" }, { status: 400 });
+    return NextResponse.json({ message: t("api.missingLabel") }, { status: 400 });
   }
   const store = getStore();
   const roots = parseRoots(store.getSetting(SETTING_DOCUMENT_ROOTS));
   const next = roots.filter((root) => root.label !== label);
   if (next.length === roots.length) {
-    return NextResponse.json({ message: `没有名为「${label}」的文档目录。` }, { status: 404 });
+    return NextResponse.json({ message: t("api.folderNotFound", { label }) }, { status: 404 });
   }
   // Removing a root only forgets where to look. Nothing on disk is touched — this layer
   // has no writer at all (REQ-F-110 ⑤).

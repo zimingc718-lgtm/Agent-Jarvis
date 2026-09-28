@@ -5,6 +5,7 @@ import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
 import { resolveUserDataRoots } from "@/lib/user-data-paths";
 import { adoptProposal, discardProposal } from "@/lib/entity-proposals";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * The approval step for model-proposed FIELD changes (CR-20260911-home-dashboard).
@@ -30,6 +31,7 @@ async function guard(): Promise<Guarded> {
 }
 
 export async function POST(_request: Request, { params }: Params) {
+  const t = requestTranslator();
   const guarded = await guard();
   if (!guarded.ok) {
     return guarded.response;
@@ -38,12 +40,13 @@ export async function POST(_request: Request, { params }: Params) {
   const id = decodeURIComponent((await params).id ?? "").trim();
   const entity = await adoptProposal(id, entitiesRoot);
   if (!entity) {
-    return NextResponse.json({ message: `没有编号为「${id}」的待采纳修改，或它指向的对象已不存在。` }, { status: 404 });
+    return NextResponse.json({ message: t("api.proposalNotFoundOrOrphan", { id }) }, { status: 404 });
   }
   return NextResponse.json({ ok: true, entity });
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
+  const t = requestTranslator();
   const guarded = await guard();
   if (!guarded.ok) {
     return guarded.response;
@@ -52,7 +55,7 @@ export async function DELETE(_request: Request, { params }: Params) {
   const id = decodeURIComponent((await params).id ?? "").trim();
   const removed = await discardProposal(id, entitiesRoot);
   if (!removed) {
-    return NextResponse.json({ message: `没有编号为「${id}」的待采纳修改。` }, { status: 404 });
+    return NextResponse.json({ message: t("api.proposalNotFound", { id }) }, { status: 404 });
   }
   return NextResponse.json({ ok: true, id });
 }

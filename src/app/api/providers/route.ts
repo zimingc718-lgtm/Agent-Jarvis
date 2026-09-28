@@ -6,6 +6,8 @@ import { requireUserId } from "@/lib/auth-guard";
 import { getDefaultProviderTemplates } from "@/lib/providers";
 import { getStore } from "@/lib/store-singleton";
 import type { ProviderAuthMode, ProviderKind } from "@/lib/types";
+import type { ServerTranslate } from "@/lib/i18n-server";
+import { requestTranslator } from "@/lib/i18n-request";
 
 const providerKinds: ProviderKind[] = ["openai", "deepseek", "local"];
 // "oauth" is a recognised auth mode (REQ-F-008) but no OAuth flow ships in this version,
@@ -30,6 +32,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -41,7 +44,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const parsed = parseProviderBody(body);
+  const parsed = parseProviderBody(body, t);
   if (!parsed.ok) {
     return NextResponse.json({ message: parsed.message }, { status: 400 });
   }
@@ -50,7 +53,7 @@ export async function POST(request: Request) {
   return NextResponse.json({ id: result.id, created: result.created }, { status: result.created ? 201 : 200 });
 }
 
-function parseProviderBody(body: unknown):
+function parseProviderBody(body: unknown, t: ServerTranslate):
   | {
       ok: true;
       value: {
@@ -82,7 +85,7 @@ function parseProviderBody(body: unknown):
     return { ok: false, message: "Provider kind is invalid." };
   }
   if (authMode === "oauth" || authMode === "unsupported") {
-    return { ok: false, message: "OAuth 与 Unsupported 认证模式在当前版本不可保存，请使用 API Key 或 Local。" };
+    return { ok: false, message: t("api.authModeUnsupported") };
   }
   if (!saveableAuthModes.includes(authMode as ProviderAuthMode)) {
     return { ok: false, message: "Provider auth mode is invalid." };

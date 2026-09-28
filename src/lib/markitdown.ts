@@ -1,5 +1,7 @@
 import { execFile } from "node:child_process";
 import { join } from "node:path";
+import { zhMessage } from "./coded-error";
+import type { ServerMessageKey } from "./i18n-server";
 
 /**
  * PDF/DOCX → Markdown/HTML via `scripts/documents_to_html.py` (DEC-390, CR-20260921-markitdown-display;
@@ -98,15 +100,20 @@ export async function renderMarkdown(markdown: string, timeoutMs = DEFAULT_TIMEO
 }
 
 /** Human-readable message for the failure reasons above — never leaks stderr verbatim to the client. */
-export function describeMarkitdownFailure(reason: string): string {
+export function markitdownFailureKey(reason: string): ServerMessageKey {
   if (reason.startsWith("notfound:")) {
-    return "转换服务不可用（Python 运行时未就绪）。";
+    return "markitdown.pythonMissing";
   }
   if (reason === "timeout") {
-    return "文档转换超时，文件可能过大或过于复杂。";
+    return "markitdown.timeout";
   }
   if (reason === "empty") {
-    return "转换结果为空——这份文件可能没有可提取的文字层。";
+    return "markitdown.empty";
   }
-  return "文档转换失败。";
+  return "markitdown.failed";
+}
+
+/** The Chinese wording of `markitdownFailureKey` — what tool results keep saying. */
+export function describeMarkitdownFailure(reason: string): string {
+  return zhMessage(markitdownFailureKey(reason));
 }

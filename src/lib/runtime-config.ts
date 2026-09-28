@@ -32,5 +32,3 @@ export function getStorageConfig(env: StorageEnv = process.env): RuntimeConfigSt
     : { configured: false, missing: ["JARVIS_SECRET_KEY"] };
 }
 
-export const STORAGE_CONFIG_HINT =
-  "该密钥用于加密保存 Provider 凭据。请在 .env.local 中设置后重启开发服务器，参见 docs/LOCAL_CONFIGURATION.md。";

@@ -5,6 +5,7 @@ import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
 import { countByEntity, listKnowledge, listSearchMisses } from "@/lib/knowledge";
 import { resolveUserDataRoots } from "@/lib/user-data-paths";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * What the board's lower half needs (CR-20260911-home-dashboard).
@@ -14,6 +15,7 @@ import { resolveUserDataRoots } from "@/lib/user-data-paths";
  * demand-side gap signal; the type counts are the supply-side one.
  */
 export async function GET() {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -32,7 +34,7 @@ export async function GET() {
 
   const byType: Record<string, number> = {};
   for (const entry of entries) {
-    const key = entry.docType || "未分类";
+    const key = entry.docType || t("api.uncategorized");
     byType[key] = (byType[key] ?? 0) + 1;
   }
 

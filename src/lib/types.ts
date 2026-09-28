@@ -15,7 +15,11 @@ export type ProviderSummary = {
   secretPreview: string | null;
   /** Human-readable reason the provider is not usable, or null when it is fine. */
   note: string | null;
+  /** Dictionary key behind `note`, so the interface can word it in its language (CR-20260928-server-strings-i18n). */
+  noteCode?: ProviderNoteCode | null;
 };
+
+export type ProviderNoteCode = "secretUndecryptable" | "missingKey";
 
 export type ProviderRuntimeConfig = {
   id: string;

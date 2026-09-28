@@ -1705,7 +1705,7 @@
       "real_entry": false,
       "date": "2026-09-28",
       "entry": "assistant",
-      "notes": "守卫 2 例（REQ-F-340 ④，DEC-460 ⑤，TASK-580）。TypeScript 语法树扫描 src/components 与 src/app（除 api/）的字符串 / 模板 / JSX 文本，含中文即红并给出 file:line；白名单仅数据键 __通用__。第一次运行找出正则摸底漏掉的 36 个与表达式相邻的 JSX 片段，收进字典后为零。"
+      "notes": "（CR-20260928-server-strings-i18n 起扫描范围加 src/app/api/**，路由文件零中文字面量；2 例 PASS。）守卫 2 例（REQ-F-340 ④，DEC-460 ⑤，TASK-580）。TypeScript 语法树扫描 src/components 与 src/app（除 api/）的字符串 / 模板 / JSX 文本，含中文即红并给出 file:line；白名单仅数据键 __通用__。第一次运行找出正则摸底漏掉的 36 个与表达式相邻的 JSX 片段，收进字典后为零。"
     },
     {
       "id": "TEST-582",
@@ -1715,13 +1715,49 @@
       "date": "2026-09-28",
       "entry": "user",
       "notes": "真实入口（REQ-F-340，TASK-580）。2026-09-28 在用户运行中的本机服务（构建 oQB8g1T-1e2Lr14uWjeiT）上经真实 GET / 与 GET/PUT /api/settings/language 走完：默认 zh 首屏含 10/10 中文界面哨兵词；PUT en 后 GET 读到 en，首屏含 10/10 英文哨兵词、0 中文界面哨兵词（剩余 CJK 1865 个全部来自用户数据）；PUT zh 切回恢复。命令列指向机器对照 TEST-580；☰ 即时切换的目视留给用户，见 EV §4。"
+    },
+    {
+      "id": "TEST-590",
+      "result": "PASS",
+      "command": "npx vitest run tests/i18n-server.test.ts",
+      "real_entry": false,
+      "date": "2026-09-28",
+      "entry": "assistant",
+      "notes": "服务端字典与 coded 错误 4 例（REQ-F-350 ①②，DEC-470 ①③，TASK-590）。zh / en 171 键逐键一致、占位符一致、en 无中文；tServer / serverTranslator / zhMessage 插值；coded 错误 message 仍是原中文句、messageFor 按语言重述；非 coded 原样透出、fallback、withCode。"
+    },
+    {
+      "id": "TEST-591",
+      "result": "PASS",
+      "command": "npx vitest run tests/server-strings-lang.test.ts",
+      "real_entry": false,
+      "date": "2026-09-28",
+      "entry": "assistant",
+      "notes": "en / zh 路由与通知 4 例（REQ-F-350 ①③，DEC-470 ②④⑤）。默认中文四类 message 逐字不变；切 en 后英文、切回恢复（settings/documents 相对路径、settings/wake 间隔 0、library/decide 非 JSON、actions 非法 effects）；buildWakeMessages 提示词与转录标题按语言；runToolLoop 未知工具步骤行状态跟随 t。"
+    },
+    {
+      "id": "TEST-592",
+      "result": "PASS",
+      "command": "npx vitest run tests/server-strings-guard.test.ts tests/ui-strings-guard.test.ts",
+      "real_entry": false,
+      "date": "2026-09-28",
+      "entry": "assistant",
+      "notes": "错误码覆盖守卫 2 例（REQ-F-350 ④，DEC-470）：扫 src/lib 与 src/app/api 里 coded / unformatted / reasonCode / messageCode / noteCode / code / t / ts / tServer / zhMessage / messageFor 命名的码，非空且覆盖路由与领域模块，逐个在服务端字典里；路由零中文字面量由扩了范围的 ui-strings-guard（TEST-581）守。"
+    },
+    {
+      "id": "TEST-593",
+      "result": "PASS",
+      "command": "npx vitest run tests/server-strings-lang.test.ts",
+      "real_entry": true,
+      "date": "2026-09-28",
+      "entry": "user",
+      "notes": "真实入口（REQ-F-350，TASK-590）。2026-09-28 在用户运行中的本机服务（构建 kQJFQcIfS8LGB18ZjELjh）上经真实接口请求走完：默认 zh 四条被拒请求的 message 与改写前逐字一致；PUT en 后同四条为英文（如 Enter an absolute path.）；PUT zh 恢复。全程无写入。命令列指向机器对照 TEST-591，见 EV §4。"
     }
   ],
   "executed_commands": [
     {
       "command": "npx vitest run",
       "result": "PASS",
-      "summary": "2026-09-28 CR-20260928-ui-strings-i18n 最终代码：108 文件 968/968 全部通过；第一轮 105/108 文件、961/968（UI 契约 4 规则 + 测试缝 6 断言），修正后全绿"
+      "summary": "2026-09-28 CR-20260928-server-strings-i18n 最终代码：111 文件 / 978 例：976 通过，2 例在全量负载下超时（既有 flaky tests/floating-chat.test.tsx skill intake ④ 与 tests/knowledge-dashboard.test.tsx ①），两文件单独重跑 78/78 通过"
     },
     {
       "command": "npx vitest run",

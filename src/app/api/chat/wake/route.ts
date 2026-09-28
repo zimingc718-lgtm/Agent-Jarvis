@@ -5,6 +5,7 @@ import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
 import { getStore } from "@/lib/store-singleton";
 import { runWakeTurn } from "@/lib/wake";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * One proactive wake-up (REQ-F-060 ④⑤, REQ-F-061; TASK-101). Plain JSON, not SSE: a
@@ -13,6 +14,7 @@ import { runWakeTurn } from "@/lib/wake";
  * trigger, never the authority on whether tokens get spent.
  */
 export async function POST(request: Request) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -23,5 +25,7 @@ export async function POST(request: Request) {
   }
   const body = (await request.json().catch(() => ({}))) as { manual?: unknown };
   const outcome = await runWakeTurn({ store: getStore(), userId: auth.userId, manual: body.manual === true });
-  return NextResponse.json(outcome);
+  return NextResponse.json(
+    outcome.kind === "skipped" ? { ...outcome, message: t(outcome.messageCode, outcome.messageParams) } : outcome
+  );
 }

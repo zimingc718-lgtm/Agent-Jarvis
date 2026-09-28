@@ -1,5 +1,8 @@
 import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
+import { type Coded, withCode, zhMessage } from "./coded-error";
+import type { Vars } from "./i18n-core";
+import type { ServerMessageKey } from "./i18n-server";
 
 /**
  * Tracked entities for the home knowledge dashboard
@@ -209,6 +212,11 @@ export class EntityError extends Error {
     super(message);
     this.name = "EntityError";
   }
+
+  /** Same Chinese `message` as before, plus the dictionary code a route uses to word it in the interface language (DEC-470 ③). */
+  static coded(code: ServerMessageKey, params?: Vars, status: 400 | 404 | 409 | 413 = 400): EntityError & Coded {
+    return withCode(new EntityError(zhMessage(code, params), status), code, params);
+  }
 }
 
 // ---------------------------------------------------------------- names & paths
@@ -231,13 +239,13 @@ function isSafeName(name: string): boolean {
 
 function entityPath(root: string, name: string, pending = false): string {
   if (!isSafeName(name)) {
-    throw new EntityError(`非法的实体名称「${name}」`, 400);
+    throw EntityError.coded("entity.invalidName", { name }, 400);
   }
   const path = pending ? join(root, PENDING_DIR, `${name}.md`) : join(root, `${name}.md`);
   const rootAbs = resolve(root);
   const targetAbs = resolve(path);
   if (targetAbs !== rootAbs && !targetAbs.startsWith(rootAbs + sep)) {
-    throw new EntityError("实体路径越界", 400);
+    throw EntityError.coded("entity.pathEscape", undefined, 400);
   }
   return path;
 }
@@ -496,20 +504,20 @@ async function uniqueName(dir: string, base: string): Promise<string> {
       return candidate;
     }
   }
-  throw new EntityError("同名实体过多", 409);
+  throw EntityError.coded("entity.tooManySameName", undefined, 409);
 }
 
 export async function saveEntity(input: SaveEntityInput, root: string = ENTITIES_ROOT): Promise<EntitySummary> {
   if (!isEntityKind(input.kind)) {
-    throw new EntityError(`未知的实体类型「${String(input.kind)}」`, 400);
+    throw EntityError.coded("entity.unknownKind", { kind: String(input.kind) }, 400);
   }
   const title = (input.title ?? "").trim();
   if (!title) {
-    throw new EntityError("实体缺少名称，未保存。", 400);
+    throw EntityError.coded("entity.missingName", undefined, 400);
   }
   const body = (input.body ?? "").replace(/\r\n/g, "\n").trim();
   if (Buffer.byteLength(body, "utf8") > MAX_ENTITY_BYTES) {
-    throw new EntityError(`实体正文超过 ${Math.floor(MAX_ENTITY_BYTES / 1024)}KB，未保存。`, 413);
+    throw EntityError.coded("entity.tooLarge", { kb: Math.floor(MAX_ENTITY_BYTES / 1024) }, 413);
   }
   const createdAt = (input.now ?? (() => new Date()))().toISOString();
   const dir = input.pending ? join(root, PENDING_DIR) : root;
@@ -566,7 +574,7 @@ export async function updateEntity(name: string, input: UpdateEntityInput, root:
     return null;
   }
   if (!(UPDATABLE_FIELDS as readonly string[]).includes(input.field)) {
-    throw new EntityError(`字段「${input.field}」不可更新`, 400);
+    throw EntityError.coded("entity.fieldNotUpdatable", { field: input.field }, 400);
   }
   const at = (input.now ?? (() => new Date()))().toISOString();
   const next: Entity = { ...entity };
@@ -625,14 +633,14 @@ export async function setParam(entityName: string, input: SetParamInput, root: s
   }
   const paramName = normalizeParamName(input.name);
   if (!paramName) {
-    throw new EntityError("参数名不能为空。", 400);
+    throw EntityError.coded("entity.paramNameEmpty", undefined, 400);
   }
   const value = input.value.replace(/[|\r\n]/g, " ").trim().slice(0, MAX_LINE_CHARS);
   const at = (input.now ?? (() => new Date()))().toISOString();
 
   const existing = entity.params.find((param) => param.name === paramName);
   if (!existing && entity.params.length >= MAX_PARAMS) {
-    throw new EntityError(`一个对象最多 ${MAX_PARAMS} 条参数，请先清理。`, 409);
+    throw EntityError.coded("entity.tooManyParams", { max: MAX_PARAMS }, 409);
   }
   const status = input.status ?? existing?.status ?? "unknown";
   const params = existing
@@ -701,13 +709,13 @@ export async function setPerson(entityName: string, input: SetPersonInput, root:
   }
   const personName = normalizePersonName(input.name);
   if (!personName) {
-    throw new EntityError("人员姓名不能为空。", 400);
+    throw EntityError.coded("entity.personNameEmpty", undefined, 400);
   }
   const at = (input.now ?? (() => new Date()))().toISOString();
 
   const existing = entity.people.find((person) => person.name === personName);
   if (!existing && entity.people.length >= MAX_PEOPLE) {
-    throw new EntityError(`一个对象最多 ${MAX_PEOPLE} 条人员，请先清理。`, 409);
+    throw EntityError.coded("entity.tooManyPeople", { max: MAX_PEOPLE }, 409);
   }
   const person: Person = {
     name: personName,
@@ -774,20 +782,20 @@ export async function addSource(name: string, url: string, root: string = ENTITI
   try {
     parsed = new URL(trimmed);
   } catch {
-    throw new EntityError("不是合法的 URL。", 400);
+    throw EntityError.coded("entity.urlInvalid", undefined, 400);
   }
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    throw new EntityError("仅支持 http/https。", 400);
+    throw EntityError.coded("entity.urlScheme", undefined, 400);
   }
   if (parsed.username || parsed.password) {
-    throw new EntityError("URL 不得包含用户名或密码。", 400);
+    throw EntityError.coded("entity.urlCredentials", undefined, 400);
   }
   const entity = await readEntity(name, root);
   if (!entity) {
     return null;
   }
   if (entity.sources.includes(trimmed)) {
-    throw new EntityError("该源已存在。", 409);
+    throw EntityError.coded("entity.sourceExists", undefined, 409);
   }
   const next: Entity = { ...entity, sources: [...entity.sources, trimmed] };
   if (next.health === "unconfigured") {

@@ -23,7 +23,7 @@ import { listKnowledge, listPending } from "@/lib/knowledge";
 import { readLanguage } from "@/lib/language";
 import { buildTranscript } from "@/lib/transcript";
 import { getDefaultProviderTemplates } from "@/lib/providers";
-import { STORAGE_CONFIG_HINT, getStorageConfig } from "@/lib/runtime-config";
+import { getStorageConfig } from "@/lib/runtime-config";
 import { getStore } from "@/lib/store-singleton";
 import { resolveUserDataRoots } from "@/lib/user-data-paths";
 
@@ -110,7 +110,7 @@ export default async function HomePage() {
       {auth.ok && !storage.configured ? (
         /* pb-36 keeps the message clear of the fixed bottom console. */
         <div className="home__message mx-auto max-w-3xl px-6 pt-8 pb-36">
-          <ConfigWarning title={t("page.storageNotConfigured")} missing={storage.missing} hint={STORAGE_CONFIG_HINT} />
+          <ConfigWarning title={t("page.storageNotConfigured")} missing={storage.missing} hint={t("page.storageHint")} />
         </div>
       ) : null}
 

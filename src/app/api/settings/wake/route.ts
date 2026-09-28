@@ -5,6 +5,8 @@ import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
 import { getStore } from "@/lib/store-singleton";
 import { readWakeSettings, readWakeUsage, WakeSettingsError, writeWakeSettings } from "@/lib/wake";
+import { messageFor } from "@/lib/coded-error";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * Proactive wake-up configuration (REQ-F-060 ①②③; TASK-101). Its own ☰ entry, like
@@ -29,6 +31,7 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const t = requestTranslator();
   const blocked = await guard();
   if (blocked) {
     return blocked;
@@ -44,7 +47,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ ok: true, ...settings, usage: readWakeUsage(store) });
   } catch (error) {
     if (error instanceof WakeSettingsError) {
-      return NextResponse.json({ message: error.message }, { status: 400 });
+      return NextResponse.json({ message: messageFor(t, error) }, { status: 400 });
     }
     throw error;
   }

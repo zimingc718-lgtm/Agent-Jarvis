@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
-import { listBrowseCards } from "@/lib/library";
+import { UNCATEGORIZED_LABEL, listBrowseCards } from "@/lib/library";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * 统一浏览：资料库已采纳原件 + 知识库真实条目，分页（CR-20260915-knowledge-library-merge CP-2）。
@@ -17,6 +18,7 @@ const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 
 export async function GET(request: Request) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -32,7 +34,11 @@ export async function GET(request: Request) {
   const offset = Number.isFinite(offsetParam) ? Math.max(0, offsetParam) : 0;
   const limit = Number.isFinite(limitParam) ? Math.min(MAX_LIMIT, Math.max(1, limitParam)) : DEFAULT_LIMIT;
 
-  const { cards, byType } = await listBrowseCards();
+  const { cards, byType: rawByType } = await listBrowseCards();
+  // The uncategorized bucket is labelled by the server; word it in the interface language (REQ-F-350).
+  const byType = Object.fromEntries(
+    Object.entries(rawByType).map(([key, count]) => [key === UNCATEGORIZED_LABEL ? t("api.uncategorized") : key, count])
+  );
   const page = cards.slice(offset, offset + limit);
 
   return NextResponse.json({ cards: page, total: cards.length, byType, offset, limit });

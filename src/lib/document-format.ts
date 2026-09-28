@@ -4,6 +4,9 @@ import { join } from "node:path";
 import { estimateTokens } from "./adapters";
 import { makeCompleter, readSkillDoc, type Completer } from "./skills";
 import type { Store } from "./store";
+import { zhMessage } from "./coded-error";
+import type { Vars } from "./i18n-core";
+import type { ServerMessageKey } from "./i18n-server";
 
 /**
  * Optional model pass over an extracted document (REQ-F-290, DEC-400/401;
@@ -58,6 +61,9 @@ export type FormatResult = {
   status: FormatStatus;
   /** Human-readable note for the page header; empty when fully formatted. */
   note: string;
+  /** Dictionary code + params behind `note`, so the route can word it in the interface language (DEC-470). */
+  noteCode?: ServerMessageKey;
+  noteParams?: Vars;
   chunks: number;
   keptVerbatim: number;
 };
@@ -84,7 +90,15 @@ export function cacheKey(input: { bytes: Buffer; skillId: string; model: string 
   return `${hash}--${skill}--${model}`;
 }
 
-type CacheRow = { markdown: string; status: FormatStatus; note: string; chunks: number; keptVerbatim: number };
+type CacheRow = {
+  markdown: string;
+  status: FormatStatus;
+  note: string;
+  noteCode?: ServerMessageKey;
+  noteParams?: Vars;
+  chunks: number;
+  keptVerbatim: number;
+};
 
 async function readCache(dir: string, key: string): Promise<CacheRow | null> {
   try {
@@ -97,6 +111,8 @@ async function readCache(dir: string, key: string): Promise<CacheRow | null> {
       markdown: parsed.markdown,
       status: parsed.status === "partial" ? "partial" : "formatted",
       note: typeof parsed.note === "string" ? parsed.note : "",
+      noteCode: typeof parsed.noteCode === "string" ? parsed.noteCode : undefined,
+      noteParams: parsed.noteParams && typeof parsed.noteParams === "object" ? parsed.noteParams : undefined,
       chunks: typeof parsed.chunks === "number" ? parsed.chunks : 0,
       keptVerbatim: typeof parsed.keptVerbatim === "number" ? parsed.keptVerbatim : 0,
     };
@@ -183,10 +199,12 @@ export type FormatDocumentInput = {
  * into `status`/`note` so the route can always render *something* honest.
  */
 export async function formatDocument(input: FormatDocumentInput): Promise<FormatResult> {
-  const unformatted = (note: string): FormatResult => ({
+  const unformatted = (code: ServerMessageKey, params?: Vars): FormatResult => ({
     markdown: input.markdown,
     status: "unformatted",
-    note,
+    note: zhMessage(code, params),
+    noteCode: code,
+    noteParams: params,
     chunks: 0,
     keptVerbatim: 0,
   });
@@ -196,7 +214,7 @@ export async function formatDocument(input: FormatDocumentInput): Promise<Format
   if (!completer || !model) {
     const provider = input.store.resolveActiveProvider(input.userId);
     if (!provider) {
-      return unformatted("本次未经排版：当前没有可用的模型 Provider。");
+      return unformatted("format.noProvider");
     }
     completer = completer ?? makeCompleter(provider);
     model = model ?? provider.defaultModel;
@@ -211,7 +229,7 @@ export async function formatDocument(input: FormatDocumentInput): Promise<Format
 
   const rule = await readSkillDoc(input.skill.dirPath);
   if (!rule) {
-    return unformatted(`本次未经排版：排版技能「${input.skill.name}」的 SKILL.md 为空或不可读。`);
+    return unformatted("format.skillEmpty", { name: input.skill.name });
   }
   const system = `${rule}${FORMAT_INSTRUCTION_TAIL}`;
 
@@ -246,15 +264,14 @@ export async function formatDocument(input: FormatDocumentInput): Promise<Format
   }
 
   if (succeeded === 0) {
-    return unformatted("本次未经排版：模型对每一段的输出都不可用，已按原样显示。");
+    return unformatted("format.allFailed");
   }
 
   const status: FormatStatus = keptVerbatim > 0 ? "partial" : "formatted";
-  const note =
-    keptVerbatim > 0
-      ? `已按排版技能「${input.skill.name}」整理，其中 ${keptVerbatim} 段因模型输出缩水而保留原文（页内有标注）。`
-      : "";
-  const row: CacheRow = { markdown: out.join("\n\n"), status, note, chunks: sent.length, keptVerbatim };
+  const noteCode: ServerMessageKey | undefined = keptVerbatim > 0 ? "format.partial" : undefined;
+  const noteParams = noteCode ? { name: input.skill.name, kept: keptVerbatim } : undefined;
+  const note = noteCode ? zhMessage(noteCode, noteParams) : "";
+  const row: CacheRow = { markdown: out.join("\n\n"), status, note, noteCode, noteParams, chunks: sent.length, keptVerbatim };
   try {
     await writeCache(cacheDir, key, row);
   } catch {

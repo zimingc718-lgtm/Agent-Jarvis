@@ -5,6 +5,7 @@ import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
 import { getStore } from "@/lib/store-singleton";
 import { probeSearchBackend, readWebSettings, validateSearchBaseUrl } from "@/lib/tools/web-tools";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * "Test connection" for the search backend (REQ-F-038 ②).
@@ -12,6 +13,7 @@ import { probeSearchBackend, readWebSettings, validateSearchBaseUrl } from "@/li
  * never disagree about what counts as a working endpoint (REQ-NF-011 ③).
  */
 export async function POST(request: Request) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -26,7 +28,7 @@ export async function POST(request: Request) {
     ? body.baseUrl.trim()
     : (readWebSettings(getStore()).baseUrl ?? "");
   if (!raw) {
-    return NextResponse.json({ ok: false, message: "尚未填写搜索服务地址。" });
+    return NextResponse.json({ ok: false, message: t("api.searchUrlMissing") });
   }
 
   const checked = validateSearchBaseUrl(raw);

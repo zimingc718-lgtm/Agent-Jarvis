@@ -4,6 +4,9 @@ import { extractPdfText, looksLikePdf } from "./pdf-text";
 import { rankBm25, snippetFor, tokenize, type IndexedDoc } from "./knowledge";
 import { readZipEntries } from "./zip";
 import { htmlToMarkdown } from "./html-text";
+import { type Coded, withCode, zhMessage } from "./coded-error";
+import type { Vars } from "./i18n-core";
+import type { ServerMessageKey } from "./i18n-server";
 
 /**
  * The local original-document layer (REQ-F-110, DEC-090, TASK-170).
@@ -56,6 +59,11 @@ export class DocumentPathError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "DocumentPathError";
+  }
+
+  /** Same Chinese `message` as before, plus the dictionary code a route uses to word it in the interface language (DEC-470 ③). */
+  static coded(code: ServerMessageKey, params?: Vars): DocumentPathError & Coded {
+    return withCode(new DocumentPathError(zhMessage(code, params)), code, params);
   }
 }
 
@@ -122,23 +130,25 @@ export function labelFor(path: string, taken: string[] = []): string {
   return `${clean}-${Date.now()}`;
 }
 
-export async function validateRoot(raw: string): Promise<{ ok: true; path: string } | { ok: false; message: string }> {
+export async function validateRoot(
+  raw: string
+): Promise<{ ok: true; path: string } | { ok: false; code: ServerMessageKey; message: string }> {
   const trimmed = raw.trim();
   if (!trimmed) {
-    return { ok: false, message: "路径为空。" };
+    return { ok: false, code: "docs.pathEmpty", message: zhMessage("docs.pathEmpty") };
   }
   if (!isAbsolute(trimmed)) {
-    return { ok: false, message: "请填绝对路径。" };
+    return { ok: false, code: "docs.pathNotAbsolute", message: zhMessage("docs.pathNotAbsolute") };
   }
   let real: string;
   try {
     real = await realpath(trimmed);
   } catch {
-    return { ok: false, message: "路径不存在，或当前账户没有访问权限。" };
+    return { ok: false, code: "docs.pathMissing", message: zhMessage("docs.pathMissing") };
   }
   const info = await stat(real);
   if (!info.isDirectory()) {
-    return { ok: false, message: "请指向一个文件夹，而不是单个文件。" };
+    return { ok: false, code: "docs.notFolder", message: zhMessage("docs.notFolder") };
   }
   return { ok: true, path: real };
 }

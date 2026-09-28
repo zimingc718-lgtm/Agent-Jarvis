@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { decryptSecret, encryptSecret, maskSecret } from "./crypto";
 import { migrateUp } from "./migrations";
-import type { ProviderAuthMode, ProviderKind, ProviderRuntimeConfig, ProviderSummary } from "./types";
+import type { ProviderAuthMode, ProviderKind, ProviderRuntimeConfig, ProviderNoteCode, ProviderSummary } from "./types";
 
 type UserInput = {
   email: string;
@@ -432,7 +432,7 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
             ORDER BY priority ASC, created_at DESC`
         )
         .all(userId) as Array<
-        Omit<ProviderSummary, "connected" | "enabled" | "note"> & {
+        Omit<ProviderSummary, "connected" | "enabled" | "note" | "noteCode"> & {
           enabled: 0 | 1;
           encryptedSecret: string | null;
         }
@@ -441,6 +441,7 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
       return rows.map((row) => {
         let connected = row.authMode === "local";
         let note: string | null = null;
+        let noteCode: ProviderNoteCode | null = null;
 
         if (!connected && row.encryptedSecret) {
           try {
@@ -449,9 +450,11 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
           } catch {
             connected = false;
             note = "凭据无法解密，请重新输入 API Key（JARVIS_SECRET_KEY 可能已更改）。";
+            noteCode = "secretUndecryptable";
           }
         } else if (!connected && row.authMode === "api_key" && !row.encryptedSecret) {
           note = "缺少 API Key。";
+          noteCode = "missingKey";
         }
 
         return {
@@ -466,6 +469,7 @@ export function createStore(databasePath: string, encryptionKey = process.env.JA
           priority: row.priority,
           secretPreview: row.secretPreview,
           note,
+          noteCode,
         };
       });
     },

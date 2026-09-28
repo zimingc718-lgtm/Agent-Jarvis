@@ -1,4 +1,7 @@
 import { inflateRawSync } from "node:zlib";
+import { type Coded, withCode, zhMessage } from "./coded-error";
+import type { Vars } from "./i18n-core";
+import type { ServerMessageKey } from "./i18n-server";
 
 /**
  * A bounded, zero-dependency ZIP reader (CR-20260910-skill-intake, DEC-018).
@@ -17,6 +20,11 @@ export class ZipError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "ZipError";
+  }
+
+  /** Same Chinese `message` as before, plus the dictionary code a route uses to word it in the interface language (DEC-470 ③). */
+  static coded(code: ServerMessageKey, params?: Vars): ZipError & Coded {
+    return withCode(new ZipError(zhMessage(code, params)), code, params);
   }
 }
 
@@ -64,10 +72,10 @@ export function readZipEntries(
   const bounds = { ...DEFAULT_ZIP_LIMITS, ...limits };
 
   if (buffer.length > bounds.maxArchiveBytes) {
-    throw new ZipError(`压缩包超过 ${mib(bounds.maxArchiveBytes)} 上限。`);
+    throw ZipError.coded("zip.archiveTooLarge", { limit: mib(bounds.maxArchiveBytes) });
   }
   if (buffer.length < EOCD_MIN) {
-    throw new ZipError("不是有效的 zip 压缩包（文件过小）。");
+    throw ZipError.coded("zip.tooSmall");
   }
 
   const eocd = findEocd(buffer);
@@ -76,13 +84,13 @@ export function readZipEntries(
   const cdOffset = readU32(buffer, eocd + 16);
 
   if (cdOffset === ZIP64_SENTINEL || cdSize === ZIP64_SENTINEL || totalEntries === 0xffff) {
-    throw new ZipError("不支持 zip64 格式的压缩包。");
+    throw ZipError.coded("zip.zip64");
   }
   if (cdOffset + cdSize > buffer.length) {
-    throw new ZipError("zip 中央目录越界，压缩包可能已损坏。");
+    throw ZipError.coded("zip.centralDirOutOfRange");
   }
   if (totalEntries > bounds.maxEntries) {
-    throw new ZipError(`压缩包条目数超过 ${bounds.maxEntries} 上限。`);
+    throw ZipError.coded("zip.tooManyEntries", { max: bounds.maxEntries });
   }
 
   const entries: ZipEntry[] = [];
@@ -92,7 +100,7 @@ export function readZipEntries(
 
   for (let i = 0; i < totalEntries; i += 1) {
     if (readU32(buffer, cursor) !== CD_SIG) {
-      throw new ZipError("zip 中央目录记录损坏。");
+      throw ZipError.coded("zip.centralDirCorrupt");
     }
     const flags = readU16(buffer, cursor + 8);
     const method = readU16(buffer, cursor + 10);
@@ -107,10 +115,10 @@ export function readZipEntries(
 
     // Encrypted archives yield nothing usable — reject the whole thing.
     if (flags & 0x1) {
-      throw new ZipError("不支持加密的 zip 压缩包。");
+      throw ZipError.coded("zip.encrypted");
     }
     if (compSize === ZIP64_SENTINEL || uncompSize === ZIP64_SENTINEL || localOffset === ZIP64_SENTINEL) {
-      throw new ZipError("不支持 zip64 格式的压缩包。");
+      throw ZipError.coded("zip.zip64");
     }
 
     // Directory entries carry no content and must not count towards maxEntries.
@@ -120,7 +128,7 @@ export function readZipEntries(
 
     const badPath = rejectPath(name);
     if (badPath) {
-      throw new ZipError(`压缩包内路径不安全（${badPath}）：${name}`);
+      throw ZipError.coded(badPath, { name });
     }
 
     if (method !== 0 && method !== 8) {
@@ -128,21 +136,21 @@ export function readZipEntries(
       continue;
     }
     if (uncompSize > bounds.maxEntryBytes) {
-      throw new ZipError(`压缩包内单个文件超过 ${mib(bounds.maxEntryBytes)} 上限：${name}`);
+      throw ZipError.coded("zip.entryTooLarge", { limit: mib(bounds.maxEntryBytes), name });
     }
     total += uncompSize;
     if (total > bounds.maxTotalBytes) {
-      throw new ZipError(`压缩包解压后总大小超过 ${mib(bounds.maxTotalBytes)} 上限。`);
+      throw ZipError.coded("zip.totalTooLarge", { limit: mib(bounds.maxTotalBytes) });
     }
     if (entries.length + 1 > bounds.maxEntries) {
-      throw new ZipError(`压缩包条目数超过 ${bounds.maxEntries} 上限。`);
+      throw ZipError.coded("zip.tooManyEntries", { max: bounds.maxEntries });
     }
 
     entries.push({ path: name, content: readEntryData(buffer, localOffset, method, compSize, uncompSize, name) });
   }
 
   if (total > buffer.length * bounds.maxRatio) {
-    throw new ZipError(`压缩包解压比超过 ${bounds.maxRatio}:1 上限。`);
+    throw ZipError.coded("zip.ratioTooHigh", { ratio: bounds.maxRatio });
   }
 
   return { entries, skipped };
@@ -187,7 +195,7 @@ function readEntryData(
   name: string
 ): Buffer {
   if (readU32(buffer, localOffset) !== LFH_SIG) {
-    throw new ZipError(`zip 本地文件头损坏：${name}`);
+    throw ZipError.coded("zip.localHeaderCorrupt", { name });
   }
   // The local header's name/extra lengths may differ from the central directory's.
   const nameLen = readU16(buffer, localOffset + 26);
@@ -201,27 +209,27 @@ function readEntryData(
   try {
     inflated = inflateRawSync(data, { maxOutputLength: uncompSize + 1 });
   } catch {
-    throw new ZipError(`zip 条目解压失败：${name}`);
+    throw ZipError.coded("zip.inflateFailed", { name });
   }
   if (inflated.length > uncompSize) {
-    throw new ZipError(`zip 条目解压后大于声明大小：${name}`);
+    throw ZipError.coded("zip.inflateOversize", { name });
   }
   return inflated;
 }
 
 /** Which unsafe-path rule the entry name breaks, or null when it is fine. */
-function rejectPath(name: string): string | null {
+function rejectPath(name: string): ServerMessageKey | null {
   if (name.includes("\\")) {
-    return "反斜杠分隔符";
+    return "zip.unsafeBackslash";
   }
   if (/^[a-zA-Z]:/.test(name)) {
-    return "盘符前缀";
+    return "zip.unsafeDrive";
   }
   if (name.startsWith("/")) {
-    return "绝对路径";
+    return "zip.unsafeAbsolute";
   }
   if (name.split("/").includes("..")) {
-    return "上级目录引用";
+    return "zip.unsafeParent";
   }
   return null;
 }
@@ -233,7 +241,7 @@ function findEocd(buffer: Buffer): number {
       return i;
     }
   }
-  throw new ZipError("不是有效的 zip 压缩包（找不到目录结尾记录）。");
+  throw ZipError.coded("zip.noEocd");
 }
 
 function readU16(buffer: Buffer, offset: number): number {
@@ -254,7 +262,7 @@ function slice(buffer: Buffer, offset: number, length: number): Buffer {
 /** Every read is bounds-checked — offset arithmetic is where hand-written parsers go wrong. */
 function ensure(buffer: Buffer, offset: number, length: number): void {
   if (offset < 0 || length < 0 || offset + length > buffer.length) {
-    throw new ZipError("zip 数据越界，压缩包可能已截断。");
+    throw ZipError.coded("zip.dataOutOfRange");
   }
 }
 

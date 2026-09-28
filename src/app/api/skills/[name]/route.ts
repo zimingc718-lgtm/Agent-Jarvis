@@ -8,6 +8,7 @@ import { requireUserId } from "@/lib/auth-guard";
 import { SKILLS_ROOT, slugifySkillName } from "@/lib/skills";
 import { SkillNameConflictError } from "@/lib/store";
 import { getStore } from "@/lib/store-singleton";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * Skill management (REQ-F-031, TASK-073).
@@ -22,13 +23,14 @@ function assertInsideSkillsRoot(dirPath: string): void {
   const root = resolve(SKILLS_ROOT);
   const target = resolve(dirPath);
   if (target !== root && !target.startsWith(root + sep)) {
-    throw new Error("技能目录越界");
+    throw new Error("skill directory escapes its root");
   }
 }
 
 type Params = { params: Promise<{ name: string }> };
 
 export async function DELETE(_request: Request, { params }: Params) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -40,14 +42,14 @@ export async function DELETE(_request: Request, { params }: Params) {
 
   const name = decodeURIComponent((await params).name ?? "").trim();
   if (!name) {
-    return NextResponse.json({ message: "缺少技能名称。" }, { status: 400 });
+    return NextResponse.json({ message: t("api.missingSkillName") }, { status: 400 });
   }
 
   // Row first, folder second (CP-3). A leftover folder is inert; a row whose folder is
   // gone breaks `read_skill` in a way the user can neither see nor fix.
   const removed = getStore().deleteSkillForUser(auth.userId, name);
   if (!removed) {
-    return NextResponse.json({ message: `没有名为「${name}」的技能。` }, { status: 404 });
+    return NextResponse.json({ message: t("api.skillNotFound", { name }) }, { status: 404 });
   }
 
   let orphanedDir: string | null = null;
@@ -62,11 +64,12 @@ export async function DELETE(_request: Request, { params }: Params) {
     ok: true,
     name: removed.name,
     // Surfaced rather than swallowed — the user should know a folder is still on disk.
-    ...(orphanedDir ? { warning: `技能已注销，但目录 ${orphanedDir} 删除失败，可手动清理。` } : {}),
+    ...(orphanedDir ? { warning: t("api.skillDirOrphaned", { dir: orphanedDir }) } : {}),
   });
 }
 
 export async function PATCH(request: Request, { params }: Params) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -80,11 +83,11 @@ export async function PATCH(request: Request, { params }: Params) {
   const body = await request.json().catch(() => ({}));
   const to = typeof body.name === "string" ? body.name.trim() : "";
   if (!from || !to) {
-    return NextResponse.json({ message: "缺少技能名称。" }, { status: 400 });
+    return NextResponse.json({ message: t("api.missingSkillName") }, { status: 400 });
   }
   const slug = slugifySkillName(to);
   if (!slug) {
-    return NextResponse.json({ message: "新名称不合法。" }, { status: 400 });
+    return NextResponse.json({ message: t("api.newNameInvalid") }, { status: 400 });
   }
 
   const store = getStore();
@@ -93,12 +96,12 @@ export async function PATCH(request: Request, { params }: Params) {
     record = store.renameSkillForUser(auth.userId, from, to);
   } catch (error) {
     if (error instanceof SkillNameConflictError) {
-      return NextResponse.json({ message: `已存在名为「${to}」的技能。` }, { status: 409 });
+      return NextResponse.json({ message: t("api.skillNameExists", { name: to }) }, { status: 409 });
     }
     throw error;
   }
   if (!record) {
-    return NextResponse.json({ message: `没有名为「${from}」的技能。` }, { status: 404 });
+    return NextResponse.json({ message: t("api.skillNotFound", { name: from }) }, { status: 404 });
   }
 
   const nextDir = join(SKILLS_ROOT, slug);
@@ -106,14 +109,14 @@ export async function PATCH(request: Request, { params }: Params) {
     assertInsideSkillsRoot(record.dirPath);
     assertInsideSkillsRoot(nextDir);
   } catch {
-    return NextResponse.json({ message: "技能目录越界，已拒绝。" }, { status: 400 });
+    return NextResponse.json({ message: t("api.skillDirEscape") }, { status: 400 });
   }
 
   if (nextDir !== record.dirPath) {
     try {
       await rename(record.dirPath, nextDir);
     } catch {
-      return NextResponse.json({ message: "技能目录改名失败，未做任何修改。" }, { status: 500 });
+      return NextResponse.json({ message: t("api.skillRenameFailed") }, { status: 500 });
     }
   }
 

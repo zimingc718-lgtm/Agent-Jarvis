@@ -1,6 +1,9 @@
 import { ENTITIES_ROOT, listEntities, readEntity, type EntitySummary } from "./entities";
 import { fetchSource, type FetchSourceDeps } from "./sources";
 import type { Store } from "./store";
+import { type Coded, withCode, zhMessage } from "./coded-error";
+import type { Vars } from "./i18n-core";
+import type { ServerMessageKey } from "./i18n-server";
 
 /**
  * Scheduled collection (CR-20260911-scheduled-sweep; 清零 CR-20260911-home-dashboard 出口义务 5 的最后一项).
@@ -51,6 +54,11 @@ export class SweepSettingsError extends Error {
     super(message);
     this.name = "SweepSettingsError";
   }
+
+  /** Same Chinese `message` as before, plus the dictionary code a route uses to word it in the interface language (DEC-470 ③). */
+  static coded(code: ServerMessageKey, params?: Vars): SweepSettingsError & Coded {
+    return withCode(new SweepSettingsError(zhMessage(code, params)), code, params);
+  }
 }
 
 function clampInt(raw: string | null, fallback: number, min: number, max: number): number {
@@ -76,14 +84,14 @@ export function writeSweepSettings(store: Store, input: Partial<SweepSettings>):
   if (input.intervalMinutes !== undefined) {
     const value = Number(input.intervalMinutes);
     if (!Number.isInteger(value) || value < SWEEP_INTERVAL_MIN || value > SWEEP_INTERVAL_MAX) {
-      throw new SweepSettingsError(`巡检间隔需在 ${SWEEP_INTERVAL_MIN}–${SWEEP_INTERVAL_MAX} 分钟之间。`);
+      throw SweepSettingsError.coded("sweep.intervalRange", { min: SWEEP_INTERVAL_MIN, max: SWEEP_INTERVAL_MAX });
     }
     store.setSetting(SETTING_SWEEP_INTERVAL, String(value));
   }
   if (input.maxPerRound !== undefined) {
     const value = Number(input.maxPerRound);
     if (!Number.isInteger(value) || value < 1 || value > SWEEP_MAX_PER_ROUND_LIMIT) {
-      throw new SweepSettingsError(`每轮条数需在 1–${SWEEP_MAX_PER_ROUND_LIMIT} 之间。`);
+      throw SweepSettingsError.coded("sweep.perRoundRange", { max: SWEEP_MAX_PER_ROUND_LIMIT });
     }
     store.setSetting(SETTING_SWEEP_MAX_PER_ROUND, String(value));
   }
@@ -150,6 +158,9 @@ export type SweepOutcome = {
   ran: boolean;
   /** Why a round did nothing: off, nothing due, or no sources configured at all. */
   reason: string;
+  /** Dictionary code + params behind `reason`, so a route can word it in the interface language (DEC-470). */
+  reasonCode: ServerMessageKey;
+  reasonParams?: Vars;
   results: SweepResult[];
   /** Due but not reached this round — the honest answer to "is that all?" */
   remaining: number;
@@ -170,17 +181,17 @@ export async function runSweep(deps: SweepDeps): Promise<SweepOutcome> {
   const settings = readSweepSettings(deps.store);
 
   if (!settings.enabled && deps.force !== true) {
-    return { ran: false, reason: "定时巡检未开启。", results: [], remaining: 0, at };
+    return { ran: false, reason: zhMessage("sweep.disabled"), reasonCode: "sweep.disabled", results: [], remaining: 0, at };
   }
 
   const entities = await listEntities(root);
   if (entities.every((entity) => entity.sources.length === 0)) {
-    return { ran: false, reason: "还没有任何对象配置了采集源。", results: [], remaining: 0, at };
+    return { ran: false, reason: zhMessage("sweep.noSources"), reasonCode: "sweep.noSources", results: [], remaining: 0, at };
   }
 
   const due = dueTargets(entities, settings.intervalMinutes, now());
   if (due.length === 0) {
-    return { ran: false, reason: "本轮没有到期的采集源。", results: [], remaining: 0, at };
+    return { ran: false, reason: zhMessage("sweep.nothingDue"), reasonCode: "sweep.nothingDue", results: [], remaining: 0, at };
   }
 
   const ordered = rotateAfter(due, deps.store.getSetting(SETTING_SWEEP_CURSOR));
@@ -222,11 +233,14 @@ export async function runSweep(deps: SweepDeps): Promise<SweepOutcome> {
   }
   deps.store.setSetting(SETTING_SWEEP_LAST_RUN, at);
 
+  const changedCount = results.filter((result) => result.changed).length;
+  const reasonCode: ServerMessageKey = changedCount > 0 ? "sweep.ranChanged" : "sweep.ranUnchanged";
+  const reasonParams = { count: results.length, changed: changedCount };
   return {
     ran: true,
-    reason: results.some((result) => result.changed)
-      ? `采集 ${results.length} 个源，其中 ${results.filter((result) => result.changed).length} 个有变化。`
-      : `采集 ${results.length} 个源，没有变化。`,
+    reason: zhMessage(reasonCode, reasonParams),
+    reasonCode,
+    reasonParams,
     results,
     remaining: Math.max(0, due.length - batch.length),
     at,

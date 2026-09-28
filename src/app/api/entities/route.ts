@@ -6,6 +6,8 @@ import { requireUserId } from "@/lib/auth-guard";
 import { EntityError, isEntityKind, listEntities, listPendingEntities, saveEntity } from "@/lib/entities";
 import { resolveUserDataRoots } from "@/lib/user-data-paths";
 import { listProposals } from "@/lib/entity-proposals";
+import { messageFor } from "@/lib/coded-error";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * The board's data (CR-20260911-home-dashboard).
@@ -35,6 +37,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -46,7 +49,7 @@ export async function POST(request: Request) {
   const { entitiesRoot } = await resolveUserDataRoots(auth.userId);
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   if (!isEntityKind(body.kind)) {
-    return NextResponse.json({ message: "kind 必须是 competitor、authority 或 customer 之一。" }, { status: 400 });
+    return NextResponse.json({ message: t("api.kindInvalid") }, { status: 400 });
   }
   try {
     const entity = await saveEntity(
@@ -65,8 +68,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, entity }, { status: 201 });
   } catch (error) {
     if (error instanceof EntityError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
+      return NextResponse.json({ message: messageFor(t, error) }, { status: error.status });
     }
-    return NextResponse.json({ message: "实体保存失败。" }, { status: 500 });
+    return NextResponse.json({ message: t("api.entitySaveFailed") }, { status: 500 });
   }
 }

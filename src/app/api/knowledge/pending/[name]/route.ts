@@ -5,6 +5,7 @@ import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
 import { adoptPending, discardPending } from "@/lib/knowledge";
 import { resolveUserDataRoots } from "@/lib/user-data-paths";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * The approval step for model-proposed knowledge (REQ-F-046 ③; TASK-084).
@@ -30,6 +31,7 @@ async function guard(): Promise<Guarded> {
 }
 
 export async function POST(_request: Request, { params }: Params) {
+  const t = requestTranslator();
   const guarded = await guard();
   if (!guarded.ok) {
     return guarded.response;
@@ -37,12 +39,13 @@ export async function POST(_request: Request, { params }: Params) {
   const name = decodeURIComponent((await params).name ?? "").trim();
   const entry = await adoptPending(name, guarded.knowledgeRoot);
   if (!entry) {
-    return NextResponse.json({ message: `待采纳区没有「${name}」。` }, { status: 404 });
+    return NextResponse.json({ message: t("api.pendingNotFound", { name }) }, { status: 404 });
   }
   return NextResponse.json({ ok: true, entry });
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
+  const t = requestTranslator();
   const guarded = await guard();
   if (!guarded.ok) {
     return guarded.response;
@@ -50,7 +53,7 @@ export async function DELETE(_request: Request, { params }: Params) {
   const name = decodeURIComponent((await params).name ?? "").trim();
   const removed = await discardPending(name, guarded.knowledgeRoot);
   if (!removed) {
-    return NextResponse.json({ message: `待采纳区没有「${name}」。` }, { status: 404 });
+    return NextResponse.json({ message: t("api.pendingNotFound", { name }) }, { status: 404 });
   }
   return NextResponse.json({ ok: true, name });
 }

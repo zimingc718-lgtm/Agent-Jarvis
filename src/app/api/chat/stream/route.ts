@@ -6,8 +6,11 @@ import { requireUserId } from "@/lib/auth-guard";
 import { ChatServiceError, runChatTurn } from "@/lib/chat";
 import { getStore } from "@/lib/store-singleton";
 import type { ChatDelta } from "@/lib/types";
+import { messageFor } from "@/lib/coded-error";
+import { requestTranslator } from "@/lib/i18n-request";
 
 export async function POST(request: Request) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -52,7 +55,7 @@ export async function POST(request: Request) {
         const consultedSkill = toolsUsed.includes("read_skill");
         const savedInsight = toolsUsed.includes("save_insight");
         if (skillCount > 0 && status === "complete" && consultedSkill && !savedInsight) {
-          tail.push({ type: "notice", text: "本轮未产出洞察。" });
+          tail.push({ type: "notice", text: t("api.noInsightThisTurn") });
         }
         return tail;
       },
@@ -67,7 +70,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     if (error instanceof ChatServiceError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
+      return NextResponse.json({ message: messageFor(t, error) }, { status: error.status });
     }
     return NextResponse.json({ message: "Chat request failed." }, { status: 500 });
   }

@@ -70,17 +70,15 @@ export function frontMatter(fields: Record<string, string>): string {
 export async function resolveArchiveDir(rawSetting: string | null | undefined, rootsRaw: string | null | undefined): Promise<ArchiveTarget> {
   const roots = parseRoots(rootsRaw);
   if (roots.length === 0) {
-    throw new DocumentPathError("尚未配置任何文档目录。请先在 ☰ 菜单「本地文档」中添加一个文件夹，再设置归档目录。");
+    throw DocumentPathError.coded("archive.noRoots");
   }
   const configured = (rawSetting ?? "").trim();
   if (!configured) {
     const names = roots.map((root) => root.label).join("、");
-    throw new DocumentPathError(
-      `尚未设置归档目录。请在「本地文档」里指定一个用于存放报告的文件夹，它必须位于已配置的文档目录之内（当前已配置：${names}）。`
-    );
+    throw DocumentPathError.coded("archive.notSet", { names });
   }
   if (!isAbsolute(configured)) {
-    throw new DocumentPathError("归档目录请填绝对路径。");
+    throw DocumentPathError.coded("archive.notAbsolute");
   }
 
   let dirReal: string;
@@ -92,7 +90,7 @@ export async function resolveArchiveDir(rawSetting: string | null | undefined, r
     try {
       await realpath(parent);
     } catch {
-      throw new DocumentPathError("归档目录及其上级目录都不存在，请先创建，或换一个已存在的文件夹。");
+      throw DocumentPathError.coded("archive.parentMissing");
     }
     dirReal = resolve(await realpath(parent), configured.slice(parent.length).replace(/^[\\/]+/, ""));
   }
@@ -109,7 +107,7 @@ export async function resolveArchiveDir(rawSetting: string | null | undefined, r
       return { dir: dirReal, root };
     }
   }
-  throw new DocumentPathError("归档目录不在任何已配置的文档目录之内，已拒绝——写入范围不会超出你已经授权的那些文件夹。");
+  throw DocumentPathError.coded("archive.outsideRoots");
 }
 
 /** 找一个还没被占用的文件名。**永不覆盖**：同名就加序号。 */
@@ -123,7 +121,7 @@ export async function freePath(dir: string, base: string, format: ArchiveFormat)
       return candidate;
     }
   }
-  throw new DocumentPathError(`目录里已经有 ${MAX_NAME_ATTEMPTS} 份同名归档（${base}），请先整理一下。`);
+  throw DocumentPathError.coded("archive.tooManySameName", { max: MAX_NAME_ATTEMPTS, base });
 }
 
 export type ArchiveInput = {
@@ -161,7 +159,7 @@ export async function archiveInsight(input: ArchiveInput): Promise<ArchiveResult
 
   const bytes = Buffer.byteLength(body, "utf8");
   if (bytes > MAX_ARCHIVE_BYTES) {
-    throw new DocumentPathError(`这份报告转换后有 ${Math.round(bytes / 1024)} KB，超过归档上限 ${MAX_ARCHIVE_BYTES / 1024} KB。`);
+    throw DocumentPathError.coded("archive.tooLarge", { kb: Math.round(bytes / 1024), max: MAX_ARCHIVE_BYTES / 1024 });
   }
 
   await mkdir(target.dir, { recursive: true });

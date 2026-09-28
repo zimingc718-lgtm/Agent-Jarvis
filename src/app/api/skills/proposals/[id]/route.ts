@@ -5,6 +5,7 @@ import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
 import { adoptSkillProposal, discardSkillProposal } from "@/lib/skill-proposals";
 import { getStore } from "@/lib/store-singleton";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * The approval click for a model-proposed skill (REQ-F-320 ①, DEC-430 ②;
@@ -30,6 +31,7 @@ async function guard(): Promise<Guarded> {
 }
 
 export async function POST(_request: Request, { params }: Params) {
+  const t = requestTranslator();
   const guarded = await guard();
   if (!guarded.ok) {
     return guarded.response;
@@ -37,7 +39,7 @@ export async function POST(_request: Request, { params }: Params) {
   const id = decodeURIComponent((await params).id ?? "").trim();
   const decision = await adoptSkillProposal(getStore(), guarded.userId, id);
   if (!decision.ok) {
-    return NextResponse.json({ message: decision.message }, { status: decision.status });
+    return NextResponse.json({ message: t(decision.code, decision.params) }, { status: decision.status });
   }
   return NextResponse.json({
     ok: true,
@@ -46,6 +48,7 @@ export async function POST(_request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
+  const t = requestTranslator();
   const guarded = await guard();
   if (!guarded.ok) {
     return guarded.response;
@@ -53,7 +56,7 @@ export async function DELETE(_request: Request, { params }: Params) {
   const id = decodeURIComponent((await params).id ?? "").trim();
   const discarded = discardSkillProposal(getStore(), guarded.userId, id);
   if (!discarded) {
-    return NextResponse.json({ message: `没有编号为「${id}」的待确认技能提议。` }, { status: 404 });
+    return NextResponse.json({ message: t("api.skillProposalNotFound", { id }) }, { status: 404 });
   }
   return NextResponse.json({ ok: true, id });
 }

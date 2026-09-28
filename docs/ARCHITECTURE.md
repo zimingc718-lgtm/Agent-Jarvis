@@ -1,6 +1,6 @@
 # Agent-Jarvis 架构图
 
-> 截至 2026-09-28（main `5b2fa9a`，CR-20260928-ui-strings-i18n 分支基点）。本文件是架构图的**源**；可分享的页面版由它派生（https://claude.ai/artifact/TLFbGtPytg96k9L5PazCzA ，私有链接，改后重新发布）。
+> 截至 2026-09-28（main `3c922a2`，CR-20260928-server-strings-i18n 分支基点）。本文件是架构图的**源**；可分享的页面版由它派生（https://claude.ai/artifact/TLFbGtPytg96k9L5PazCzA ，私有链接，改后重新发布）。
 > **维护规则见文末**：凡动了模块、路由、表、依赖或部署形态的 CR，都要在同一变更里更新本文件；`tests/architecture-doc.test.ts` 逐项核对附录清单，漏了直接红。
 
 一个 Node.js 进程同时提供页面与 API：浮窗对话把用户消息交给工具循环，模型在循环里读技能、查知识库、读网页与文档、提出写入提议；写入先进待确认队列，用户点采纳才生效，每次工具调用都落到操作记录。数据全部在 `.data/`（SQLite + 文件），本机与 Railway 各跑一份同样的构建。
@@ -25,7 +25,7 @@
 
 ### 1.2 路由层（Next.js Route Handlers，与页面同进程）
 
-每条先过身份守卫（`auth-guard.ts`：Railway 上真实 Google OAuth 会话；本机回环地址走单管理员）与存储可用性守卫（`api-guard.ts`）。
+每条先过身份守卫（`auth-guard.ts`：Railway 上真实 Google OAuth 会话；本机回环地址走单管理员）与存储可用性守卫（`api-guard.ts`）。回到界面的 `message` 全部出自服务端字典 `i18n-server.ts`：路由入口用 `i18n-request.ts` 的 `requestTranslator()` 读一次全局 `ui.language` 绑定 `t`；领域模块抛出的类型化错误带 `code`（`coded-error.ts`，中文 `message` 由字典派生，工具路径照旧），路由边界用 `messageFor(t, error)` 按当前语言成句。
 
 | 组 | 路由 |
 |---|---|
@@ -59,7 +59,7 @@
 | 文档与资料库 | 本地目录只读检索与读取；资料库采纳与浏览 | `documents.ts` `library.ts` `markitdown.ts`（PDF/DOCX → HTML 子进程）`document-format.ts`（按排版技能重排、按内容缓存）`pdf-text.ts` · `tools/document-tools.ts` |
 | 联网 | `web_search`（SearXNG）`read_url`（地址校验、PDF 抽取、被拦截时浏览器回退） | `tools/web-tools.ts` `tools/url-guard.ts` `tools/browser-fetch.ts` |
 | 展示与主动性 | `show_home` `show_insight` `save_insight` 与各看板阶段 | `display.ts` `display-document.ts` `insight-export.ts` · `tools/display-tools.ts`；`wake.ts` 主动唤醒（按日上限一次非流式调用） |
-| 横切 | — | `store.ts` `store-singleton.ts` `migrations.ts`（`PRAGMA user_version` 迁移框架）`user-data-paths.ts`（按用户数据根）`language.ts`（语言设置与回复指令）`i18n.ts`（界面文案字典 zh / en 与 `t`）`transcript.ts` `send-failure.ts` `supervisor-policy.ts` `types.ts` `ui-events.ts` `utils.ts` `auth.ts` |
+| 横切 | — | `store.ts` `store-singleton.ts` `migrations.ts`（`PRAGMA user_version` 迁移框架）`user-data-paths.ts`（按用户数据根）`language.ts`（语言设置与回复指令）`i18n-core.ts`（查表核心）`i18n.ts`（界面文案字典 zh / en 与 `t`）`i18n-server.ts`（服务端文案字典：接口 message、对话通知、步骤行状态、领域错误、压缩与唤醒提示词）`i18n-request.ts`（请求级翻译器）`coded-error.ts`（带 `code` 的类型化错误与 `messageFor`）`transcript.ts` `send-failure.ts` `supervisor-policy.ts` `types.ts` `ui-events.ts` `utils.ts` `auth.ts` |
 
 ### 1.5 数据
 
@@ -145,7 +145,7 @@ flowchart LR
 
 ## 附录 · 清单（守卫测试逐项核对）
 
-**`src/lib`**：`adapters.ts` `agent-loop.ts` `api-guard.ts` `auth.ts` `auth-guard.ts` `chat.ts` `crypto.ts` `display.ts` `display-document.ts` `document-format.ts` `documents.ts` `entities.ts` `entity-history.ts` `entity-proposals.ts` `extract.ts` `html-text.ts` `i18n.ts` `ingest.ts` `insight-export.ts` `knowledge.ts` `language.ts` `library.ts` `markitdown.ts` `migrations.ts` `pdf-text.ts` `providers.ts` `runtime-config.ts` `send-failure.ts` `skill-proposals.ts` `skills.ts` `sources.ts` `store.ts` `store-singleton.ts` `supervisor-policy.ts` `sweep.ts` `transcript.ts` `types.ts` `ui-events.ts` `user-data-paths.ts` `utils.ts` `wake.ts` `zip.ts`
+**`src/lib`**：`adapters.ts` `agent-loop.ts` `api-guard.ts` `auth.ts` `auth-guard.ts` `chat.ts` `coded-error.ts` `crypto.ts` `display.ts` `display-document.ts` `document-format.ts` `documents.ts` `entities.ts` `entity-history.ts` `entity-proposals.ts` `extract.ts` `html-text.ts` `i18n.ts` `i18n-core.ts` `i18n-request.ts` `i18n-server.ts` `ingest.ts` `insight-export.ts` `knowledge.ts` `language.ts` `library.ts` `markitdown.ts` `migrations.ts` `pdf-text.ts` `providers.ts` `runtime-config.ts` `send-failure.ts` `skill-proposals.ts` `skills.ts` `sources.ts` `store.ts` `store-singleton.ts` `supervisor-policy.ts` `sweep.ts` `transcript.ts` `types.ts` `ui-events.ts` `user-data-paths.ts` `utils.ts` `wake.ts` `zip.ts`
 
 **`src/lib/tools`**：`browser-fetch.ts` `budget.ts` `display-tools.ts` `document-tools.ts` `entity-tools.ts` `knowledge-tools.ts` `registry.ts` `skill-tools.ts` `url-guard.ts` `web-tools.ts`
 

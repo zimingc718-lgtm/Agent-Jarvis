@@ -12,6 +12,8 @@ import {
   writeSweepSettings,
 } from "@/lib/sweep";
 import { resolveUserDataRoots } from "@/lib/user-data-paths";
+import { messageFor } from "@/lib/coded-error";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * Scheduled collection (CR-20260911-scheduled-sweep).
@@ -47,6 +49,7 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const t = requestTranslator();
   const guarded = await guard();
   if (!guarded.ok) {
     return guarded.response;
@@ -62,13 +65,14 @@ export async function PUT(request: Request) {
     return NextResponse.json({ ok: true, ...settings, lastRun: readLastRun(store) });
   } catch (error) {
     if (error instanceof SweepSettingsError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
+      return NextResponse.json({ message: messageFor(t, error) }, { status: error.status });
     }
     throw error;
   }
 }
 
 export async function POST(request: Request) {
+  const t = requestTranslator();
   const guarded = await guard();
   if (!guarded.ok) {
     return guarded.response;
@@ -77,5 +81,5 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const store = getStore();
   const outcome = await runSweep({ store, force: body.force === true, root: entitiesRoot });
-  return NextResponse.json({ ...outcome, lastRun: readLastRun(store) });
+  return NextResponse.json({ ...outcome, reason: t(outcome.reasonCode, outcome.reasonParams), lastRun: readLastRun(store) });
 }

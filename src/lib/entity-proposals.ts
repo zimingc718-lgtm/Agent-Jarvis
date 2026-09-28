@@ -68,7 +68,7 @@ function proposalsDir(root: string): string {
   const dir = join(root, PROPOSALS_DIR);
   const rootAbs = resolve(root);
   if (!resolve(dir).startsWith(rootAbs + sep)) {
-    throw new EntityError("提议目录越界", 400);
+    throw EntityError.coded("entity.proposalDirEscape", undefined, 400);
   }
   return dir;
 }
@@ -182,7 +182,7 @@ export async function proposeEntityUpdate(
   await mkdir(dir, { recursive: true });
   const existing = await listProposalFiles(dir);
   if (existing.length >= MAX_PROPOSALS) {
-    throw new EntityError("待采纳的字段提议过多，请先处理。", 409);
+    throw EntityError.coded("entity.tooManyProposals", undefined, 409);
   }
   const path = join(dir, `${proposal.id}.json`);
   // Report replacement rather than let a caller count it as a new record.

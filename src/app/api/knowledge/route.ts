@@ -13,6 +13,8 @@ import {
   saveKnowledge,
 } from "@/lib/knowledge";
 import { resolveUserDataRoots } from "@/lib/user-data-paths";
+import { messageFor } from "@/lib/coded-error";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * Knowledge base listing and the two user-initiated consolidation entries
@@ -36,6 +38,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -52,13 +55,13 @@ export async function POST(request: Request) {
       const form = await request.formData();
       const file = form.get("file");
       if (!(file instanceof File)) {
-        return NextResponse.json({ message: "缺少文件。" }, { status: 400 });
+        return NextResponse.json({ message: t("api.missingFile") }, { status: 400 });
       }
       if (!isKnowledgeTextPath(file.name)) {
-        return NextResponse.json({ message: `「${file.name}」不是文本笔记（支持 .md / .txt）。` }, { status: 400 });
+        return NextResponse.json({ message: t("api.notTextNote", { name: file.name }) }, { status: 400 });
       }
       if (file.size > MAX_ENTRY_BYTES) {
-        return NextResponse.json({ message: `「${file.name}」超过 ${Math.floor(MAX_ENTRY_BYTES / 1024)}KB。` }, { status: 413 });
+        return NextResponse.json({ message: t("api.fileTooLarge", { name: file.name, kb: Math.floor(MAX_ENTRY_BYTES / 1024) }) }, { status: 413 });
       }
       const stem = file.name.replace(/\.[^.]+$/, "");
       const entry = await saveKnowledge(
@@ -100,8 +103,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, entry }, { status: 201 });
   } catch (error) {
     if (error instanceof KnowledgeError) {
-      return NextResponse.json({ message: error.message }, { status: error.status });
+      return NextResponse.json({ message: messageFor(t, error) }, { status: error.status });
     }
-    return NextResponse.json({ message: "知识保存失败。" }, { status: 500 });
+    return NextResponse.json({ message: t("api.knowledgeSaveFailed") }, { status: 500 });
   }
 }

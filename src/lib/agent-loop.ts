@@ -10,6 +10,7 @@ import {
   type ToolRegistry,
 } from "./tools/registry";
 import { fitToolLoopContext, overTurnCeiling } from "./tools/budget";
+import { serverTranslator, type ServerTranslate } from "./i18n-server";
 
 /**
  * The tool loop (DEC-022, REQ-F-029, TASK-065).
@@ -69,6 +70,8 @@ type Executed = { call: ToolCall; content: string; ok: boolean; outcome: ActionE
 export type ToolLoopInput = {
   registry: ToolRegistry;
   toolContext: ToolContext;
+  /** Wording for notices and step-row status in the interface language (DEC-470); Chinese when absent. */
+  t?: ServerTranslate;
   /**
    * The budgeted tool set for this turn (CR-20260912-tool-budget). Omitted means "no
    * budget applied" and every available tool is sent — the shape tests use.
@@ -133,6 +136,7 @@ function raceWithTimeout<T>(promise: Promise<T>, ms: number, signal?: AbortSigna
 
 export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult> {
   const conversation = [...input.messages];
+  const t = input.t ?? serverTranslator("zh");
   const specs = input.toolSpecs ?? input.registry.specsFor(input.toolContext);
   const sources: Source[] = [];
   const seenSourceUrls = new Set<string>();
@@ -165,7 +169,7 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
       if (!fit.fits) {
         input.emit({
           type: "notice",
-          text: `本轮工具结果累计约 ${fit.estimatedTokens} tokens，已超出预算 ${fit.limit}，停在这里。已完成的部分保留，可就已有结果继续追问。`,
+          text: t("loop.budgetStop", { tokens: fit.estimatedTokens, limit: fit.limit }),
         });
         input.persist({ role: "assistant", content: "", status: "truncated", sources });
         input.emit({ type: "truncated", steps });
@@ -175,7 +179,7 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
         narrowedAnnounced = true;
         input.emit({
           type: "notice",
-          text: "本轮工具结果较多，较早几条已省略正文以腾出预算；需要时可以让我重新读取。",
+          text: t("loop.narrowed"),
         });
       }
       outgoing = fit.messages;
@@ -271,8 +275,8 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
           type: "notice",
           text:
             continuations >= MAX_CONTINUATIONS
-              ? `回复已自动续写 ${continuations} 次仍未写完，为免无上限消耗在此停下。可以让我就某一部分单独展开。`
-              : "回复因达到模型输出上限而被截断，且本轮预算已用尽，在此停下。可以让我就某一部分单独展开。",
+              ? t("loop.continuationsExhausted", { count: continuations })
+              : t("loop.outputCapped"),
         });
       }
       input.persist({ role: "assistant", content: stepText, status: "complete", sources });
@@ -287,7 +291,7 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
         ceilingAnnounced = true;
         input.emit({
           type: "notice",
-          text: `本轮累计已用约 ${turnUsage.inputTokens + turnUsage.outputTokens} tokens，达到本轮预算上限，不再调用工具，改用已获得的材料作答。`,
+          text: t("loop.turnCeiling", { tokens: turnUsage.inputTokens + turnUsage.outputTokens }),
         });
       }
       input.persist({ role: "assistant", content: stepText, status: "complete", sources });
@@ -324,14 +328,14 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
           // Running a half-arrived call would only produce a confusing downstream error
           // (the nine "HTML 不完整" retries in EV §1.1). Say exactly what happened instead.
           const content = `工具参数在第 ${cutAt} 字符处被模型输出上限截断，本次调用未执行。请缩短参数内容，或分成多次较小的调用提交。`;
-          const summary = "参数被输出上限截断，未执行";
+          const summary = t("loop.argsTruncated");
           input.emit({ type: "tool_result", callId: call.id, ok: false, summary });
           return { call, content, ok: false, outcome: "not_run", summary };
         }
 
         if ((failureStreak.get(key) ?? 0) >= REPEAT_FAILURE_LIMIT) {
           const content = `同一调用已连续失败 ${REPEAT_FAILURE_LIMIT} 次，本轮不再重试。请换一种做法。`;
-          const summary = "重复失败，已拒绝";
+          const summary = t("loop.repeatRefused");
           input.emit({ type: "tool_result", callId: call.id, ok: false, summary });
           return { call, content, ok: false, outcome: "refused", summary };
         }
@@ -339,8 +343,8 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
         const tool = input.registry.get(call.function.name);
         if (!tool) {
           const content = `没有名为 ${call.function.name} 的工具。`;
-          input.emit({ type: "tool_result", callId: call.id, ok: false, summary: "未知工具" });
-          return { call, content, ok: false, outcome: "failed", summary: "未知工具" };
+          input.emit({ type: "tool_result", callId: call.id, ok: false, summary: t("loop.unknownTool") });
+          return { call, content, ok: false, outcome: "failed", summary: t("loop.unknownTool") };
         }
 
         try {
@@ -366,7 +370,7 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
           failureStreak.set(key, (failureStreak.get(key) ?? 0) + 1);
           const message = error instanceof Error ? error.message : "未知错误";
           const aborted = message === "aborted";
-          const summary = aborted ? "已中止" : `失败：${message}`;
+          const summary = aborted ? t("loop.aborted") : t("loop.failed", { message });
           input.emit({ type: "tool_result", callId: call.id, ok: false, summary });
           return {
             call,

@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 import type { ProviderTemplate } from "@/lib/providers";
 import type { ProviderAuthMode, ProviderKind, ProviderSummary } from "@/lib/types";
 import { useT } from "@/components/LanguageProvider";
+import type { MessageKey } from "@/lib/i18n";
+import type { ProviderNoteCode } from "@/lib/types";
 
 type ModelSettingsProps = {
   templates: ProviderTemplate[];
@@ -47,6 +49,12 @@ function stateFromTemplate(template: ProviderTemplate): ProviderFormState {
     enabled: true,
   };
 }
+
+/** Provider notes come from the store as codes; the words are the interface's (REQ-F-350). */
+const NOTE_KEY: Record<ProviderNoteCode, MessageKey> = {
+  secretUndecryptable: "models.noteSecretUndecryptable",
+  missingKey: "models.noteMissingKey",
+};
 
 export function ModelSettings({ templates, providers }: ModelSettingsProps) {
   const t = useT();
@@ -272,7 +280,9 @@ export function ModelSettings({ templates, providers }: ModelSettingsProps) {
                     <span className="font-mono text-xs text-muted-foreground">{provider.secretPreview}</span>
                   ) : null}
                   {provider.note ? (
-                    <span className="provider-list__note w-full text-xs text-muted-foreground">{provider.note}</span>
+                    <span className="provider-list__note w-full text-xs text-muted-foreground">
+                      {provider.noteCode ? t(NOTE_KEY[provider.noteCode]) : provider.note}
+                    </span>
                   ) : null}
 
                   <div className="ml-auto flex items-center gap-1">

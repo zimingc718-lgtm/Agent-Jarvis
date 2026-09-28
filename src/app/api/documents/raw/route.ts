@@ -10,8 +10,9 @@ import { DocumentPathError, OFFICE_EXTENSIONS, PDF_EXTENSIONS, READABLE_EXTENSIO
 import { LIBRARY_LABEL, statusOf } from "@/lib/library";
 import { rootsOf } from "@/lib/tools/document-tools";
 import { buildInsightDocument } from "@/lib/display-document";
-import { convertToHtml, convertToMarkdown, describeMarkitdownFailure, renderMarkdown } from "@/lib/markitdown";
+import { convertToHtml, convertToMarkdown, markitdownFailureKey, renderMarkdown } from "@/lib/markitdown";
 import { formatDocument, resolveFormatterSkill } from "@/lib/document-format";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * 原样字节（CR-20260915-document-display CP-1）。
@@ -57,6 +58,7 @@ const MIME_BY_EXT: Record<string, string> = {
 };
 
 export async function GET(request: Request) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -69,7 +71,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const id = url.searchParams.get("id") ?? "";
   if (!id) {
-    return NextResponse.json({ message: "缺少 id。" }, { status: 400 });
+    return NextResponse.json({ message: t("api.missingId") }, { status: 400 });
   }
   const wantsRawBytes = url.searchParams.get("raw") === "1";
 
@@ -78,10 +80,10 @@ export async function GET(request: Request) {
     const { absPath, relPath, root } = await resolveWithinRoots(id, roots);
     const ext = extname(absPath).toLowerCase();
     if (!READABLE_EXTENSIONS.includes(ext)) {
-      return NextResponse.json({ message: "不支持的文件类型。" }, { status: 400 });
+      return NextResponse.json({ message: t("api.unsupportedFileType") }, { status: 400 });
     }
     if (root.label === LIBRARY_LABEL && (await statusOf(relPath)) !== "adopted") {
-      return NextResponse.json({ message: `「${relPath}」还没有被采纳，按约定审批通过后才能查看。` }, { status: 403 });
+      return NextResponse.json({ message: t("api.notAdoptedYet", { path: relPath }) }, { status: 403 });
     }
     const filename = relPath.split("/").pop() ?? "document";
 
@@ -89,7 +91,7 @@ export async function GET(request: Request) {
       const conversionFailed = (reason: string) =>
         NextResponse.json(
           {
-            message: `${describeMarkitdownFailure(reason)}可以加 &raw=1 查看原始文件。`,
+            message: t("api.rawHint", { reason: t(markitdownFailureKey(reason)) }),
             rawUrl: `${url.pathname}?${new URLSearchParams({ id, raw: "1" }).toString()}`,
           },
           { status: 502 }
@@ -123,14 +125,14 @@ export async function GET(request: Request) {
         if (!rendered.ok) {
           return conversionFailed(rendered.reason);
         }
-        return respondHtml(`${banner(formatted.note)}${rendered.html}`);
+        return respondHtml(`${banner(formatted.noteCode ? t(formatted.noteCode, formatted.noteParams) : formatted.note)}${rendered.html}`);
       }
 
       const converted = await convertToHtml(absPath);
       if (!converted.ok) {
         return conversionFailed(converted.reason);
       }
-      const staleNote = formatter.stale ? "本次未经排版：设置里的排版技能已不存在，请在「本地文档」里重新选择。" : "";
+      const staleNote = formatter.stale ? t("api.formatSkillStale") : "";
       return respondHtml(`${banner(staleNote)}${converted.html}`);
     }
 
@@ -147,6 +149,6 @@ export async function GET(request: Request) {
     if (error instanceof DocumentPathError) {
       return NextResponse.json({ message: error.message }, { status: 404 });
     }
-    return NextResponse.json({ message: "读取文档失败。" }, { status: 500 });
+    return NextResponse.json({ message: t("api.documentReadFailed") }, { status: 500 });
   }
 }

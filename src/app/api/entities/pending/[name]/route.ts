@@ -5,6 +5,7 @@ import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
 import { adoptPendingEntity, discardPendingEntity } from "@/lib/entities";
 import { resolveUserDataRoots } from "@/lib/user-data-paths";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * The approval step for model-proposed entities (CR-20260911-home-dashboard).
@@ -30,6 +31,7 @@ async function guard(): Promise<Guarded> {
 }
 
 export async function POST(_request: Request, { params }: Params) {
+  const t = requestTranslator();
   const guarded = await guard();
   if (!guarded.ok) {
     return guarded.response;
@@ -38,12 +40,13 @@ export async function POST(_request: Request, { params }: Params) {
   const name = decodeURIComponent((await params).name ?? "").trim();
   const entity = await adoptPendingEntity(name, entitiesRoot);
   if (!entity) {
-    return NextResponse.json({ message: `待采纳区没有「${name}」。` }, { status: 404 });
+    return NextResponse.json({ message: t("api.pendingNotFound", { name }) }, { status: 404 });
   }
   return NextResponse.json({ ok: true, entity });
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
+  const t = requestTranslator();
   const guarded = await guard();
   if (!guarded.ok) {
     return guarded.response;
@@ -52,7 +55,7 @@ export async function DELETE(_request: Request, { params }: Params) {
   const name = decodeURIComponent((await params).name ?? "").trim();
   const removed = await discardPendingEntity(name, entitiesRoot);
   if (!removed) {
-    return NextResponse.json({ message: `待采纳区没有「${name}」。` }, { status: 404 });
+    return NextResponse.json({ message: t("api.pendingNotFound", { name }) }, { status: 404 });
   }
   return NextResponse.json({ ok: true, name });
 }

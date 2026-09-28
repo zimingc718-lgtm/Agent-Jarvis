@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requestTranslator } from "./i18n-request";
 import { getStorageConfig } from "./runtime-config";
 
 /**
@@ -14,7 +15,8 @@ export function storageUnavailable(): NextResponse | null {
   }
   return NextResponse.json(
     {
-      message: `服务端存储未配置：缺少 ${status.missing.join(", ")}。请在 .env.local 中设置后重启服务，参见 docs/LOCAL_CONFIGURATION.md。`,
+      // The store cannot be opened here, so this is Chinese unless a language could be read (it cannot) — registered limitation.
+      message: requestTranslator()("guard.storageNotConfigured", { missing: status.missing.join(", ") }),
       missing: status.missing,
     },
     { status: 503 }

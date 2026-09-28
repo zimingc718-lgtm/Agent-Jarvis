@@ -1,6 +1,9 @@
 import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import { estimateTokens } from "./adapters";
+import { type Coded, withCode, zhMessage } from "./coded-error";
+import type { Vars } from "./i18n-core";
+import type { ServerMessageKey } from "./i18n-server";
 
 /**
  * Local knowledge base (REQ-F-044..046, REQ-NF-013, DEC-031; CR-20260911-knowledge-base).
@@ -64,6 +67,11 @@ export class KnowledgeError extends Error {
     super(message);
     this.name = "KnowledgeError";
   }
+
+  /** Same Chinese `message` as before, plus the dictionary code a route uses to word it in the interface language (DEC-470 ③). */
+  static coded(code: ServerMessageKey, params?: Vars, status: 400 | 404 | 409 | 413 = 400): KnowledgeError & Coded {
+    return withCode(new KnowledgeError(zhMessage(code, params), status), code, params);
+  }
 }
 
 // ---------------------------------------------------------------- names & paths
@@ -91,13 +99,13 @@ function assertInside(root: string, target: string): void {
   const rootAbs = resolve(root);
   const targetAbs = resolve(target);
   if (targetAbs !== rootAbs && !targetAbs.startsWith(rootAbs + sep)) {
-    throw new KnowledgeError("知识条目路径越界", 400);
+    throw KnowledgeError.coded("knowledge.pathEscape", undefined, 400);
   }
 }
 
 function entryPath(root: string, name: string, pending = false): string {
   if (!isSafeName(name)) {
-    throw new KnowledgeError(`非法的条目名称「${name}」`, 400);
+    throw KnowledgeError.coded("knowledge.invalidName", { name }, 400);
   }
   const path = pending ? join(root, PENDING_DIR, `${name}.md`) : join(root, `${name}.md`);
   assertInside(root, path);
@@ -270,17 +278,17 @@ async function uniqueName(dir: string, base: string): Promise<string> {
       return candidate;
     }
   }
-  throw new KnowledgeError("同名条目过多", 409);
+  throw KnowledgeError.coded("knowledge.tooManySameName", undefined, 409);
 }
 
 export async function saveKnowledge(input: SaveKnowledgeInput, root: string = KNOWLEDGE_ROOT): Promise<KnowledgeSummary> {
   const content = input.content.replace(/\r\n/g, "\n").trim();
   if (!content) {
-    throw new KnowledgeError("知识内容为空，未保存。", 400);
+    throw KnowledgeError.coded("knowledge.empty", undefined, 400);
   }
   const bytes = Buffer.byteLength(content, "utf8");
   if (bytes > MAX_ENTRY_BYTES) {
-    throw new KnowledgeError(`知识内容超过 ${Math.floor(MAX_ENTRY_BYTES / 1024)}KB，未保存。请拆分后再存。`, 413);
+    throw KnowledgeError.coded("knowledge.tooLarge", { kb: Math.floor(MAX_ENTRY_BYTES / 1024) }, 413);
   }
   const firstLine = content.split("\n").find((line) => line.trim())?.replace(/^#+\s*/, "").trim() ?? "";
   const title = (input.title?.trim() || firstLine || "未命名").slice(0, MAX_TITLE_CHARS);

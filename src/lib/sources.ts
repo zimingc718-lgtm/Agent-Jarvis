@@ -108,7 +108,7 @@ function snapshotPath(root: string, entity: string, url: string): string {
   const key = `${entity}__${createHash("sha256").update(url).digest("hex").slice(0, 16)}.json`;
   const path = join(root, SNAPSHOTS_DIR, key);
   if (!resolve(path).startsWith(resolve(root) + sep)) {
-    throw new EntityError("快照路径越界", 400);
+    throw EntityError.coded("entity.snapshotEscape", undefined, 400);
   }
   return path;
 }
@@ -170,10 +170,10 @@ export async function fetchSource(entityName: string, url: string, deps: FetchSo
 
   const entity = await readEntity(entityName, root);
   if (!entity) {
-    throw new EntityError(`没有名为「${entityName}」的跟踪对象。`, 404);
+    throw EntityError.coded("entity.notFound", { name: entityName }, 404);
   }
   if (!entity.sources.includes(url)) {
-    throw new EntityError("该链接不是这个对象已登记的采集源。", 400);
+    throw EntityError.coded("entity.sourceNotRegistered", undefined, 400);
   }
 
   const fail = async (health: Health, detail: string): Promise<FetchOutcome> => {

@@ -7,7 +7,7 @@ import { Dialog } from "./Dialog";
 import { ModelSettings } from "./ModelSettings";
 import { Button } from "@/components/ui/button";
 import type { ProviderTemplate } from "@/lib/providers";
-import { STORAGE_CONFIG_HINT, type RuntimeConfigStatus } from "@/lib/runtime-config";
+import type { RuntimeConfigStatus } from "@/lib/runtime-config";
 import type { ProviderSummary } from "@/lib/types";
 import { useT } from "@/components/LanguageProvider";
 
@@ -36,7 +36,7 @@ export function SettingsDialog({ templates, providers, storage }: SettingsDialog
       </Button>
       <Dialog open={open} title={t("settings.providersAria")} onClose={() => setOpen(false)}>
         {storageBlocked ? (
-          <ConfigWarning title={t("settings.storageMissing")} missing={storage!.missing} hint={STORAGE_CONFIG_HINT} />
+          <ConfigWarning title={t("settings.storageMissing")} missing={storage!.missing} hint={t("page.storageHint")} />
         ) : (
           <ModelSettings templates={templates} providers={providers} />
         )}

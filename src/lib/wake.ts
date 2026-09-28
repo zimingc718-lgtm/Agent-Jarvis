@@ -4,6 +4,11 @@ import { makeCompleter, type Completer } from "./skills";
 import { ProviderSecretError, type MessageRecord, type Store } from "./store";
 import { truncateToTokens } from "./tools/budget";
 import type { ChatMessage } from "./types";
+import { type Coded, withCode, zhMessage } from "./coded-error";
+import type { Vars } from "./i18n-core";
+import type { ServerMessageKey } from "./i18n-server";
+import { tServer } from "./i18n-server";
+import { readLanguage, type UiLanguage } from "./language";
 
 /**
  * Proactive wake-up (REQ-F-060, REQ-F-061, REQ-NF-020, DEC-040; CR-20260911-proactive-wake, D 期).
@@ -41,10 +46,6 @@ export const WAKE_TAIL_ROWS = 12;
 export const WAKE_STATUS = "wake";
 export const WAKE_NOTICE_PREFIX = "主动提醒：";
 
-const WAKE_INSTRUCTIONS =
-  "这是一次空闲唤醒，不是用户提问。请只根据下面截取的最近对话判断：是否有一件值得现在主动提醒用户的事——" +
-  "未完成的事项、明显遗漏的下一步、或对方说过要回头处理的点。有就用一两句中文直接说，不要寒暄、不要复述对话。" +
-  "没有就只回复 NOOP。";
 
 export type WakeSettings = { enabled: boolean; intervalMinutes: number; dailyTokenCap: number };
 export type WakeUsage = { date: string; inputTokens: number; outputTokens: number; runs: number; notices: number };
@@ -54,6 +55,9 @@ export type WakeOutcome =
       kind: "skipped";
       reason: "disabled" | "cap" | "no-provider" | "no-conversation" | "failed";
       message: string;
+      /** Dictionary code + params behind `message`, so the route can word it in the interface language (DEC-470). */
+      messageCode: ServerMessageKey;
+      messageParams?: Vars;
       usage: WakeUsage;
     }
   | { kind: "noop"; usage: WakeUsage }
@@ -79,27 +83,37 @@ export function readWakeSettings(store: Store): WakeSettings {
   };
 }
 
-export class WakeSettingsError extends Error {}
+export class WakeSettingsError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "WakeSettingsError";
+  }
+
+  /** Same Chinese `message` as before, plus the dictionary code a route uses to word it in the interface language (DEC-470 ③). */
+  static coded(code: ServerMessageKey, params?: Vars): WakeSettingsError & Coded {
+    return withCode(new WakeSettingsError(zhMessage(code, params)), code, params);
+  }
+}
 
 /** Validates then persists; rejects rather than silently clamping what the user typed. */
 export function writeWakeSettings(store: Store, input: Partial<Record<keyof WakeSettings, unknown>>): WakeSettings {
   if (input.enabled !== undefined) {
     if (typeof input.enabled !== "boolean") {
-      throw new WakeSettingsError("enabled 必须是布尔值。");
+      throw WakeSettingsError.coded("wake.enabledBoolean");
     }
     store.setSetting(SETTING_WAKE_ENABLED, String(input.enabled));
   }
   if (input.intervalMinutes !== undefined) {
     const n = Number(input.intervalMinutes);
     if (!Number.isInteger(n) || n < WAKE_INTERVAL_MIN || n > WAKE_INTERVAL_MAX) {
-      throw new WakeSettingsError(`唤醒间隔须是 ${WAKE_INTERVAL_MIN}–${WAKE_INTERVAL_MAX} 之间的整数分钟。`);
+      throw WakeSettingsError.coded("wake.intervalRange", { min: WAKE_INTERVAL_MIN, max: WAKE_INTERVAL_MAX });
     }
     store.setSetting(SETTING_WAKE_INTERVAL, String(n));
   }
   if (input.dailyTokenCap !== undefined) {
     const n = Number(input.dailyTokenCap);
     if (!Number.isInteger(n) || n < 0 || n > WAKE_DAILY_CAP_MAX) {
-      throw new WakeSettingsError(`每日 token 上限须是 0–${WAKE_DAILY_CAP_MAX} 之间的整数。`);
+      throw WakeSettingsError.coded("wake.capRange", { max: WAKE_DAILY_CAP_MAX });
     }
     store.setSetting(SETTING_WAKE_DAILY_CAP, String(n));
   }
@@ -150,7 +164,7 @@ const TEXT_STATUSES = new Set(["complete", "stopped", "truncated"]);
  * user/assistant text from the tail of the conversation is included — tool rows,
  * summaries and earlier wake reminders are not, so a wake never sees its own output.
  */
-export function buildWakeMessages(rows: MessageRecord[], identity: string = DEFAULT_SYSTEM_PROMPT): ChatMessage[] {
+export function buildWakeMessages(rows: MessageRecord[], identity: string = DEFAULT_SYSTEM_PROMPT, language: UiLanguage = "zh"): ChatMessage[] {
   const tail = rows
     .filter(
       (row) =>
@@ -164,8 +178,8 @@ export function buildWakeMessages(rows: MessageRecord[], identity: string = DEFA
   // Trim from the head, not the tail: the most recent turns are the ones that matter.
   const { text } = truncateToTokens(transcript, WAKE_CONTEXT_TOKEN_CAP);
   return [
-    { role: "system", content: `${identity}\n\n${WAKE_INSTRUCTIONS}` },
-    { role: "user", content: `最近对话（截取）：\n${text || "（无）"}` },
+    { role: "system", content: `${identity}\n\n${tServer(language, "wake.instructions")}` },
+    { role: "user", content: `${tServer(language, "wake.transcriptHeader")}\n${text || tServer(language, "wake.transcriptEmpty")}` },
   ];
 }
 
@@ -189,16 +203,19 @@ export type RunWakeInput = {
 export async function runWakeTurn(input: RunWakeInput): Promise<WakeOutcome> {
   const now = input.now ?? (() => new Date());
   const settings = readWakeSettings(input.store);
+  const language = readLanguage(input.store);
   let usage = readWakeUsage(input.store, now());
 
   if (!settings.enabled && !input.manual) {
-    return { kind: "skipped", reason: "disabled", message: "主动唤醒未开启。", usage };
+    return { kind: "skipped", reason: "disabled", message: zhMessage("wake.disabled"), messageCode: "wake.disabled", usage };
   }
   if (usage.inputTokens + usage.outputTokens >= settings.dailyTokenCap) {
     return {
       kind: "skipped",
       reason: "cap",
-      message: `今日唤醒 token 已达上限（${settings.dailyTokenCap}），明天再试或在 ☰ 中调高上限。`,
+      message: zhMessage("wake.capReached", { cap: settings.dailyTokenCap }),
+      messageCode: "wake.capReached",
+      messageParams: { cap: settings.dailyTokenCap },
       usage,
     };
   }
@@ -214,15 +231,15 @@ export async function runWakeTurn(input: RunWakeInput): Promise<WakeOutcome> {
     }
   }
   if (!provider) {
-    return { kind: "skipped", reason: "no-provider", message: "没有可用的模型 Provider，本次唤醒跳过。", usage };
+    return { kind: "skipped", reason: "no-provider", message: zhMessage("wake.noProvider"), messageCode: "wake.noProvider", usage };
   }
 
   const [recent] = input.store.listRecentConversations(input.userId);
   if (!recent) {
-    return { kind: "skipped", reason: "no-conversation", message: "还没有对话可供唤醒参考。", usage };
+    return { kind: "skipped", reason: "no-conversation", message: zhMessage("wake.noConversation"), messageCode: "wake.noConversation", usage };
   }
 
-  const messages = buildWakeMessages(input.store.listMessages(recent.id));
+  const messages = buildWakeMessages(input.store.listMessages(recent.id), undefined, language);
   const inputTokens = messages.reduce((sum, message) => sum + estimateTokens(message.content), 0);
   const completer = input.complete ?? makeCompleter(provider);
 
@@ -234,10 +251,13 @@ export async function runWakeTurn(input: RunWakeInput): Promise<WakeOutcome> {
     // cannot burn the day's budget in silence (REQ-NF-020 ③).
     usage = { ...usage, inputTokens: usage.inputTokens + inputTokens, runs: usage.runs + 1 };
     writeWakeUsage(input.store, usage);
+    const detail = error instanceof Error ? error.message : zhMessage("common.unknownError");
     return {
       kind: "skipped",
       reason: "failed",
-      message: `唤醒调用失败：${error instanceof Error ? error.message : "未知错误"}`,
+      message: zhMessage("wake.callFailed", { message: detail }),
+      messageCode: "wake.callFailed",
+      messageParams: { message: detail },
       usage,
     };
   }
@@ -257,7 +277,7 @@ export async function runWakeTurn(input: RunWakeInput): Promise<WakeOutcome> {
     return { kind: "noop", usage };
   }
 
-  const text = `${WAKE_NOTICE_PREFIX}${reply.trim()}`;
+  const text = `${tServer(language, "wake.noticePrefix")}${reply.trim()}`;
   const messageId = input.store.appendMessage({ conversationId: recent.id, role: "system", content: text, status: WAKE_STATUS });
   usage = { ...usage, notices: usage.notices + 1 };
   writeWakeUsage(input.store, usage);

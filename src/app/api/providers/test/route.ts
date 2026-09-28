@@ -6,8 +6,10 @@ import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
 import { ProviderSecretError } from "@/lib/store";
 import { getStore } from "@/lib/store-singleton";
+import { requestTranslator } from "@/lib/i18n-request";
 
 export async function POST(request: Request) {
+  const t = requestTranslator();
   const auth = requireUserId(await getServerSession(authOptions));
   if (!auth.ok) {
     return NextResponse.json({ message: auth.message }, { status: auth.status });
@@ -39,7 +41,7 @@ export async function POST(request: Request) {
     } catch (error) {
       if (error instanceof ProviderSecretError) {
         return NextResponse.json(
-          { ok: false, message: "已存凭据无法解密，请重新输入 API Key 后再测试。" },
+          { ok: false, message: t("api.secretUndecryptableRetest") },
           { status: 200 }
         );
       }

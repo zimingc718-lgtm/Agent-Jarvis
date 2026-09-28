@@ -3,6 +3,9 @@ import { existsSync } from "node:fs";
 import { extname, join } from "node:path";
 import type { DocumentRoot } from "./documents";
 import { deleteKnowledge, listKnowledge, saveKnowledge } from "./knowledge";
+import { type Coded, withCode, zhMessage } from "./coded-error";
+import type { Vars } from "./i18n-core";
+import type { ServerMessageKey } from "./i18n-server";
 
 /**
  * 资料库：一层**受采纳约束**的原始资料（REQ-F-220、REQ-F-230、DEC-310；CR-20260915-library-adoption）。
@@ -94,6 +97,9 @@ export type LibraryItem = {
   retrieval: string;
 };
 
+/** Bucket label for cards without a docType; routes word it in the interface language. */
+export const UNCATEGORIZED_LABEL = "未分类";
+
 export class LibraryError extends Error {
   constructor(
     message: string,
@@ -101,6 +107,11 @@ export class LibraryError extends Error {
   ) {
     super(message);
     this.name = "LibraryError";
+  }
+
+  /** Same Chinese `message` as before, plus the dictionary code a route uses to word it in the interface language (DEC-470 ③). */
+  static coded(code: ServerMessageKey, params?: Vars, status: 400 | 404 | 409 = 400): LibraryError & Coded {
+    return withCode(new LibraryError(zhMessage(code, params), status), code, params);
   }
 }
 
@@ -379,13 +390,13 @@ export async function decideLibrary(
 ): Promise<DecideResult> {
   const wanted = [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
   if (wanted.length === 0) {
-    throw new LibraryError("没有指定要裁定的资料。", 400);
+    throw LibraryError.coded("library.noneSelected", undefined, 400);
   }
   const items = await listLibrary(options);
   const known = new Map(items.map((item) => [item.id, item]));
   const missing = wanted.filter((id) => !known.has(id));
   if (missing.length > 0) {
-    throw new LibraryError(`资料库里没有这些条目：${missing.slice(0, 3).join("、")}${missing.length > 3 ? " 等" : ""}。`, 404);
+    throw LibraryError.coded(missing.length > 3 ? "library.missingItemsMore" : "library.missingItems", { items: missing.slice(0, 3).join("、") }, 404);
   }
 
   const ledger = await readLedger(options.stateDir);
@@ -518,7 +529,7 @@ export async function listBrowseCards(options: ListLibraryOptions = {}): Promise
 
   const byType: Record<string, number> = {};
   for (const card of cards) {
-    const key = card.docType || "未分类";
+    const key = card.docType || UNCATEGORIZED_LABEL;
     byType[key] = (byType[key] ?? 0) + 1;
   }
 

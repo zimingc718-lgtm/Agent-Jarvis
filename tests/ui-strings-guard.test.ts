@@ -11,12 +11,14 @@ import { describe, expect, it } from "vitest";
  * are not nodes and are ignored — and fails on any CJK character it finds, with the exact
  * `file:line` so the fix is obvious.
  *
- * Scope is the user's ruling ②: `src/components` and the pages under `src/app` (not the API
- * routes, whose messages are server text and a candidate for the next step).
+ * Scope: `src/components` and everything under `src/app` — the pages (user ruling ②,
+ * CR-20260928-ui-strings-i18n) and, since CR-20260928-server-strings-i18n (ruling ③), the API
+ * routes too: every string a route holds is a `message` that comes back to the browser, so
+ * a route file must hold no Chinese literal either; its words live in `src/lib/i18n-server.ts`.
  */
 const ROOT = join(__dirname, "..");
 const SCAN_ROOTS = [join(ROOT, "src", "components"), join(ROOT, "src", "app")];
-const EXCLUDED_DIRS = [join(ROOT, "src", "app", "api")];
+const EXCLUDED_DIRS: string[] = [];
 const CJK = /[㐀-鿿豈-﫿]/;
 /**
  * Not copy: data keys the components must spell exactly as the server does. The one entry is
@@ -64,11 +66,11 @@ function chineseLiterals(file: string): string[] {
 describe("TEST-581 界面源码不得出现未走字典的中文", () => {
   const files = SCAN_ROOTS.flatMap((dir) => sources(dir));
 
-  it("① 扫描范围覆盖组件与页面，且不是空集", () => {
-    expect(files.length).toBeGreaterThan(20);
+  it("① 扫描范围覆盖组件、页面与 API 路由，且不是空集", () => {
+    expect(files.length).toBeGreaterThan(50);
     expect(files.some((f) => f.endsWith("FloatingChat.tsx"))).toBe(true);
     expect(files.some((f) => f.replace(/\\/g, "/").endsWith("src/app/page.tsx"))).toBe(true);
-    expect(files.some((f) => f.replace(/\\/g, "/").includes("/src/app/api/"))).toBe(false);
+    expect(files.filter((f) => f.replace(/\\/g, "/").includes("/src/app/api/")).length).toBeGreaterThan(30);
   });
 
   it("② 字符串、模板与 JSX 文本里没有中文——有就把它放进 src/lib/i18n.ts 并经 useT()/t() 引用", () => {

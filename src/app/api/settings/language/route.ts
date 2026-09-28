@@ -5,6 +5,7 @@ import { storageUnavailable } from "@/lib/api-guard";
 import { requireUserId } from "@/lib/auth-guard";
 import { LanguageSettingError, readLanguage, writeLanguage } from "@/lib/language";
 import { getStore } from "@/lib/store-singleton";
+import { requestTranslator } from "@/lib/i18n-request";
 
 /**
  * The reply-language setting (REQ-F-330 ②; CR-20260927-reply-language). Read by the ☰
@@ -28,6 +29,7 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const t = requestTranslator();
   const blocked = await guard();
   if (blocked) {
     return blocked;
@@ -38,7 +40,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ ok: true, language });
   } catch (error) {
     if (error instanceof LanguageSettingError) {
-      return NextResponse.json({ message: error.message }, { status: 400 });
+      return NextResponse.json({ message: t("api.languageInvalid") }, { status: 400 });
     }
     throw error;
   }

@@ -5,7 +5,7 @@ import {
   DISPLAY_CHANGED_EVENT,
   ASK_JARVIS_EVENT,
   SETTINGS_PANEL_EVENT,
-  SETTINGS_PANEL_LABEL,
+  SETTINGS_PANEL_KEY,
   type SettingsPanel,
   KNOWLEDGE_CHANGED_EVENT,
   DISPLAY_STAGE_EVENT,
@@ -1049,7 +1049,7 @@ export function FloatingChat({
         // REQ-F-120 ①②: a raw `Failed to fetch` tells the user nothing and carries no
         // time. One probe separates "the server is gone" from "the transfer broke", which
         // are the two cases with different next steps.
-        const failure = await describeSendFailure(error);
+        const failure = await describeSendFailure(error, { t });
         setErrorLine(failure.message);
       } else {
         setMessages((current) =>
@@ -1242,7 +1242,7 @@ export function FloatingChat({
               onClick={() => window.dispatchEvent(new CustomEvent(SETTINGS_PANEL_EVENT, { detail: { panel } }))}
               type="button"
             >
-              {SETTINGS_PANEL_LABEL[panel]}
+              {t(SETTINGS_PANEL_KEY[panel])}
             </button>
           ))}
 
