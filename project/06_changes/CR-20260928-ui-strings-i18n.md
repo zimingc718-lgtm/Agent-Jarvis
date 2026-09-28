@@ -2,7 +2,7 @@
 
 - 级别: L2（标准档：全部 CP 双向门——一个纯数据字典模块、一个 React 上下文、组件里的字面量改为查表；不改数据含义与任何接口，`git revert` 即回滚；英文措辞是否得当须人在真实界面里看，登记为人工发现项）
 - 提出人: user（INPUT-2026-09-28-001；INPUT-2026-09-27-002 第二步）
-- 状态: P2-P4 与真实入口完成，待 snapshot 与合并（R1 由用户三点裁定终裁；R1-R4 全 PASS；新增测试 8 例，TEST-571 修订；`tsc` 0 错误；全量 108 文件 968/968；TEST-582 四步已于 2026-09-28 在用户运行中的本机服务（分支构建 `oQB8g1T-1e2Lr14uWjeiT`）上经真实 `GET /` 与 `GET/PUT /api/settings/language` 走完，见 EV §4；合并 main 且 `verify` PASS 后转 CLOSED）
+- 状态: CLOSED（2026-09-28 闭环：TASK-580 DONE，TEST-580/581 PASS、TEST-582 真实入口 PASS（`entry: user`）、TEST-571 修订后 PASS；L2 标准档，R1 由用户三点裁定终裁，R2–R4 全 PASS、R4 CP-1 由 CONDITIONAL 转 APPROVED；`tsc` 0 错误，全量 108 文件 968/968，治理单测 140 通过；TEST-582 于 2026-09-28 在用户运行中的本机服务（分支构建 `oQB8g1T-1e2Lr14uWjeiT`）上经真实 `GET /` 与 `GET/PUT /api/settings/language` 走完，见 EV §4；snapshot ledger seq 146 后快进合入 main（`6523c17`），合并后 `verify` PASS；本机服务已在跑本 CR 的构建，无需再重建）
 - 占用 ID: REQ-F-340, DEC-460, TASK-580, TEST-580, TEST-581, TEST-582
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: REQ-F-330（☰「语言」开关从只决定回复语言扩为同时决定界面语言，开关旁提示文案随之改写）
