@@ -1751,13 +1751,31 @@
       "date": "2026-09-28",
       "entry": "user",
       "notes": "真实入口（REQ-F-350，TASK-590）。2026-09-28 在用户运行中的本机服务（构建 kQJFQcIfS8LGB18ZjELjh）上经真实接口请求走完：默认 zh 四条被拒请求的 message 与改写前逐字一致；PUT en 后同四条为英文（如 Enter an absolute path.）；PUT zh 恢复。全程无写入。命令列指向机器对照 TEST-591，见 EV §4。"
+    },
+    {
+      "id": "TEST-600",
+      "result": "PASS",
+      "command": "npx vitest run tests/ci-workflow.test.ts",
+      "real_entry": false,
+      "date": "2026-09-28",
+      "entry": "assistant",
+      "notes": "CI 工作流守卫 4 例 + tests/test_governance.py::CiStageTests 1 例（REQ-NF-062 ①③，DEC-480 ①②，TASK-600）。工作流存在且在 main / cr/** 推送与 PR 上触发；Node 24 + Python 3.13；六步 = verify:all 减 smoke 且顺序固定；governance:ci → check ci；STAGE_GATES[\"ci\"] = p3 去 verify 且含全部评审门与证据门。"
+    },
+    {
+      "id": "TEST-601",
+      "result": "DEFERRED",
+      "verification": "manual",
+      "command": "human: push cr/20260928-ci-gate and watch the CI / verify workflow on GitHub Actions; turn on Wait for CI in the Railway service settings; after merging, compare the deployment timestamp with the workflow completion",
+      "blocks": ["REQ-NF-062"],
+      "date": "2026-09-28",
+      "evidence": "DEFERRED with REQ-NF-062 (CR-20260928-ci-gate): 真实入口是推送后 GitHub Actions 的第一次运行本身——它必须先跑起来才有证据，而 check ci 又是它的一步，所以第一次运行时本条只能是 DEFERRED；运行跑绿后立即翻为 PASS 并写入 run id 与链接。"
     }
   ],
   "executed_commands": [
     {
       "command": "npx vitest run",
       "result": "PASS",
-      "summary": "2026-09-28 CR-20260928-server-strings-i18n 最终代码：111 文件 / 978 例：976 通过，2 例在全量负载下超时（既有 flaky tests/floating-chat.test.tsx skill intake ④ 与 tests/knowledge-dashboard.test.tsx ①），两文件单独重跑 78/78 通过"
+      "summary": "2026-09-28 CR-20260928-ci-gate：112 文件 / 982 例：981 通过，1 例既有 flaky（tests/floating-chat.test.tsx skill intake ④ 全量负载下超时），该文件单独重跑全部通过"
     },
     {
       "command": "npx vitest run",

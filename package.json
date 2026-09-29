@@ -14,6 +14,7 @@
     "dev": "next dev",
     "docs:index": "node scripts/gen-index.mjs",
     "governance:check-specs": "python tools/governance.py check-specs",
+    "governance:ci": "python tools/governance.py check ci",
     "governance:g1": "python tools/governance.py gate g1",
     "governance:g2": "python tools/governance.py gate g2",
     "governance:g3": "python tools/governance.py gate g3",

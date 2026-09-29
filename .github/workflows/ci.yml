@@ -1,0 +1,64 @@
+# CI gate (REQ-NF-062, DEC-480; CR-20260928-ci-gate).
+#
+# The same checks `npm run verify:all` runs on a developer's machine, minus the smoke test that
+# needs a live server: type check, the whole vitest suite (UI and visual contracts included),
+# the governance unit tests, the governance stage `ci` (= `p3` without the baseline `verify`,
+# which legitimately drifts by one file between a CR's CLOSED flip and the next snapshot), the
+# UI-contract static rules, and a production build into `.next-verify`.
+#
+# Railway deploys `main` only after this workflow is green — that switch lives in the Railway
+# service settings ("Wait for CI"), not in this repository; see docs/ARCHITECTURE.md § 部署形态.
+name: CI
+
+on:
+  push:
+    branches: ["main", "cr/**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install
+        run: |
+          npm ci
+          pip install -r requirements.txt
+
+      - name: Type check
+        run: npm run test:typecheck
+
+      - name: Unit, component and contract tests
+        run: npm test
+        env:
+          CI: "true"
+
+      - name: Governance unit tests
+        run: npm run test:governance
+
+      - name: Governance stage ci
+        run: npm run governance:ci
+
+      - name: UI contract (static tier)
+        run: npm run test:ui-contract
+
+      - name: Production build
+        run: npm run build:verify

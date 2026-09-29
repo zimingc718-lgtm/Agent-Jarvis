@@ -1,6 +1,6 @@
 # Agent-Jarvis 架构图
 
-> 截至 2026-09-28（main `3c922a2`，CR-20260928-server-strings-i18n 分支基点）。本文件是架构图的**源**；可分享的页面版由它派生（https://claude.ai/artifact/TLFbGtPytg96k9L5PazCzA ，私有链接，改后重新发布）。
+> 截至 2026-09-28（main `77333f9`，CR-20260928-ci-gate 分支基点）。本文件是架构图的**源**；可分享的页面版由它派生（https://claude.ai/artifact/TLFbGtPytg96k9L5PazCzA ，私有链接，改后重新发布）。
 > **维护规则见文末**：凡动了模块、路由、表、依赖或部署形态的 CR，都要在同一变更里更新本文件；`tests/architecture-doc.test.ts` 逐项核对附录清单，漏了直接红。
 
 一个 Node.js 进程同时提供页面与 API：浮窗对话把用户消息交给工具循环，模型在循环里读技能、查知识库、读网页与文档、提出写入提议；写入先进待确认队列，用户点采纳才生效，每次工具调用都落到操作记录。数据全部在 `.data/`（SQLite + 文件），本机与 Railway 各跑一份同样的构建。
@@ -113,7 +113,7 @@ flowchart LR
 
 | | 本机 | Railway |
 |---|---|---|
-| 构建 | `npm run build:local` → `.next-prod`（与 dev 的 `.next` 隔离） | GitHub `main` 推送 → 自动构建（Railpack：node + python 3.13 + `pip install -r requirements.txt`） |
+| 构建 | `npm run build:local` → `.next-prod`（与 dev 的 `.next` 隔离） | GitHub `main` 推送 → GitHub Actions CI（`.github/workflows/ci.yml`：类型检查、全量 vitest、治理单测与 `check ci`、UI 契约、生产构建）绿 → Railway 自动构建（Railpack：node + python 3.13 + `pip install -r requirements.txt`）；「等 CI 通过再部署」是 Railway 服务设置里的开关 |
 | 运行 | `npm run serve:local`：带看护的 `next start`，端口 3000，被系统停掉自动拉起（`scripts/serve-local.mjs`） | 单实例 `next start`，公网域名 |
 | 身份 | 回环地址上的单管理员（`JARVIS_SINGLE_ADMIN_ID`），API 免登录 | 真实 Google OAuth；未登录一律 401 |
 | 数据 | 项目目录下 `.data/` | 持久卷 `/app/.data`；首次真实登录把单管理员数据迁入 `users/<email>/` |

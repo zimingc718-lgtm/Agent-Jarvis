@@ -2598,3 +2598,17 @@ class GeneratedIndexTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CiStageTests(unittest.TestCase):
+    """CR-20260928-ci-gate: the hosted `ci` stage is p3 minus the baseline check, nothing else."""
+
+    def test_ci_stage_is_p3_without_baseline_verify(self):
+        expected = [gate for gate in governance.STAGE_GATES["p3"] if gate != "verify"]
+        self.assertIn("verify", governance.STAGE_GATES["p3"])
+        self.assertEqual(governance.STAGE_GATES["ci"], expected)
+        self.assertNotIn("gate g4", governance.STAGE_GATES["ci"])
+        # Still every consensus gate and every evidence gate short of release.
+        for gate in ("review r1", "review r2", "review r3", "review r4", "gate g3", "gate g3.5", "check-real-entry"):
+            self.assertIn(gate, governance.STAGE_GATES["ci"])
+

@@ -240,7 +240,7 @@ def build_parser() -> argparse.ArgumentParser:
     review_parser.add_argument("--cr", default=None, help="narrow the judgement to one change record")
 
     check_parser = subparsers.add_parser("check", help="run every gate a stage requires (p1|p2|p3|release)")
-    check_parser.add_argument("stage", choices=["p1", "p2", "p3", "release"])
+    check_parser.add_argument("stage", choices=["p1", "p2", "p3", "ci", "release"])
     check_parser.add_argument("--root", default=".", help="project root")
     check_parser.add_argument("--cr", default=None, help="narrow the judgement to one change record (not for release)")
 
@@ -1874,6 +1874,14 @@ STAGE_GATES: dict[str, list[str]] = {
                 "check-hygiene", "check-test-commands", "check-ui-route", "check-index",
                 "gate g1", "gate g2", "gate g3", "gate g3.5",
                 "gate g4", "review r1", "review r2", "review r3", "review r4"],
+    # `ci` is what GitHub Actions runs on every push (CR-20260928-ci-gate): p3 without the
+    # baseline `verify`. Between a CR's CLOSED flip and the next snapshot the baseline
+    # legitimately lags by that one file, so a hosted runner cannot hold `verify` as a gate;
+    # the merge-time `verify` on the developer's machine still does (CLAUDE.md §三).
+    "ci": ["check-changes", "check-specs", "check-doors", "check-ids", "check-human-side", "check-tables", "check-req-status", "check-approval-log", "check-warnings", "check-real-entry", "ui",
+           "check-hygiene", "check-test-commands", "check-ui-route", "check-index",
+           "gate g1", "gate g2", "gate g3", "gate g3.5",
+           "review r1", "review r2", "review r3", "review r4"],
 }
 
 
