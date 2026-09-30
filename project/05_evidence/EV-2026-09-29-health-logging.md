@@ -32,7 +32,7 @@
 
 `npx tsc --noEmit`：**0 错误**。治理单测 141 通过；UI 契约 53 规则 0 FAIL；`npx vitest run` 定向 12 文件 96/96 通过
 
-`npx vitest run`（全量，2026-09-29 本机）：115 文件 / 992 例：990 通过，2 例在全量负载下超时——既有 flaky tests/floating-chat.test.tsx skill intake ④ 与 tests/language-toggle.test.tsx ②；language-toggle 单独重跑 3/3 通过；floating-chat ④ 本次连单文件重跑也超时（CR 分支与未改动 main 代码各 2 次同样超时，与本 CR 无关），托管 runner 结果以本分支推送的 CI 为准
+`npx vitest run`（全量，2026-09-29 本机）：115 文件 / 992 例：990 通过，2 例在全量负载下超时——既有 flaky tests/floating-chat.test.tsx skill intake ④ 与 tests/language-toggle.test.tsx ②；language-toggle 单独重跑 3/3 通过；floating-chat ④ 本次连单文件重跑也超时（CR 分支与未改动 main 代码各 2 次同样超时，与本 CR 无关），托管 runner 结果以本分支推送的 CI 为准——已跑：推送 `387b34e` 后 GitHub Actions run 36658307336（https://github.com/zimingc718-lgtm/Agent-Jarvis/actions/runs/36658307336）六步全绿，1 分 26 秒，含全量 vitest，floating-chat ④ 在 ubuntu runner 上通过
 
 ## 4. 真实入口（2026-09-29 已执行①②，③待闭环推送后补记）
 

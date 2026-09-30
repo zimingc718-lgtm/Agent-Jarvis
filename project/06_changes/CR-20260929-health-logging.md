@@ -2,7 +2,7 @@
 
 - 级别: L2（标准档：全部 CP 双向门——新增两个横切模块、一条免登录路由、一个 instrumentation 钩子、一个 `railway.json`、十来处一行日志，`git revert` 即回滚；不动 schema、不动用户数据；Railway 健康检查是否真的执行、日志面板是否出现事件行，由部署结果与面板核对，登记为人工发现项）
 - 提出人: user（INPUT-2026-09-28-004 第二项：健康检查 + 服务端日志；裁定③④）
-- 状态: P2-P4 与真实入口①②完成，待 snapshot 与合并（R1 由用户 2026-09-28 两轮 AskUserQuestion 终裁；R1–R4 全 PASS；TEST-610 / 611 / 613 PASS，TEST-612 真实入口①②PASS；`tsc` 0 错误；治理单测 141 通过；UI 契约 53 规则 0 FAIL；`npx vitest run` 定向 12 文件 96/96 通过；全量 115 文件 / 992 例：990 通过，2 例在全量负载下超时——既有 flaky tests/floating-chat.test.tsx skill intake ④ 与 tests/language-toggle.test.tsx ②；language-toggle 单独重跑 3/3 通过；floating-chat ④ 本次连单文件重跑也超时（CR 分支与未改动 main 代码各 2 次同样超时，与本 CR 无关），托管 runner 结果以本分支推送的 CI 为准；合并 main 且 `verify` PASS 后转 CLOSED，③ 闭环推送后补记）
+- 状态: P2-P4 与真实入口①②完成，待 snapshot 与合并（R1 由用户 2026-09-28 两轮 AskUserQuestion 终裁；R1–R4 全 PASS；TEST-610 / 611 / 613 PASS，TEST-612 真实入口①②PASS；`tsc` 0 错误；治理单测 141 通过；UI 契约 53 规则 0 FAIL；`npx vitest run` 定向 12 文件 96/96 通过；全量 115 文件 / 992 例：990 通过，2 例在全量负载下超时——既有 flaky tests/floating-chat.test.tsx skill intake ④ 与 tests/language-toggle.test.tsx ②；language-toggle 单独重跑 3/3 通过；floating-chat ④ 本次连单文件重跑也超时（CR 分支与未改动 main 代码各 2 次同样超时，与本 CR 无关），托管 runner 结果以本分支推送的 CI 为准——已跑：推送 `387b34e` 后 GitHub Actions run 36658307336（https://github.com/zimingc718-lgtm/Agent-Jarvis/actions/runs/36658307336）六步全绿，1 分 26 秒，含全量 vitest，floating-chat ④ 在 ubuntu runner 上通过；合并 main 且 `verify` PASS 后转 CLOSED，③ 闭环推送后补记）
 - 占用 ID: REQ-NF-063, DEC-490, TASK-610, TEST-610, TEST-611, TEST-612, TEST-613
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: 无既有需求变更；新增 REQ-NF-063
