@@ -1,6 +1,6 @@
 # Agent-Jarvis 架构图
 
-> 截至 2026-09-29（main `0af1513`，CR-20260929-health-logging 分支基点）。本文件是架构图的**源**；可分享的页面版由它派生（https://claude.ai/artifact/TLFbGtPytg96k9L5PazCzA ，私有链接，改后重新发布）。
+> 截至 2026-09-30（main `90072cf`，CR-20260930-railway-healthcheck-buildsha 分支基点）。本文件是架构图的**源**；可分享的页面版由它派生（https://claude.ai/artifact/TLFbGtPytg96k9L5PazCzA ，私有链接，改后重新发布）。
 > **维护规则见文末**：凡动了模块、路由、表、依赖或部署形态的 CR，都要在同一变更里更新本文件；`tests/architecture-doc.test.ts` 逐项核对附录清单，漏了直接红。
 
 一个 Node.js 进程同时提供页面与 API：浮窗对话把用户消息交给工具循环，模型在循环里读技能、查知识库、读网页与文档、提出写入提议；写入先进待确认队列，用户点采纳才生效，每次工具调用都落到操作记录。数据全部在 `.data/`（SQLite + 文件），本机与 Railway 各跑一份同样的构建。
@@ -25,7 +25,7 @@
 
 ### 1.2 路由层（Next.js Route Handlers，与页面同进程）
 
-每条先过身份守卫（`auth-guard.ts`：Railway 上真实 Google OAuth 会话；本机回环地址走单管理员）与存储可用性守卫（`api-guard.ts`）。回到界面的 `message` 全部出自服务端字典 `i18n-server.ts`：路由入口用 `i18n-request.ts` 的 `requestTranslator()` 读一次全局 `ui.language` 绑定 `t`；领域模块抛出的类型化错误带 `code`（`coded-error.ts`，中文 `message` 由字典派生，工具路径照旧），路由边界用 `messageFor(t, error)` 按当前语言成句。唯一不过守卫的是 `/api/health`（`health.ts`）：不登录也可读，只报构建提交号、存储可用性、运行时长与时间戳，存储打不开返 503——Railway 的部署健康检查（`railway.json`）与本机探活都打它。路由的 500 分支经 `log.ts` 的 `logRouteFailure` 留一行 `route.failed`，并把同一个 `requestId` 放进响应体。
+每条先过身份守卫（`auth-guard.ts`：Railway 上真实 Google OAuth 会话；本机回环地址走单管理员）与存储可用性守卫（`api-guard.ts`）。回到界面的 `message` 全部出自服务端字典 `i18n-server.ts`：路由入口用 `i18n-request.ts` 的 `requestTranslator()` 读一次全局 `ui.language` 绑定 `t`；领域模块抛出的类型化错误带 `code`（`coded-error.ts`，中文 `message` 由字典派生，工具路径照旧），路由边界用 `messageFor(t, error)` 按当前语言成句。唯一不过守卫的是 `/api/health`（`health.ts`）：不登录也可读，只报构建提交号、存储可用性、运行时长与时间戳，存储打不开返 503——Railway 的部署健康检查（服务设置 `healthcheckPath`，DEC-500 ①）与本机探活都打它。路由的 500 分支经 `log.ts` 的 `logRouteFailure` 留一行 `route.failed`，并把同一个 `requestId` 放进响应体。
 
 | 组 | 路由 |
 |---|---|
@@ -117,7 +117,7 @@ flowchart LR
 |---|---|---|
 | 构建 | `npm run build:local` → `.next-prod`（与 dev 的 `.next` 隔离） | GitHub `main` 推送 → GitHub Actions CI（`.github/workflows/ci.yml`：类型检查、全量 vitest、治理单测与 `check ci`、UI 契约、生产构建）绿 → Railway 自动构建（Railpack：node + python 3.13 + `pip install -r requirements.txt`）；「等 CI 通过再部署」是 Railway 服务设置里的开关 |
 | 运行 | `npm run serve:local`：带看护的 `next start`，端口 3000，被系统停掉自动拉起（`scripts/serve-local.mjs`） | 单实例 `next start`，公网域名 |
-| 健康与日志 | `curl -s localhost:3000/api/health`：`build` 与 `git rev-parse HEAD` 不一致即在跑旧构建；`src/instrumentation.ts` 启动时记 `server.start` 并接住未捕获异常；事件在 `.data/server.log` | `railway.json` 把 `healthcheckPath` 指向 `/api/health`，不过则该次部署失败、不切流量；日志同时进 Railway 日志面板（stdout）与卷上的 `.data/server.log` |
+| 健康与日志 | `curl -s localhost:3000/api/health`：`build` 与 `git rev-parse HEAD` 不一致即在跑旧构建；`src/instrumentation.ts` 启动时记 `server.start` 并接住未捕获异常；事件在 `.data/server.log` | 服务设置 `healthcheckPath: /api/health`、`healthcheckTimeout: 120`（`serviceInstanceUpdate`，等价仪表盘；仓库根的 `railway.json` 不会被读取、配置即代码已弃用），不过则该次部署失败、不切流量；构建号在没有 git 的 Railpack 构建里回退到 `RAILWAY_GIT_COMMIT_SHA`（`scripts/build-sha.mjs`）；日志同时进 Railway 日志面板（stdout）与卷上的 `.data/server.log` |
 | 身份 | 回环地址上的单管理员（`JARVIS_SINGLE_ADMIN_ID`），API 免登录 | 真实 Google OAuth；未登录一律 401 |
 | 数据 | 项目目录下 `.data/` | 持久卷 `/app/.data`；首次真实登录把单管理员数据迁入 `users/<email>/` |
 | 周边 | SearXNG 容器、Python 3 + markitdown、可选 playwright-core 浏览器 | 同一 railpack 镜像内的 Python |

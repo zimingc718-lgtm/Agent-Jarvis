@@ -73,5 +73,5 @@ npm run config:check                                # 配置预检，会报告�
 - 涉及 UI、CLI、API 的验收必须走真实入口，测试桩和纯函数断言不算。
 - 改一段代码时，被取代的旧实现要在同一变更内删掉，不留新旧并存（`noUnusedLocals` 会强制一部分）。
 - **动了模块、路由、表、依赖或部署形态，就在同一 CR 里更新 `docs/ARCHITECTURE.md`**（用户 2026-09-27：「当新功能或者新重构变化后，更新这个架构图」）。`tests/architecture-doc.test.ts` 逐项核对 `src/lib`、`src/lib/tools`、`src/components`、`src/app/api/**/route.ts`、SQLite 表与 `package.json`/`requirements.txt` 依赖是否都出现在图里，漏一个全量测试红；先改分层总览与流程图，再改附录清单，不要只往清单里塞名字。改完把文首日期与 main 提交号更新，并重新发布可分享页面（链接在文首）。
-- **Railway 的「等 CI 通过再部署」是仪表盘设置，不在仓库里。** `.github/workflows/ci.yml` 只负责在 push / PR 上跑检查（`verify:all` 减 smoke；治理跑 `check ci`——p3 去掉基线 `verify`，因为 CLOSED 翻状态到下一次 snapshot 之间基线合法地差一个文件）；拦住红色部署靠 Railway 服务 Settings → Deploy → Wait for CI。新建服务或换项目时要重新打开。
+- **Railway 的「等 CI 通过再部署」是仪表盘设置，不在仓库里。** `.github/workflows/ci.yml` 只负责在 push / PR 上跑检查（`verify:all` 减 smoke；治理跑 `check ci`——p3 去掉基线 `verify`，因为 CLOSED 翻状态到下一次 snapshot 之间基线合法地差一个文件）；拦住红色部署靠 Railway 服务 Settings → Deploy → Wait for CI。新建服务或换项目时要重新打开。**健康检查路径同理是服务设置**（`serviceInstanceUpdate` 的 `healthcheckPath` / `healthcheckTimeout`，等价仪表盘）：仓库根的 `railway.json` 不会被读取——配置即代码已弃用，2026-09-30 实测部署清单里 `healthcheckPath` 为 null；核对任何 Railway 设置都要读该次部署的 `meta.serviceManifest`，不要信文件。
 - 不要替用户提交或推送。改完把结果说清楚，让用户自己看 `git diff`。

@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | 生成命令 | `npm run docs:index` |
-| 规模 | REQ 117 条 · TEST 209 条（主矩阵） · TASK 186 条 · tests/**/*.test.ts(x) 115 个 |
+| 规模 | REQ 117 条 · TEST 211 条（主矩阵） · TASK 187 条 · tests/**/*.test.ts(x) 116 个 |
 
 ---
 
@@ -118,7 +118,7 @@
 | REQ-NF-060 | 单轮成本护栏与可见性 | APPROVED | **TEST-250** → `turn-budget.test.ts` |
 | REQ-NF-061 | 流式超时看沉默，不看总时长 | APPROVED | **TEST-370** → `adapters-stream.test.ts` |
 | REQ-NF-062 | 部署前 CI 门禁 | APPROVED | **TEST-600** → `ci-workflow.test.ts`<br>**TEST-601** → `ci-workflow.test.ts` |
-| REQ-NF-063 | 健康检查与结构化服务端日志 | APPROVED | **TEST-610** → `health-route.test.ts`<br>**TEST-611** → `account-dialog.test.tsx`, `action-log.test.tsx`, `log.test.ts`<br>**TEST-612** → `health-route.test.ts`, `server-log-sites.test.ts`<br>**TEST-613** → `server-log-sites.test.ts` |
+| REQ-NF-063 | 健康检查与结构化服务端日志 | APPROVED | **TEST-610** → `health-route.test.ts`<br>**TEST-611** → `account-dialog.test.tsx`, `action-log.test.tsx`, `log.test.ts`<br>**TEST-612** → `health-route.test.ts`, `server-log-sites.test.ts`<br>**TEST-613** → `server-log-sites.test.ts`<br>**TEST-621** → `build-sha.test.ts` |
 | REQ-NF-001 | 本机运行 | APPROVED | **TEST-013** → &lt;smoke&gt;<br>**TEST-023** → `api-guard.test.ts`, `config-check.test.ts`, `runtime-config.test.ts` |
 | REQ-NF-002 | 认证隔离 | DEFERRED | **TEST-001** → `auth-config.test.ts`, `auth.test.ts`<br>**TEST-004** → `store-singleton.test.ts`, `store.test.ts`<br>**TEST-015** → `conversation-routes.test.ts`<br>**TEST-016** → `provider-routes.test.ts` |
 | REQ-NF-003 | 官方授权边界 | APPROVED | **TEST-005** → `providers.test.ts` |
@@ -245,3 +245,4 @@
 | TASK-500 | 新增 `src/lib/user-data-paths.ts` |
 | TASK-510 | 新增 `src/lib/markitdown.ts` + `scripts/documents_to_html.py` |
 | TASK-520 | 新增 `src/lib/document-format.ts`；扩展 `scripts/documents_to_html.py`、`src/lib/markitdown.ts` |
+| TASK-620 | `next.config.mjs`；新增 `scripts/build-sha.mjs`；删除 `railway.json`；Railway 服务设置；`docs/ARCHITECTURE.md`、CLAUDE.md §六 |
