@@ -34,19 +34,22 @@
 
 `npx vitest run`（全量，2026-09-29 本机）：115 文件 / 992 例：990 通过，2 例在全量负载下超时——既有 flaky tests/floating-chat.test.tsx skill intake ④ 与 tests/language-toggle.test.tsx ②；language-toggle 单独重跑 3/3 通过；floating-chat ④ 本次连单文件重跑也超时（CR 分支与未改动 main 代码各 2 次同样超时，与本 CR 无关），托管 runner 结果以本分支推送的 CI 为准——已跑：推送 `387b34e` 后 GitHub Actions run 36658307336（https://github.com/zimingc718-lgtm/Agent-Jarvis/actions/runs/36658307336）六步全绿，1 分 26 秒，含全量 vitest，floating-chat ④ 在 ubuntu runner 上通过
 
-## 4. 真实入口（2026-09-29 已执行①②，③待闭环推送后补记）
+## 4. 真实入口（2026-09-29 已执行①②；2026-09-30 闭环推送后补记③——部分成立）
 
 - 环境: 用户运行中的本机生产构建（`npm run build:local` → `.next-prod`，`npm run serve:local`，端口 3000），HEAD `0af1513`——不是测试桩
 - ① 不带会话 `GET http://localhost:3000/api/health` → 200：`{"ok":true,"storage":"ok","build":"0af1513e9dbf7ffd8f70e7181d2d852a5d881009","uptimeSeconds":4,"timestamp":"2026-09-30T02:04:21.243Z"}`。`build` 等于 `git rev-parse HEAD`，`storage: ok`。`.data/server.log` 出现启动行：`{"ts":"2026-09-30T02:04:19.357Z","level":"info","event":"server.start","build":"0af1513e9dbf7ffd8f70e7181d2d852a5d881009","node":"v24.11.0","pid":19832,"env":"production"}`（`build` 一致）。
 - ② `POST /api/chat/wake` 后 `.data/server.log` 出现：`{"ts":"2026-09-30T02:04:22.146Z","level":"info","event":"wake.outcome","kind":"noop","manual":false}`——只有 kind / manual，没有 text。本机的主动唤醒开关是开着的，所以这一下真实跑了一次唤醒（结果 `noop`，用量 497 输入 token），与界面定时器每次触发的行为相同；预案里写的「开关关着、不花 token」与实际不符，按实际登记。
-- ③ 合入 main 推送后，Railway 带 `healthcheckPath` 的部署应成功切流量、公网域名不登录 `GET /api/health` 应 200 且 `build` 为所部署提交——闭环推送后补记于此。
+- ③ 合入 main（`a92128e`）推送后（2026-09-30 14:10:23Z），Railway 部署 `0d9c1fc4-48cf-42a3-8daf-1a560f2865d6` 于 14:10:24Z 创建、14:12:08Z SUCCESS 并切流量；公网 `GET https://agent-jarvis-production-673e.up.railway.app/api/health` 不登录 → 200：`{"ok":true,"storage":"ok","build":"","uptimeSeconds":31,"timestamp":"2026-09-30T14:12:35.916Z"}`；同一时刻 `/api/knowledge` 不登录仍 401——免守卫的只有这一条路由。Railway 日志面板里出现 `[INFO] ts=… event="server.start" build="" node="v24.21.0" pid=25 env="production"`——stdout 的 JSON 行被面板解析为带属性的结构化日志，级别识别正确。
+  - **成立的部分**：免登录、真开库、`no-store`、其余路由不受影响、日志到面板。
+  - **不成立的两处（如实登记，另立 CR）**：(a) `build` 为空——Railpack 的构建环境里没有 `.git`，`next.config.mjs` 的 `buildSha()` 取不到就按设计留空（本机是 `0af1513…`）；候选修法：回退到 Railway 注入的 `RAILWAY_GIT_COMMIT_SHA`。(b) 健康检查没有拦在部署前——`railway api` 查该部署 `meta.serviceManifest.deploy.healthcheckPath` 为 `null`、`fileServiceManifest` 为 `{}`，即 `railway.json` 未被读取；`railway` CLI 同时警告「Config as Code (railway.json / railway.toml) is deprecated. Prefer Infrastructure as Code (.railway/railway.ts)…Existing files keep working until 2026-12-01」，本次并未生效，原因未定。候选修法：迁到 `.railway/railway.ts`，或直接用 `serviceInstanceUpdate`（`ServiceInstanceUpdateInput` 有 `healthcheckPath` / `healthcheckTimeout` 字段，等价于仪表盘设置）并把仓库里的 `railway.json` 删掉以免误导。
+  - 「Wait for CI」第二次核对仍未生效：部署 14:10:24Z 创建、14:12:08Z 成功，CI run 36727092953 14:10:25Z 创建、14:12:16Z 才绿。
 
-据此 R4 矩阵 CP-1 四列由 CONDITIONAL 转 APPROVED（以 ①② 为据；③ 为部署侧核对，登记为人工发现项并在补记里落实）；`test-results.json` TEST-612 `PASS`、`real_entry: true`、`entry: user`。
+据此 R4 矩阵 CP-1 四列由 CONDITIONAL 转 APPROVED（以 ①② 为据；③ 于 2026-09-30 核对：免登录 200 与日志到面板成立，`build` 为空与健康检查未生效两项登记 known_warning、另立 CR）；`test-results.json` TEST-612 `PASS`、`real_entry: true`、`entry: user`。
 
 ## 5. 局限（如实登记）
 
 - `requestId` 只在 500 响应体里，浮窗不显示；用户要引用它得看网络面板——显示到浮窗另立 CR。
 - 日志文件在多实例下会互相覆盖滚动（Railway 目前单实例，架构图「边界」行已写多实例另立 CR）。
 - `instrumentation.ts` 的两个监听只能证明装上了——进程活着时不能人为制造未捕获异常，是否真的记下一行由日后第一次真实事件核对。
-- Railway 健康检查是否按 `railway.json` 执行、日志面板是否出现事件行，仓库守不住，只能推送后看部署结果与面板。
+- Railway 健康检查是否按 `railway.json` 执行、日志面板是否出现事件行，仓库守不住，只能推送后看部署结果与面板。**2026-09-30 核对：日志面板有事件行；健康检查没有生效（部署清单 `healthcheckPath: null`，`railway.json` 未被读取、且该机制已被 Railway 弃用），`build` 在 Railway 上为空——见 §4 ③。**
 - 看护进程 `scripts/serve-local.mjs` 自己的事件仍写 `.data/server-events.log`（它在 Next 进程之外），本 CR 不合并两份文件。

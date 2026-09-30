@@ -1795,7 +1795,7 @@
       "real_entry": true,
       "date": "2026-09-29",
       "entry": "user",
-      "notes": "真实入口（REQ-NF-063，TASK-610）。2026-09-29 本机 build:local + serve:local 重启后（HEAD 0af1513）：①不带会话 GET http://localhost:3000/api/health → 200，{\"ok\":true,\"storage\":\"ok\",\"build\":\"0af1513e9dbf7ffd8f70e7181d2d852a5d881009\",\"uptimeSeconds\":4,\"timestamp\":\"2026-09-30T02:04:21.243Z\"}——build 等于 HEAD，storage ok；.data/server.log 出现 {\"ts\":\"2026-09-30T02:04:19.357Z\",\"level\":\"info\",\"event\":\"server.start\",\"build\":\"0af1513e9dbf7ffd8f70e7181d2d852a5d881009\",\"node\":\"v24.11.0\",\"pid\":19832,\"env\":\"production\"}；②POST /api/chat/wake 后出现 {\"ts\":\"2026-09-30T02:04:22.146Z\",\"level\":\"info\",\"event\":\"wake.outcome\",\"kind\":\"noop\",\"manual\":false}，无 text（本机主动唤醒开关为开，探针真实跑了一次唤醒，结果 noop、用量 497 输入 token——与界面定时器的行为相同）。③合入 main 推送后 Railway 带 healthcheckPath 的部署与公网 /api/health 在闭环推送后补记于 EV §4。命令列指向机器对照 TEST-610 / TEST-613。"
+      "notes": "真实入口（REQ-NF-063，TASK-610）。2026-09-29 本机 build:local + serve:local 重启后（HEAD 0af1513）：①不带会话 GET http://localhost:3000/api/health → 200，{\"ok\":true,\"storage\":\"ok\",\"build\":\"0af1513e9dbf7ffd8f70e7181d2d852a5d881009\",\"uptimeSeconds\":4,\"timestamp\":\"2026-09-30T02:04:21.243Z\"}——build 等于 HEAD，storage ok；.data/server.log 出现 {\"ts\":\"2026-09-30T02:04:19.357Z\",\"level\":\"info\",\"event\":\"server.start\",\"build\":\"0af1513e9dbf7ffd8f70e7181d2d852a5d881009\",\"node\":\"v24.11.0\",\"pid\":19832,\"env\":\"production\"}；②POST /api/chat/wake 后出现 {\"ts\":\"2026-09-30T02:04:22.146Z\",\"level\":\"info\",\"event\":\"wake.outcome\",\"kind\":\"noop\",\"manual\":false}，无 text（本机主动唤醒开关为开，探针真实跑了一次唤醒，结果 noop、用量 497 输入 token——与界面定时器的行为相同）。③2026-09-30 合入 main（a92128e）推送后 Railway 部署 0d9c1fc4 于 14:10:24Z 创建、14:12:08Z SUCCESS；公网 /api/health 不登录 → 200（storage ok），/api/knowledge 仍 401，日志面板把 server.start 行解析为结构化 INFO。部分不成立：build 为空（Railpack 构建环境无 git，buildSha() 留空）；部署清单 healthcheckPath 为 null、railway.json 未被读取（配置即代码已弃用），健康检查未拦在部署前——两项登记 known_warning railway-build-sha-empty / railway-healthcheck-not-applied，另立 CR。细节见 EV §4 ③。命令列指向机器对照 TEST-610 / TEST-613。"
     },
     {
       "id": "TEST-613",
@@ -2140,9 +2140,21 @@
     },
     {
       "id": "railway-wait-for-ci-not-enabled",
-      "text": "Railway 的「Wait for CI」尚未生效（CR-20260928-ci-gate ②③ 补记，2026-09-29）：main 推送 50a011d 后部署 6dd89388 于 01:39:57Z 创建、01:41:46Z SUCCESS，CI run 36656193041 01:42:12Z 才绿——红的提交此刻仍会直接上线。用户在 Railway 服务 Settings → Deploy 打开 Wait for CI 后，用下一次 main 推送的时间戳复核并删除本条。",
+      "text": "Railway 的「Wait for CI」尚未生效（CR-20260928-ci-gate ②③ 补记，2026-09-29）：main 推送 50a011d 后部署 6dd89388 于 01:39:57Z 创建、01:41:46Z SUCCESS，CI run 36656193041 01:42:12Z 才绿——红的提交此刻仍会直接上线。2026-09-30 14:10Z 第二次核对（a92128e：部署 14:10:24Z 创建、14:12:08Z 成功，CI 14:12:16Z 才绿）仍未生效。用户在 Railway 服务 Settings → Deploy 打开 Wait for CI 后，用下一次 main 推送的时间戳复核并删除本条。",
       "check": "manual",
-      "reviewed_at": "2026-09-29"
+      "reviewed_at": "2026-09-30"
+    },
+    {
+      "id": "railway-healthcheck-not-applied",
+      "text": "CR-20260929-health-logging ③（2026-09-30）：仓库根的 railway.json（deploy.healthcheckPath: /api/health）未被 Railway 读取——部署 0d9c1fc4 的 meta.serviceManifest.deploy.healthcheckPath 为 null、fileServiceManifest 为 {}；CLI 警告配置即代码已弃用（2026-12-01 前应仍生效，本次没有）。健康检查因此没有拦在部署前。候选：迁到 .railway/railway.ts，或用 serviceInstanceUpdate（healthcheckPath / healthcheckTimeout）等价于仪表盘设置，并删掉误导性的 railway.json——另立 CR 处理后删除本条。",
+      "check": "manual",
+      "reviewed_at": "2026-09-30"
+    },
+    {
+      "id": "railway-build-sha-empty",
+      "text": "CR-20260929-health-logging ③（2026-09-30）：Railway 上 /api/health 的 build 与页面 jarvis-build meta 为空——Railpack 构建环境无 .git，next.config.mjs 的 buildSha() 按设计留空。本机正常。候选修法：buildSha() 回退到 Railway 注入的 RAILWAY_GIT_COMMIT_SHA——另立 CR 处理后删除本条。",
+      "check": "manual",
+      "reviewed_at": "2026-09-30"
     },
     {
       "id": "CR-20260909-minimal-floating-chat",
