@@ -2,7 +2,7 @@
 
 - 级别: L2（标准档：全部 CP 双向门——一个 Railway 服务设置（可设回 null）、删除一个不被读取的部署文件、一个小脚本与 `next.config.mjs` 一处引用、两处文档；代码部分 `git revert` 即回滚；服务设置是否在下一次部署里生效只能读部署清单核对，登记为人工发现项）
 - 提出人: user（INPUT-2026-09-30-001：对 CR-20260929-health-logging ③ 核对出的两处「按你的建议来」）
-- 状态: P2-P4 与真实入口①④完成，待 snapshot 与合并（R1 由用户 2026-09-30 一句终裁；R1–R4 全 PASS；TEST-620 PASS，TEST-621 真实入口①④PASS；`tsc` 0 错误（为 `.mjs` 加 `scripts/build-sha.d.mts` 声明后）；治理单测 141 通过；UI 契约 53 规则 0 FAIL；定向 4 文件 16/16；全量 116 文件 / 996 例全部通过（含此前在全量负载下超时过的 floating-chat ④ 与 language-toggle ②）；合并 main 且 `verify` PASS 后转 CLOSED，②③ 闭环推送后补记）
+- 状态: P2-P4 与真实入口①④完成，待 snapshot 与合并（R1 由用户 2026-09-30 一句终裁；R1–R4 全 PASS；TEST-620 PASS，TEST-621 真实入口①④PASS；`tsc` 0 错误（为 `.mjs` 加 `scripts/build-sha.d.mts` 声明后）；治理单测 141 通过；UI 契约 53 规则 0 FAIL；定向 4 文件 16/16；全量 116 文件 / 996 例全部通过（含此前在全量负载下超时过的 floating-chat ④ 与 language-toggle ②）；托管 runner：推送 `87b3821` 后 GitHub Actions run 36773361345（https://github.com/zimingc718-lgtm/Agent-Jarvis/actions/runs/36773361345）六步全绿，1 分 33 秒，含 `build:verify`；合并 main 且 `verify` PASS 后转 CLOSED，②③ 闭环推送后补记）
 - 占用 ID: DEC-500, TASK-620, TEST-620, TEST-621
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: 无需求文字变更；REQ-NF-063 ① 的落地机制由本 CR 换（见 DEC-500）

@@ -25,7 +25,7 @@ CR-20260929-health-logging 合入 main（`a92128e`）后，Railway 部署 `0d9c1
 
 `npx tsc --noEmit`：**0 错误（为 `.mjs` 加 `scripts/build-sha.d.mts` 声明后）**。治理单测 141 通过；UI 契约 53 规则 0 FAIL；定向 4 文件 16/16
 
-`npx vitest run`（全量，2026-09-30 本机）：116 文件 / 996 例全部通过（含此前在全量负载下超时过的 floating-chat ④ 与 language-toggle ②）
+`npx vitest run`（全量，2026-09-30 本机）：116 文件 / 996 例全部通过（含此前在全量负载下超时过的 floating-chat ④ 与 language-toggle ②）；托管 runner：推送 `87b3821` 后 GitHub Actions run 36773361345（https://github.com/zimingc718-lgtm/Agent-Jarvis/actions/runs/36773361345）六步全绿，1 分 33 秒，含 `build:verify`
 
 ## 4. 真实入口（2026-09-30 已执行①④，②③待闭环推送后补记）
 
