@@ -23,13 +23,18 @@ CR-20260929-health-logging 合入 main（`a92128e`）后，Railway 部署 `0d9c1
 | TEST-620 | `tests/build-sha.test.ts` | 4 | git 优先；回退 `RAILWAY_GIT_COMMIT_SHA` 并去空白；皆无或非十六进制留空；仓库里 git 真答得出且 `next.config.mjs` 用的是该解析器 |
 | 既有 | `tests/architecture-doc.test.ts`、`tests/ci-workflow.test.ts`、`tests/health-route.test.ts` | — | 架构图守卫仍过；CI 工作流守卫不受影响；健康路由不变 |
 
-{{MACHINE}}
+`npx tsc --noEmit`：**0 错误（为 `.mjs` 加 `scripts/build-sha.d.mts` 声明后）**。治理单测 141 通过；UI 契约 53 规则 0 FAIL；定向 4 文件 16/16
 
-## 4. 真实入口（待执行）
+`npx vitest run`（全量，2026-09-30 本机）：116 文件 / 996 例全部通过（含此前在全量负载下超时过的 floating-chat ④ 与 language-toggle ②）
 
-- ① Railway：`serviceInstanceUpdate` 后读回 `healthcheckPath` / `healthcheckTimeout`。
-- ④ 本机：重建重启后 `/api/health` 的 `build` 等于 HEAD。
-- ②③ Railway：合入 main 推送后的部署清单与公网 `/api/health` 的 `build`。
+## 4. 真实入口（2026-09-30 已执行①④，②③待闭环推送后补记）
+
+- 环境: 真实 Railway 服务 `agent-jarvis`（`b18a7c15…`，环境 production）与用户运行中的本机生产构建（HEAD `1775beb`）——不是测试桩
+- ① 20:22:08Z `serviceInstanceUpdate(serviceId, environmentId, input:{healthcheckPath:"/api/health", healthcheckTimeout:120})` → `true`；20:22:09Z 读回 `serviceInstance { healthcheckPath healthcheckTimeout }` = `/api/health` / `120`（此前两者都是 `null`）。第一次调用失败过：PowerShell 5.1 把单引号字符串里的双引号原样丢给 node 前会剥掉，JSON 变量成了 `{healthcheckPath:/api/health,…}`，Railway 回「Problem processing request」；内层双引号写成 `\"` 后成功——记入 [[railway-deployment]]。
+- ④ 本机重建重启后不带会话 `GET http://localhost:3000/api/health` → 200：`{"ok":true,"storage":"ok","build":"1775beb85050e585d0d3013cd0c538abcafa69d8","uptimeSeconds":5,"timestamp":"2026-09-30T20:31:29.337Z"}`，`build` 等于 `git rev-parse HEAD`（git 可用时行为不变）。
+- ②③ 合入 main 推送后：读该次部署的 `meta.serviceManifest.deploy.healthcheckPath` 应为 `/api/health` 且部署 SUCCESS；公网 `GET /api/health` 的 `build` 应等于所部署提交——闭环推送后补记于此。
+
+据此 R4 矩阵 CP-1 四列由 CONDITIONAL 转 APPROVED（以 ①④ 为据；②③ 为部署侧核对，闭环推送后补记）；`test-results.json` TEST-621 `PASS`、`real_entry: true`、`entry: user`。
 
 ## 5. 局限（如实登记）
 

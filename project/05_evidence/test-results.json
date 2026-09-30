@@ -1805,13 +1805,31 @@
       "date": "2026-09-29",
       "entry": "assistant",
       "notes": "日志落点 3 例（REQ-NF-063 ②③，DEC-490 ②④，TASK-610）。runChatTurn 抛错时 /api/chat/stream 返 500、响应体 requestId 与 route.failed 行一致、错误消息里的 sk-… 已打码、无 body 键；工具抛错留 tool.failed（工具名、callId、conversationId、错误消息），不含参数与用户消息；唤醒（关着）与巡检（无来源）各留 wake.outcome / sweep.outcome，无 text / message、只有类别与计数。"
+    },
+    {
+      "id": "TEST-620",
+      "result": "PASS",
+      "command": "npx vitest run tests/build-sha.test.ts",
+      "real_entry": false,
+      "date": "2026-09-30",
+      "entry": "assistant",
+      "notes": "构建号解析 4 例（DEC-500 ②，TASK-620）。git 可用时用 git 的 HEAD 并忽略环境变量；git 取不到回退 RAILWAY_GIT_COMMIT_SHA（去空白）；两者皆无或非十六进制提交号留空不编值；仓库里 gitHead() 真答得出 40 位提交号且 next.config.mjs 引用 resolveBuildSha()。"
+    },
+    {
+      "id": "TEST-621",
+      "result": "PASS",
+      "command": "npx vitest run tests/build-sha.test.ts",
+      "real_entry": true,
+      "date": "2026-09-30",
+      "entry": "user",
+      "notes": "真实入口（REQ-NF-063 ①，DEC-500，TASK-620）。①2026-09-30 20:22:08Z serviceInstanceUpdate 设 healthcheckPath=/api/health、healthcheckTimeout=120 → true，20:22:09Z 读回 serviceInstance 为 /api/health / 120（此前为 null / null）；④本机 build:local + serve:local 重启后（HEAD 1775beb）不带会话 GET http://localhost:3000/api/health → 200，{\"ok\":true,\"storage\":\"ok\",\"build\":\"1775beb85050e585d0d3013cd0c538abcafa69d8\",\"uptimeSeconds\":5,\"timestamp\":\"2026-09-30T20:31:29.337Z\"}——build 等于 HEAD。②③合入 main 推送后的部署清单与公网 build 在闭环推送后补记于 EV §4。命令列指向机器对照 TEST-620。"
     }
   ],
   "executed_commands": [
     {
       "command": "npx vitest run",
       "result": "PASS",
-      "summary": "2026-09-29 CR-20260929-health-logging：115 文件 / 992 例：990 通过，2 例在全量负载下超时——既有 flaky tests/floating-chat.test.tsx skill intake ④ 与 tests/language-toggle.test.tsx ②；language-toggle 单独重跑 3/3 通过；floating-chat ④ 本次连单文件重跑也超时（CR 分支与未改动 main 代码各 2 次同样超时，与本 CR 无关），托管 runner 结果以本分支推送的 CI 为准"
+      "summary": "2026-09-30 CR-20260930-railway-healthcheck-buildsha：116 文件 / 996 例全部通过（含此前在全量负载下超时过的 floating-chat ④ 与 language-toggle ②）"
     },
     {
       "command": "npx vitest run",

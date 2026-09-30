@@ -2,7 +2,7 @@
 
 - 级别: L2（标准档：全部 CP 双向门——一个 Railway 服务设置（可设回 null）、删除一个不被读取的部署文件、一个小脚本与 `next.config.mjs` 一处引用、两处文档；代码部分 `git revert` 即回滚；服务设置是否在下一次部署里生效只能读部署清单核对，登记为人工发现项）
 - 提出人: user（INPUT-2026-09-30-001：对 CR-20260929-health-logging ③ 核对出的两处「按你的建议来」）
-- 状态: P1 完成，待 P2–P4（R1 由用户 2026-09-30 一句终裁；服务设置已设并读回，代码、文档、测试已就位，待本机重建重启走真实入口④）
+- 状态: P2-P4 与真实入口①④完成，待 snapshot 与合并（R1 由用户 2026-09-30 一句终裁；R1–R4 全 PASS；TEST-620 PASS，TEST-621 真实入口①④PASS；`tsc` 0 错误（为 `.mjs` 加 `scripts/build-sha.d.mts` 声明后）；治理单测 141 通过；UI 契约 53 规则 0 FAIL；定向 4 文件 16/16；全量 116 文件 / 996 例全部通过（含此前在全量负载下超时过的 floating-chat ④ 与 language-toggle ②）；合并 main 且 `verify` PASS 后转 CLOSED，②③ 闭环推送后补记）
 - 占用 ID: DEC-500, TASK-620, TEST-620, TEST-621
 - 评审模型: R1-R4 + G3/G3.5/G4
 - 影响需求: 无需求文字变更；REQ-NF-063 ① 的落地机制由本 CR 换（见 DEC-500）
@@ -24,7 +24,7 @@
   - R1: 本文件有 `## 变化点登记` 表（每行有来源角色）+ R1 人工终裁痕迹；`review r1` PASS。
   - R2/R3/R4: 三层说明书各含 `变更响应 · CR-20260930-railway-healthcheck-buildsha` 节逐一响应全部 CP；本文件三张矩阵无空、无 REJECTED；`review r2|r3|r4` PASS。
   - P3/P4: TASK-620 DONE；TEST-620 PASS，TEST-621 真实入口 PASS；`npx tsc --noEmit` 0 错误；`npx vitest run` 全量绿；`python -m unittest tests.test_governance` 通过；`npm run governance:ci` PASS；`npm run build:local` 成功且本机 `/api/health` 的 `build` 等于 HEAD。
-- 真实入口: 未执行（①API 设置后读回 `healthcheckPath`；④本机重建重启后 `/api/health` 的 `build` 等于 HEAD；②③合入 main 推送后读部署清单与公网 `/api/health` 的 `build`）
+- 真实入口: 已执行（①2026-09-30 20:22:08Z `serviceInstanceUpdate` 设 `healthcheckPath=/api/health`、`healthcheckTimeout=120`，20:22:09Z 读回一致（此前 null）；④本机重建重启后（HEAD `1775beb`）不带会话 GET `/api/health` 200 且 `build` 等于 HEAD；②③合入 main 推送后的部署清单与公网 `/api/health` 的 `build` 在闭环推送后补记于 EV-2026-09-30-railway-healthcheck-buildsha §4）
   - **真实入口（必做）**：①`serviceInstanceUpdate` 后读回 `serviceInstance.healthcheckPath` 为 `/api/health`、`healthcheckTimeout` 为 120；②合入 main 推送后的部署 `meta.serviceManifest.deploy.healthcheckPath` 为 `/api/health` 且部署 SUCCESS；③公网 `/api/health` 不登录 200 且 `build` 等于所部署提交；④本机重建重启后 `/api/health` 的 `build` 仍等于 `git rev-parse HEAD`。
 - 评审记录: R1 四角色（产品 / 架构 / 模块开发 / 测试）独立评审。**R1 人工终裁**：用户对协调会话逐条给出的建议一句「按你的建议来」。
 - R1 终裁: 已完成 | 用户 | 2026-09-30
@@ -69,7 +69,7 @@ P2 产出。三层说明书写 `变更响应 · CR-20260930-railway-healthcheck-
 
 | CP | 产品 | 架构 | 模块 | 测试 |
 |---|---|---|---|---|
-| CP-1 | CONDITIONAL 机器只能证明解析器与文档改了，证明不了 Railway 服务设置读得回来、下一次部署的清单带健康检查、公网与本机的 `build` 正确；条件为 TEST-621 ①④ 真实发生并记入 `EV-2026-09-30-railway-healthcheck-buildsha.md` §4（②③ 闭环推送后补记），之后本条转 APPROVED | CONDITIONAL 机器只能证明解析器与文档改了，证明不了 Railway 服务设置读得回来、下一次部署的清单带健康检查、公网与本机的 `build` 正确；条件为 TEST-621 ①④ 真实发生并记入 `EV-2026-09-30-railway-healthcheck-buildsha.md` §4（②③ 闭环推送后补记），之后本条转 APPROVED | CONDITIONAL 机器只能证明解析器与文档改了，证明不了 Railway 服务设置读得回来、下一次部署的清单带健康检查、公网与本机的 `build` 正确；条件为 TEST-621 ①④ 真实发生并记入 `EV-2026-09-30-railway-healthcheck-buildsha.md` §4（②③ 闭环推送后补记），之后本条转 APPROVED | CONDITIONAL 机器只能证明解析器与文档改了，证明不了 Railway 服务设置读得回来、下一次部署的清单带健康检查、公网与本机的 `build` 正确；条件为 TEST-621 ①④ 真实发生并记入 `EV-2026-09-30-railway-healthcheck-buildsha.md` §4（②③ 闭环推送后补记），之后本条转 APPROVED |
+| CP-1 | APPROVED 2026-09-30 服务设置读回 `/api/health` / 120（此前 null）——用户裁定③在 Railway 上第一次真的成立 | APPROVED 本机重建重启后 `/api/health` 200、`build` 等于 HEAD `1775beb`：解析器在真实生产构建里成立 | APPROVED `railway.json` 已删，文档改为服务设置；②③ 部署清单与公网 `build` 在闭环推送后补记 | APPROVED TEST-621 `real_entry: true`（`entry: user`）；证据 EV-2026-09-30-railway-healthcheck-buildsha §4 |
 | CP-2 | APPROVED TEST-620 四例全绿 | APPROVED 本机 `npm run build:local` 通过、`build` 仍等于 HEAD | APPROVED `tsc` 0 错误 | APPROVED `npx vitest run tests/build-sha.test.ts` |
 | CP-3 | APPROVED 文档改后架构图守卫通过 | APPROVED 与部署清单核对办法一致 | APPROVED CLAUDE.md 与 `docs/ARCHITECTURE.md` 已改 | APPROVED TEST-560 |
 | CP-4 | APPROVED | APPROVED | APPROVED | APPROVED 全量回归见 EV §3 |
