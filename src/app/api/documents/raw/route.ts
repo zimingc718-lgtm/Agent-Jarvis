@@ -13,6 +13,7 @@ import { buildInsightDocument } from "@/lib/display-document";
 import { convertToHtml, convertToMarkdown, markitdownFailureKey, renderMarkdown } from "@/lib/markitdown";
 import { formatDocument, resolveFormatterSkill } from "@/lib/document-format";
 import { requestTranslator } from "@/lib/i18n-request";
+import { logRouteFailure } from "@/lib/log";
 
 /**
  * 原样字节（CR-20260915-document-display CP-1）。
@@ -149,6 +150,7 @@ export async function GET(request: Request) {
     if (error instanceof DocumentPathError) {
       return NextResponse.json({ message: error.message }, { status: 404 });
     }
-    return NextResponse.json({ message: t("api.documentReadFailed") }, { status: 500 });
+    const requestId = logRouteFailure("/api/documents/raw", error);
+    return NextResponse.json({ message: t("api.documentReadFailed"), requestId }, { status: 500 });
   }
 }

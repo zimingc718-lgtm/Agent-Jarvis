@@ -6,6 +6,7 @@ import { requireUserId } from "@/lib/auth-guard";
 import { getStore } from "@/lib/store-singleton";
 import { runWakeTurn } from "@/lib/wake";
 import { requestTranslator } from "@/lib/i18n-request";
+import { logEvent } from "@/lib/log";
 
 /**
  * One proactive wake-up (REQ-F-060 ④⑤, REQ-F-061; TASK-101). Plain JSON, not SSE: a
@@ -25,6 +26,13 @@ export async function POST(request: Request) {
   }
   const body = (await request.json().catch(() => ({}))) as { manual?: unknown };
   const outcome = await runWakeTurn({ store: getStore(), userId: auth.userId, manual: body.manual === true });
+  // One line per wake-up (REQ-NF-063 ②): the kind and why it was skipped — never the notice text.
+  logEvent(outcome.kind === "skipped" && outcome.reason === "failed" ? "warn" : "info", "wake.outcome", {
+    kind: outcome.kind,
+    manual: body.manual === true,
+    ...(outcome.kind === "skipped" ? { reason: outcome.reason } : {}),
+    ...(outcome.kind === "notice" ? { conversationId: outcome.conversationId } : {}),
+  });
   return NextResponse.json(
     outcome.kind === "skipped" ? { ...outcome, message: t(outcome.messageCode, outcome.messageParams) } : outcome
   );

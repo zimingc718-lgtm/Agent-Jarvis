@@ -11,6 +11,7 @@ import {
 } from "./tools/registry";
 import { fitToolLoopContext, overTurnCeiling } from "./tools/budget";
 import { serverTranslator, type ServerTranslate } from "./i18n-server";
+import { logEvent } from "./log";
 
 /**
  * The tool loop (DEC-022, REQ-F-029, TASK-065).
@@ -343,6 +344,12 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
         const tool = input.registry.get(call.function.name);
         if (!tool) {
           const content = `没有名为 ${call.function.name} 的工具。`;
+          logEvent("warn", "tool.failed", {
+            tool: call.function.name,
+            callId: call.id,
+            conversationId: input.toolContext.conversationId,
+            reason: "unknown_tool",
+          });
           input.emit({ type: "tool_result", callId: call.id, ok: false, summary: t("loop.unknownTool") });
           return { call, content, ok: false, outcome: "failed", summary: t("loop.unknownTool") };
         }
@@ -370,6 +377,15 @@ export async function runToolLoop(input: ToolLoopInput): Promise<ToolLoopResult>
           failureStreak.set(key, (failureStreak.get(key) ?? 0) + 1);
           const message = error instanceof Error ? error.message : "未知错误";
           const aborted = message === "aborted";
+          if (!aborted) {
+            // REQ-NF-063 ②: the tool and the error, never its arguments (they can carry the user's text).
+            logEvent("warn", "tool.failed", {
+              tool: call.function.name,
+              callId: call.id,
+              conversationId: input.toolContext.conversationId,
+              errorMessage: message,
+            });
+          }
           const summary = aborted ? t("loop.aborted") : t("loop.failed", { message });
           input.emit({ type: "tool_result", callId: call.id, ok: false, summary });
           return {

@@ -9,6 +9,7 @@ import { SKILLS_ROOT, slugifySkillName } from "@/lib/skills";
 import { SkillNameConflictError } from "@/lib/store";
 import { getStore } from "@/lib/store-singleton";
 import { requestTranslator } from "@/lib/i18n-request";
+import { logRouteFailure } from "@/lib/log";
 
 /**
  * Skill management (REQ-F-031, TASK-073).
@@ -115,8 +116,9 @@ export async function PATCH(request: Request, { params }: Params) {
   if (nextDir !== record.dirPath) {
     try {
       await rename(record.dirPath, nextDir);
-    } catch {
-      return NextResponse.json({ message: t("api.skillRenameFailed") }, { status: 500 });
+    } catch (error) {
+      const requestId = logRouteFailure("/api/skills/[name]", error);
+      return NextResponse.json({ message: t("api.skillRenameFailed"), requestId }, { status: 500 });
     }
   }
 

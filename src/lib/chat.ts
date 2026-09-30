@@ -34,6 +34,7 @@ import type { ChatDelta, ChatMessage, ProviderRuntimeConfig, Source } from "./ty
 import { type Coded, withCode, zhMessage } from "./coded-error";
 import type { Vars } from "./i18n-core";
 import { serverTranslator, tServer, type ServerMessageKey, type ServerTranslate } from "./i18n-server";
+import { errorFields, logEvent } from "./log";
 
 export const DEFAULT_SYSTEM_PROMPT =
   "You are Agent-Jarvis, a concise assistant running locally on the user's machine. Answer directly and keep prior turns of this conversation in mind.";
@@ -457,6 +458,7 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
         if (delta.type === "error" && !produced && !isLast) {
           failoverUsed = true;
           failoverNote = { from: candidate.name, to: attempts[index + 1]!.name, why: delta.message };
+          logEvent("warn", "provider.failover", { conversationId, ...failoverNote });
           break;
         }
         if (delta.type !== "usage") {
@@ -824,12 +826,24 @@ function createStreamingResponse(input: {
         if (result.status === "stopped") {
           send({ type: "stopped" });
         } else if (result.status === "error") {
+          logEvent("error", "chat.turn_failed", {
+            conversationId: input.conversationId,
+            messageId: input.messageId,
+            stage: "provider",
+            errorMessage: result.errorMessage ?? "",
+          });
           send({ type: "error", message: result.errorMessage ?? "Provider stream failed." });
         } else {
           send({ type: "done", messageId: input.messageId });
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : "Provider stream failed.";
+        logEvent("error", "chat.turn_failed", {
+          conversationId: input.conversationId,
+          messageId: input.messageId,
+          stage: "stream",
+          ...errorFields(error),
+        });
         send({ type: "error", message });
       } finally {
         closed = true;

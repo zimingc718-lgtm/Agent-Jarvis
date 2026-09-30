@@ -14,6 +14,7 @@ import {
 import { resolveUserDataRoots } from "@/lib/user-data-paths";
 import { messageFor } from "@/lib/coded-error";
 import { requestTranslator } from "@/lib/i18n-request";
+import { logEvent } from "@/lib/log";
 
 /**
  * Scheduled collection (CR-20260911-scheduled-sweep).
@@ -81,5 +82,15 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const store = getStore();
   const outcome = await runSweep({ store, force: body.force === true, root: entitiesRoot });
+  // One line per round (REQ-NF-063 ②): counts only — the per-source detail stays in the response and the history.
+  logEvent("info", "sweep.outcome", {
+    ran: outcome.ran,
+    reasonCode: outcome.reasonCode,
+    count: outcome.results.length,
+    changed: outcome.results.filter((result) => result.changed).length,
+    failed: outcome.results.filter((result) => result.health === "failed_fetch").length,
+    remaining: outcome.remaining,
+    force: body.force === true,
+  });
   return NextResponse.json({ ...outcome, reason: t(outcome.reasonCode, outcome.reasonParams), lastRun: readLastRun(store) });
 }

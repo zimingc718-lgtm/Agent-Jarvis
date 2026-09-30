@@ -15,6 +15,7 @@ import {
 import { resolveUserDataRoots } from "@/lib/user-data-paths";
 import { messageFor } from "@/lib/coded-error";
 import { requestTranslator } from "@/lib/i18n-request";
+import { logRouteFailure } from "@/lib/log";
 
 /**
  * Knowledge base listing and the two user-initiated consolidation entries
@@ -105,6 +106,7 @@ export async function POST(request: Request) {
     if (error instanceof KnowledgeError) {
       return NextResponse.json({ message: messageFor(t, error) }, { status: error.status });
     }
-    return NextResponse.json({ message: t("api.knowledgeSaveFailed") }, { status: 500 });
+    const requestId = logRouteFailure("/api/knowledge", error);
+    return NextResponse.json({ message: t("api.knowledgeSaveFailed"), requestId }, { status: 500 });
   }
 }

@@ -42,7 +42,7 @@ npm run config:check                                # 配置预检，会报告�
 
 **构建目录**：绝不在交互式 `next dev` 运行时直接 `next build`——两者共用 `.next` 会互相毁掉产物，曾导致 `/api/auth/*` 全部 500。要构建用 `npm run build:verify`（`.next-verify`）或 `npm run build:local`（`.next-prod`）。新增或修改 `next.config.*` / `postcss.config.*` 后必须重启 dev server，Next 只在启动时读一次。
 
-**dev server 会悄悄坏掉**：长跑数小时后常驻内存涨到 GB 级，内存紧张时编译 worker 被系统杀掉，此时 **GET 路由仍返回 200，按需编译的路由返回 500**，看起来像业务 bug。判断健康要打一个按需编译的只读路由（`curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/knowledge`），**不要用写操作探针**——服务半死时第二步会失败，把数据留在改坏的状态。日常用 `npm run build:local && npm run serve:local`（生产构建，内存约为 dev 的十几分之一，代价是**无热更新**——见第六节，改完必须重建重启）。`serve:local` 带看护：被系统停掉会自动拉起，事件写 `.data/server-events.log`；`start:local` 保留给排查用，起一个、不自动重启。
+**dev server 会悄悄坏掉**：长跑数小时后常驻内存涨到 GB 级，内存紧张时编译 worker 被系统杀掉，此时 **GET 路由仍返回 200，按需编译的路由返回 500**，看起来像业务 bug。判断健康打 `curl -s http://localhost:3000/api/health`（免登录、真开一次库；`build` 与 `git rev-parse HEAD` 不一致就是在跑旧构建，存储打不开返 503），**不要用写操作探针**——服务半死时第二步会失败，把数据留在改坏的状态。日常用 `npm run build:local && npm run serve:local`（生产构建，内存约为 dev 的十几分之一，代价是**无热更新**——见第六节，改完必须重建重启）。`serve:local` 带看护：被系统停掉会自动拉起，事件写 `.data/server-events.log`；服务进程自己的结构化日志在 `.data/server.log`（一行一个 JSON，`route.failed` 行的 `requestId` 与 500 响应体里的一致）；`start:local` 保留给排查用，起一个、不自动重启。
 
 **CR 的 `- 影响测试:` 不要写 `TEST-097..099` 范围形式**：`extract_ids` 不解析 `..`，只会取到第一个编号，`gate g3.5 --cr` 因此看不到真实入口证据。逐一列出。
 

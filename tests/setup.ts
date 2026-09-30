@@ -1,3 +1,10 @@
+/*
+ * Server log (CR-20260929-health-logging, DEC-490 ②): off for every suite, so tests never append
+ * to the repository's own `.data/server.log` or spray JSON lines through the runner's output.
+ * `tests/log.test.ts` and the tests that assert on log lines turn it back on for themselves.
+ */
+process.env.JARVIS_SERVER_LOG ??= "off";
+
 import "@testing-library/jest-dom/vitest";
 
 /*

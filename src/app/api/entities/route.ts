@@ -8,6 +8,7 @@ import { resolveUserDataRoots } from "@/lib/user-data-paths";
 import { listProposals } from "@/lib/entity-proposals";
 import { messageFor } from "@/lib/coded-error";
 import { requestTranslator } from "@/lib/i18n-request";
+import { logRouteFailure } from "@/lib/log";
 
 /**
  * The board's data (CR-20260911-home-dashboard).
@@ -70,6 +71,7 @@ export async function POST(request: Request) {
     if (error instanceof EntityError) {
       return NextResponse.json({ message: messageFor(t, error) }, { status: error.status });
     }
-    return NextResponse.json({ message: t("api.entitySaveFailed") }, { status: 500 });
+    const requestId = logRouteFailure("/api/entities", error);
+    return NextResponse.json({ message: t("api.entitySaveFailed"), requestId }, { status: 500 });
   }
 }

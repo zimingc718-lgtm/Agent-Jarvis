@@ -1769,13 +1769,49 @@
       "date": "2026-09-28",
       "entry": "user",
       "notes": "真实入口（REQ-NF-062，TASK-600）。2026-09-28 推送 cr/20260928-ci-gate（58c5d80）后 GitHub Actions 的 CI / verify 在 ubuntu-latest 托管 runner 上跑完六步并绿：run 36507608678，https://github.com/zimingc718-lgtm/Agent-Jarvis/actions/runs/36507608678，用时 1 分 48 秒。这是仓库的真实流水线，不是本机模拟。②③2026-09-29 闭环推送后补记：部署（01:39:57Z 创建、01:41:46Z 成功）早于 CI 完成（01:42:12Z 绿），「Wait for CI」尚未生效，登记 known_warning 待用户打开后复核，细节见 EV §4。命令列指向机器对照 TEST-600。"
+    },
+    {
+      "id": "TEST-610",
+      "result": "PASS",
+      "command": "npx vitest run tests/health-route.test.ts",
+      "real_entry": false,
+      "date": "2026-09-29",
+      "entry": "assistant",
+      "notes": "健康路由 2 例（REQ-NF-063 ①，DEC-490 ①，TASK-610）。不 mock 会话直接 GET → 200、cache-control: no-store、恰好 ok / build / storage / uptimeSeconds / timestamp 五个键、dynamic 为 force-dynamic；healthReport 未配置 → 503 unconfigured，库打不开 → 503 error 并记 health.store_failed 一行、不抛。"
+    },
+    {
+      "id": "TEST-611",
+      "result": "PASS",
+      "command": "npx vitest run tests/log.test.ts",
+      "real_entry": false,
+      "date": "2026-09-29",
+      "entry": "assistant",
+      "notes": "日志模块 5 例（REQ-NF-063 ②③，DEC-490 ②）。JSON 行含 ts / level / event / 字段并同时到 stdout 与文件（自动建目录）；error 走 stderr、黑名单键丢弃、嵌套值里的 Bearer / sk- 打码且文件里不含；errorFields / newRequestId / logRouteFailure；超限滚动到 .1 且写入不中断；空路径只写 stdout、JARVIS_SERVER_LOG=off 两个出口都关。"
+    },
+    {
+      "id": "TEST-612",
+      "result": "PASS",
+      "command": "npx vitest run tests/health-route.test.ts tests/server-log-sites.test.ts",
+      "real_entry": true,
+      "date": "2026-09-29",
+      "entry": "user",
+      "notes": "真实入口（REQ-NF-063，TASK-610）。2026-09-29 本机 build:local + serve:local 重启后（HEAD 0af1513）：①不带会话 GET http://localhost:3000/api/health → 200，{\"ok\":true,\"storage\":\"ok\",\"build\":\"0af1513e9dbf7ffd8f70e7181d2d852a5d881009\",\"uptimeSeconds\":4,\"timestamp\":\"2026-09-30T02:04:21.243Z\"}——build 等于 HEAD，storage ok；.data/server.log 出现 {\"ts\":\"2026-09-30T02:04:19.357Z\",\"level\":\"info\",\"event\":\"server.start\",\"build\":\"0af1513e9dbf7ffd8f70e7181d2d852a5d881009\",\"node\":\"v24.11.0\",\"pid\":19832,\"env\":\"production\"}；②POST /api/chat/wake 后出现 {\"ts\":\"2026-09-30T02:04:22.146Z\",\"level\":\"info\",\"event\":\"wake.outcome\",\"kind\":\"noop\",\"manual\":false}，无 text（本机主动唤醒开关为开，探针真实跑了一次唤醒，结果 noop、用量 497 输入 token——与界面定时器的行为相同）。③合入 main 推送后 Railway 带 healthcheckPath 的部署与公网 /api/health 在闭环推送后补记于 EV §4。命令列指向机器对照 TEST-610 / TEST-613。"
+    },
+    {
+      "id": "TEST-613",
+      "result": "PASS",
+      "command": "npx vitest run tests/server-log-sites.test.ts",
+      "real_entry": false,
+      "date": "2026-09-29",
+      "entry": "assistant",
+      "notes": "日志落点 3 例（REQ-NF-063 ②③，DEC-490 ②④，TASK-610）。runChatTurn 抛错时 /api/chat/stream 返 500、响应体 requestId 与 route.failed 行一致、错误消息里的 sk-… 已打码、无 body 键；工具抛错留 tool.failed（工具名、callId、conversationId、错误消息），不含参数与用户消息；唤醒（关着）与巡检（无来源）各留 wake.outcome / sweep.outcome，无 text / message、只有类别与计数。"
     }
   ],
   "executed_commands": [
     {
       "command": "npx vitest run",
       "result": "PASS",
-      "summary": "2026-09-28 CR-20260928-ci-gate：112 文件 / 982 例：981 通过，1 例既有 flaky（tests/floating-chat.test.tsx skill intake ④ 全量负载下超时），该文件本机单独重跑 5 次中 4 次通过、1 次超时（低内存机器上的既有 flaky），托管 runner 上通过"
+      "summary": "2026-09-29 CR-20260929-health-logging：115 文件 / 992 例：990 通过，2 例在全量负载下超时——既有 flaky tests/floating-chat.test.tsx skill intake ④ 与 tests/language-toggle.test.tsx ②；language-toggle 单独重跑 3/3 通过；floating-chat ④ 本次连单文件重跑也超时（CR 分支与未改动 main 代码各 2 次同样超时，与本 CR 无关），托管 runner 结果以本分支推送的 CI 为准"
     },
     {
       "command": "npx vitest run",

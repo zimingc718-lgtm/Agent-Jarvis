@@ -9,6 +9,7 @@ import { getStore } from "@/lib/store-singleton";
 import { deriveFolderName, readZipEntries, ZipError } from "@/lib/zip";
 import { messageFor } from "@/lib/coded-error";
 import { requestTranslator } from "@/lib/i18n-request";
+import { logRouteFailure } from "@/lib/log";
 
 /** Files larger than this are almost certainly binary — skip them (they are stored, not injected). */
 const MAX_UPLOAD_FILE_BYTES = 512 * 1024;
@@ -154,6 +155,7 @@ export async function POST(request: Request) {
         { status: 409 }
       );
     }
-    return NextResponse.json({ message: t("api.skillRegisterFailed") }, { status: 500 });
+    const requestId = logRouteFailure("/api/skills", error);
+    return NextResponse.json({ message: t("api.skillRegisterFailed"), requestId }, { status: 500 });
   }
 }

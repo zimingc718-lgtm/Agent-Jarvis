@@ -20,6 +20,10 @@ JARVIS_SECRET_KEY=replace-with-a-long-random-secret-used-for-provider-secret-enc
 JARVIS_DB_PATH=.data/agent-jarvis.sqlite
 # 本地知识库目录：一个条目一个 .md 文件，可直接手工增删（默认 .data/knowledge）
 JARVIS_KNOWLEDGE_PATH=.data/knowledge
+# 服务端日志（可选，CR-20260929-health-logging）：一行一个 JSON，写 stdout 并追加到这个文件，满 5 MiB 滚到 .1
+# JARVIS_SERVER_LOG_PATH=.data/server.log      # 留空 = 只写 stdout
+# JARVIS_SERVER_LOG_MAX_BYTES=5242880
+# JARVIS_SERVER_LOG=off                        # 全关（测试 setup 就是这么做的）
 ```
 
 Generate the two secrets with:
@@ -131,13 +135,16 @@ npm run start:local     # 默认 3000 端口
 
 ### 判断服务是否还健康
 
-只看首页或 GET 接口会被骗。要打一个**按需编译**的路由。最省事的只读探针：
+只看首页或 GET 接口会被骗。打 `/api/health`（CR-20260929-health-logging）：它不要登录、每次真开一次库，并说出这份产物是从哪个提交构建的：
 
 ```powershell
-curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/knowledge
+curl -s http://localhost:3000/api/health
+# {"ok":true,"build":"<提交号>","storage":"ok","uptimeSeconds":12,"timestamp":"..."}
 ```
 
-返回 500 就说明编译 worker 已经死了，重启即可。不要用「上移再下移 Provider」这种写操作探针——服务半死时第二步会失败，把顺序留在改坏的状态。
+`build` 与 `git rev-parse HEAD` 不一致，说明服务在跑旧构建——先重建重启再排查；`storage` 不是 `ok`（HTTP 503）说明库打不开或 `JARVIS_SECRET_KEY` 没配；500 或连不上说明进程已经半死，重启即可。不要用「上移再下移 Provider」这种写操作探针——服务半死时第二步会失败，把顺序留在改坏的状态。
+
+服务进程的结构化日志在 `.data/server.log`（一行一个 JSON；`route.failed` 行里的 `requestId` 与 500 响应体里的一致；启动时有 `server.start` 行，`build` 字段同样是构建提交号）。看护进程自己的事件仍在 `.data/server-events.log`。
 
 ### 生产模式为什么不要求登录
 

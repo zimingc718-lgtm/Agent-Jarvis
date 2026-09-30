@@ -8,6 +8,7 @@ import { getStore } from "@/lib/store-singleton";
 import type { ChatDelta } from "@/lib/types";
 import { messageFor } from "@/lib/coded-error";
 import { requestTranslator } from "@/lib/i18n-request";
+import { logRouteFailure } from "@/lib/log";
 
 export async function POST(request: Request) {
   const t = requestTranslator();
@@ -72,6 +73,7 @@ export async function POST(request: Request) {
     if (error instanceof ChatServiceError) {
       return NextResponse.json({ message: messageFor(t, error) }, { status: error.status });
     }
-    return NextResponse.json({ message: "Chat request failed." }, { status: 500 });
+    const requestId = logRouteFailure("/api/chat/stream", error, { conversationId });
+    return NextResponse.json({ message: "Chat request failed.", requestId }, { status: 500 });
   }
 }
