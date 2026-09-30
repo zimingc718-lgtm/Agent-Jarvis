@@ -1768,7 +1768,7 @@
       "real_entry": true,
       "date": "2026-09-28",
       "entry": "user",
-      "notes": "真实入口（REQ-NF-062，TASK-600）。2026-09-28 推送 cr/20260928-ci-gate（58c5d80）后 GitHub Actions 的 CI / verify 在 ubuntu-latest 托管 runner 上跑完六步并绿：run 36507608678，https://github.com/zimingc718-lgtm/Agent-Jarvis/actions/runs/36507608678，用时 1 分 48 秒。这是仓库的真实流水线，不是本机模拟。②用户打开 Railway「等 CI」与③合入 main 后部署晚于 CI 完成，在闭环推送后补记于 EV §4。命令列指向机器对照 TEST-600。"
+      "notes": "真实入口（REQ-NF-062，TASK-600）。2026-09-28 推送 cr/20260928-ci-gate（58c5d80）后 GitHub Actions 的 CI / verify 在 ubuntu-latest 托管 runner 上跑完六步并绿：run 36507608678，https://github.com/zimingc718-lgtm/Agent-Jarvis/actions/runs/36507608678，用时 1 分 48 秒。这是仓库的真实流水线，不是本机模拟。②③2026-09-29 闭环推送后补记：部署（01:39:57Z 创建、01:41:46Z 成功）早于 CI 完成（01:42:12Z 绿），「Wait for CI」尚未生效，登记 known_warning 待用户打开后复核，细节见 EV §4。命令列指向机器对照 TEST-600。"
     }
   ],
   "executed_commands": [
@@ -2101,6 +2101,12 @@
       "text": "next build and next dev must not share a build dir: use npm run build:verify / the NEXT_DIST_DIR-isolated smoke and e2e servers. See docs/WORKFLOW.md.",
       "check": "manual",
       "reviewed_at": "2026-09-10"
+    },
+    {
+      "id": "railway-wait-for-ci-not-enabled",
+      "text": "Railway 的「Wait for CI」尚未生效（CR-20260928-ci-gate ②③ 补记，2026-09-29）：main 推送 50a011d 后部署 6dd89388 于 01:39:57Z 创建、01:41:46Z SUCCESS，CI run 36656193041 01:42:12Z 才绿——红的提交此刻仍会直接上线。用户在 Railway 服务 Settings → Deploy 打开 Wait for CI 后，用下一次 main 推送的时间戳复核并删除本条。",
+      "check": "manual",
+      "reviewed_at": "2026-09-29"
     },
     {
       "id": "CR-20260909-minimal-floating-chat",
