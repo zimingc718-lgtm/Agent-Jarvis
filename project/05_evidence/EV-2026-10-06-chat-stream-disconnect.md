@@ -78,7 +78,7 @@ at Object.start (src/lib/chat.ts:784)
   declares 2 real-entry detection route(s) but registers no real-entry PASS and carries neither a
   - 真实入口: 未执行（原因） …`——真实入口尚未执行时，CR 必须明写 `- 真实入口: 未执行（原因）`，补上后绿。
   两项修正后这 8 例复跑 OK。
-- `npx vitest run`（全量 116 文件 / 996 例）跑了**三轮**，**没有一轮是整体绿的**；逐条追查的结果见本节末的「综合判定」：
+- `npx vitest run` 跑了**四轮**（前三轮 116 文件 / 996 例，第四轮在合进 main 之后是 117 文件 / 1000 例）：**前三轮没有一轮整体绿，第四轮整体绿**；逐条追查的结果见本节末的「最终判定」：
   - 第一轮（与治理单测并发，机器满载）：**995 通过 / 1 文件红**，另有一条 runner 级
     `Vitest caught 1 unhandled error … Timeout calling "onTaskUpdate"`。
   - 第二轮（单独跑）：**994 通过 / 2 条红**——`tests/floating-chat.test.tsx > skill intake (TEST-044) ④
@@ -102,12 +102,25 @@ at Object.start (src/lib/chat.ts:784)
     `-t "request-level error|a registration receipt that excludes"` 则 **365 ms 全绿**，
     说明不存在单一污染源，是「走会话结束 / 错误路径的用例」与 `skill intake` 块的**组合**才触发。
     21–28 s 是撞 `testTimeout` 的**挂住**，不是断言不符（断言不符会在 `waitFor` 的 1 s 后就报）。
-    结论：这是 main 上一个**确定性的测试间状态污染缺陷**，此前被当成噪声；已按实测重写 known_warning，待另立 CR 查泄漏的是哪一份状态。
-    它**与本 CR 无关**（见下一条硬证据），但确实意味着 `npx vitest run` 整体当前拿不到一次全绿。
+  - **第四轮（2026-10-12，把 main 合进 cr/20260930 之后）：117 文件 / 1000 例全绿**，
+    `floating-chat ④` 本轮 **12468 ms 通过**，整文件 29112 ms。
+  - **最终判定（并收回前面两次说法）**：这一例的耗时在同一台机器、同一棵树上跨越两个数量级，
+    而 20 s 的 `testTimeout` 正好落在波动区间内，所以它**时红时绿**。实测谱：
+    隔离单例 **77 ms** 绿；两例子集 **365 ms** 绿；14 / 17 / 18 / 21 例子集绿；15 例与 16 例子集红；
+    只跑该文件（47 例）红在 **28638 ms**；全量三轮里红过 **21401 ms** 与 **28339 ms**；
+    2026-10-12 的全量 **12468 ms 绿**。
+    因此先前两种说法都不成立：不是单纯的「满负载抖动」（例数更多的子集反而绿，单跑该文件也能红），
+    也不是「确定性失败」（同一棵树的全量跑出过绿）。**能确定的只有一件事**：同文件内其它用例会把这一例的耗时
+    推高到秒级甚至接近半分钟，即用例之间确实有相互影响；红绿则取决于那次恰好落在 20 s 的哪一侧。
+    21–28 s 是撞 `testTimeout` 的**挂住**，不是断言不符（断言不符会在 `waitFor` 的 1 s 后就报）。
+    线索仍是那几例都写 `sessionStorage` 的 `jarvis:chat-session-ended` 或走 `describeSendFailure`，
+    而用例之间没有清理 `sessionStorage` 与 `vi.stubGlobal("fetch")`。
+    待另立 CR 定位并清理那份状态，**不要用提高该用例超时的方式糊过去**。
+    它**与本 CR 无关**（见下一条硬证据）。
   - **与本 CR 无关的硬证据**：该用例 `vi.stubGlobal("fetch", …)` 之后只渲染组件、上传一个 zip，
     `tests/floating-chat.test.tsx` 整个文件不 import `src/lib/chat.ts`——本 CR 唯一改动的文件。
     CR-20260930-railway-healthcheck-buildsha 的记录里也点名过它在全量负载下超时。
-  - `tests/chat-stream-disconnect.test.ts` 在三轮全量里都绿。
+  - `tests/chat-stream-disconnect.test.ts` 在四轮全量里都绿。
 - 治理检查（本 CR 视角）：`check-ids`、`check-specs`、`check-changes`、`check-doors` 无 FAIL；
   `gate g1`、`gate g2` PASS；`review r1` PASS，`review r2|r3|r4` 报 `SKIPPED_FAST_LANE`（见 CR「级别」行）。
 
