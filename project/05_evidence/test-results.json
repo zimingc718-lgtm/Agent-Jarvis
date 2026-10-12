@@ -2179,21 +2179,9 @@
     },
     {
       "id": "railway-wait-for-ci-not-enabled",
-      "text": "Railway 的「Wait for CI」尚未生效（CR-20260928-ci-gate ②③ 补记，2026-09-29）：main 推送 50a011d 后部署 6dd89388 于 01:39:57Z 创建、01:41:46Z SUCCESS，CI run 36656193041 01:42:12Z 才绿——红的提交此刻仍会直接上线。2026-09-30 14:10Z 第二次核对（a92128e：部署 14:10:24Z 创建、14:12:08Z 成功，CI 14:12:16Z 才绿）仍未生效。用户在 Railway 服务 Settings → Deploy 打开 Wait for CI 后，用下一次 main 推送的时间戳复核并删除本条。",
+      "text": "Railway 的「Wait for CI」尚未生效（CR-20260928-ci-gate ②③ 补记，2026-09-29）：main 推送 50a011d 后部署 6dd89388 于 01:39:57Z 创建、01:41:46Z SUCCESS，CI run 36656193041 01:42:12Z 才绿——红的提交此刻仍会直接上线。2026-09-30 14:10Z 第二次核对（a92128e：部署 14:10:24Z 创建、14:12:08Z 成功，CI 14:12:16Z 才绿）仍未生效。2026-10-12 第三次核对（CR-20260930 的合并提交 193acfae…）**仍未生效，且这次是决定性的**：deployment 6227c595-87f4-42d6-9589-3e80d84bd2ee 于 22:52:33.703Z 创建，其 server.start 在 22:54:27.624Z——而同一提交的 CI run 38319114665（createdAt 22:52:34Z）到 22:54:43Z 才结束，即新构建比 CI 绿早 16 秒就在对外服务。用户在 Railway 服务 Settings → Deploy 打开 Wait for CI 后，用下一次 main 推送的时间戳复核并删除本条。",
       "check": "manual",
-      "reviewed_at": "2026-09-30"
-    },
-    {
-      "id": "railway-healthcheck-not-applied",
-      "text": "CR-20260929-health-logging ③（2026-09-30）：仓库根的 railway.json（deploy.healthcheckPath: /api/health）未被 Railway 读取——部署 0d9c1fc4 的 meta.serviceManifest.deploy.healthcheckPath 为 null、fileServiceManifest 为 {}；CLI 警告配置即代码已弃用（2026-12-01 前应仍生效，本次没有）。健康检查因此没有拦在部署前。候选：迁到 .railway/railway.ts，或用 serviceInstanceUpdate（healthcheckPath / healthcheckTimeout）等价于仪表盘设置，并删掉误导性的 railway.json——另立 CR 处理后删除本条。",
-      "check": "manual",
-      "reviewed_at": "2026-09-30"
-    },
-    {
-      "id": "railway-build-sha-empty",
-      "text": "CR-20260929-health-logging ③（2026-09-30）：Railway 上 /api/health 的 build 与页面 jarvis-build meta 为空——Railpack 构建环境无 .git，next.config.mjs 的 buildSha() 按设计留空。本机正常。候选修法：buildSha() 回退到 Railway 注入的 RAILWAY_GIT_COMMIT_SHA——另立 CR 处理后删除本条。",
-      "check": "manual",
-      "reviewed_at": "2026-09-30"
+      "reviewed_at": "2026-10-12"
     },
     {
       "id": "CR-20260909-minimal-floating-chat",

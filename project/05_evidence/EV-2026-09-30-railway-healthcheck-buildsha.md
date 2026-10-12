@@ -27,7 +27,7 @@ CR-20260929-health-logging 合入 main（`a92128e`）后，Railway 部署 `0d9c1
 
 `npx vitest run`（全量，2026-09-30 本机）：116 文件 / 996 例全部通过（含此前在全量负载下超时过的 floating-chat ④ 与 language-toggle ②）；托管 runner：推送 `87b3821` 后 GitHub Actions run 36773361345（https://github.com/zimingc718-lgtm/Agent-Jarvis/actions/runs/36773361345）六步全绿，1 分 33 秒，含 `build:verify`
 
-## 4. 真实入口（2026-09-30 执行①④；②于 2026-10-12 补记成立；③待本 CR 合入部署后补记）
+## 4. 真实入口（2026-09-30 执行①④；②③于 2026-10-12 补记，四项全部成立）
 
 - 环境: 真实 Railway 服务 `agent-jarvis`（`b18a7c15…`，环境 production）与用户运行中的本机生产构建（HEAD `1775beb`）——不是测试桩
 - ① 20:22:08Z `serviceInstanceUpdate(serviceId, environmentId, input:{healthcheckPath:"/api/health", healthcheckTimeout:120})` → `true`；20:22:09Z 读回 `serviceInstance { healthcheckPath healthcheckTimeout }` = `/api/health` / `120`（此前两者都是 `null`）。第一次调用失败过：PowerShell 5.1 把单引号字符串里的双引号原样丢给 node 前会剥掉，JSON 变量成了 `{healthcheckPath:/api/health,…}`，Railway 回「Problem processing request」；内层双引号写成 `\"` 后成功——记入 [[railway-deployment]]。
@@ -46,16 +46,32 @@ CR-20260929-health-logging 合入 main（`a92128e`）后，Railway 部署 `0d9c1
     所以准确的说法是「被看见，但没有被采纳进该次部署的清单」，不是「平台完全无视这个文件」。
     删掉它的理由不变：留着只会让人以为健康检查是由仓库文件配置的，而清单显示它不是。
     平台给出的 2026-12-01 期限也说明这条路本来就要废。
-- **③ 仍待本 CR 合入后的部署**：公网 `GET /api/health` 的 `build` 要等于所部署提交，而回退到
-  `RAILWAY_GIT_COMMIT_SHA` 的代码就在本 CR 里。反向印证：2026-10-12 14:10:02Z 对未含本 CR 的 `21ca6b6`
-  部署探 `/api/health` 得 `200 {"ok":true,"storage":"ok","build":"","uptimeSeconds":55,…}`——`build` 仍为空，
-  与「无 git 的 Railpack 构建里 `buildSha()` 取不到值」这一诊断一致。
+- **③ 2026-10-12 补记：成立。** 本 CR 自己合入 main（`193acfa`）并部署后，构建号第一次在 Railway 上落下来了：
+  - 部署：deployment `6227c595-87f4-42d6-9589-3e80d84bd2ee`，`status=SUCCESS`，`meta.commitHash=193acfae215ac64add9979ea3d153db35c4a1cab`，`createdAt 2026-10-12T22:52:33.703Z`；
+    同一清单里 `healthcheckPath` 为 `/api/health`、`healthcheckTimeout` 为 `120`，`fileServiceManifest` 为 `{}`。
+  - 公网 `GET https://agent-jarvis-production-673e.up.railway.app/api/health` → `200`
+    `{"ok":true,"storage":"ok","build":"193acfae215ac64add9979ea3d153db35c4a1cab","uptimeSeconds":35,"timestamp":"2026-10-12T22:55:02.653Z"}`
+    ——`build` **等于所部署提交，也等于本地 `git rev-parse HEAD`**。部署前同一探针得的是 `build:""`（14:10:02Z）。
+  - 页面 meta 同步生效：`GET /` 的 `<meta name="jarvis-build" content="193acfae215ac64add9979ea3d153db35c4a1cab"/>`。
+  - 日志面板：`[INFO]  ts="2026-10-12T22:54:27.624Z" event="server.start" build="193acfae215ac64add9979ea3d153db35c4a1cab" node="v24.21.0" pid=25 env="production"`
+    ——`server.start` 的 `build` 不再是空串，「哪个构建在跑」从此在 Railway 上也答得出。
+  - **附带一项确认**：这次的部署日志里**再没有** `warning: Config as Code (railway.json / railway.toml) is deprecated`
+    那一行——因为文件已随本 CR 删除。此前它和 `fileServiceManifest` 为 `{}` 并存，正是「被看见但没被采纳」的证据。
+  - 采集命令：`railway status --json`、`curl -s …/api/health`、`curl -s …/ | grep jarvis-build`、
+    `railway logs --deployment 6227c595-87f4-42d6-9589-3e80d84bd2ee`（采集者：协调会话，2026-10-12）。
+- **顺带废掉两条 known_warning**（两条原文都写着「另立 CR 处理后删除本条」，本 CR 就是那条）：
+  CR-20260929-health-logging ③ 的「`railway.json` 未被读取、健康检查没拦在部署前」与「Railway 上 `build` 为空」
+  已由本 CR 的 ①②③ 分别消除，已从 `test-results.json` 删除。
+- **仍未消除的一条**：「Wait for CI」第三次复核**依旧未生效**，而且这次是决定性的——
+  deployment `6227c595-87f4-42d6-9589-3e80d84bd2ee` 的 `server.start` 在 `22:54:27.624Z`，而同一提交的 CI run `38319114665`
+  到 `22:54:43Z` 才结束（`createdAt 22:52:34Z`）：**新构建比 CI 绿早 16 秒就在对外服务了**。
+  本 CR 不处理它（那是用户的仪表盘动作），known_warning 已按这次的时间戳更新。
 
-据此 R4 矩阵 CP-1 四列由 CONDITIONAL 转 APPROVED（以 ①②④ 为据；③ 要等本 CR 自己的代码上线）；`test-results.json` TEST-621 `PASS`、`real_entry: true`、`entry: user`。
+据此 R4 矩阵 CP-1 四列由 CONDITIONAL 转 APPROVED（①②③④ 四项全部实测成立）；`test-results.json` TEST-621 `PASS`、`real_entry: true`、`entry: user`。
 
 ## 5. 局限（如实登记）
 
 - 服务设置不在仓库里：换服务、换项目、或有人在仪表盘改动，`healthcheckPath` 可能又变回空——每次部署后读部署清单才知道（同「等 CI」）。
 - `RAILWAY_GIT_COMMIT_SHA` 是 Railway 私有约定；换平台要再加一个回退。
-- 本 CR 不处理「Wait for CI」——那是用户的仪表盘动作，known_warning 保留。
+- 本 CR 不处理「Wait for CI」——那是用户的仪表盘动作，known_warning 保留；2026-10-12 的第三次复核见 §4，这次有决定性时间差（服务起于 22:54:27.624Z，CI 22:54:43Z 才绿）。
 - `railway.json` 的措辞已按实测收紧（见 §4 ②）：被平台看见并警告，但没进部署清单。本 CR 不迁 `.railway/railway.ts`——平台给的期限是 2026-12-01，等有第二个设置要管再迁（DEC-500 选项 A 的理由不变）。
