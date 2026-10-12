@@ -134,14 +134,34 @@ at Object.start (src/lib/chat.ts:784)
 - **③日志分得清**：`.data/server.log` 对两次断开各留一条
   `{"level":"info","event":"chat.turn_abandoned","conversationId":"e9a3257b…"/"28d28970…","noticedAt":"cancel"}`，
   conversationId 与请求一一对应；**全文件 `chat.turn_failed` 零条**——生产那四条的签名在断开场景下不再出现。
-- **④公网部署待补记**：合入 main 推送后在 Railway 上同样走一遍①②，并确认日志面板里是 `[INFO] … event="chat.turn_abandoned"`。
+- **④公网部署（2026-10-12 补记）**：机器可采的三项成立，需登录态的那半项如实挂起。
+  - **部署清单**：Railway project `agent-jarvis`（`5a58f2e8-dc90-4cf0-8e61-7ea07f4a32db`）/ service `agent-jarvis`
+    （`b18a7c15-fa6a-4230-87d6-3714923aed02`）/ env `production`（`e66f5ef2-0e28-4e5f-9dc8-d1122ff9d9ec`），
+    deployment `090b220f-874b-4e07-9fdf-1a40d775bb27`，`status=SUCCESS`，
+    `meta.commitHash=21ca6b6097763efa6ca942038acbefb043c84b58`（即本 CR 合入 main 的合并提交），
+    `createdAt 2026-10-12T14:06:35.738Z`；采集命令 `railway status --json`。
+    同一 SHA 的托管 CI run `38260510215` 九步全绿（含类型检查、单测/组件/契约、治理 `check ci`、生产构建）。
+  - **公网健康**：`GET https://agent-jarvis-production-673e.up.railway.app/api/health` → `200`
+    `{"ok":true,"storage":"ok","build":"","uptimeSeconds":55,"timestamp":"2026-10-12T14:10:01.998Z"}`；
+    部署前同一探针（14:07:21Z）是 `uptimeSeconds 1035907`——**uptime 归零即新构建已切流**。
+    `build` 为空是 CR-20260929-health-logging 已登记的 known_warning，不是本 CR 的回归。
+  - **日志面板**：`railway logs --deployment 090b220f-874b-4e07-9fdf-1a40d775bb27` 里有
+    `[INFO]  ts="2026-10-12T14:09:06.808Z" event="server.start" build="" node="v24.21.0" pid=25 env="production"`
+    ——结构化日志在线上这一版里是活的，所以 `chat.turn_abandoned` 一旦发生就会落到同一个面板。
+  - **公网的①②尚未走，原因不是忘了**：`src/app/api/chat/stream/route.ts` 第一步就是
+    `requireUserId(await getServerSession(authOptions))`；线上 `NEXTAUTH_URL` 是公网 https 域名且未设
+    `JARVIS_SINGLE_ADMIN_ID`，免登录路径按 `src/lib/auth-guard.ts:102-113` 被明确拒绝。
+    所以公网那一遍必须由持有该 Google 身份的 owner 在浏览器里做一次（发一条消息、回复流到一半刷新或关面板，
+    再回到该会话看是否带「已停止」标记，并紧接着再发一条看是否立刻开始）。
+    **已登记为人工发现项**（`test-results.json` 的 `known_warnings`，`check: manual`），
+    做完在 `railway logs` 里应能看到 `[INFO] … event="chat.turn_abandoned"`。
 
 **两点如实说明**：
-1. 修复尚未提交，所以 `build` 等于 `git rev-parse HEAD`（都是 `90072cf`）这条**常规新鲜度核对在此不足以证明跑的是新代码**
+1. ①②③那一轮跑在修复提交之前，所以 `build` 等于 `git rev-parse HEAD`（都是 `90072cf`）这条**常规新鲜度核对在当时不足以证明跑的是新代码**
    ——真正的证明来自行为：`chat.turn_abandoned` 这个事件名只存在于本 CR 的代码里，旧构建不可能写出这两行。
 2. 界面上的行内「已停止」标记由 `src/components/FloatingChat.tsx:1348-1349` 按 `message.status === "stopped"` 渲染
    （文案 `chat.stopped` = 「（已停止）」）。本次核对的是它所依据的**库内状态**，**未经浏览器目视**；
-   目视那一步留给用户，或随④一并确认。
+   目视那一步留给用户，随④的公网那一遍一并确认（见上）。
 
 ## 5. 局限（如实登记）
 

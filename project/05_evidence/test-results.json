@@ -2284,6 +2284,11 @@
       "text": "tests/floating-chat.test.tsx > skill intake (TEST-044) ④ a registration receipt that excludes files says so 在 main 上确定性地撞 20 s testTimeout —— **不是满负载抖动**（2026-10-11 二分推翻了先前的判断）。实测：机器空闲、只跑这一个文件（47 例）时 ④ 红在 28638 ms、其余 46 例全过；`-t \"新对话|does not hydrate|skill intake\"`（16 例）与 `-t \"request-level error|mid-stream failure|skill intake\"`（15 例）各自都红，而 `-t \"skill intake\"`（14 例）、`-t \"collapse panel|skill intake\"`（21 例）、`-t \"status light|light is 'off'|re-probes|skill intake\"`（17 例）、`-t \"shows a bottom input|carries no provider|keeps separate assistant|Stop aborts|skill intake\"`（18 例）全绿——例数多的绿、例数少的红，与负载无关；缩到两例 `-t \"request-level error|a registration receipt that excludes\"` 则 365 ms 全绿，所以没有单一污染源，是「走会话结束 / 错误路径的用例」与 skill intake 块的组合才触发。21–28 s 是挂住而非断言不符（断言不符会在 waitFor 的 1 s 后报）。线索：那四例都写 sessionStorage 的 jarvis:chat-session-ended 或走 describeSendFailure，而用例之间没有清理 sessionStorage / vi.stubGlobal(\"fetch\")。与 CR-20261006-chat-stream-disconnect 无关：该文件不 import 本 CR 唯一改动的 src/lib/chat.ts。后果：npx vitest run 整体当前拿不到一次全绿。待另立 CR 定位泄漏的那份状态并加清理，不要用提高该用例超时的方式糊过去。",
       "check": "manual",
       "reviewed_at": "2026-10-11"
+    },
+    {
+      "text": "TEST-631 ④ 的公网那一遍（在 https://agent-jarvis-production-673e.up.railway.app 上发一条消息、回复流到一半刷新或关面板，再回该会话确认带「已停止」标记，并紧接着再发一条确认立刻开始）尚未执行，原因是线上拒绝免登录路径：src/app/api/chat/stream/route.ts 第一步即 requireUserId(await getServerSession(authOptions))，而线上 NEXTAUTH_URL 是公网 https 域名且未设 JARVIS_SINGLE_ADMIN_ID，src/lib/auth-guard.ts:102-113 因此明确拒绝单管理员模式。必须由持有该 Google 身份的 owner 在浏览器里做一次。④的其余三项已机器采集并记于 EV-2026-10-06-chat-stream-disconnect §4：Railway deployment 090b220f-874b-4e07-9fdf-1a40d775bb27 status=SUCCESS 且 meta.commitHash=21ca6b6097763efa6ca942038acbefb043c84b58、公网 /api/health 200 且 uptimeSeconds 由 1035907 归零为 55、日志面板有 [INFO] event=\"server.start\" env=\"production\"。①②③已在本机生产构建 + 真实 DeepSeek 上成立（EV §4），所以这里缺的是公网那一次目视复核，不是行为未验证。",
+      "check": "manual",
+      "reviewed_at": "2026-10-12"
     }
   ]
 }
