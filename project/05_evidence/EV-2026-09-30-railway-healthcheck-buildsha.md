@@ -59,6 +59,16 @@ CR-20260929-health-logging 合入 main（`a92128e`）后，Railway 部署 `0d9c1
     那一行——因为文件已随本 CR 删除。此前它和 `fileServiceManifest` 为 `{}` 并存，正是「被看见但没被采纳」的证据。
   - 采集命令：`railway status --json`、`curl -s …/api/health`、`curl -s …/ | grep jarvis-build`、
     `railway logs --deployment 6227c595-87f4-42d6-9589-3e80d84bd2ee`（采集者：协调会话，2026-10-12）。
+- **③ 的第二次独立复核（2026-10-12 23:02–23:18Z，同日下一次部署）**：结论不是只在一次部署上成立。
+  deployment `19d96f14-2c3d-4e27-871a-f8575dd6f5bb`（main `14cf39d`，`status=SUCCESS`）：
+  - 公网 `GET /api/health` → `200 {"ok":true,"storage":"ok","build":"14cf39d85dec8816640b2d8baf1f8b946a273e03","uptimeSeconds":943,…}`；
+    `GET /` 的 `<meta name="jarvis-build" content="14cf39d85dec8816640b2d8baf1f8b946a273e03"/>`；两者都等于该次部署的 `meta.commitHash`。
+  - 清单 `healthcheckPath=/api/health`、`healthcheckTimeout=120`、`fileServiceManifest={}`。
+  - 日志（`railway logs --deployment 19d96f14-2c3d-4e27-871a-f8575dd6f5bb`，共 14 行）：
+    `[INFO]  ts="2026-10-12T23:02:41.374Z" event="server.start" build="14cf39d85dec8816640b2d8baf1f8b946a273e03" node="v24.21.0" pid=25 env="production"`；
+    **`Config as Code … deprecated` 0 行**（连续两次部署都没有，文件删除的效果稳定），
+    `chat.turn_failed` / `route.failed` / `[ERROR]` / 未捕获异常 **各 0 行**。
+  - 另外 `GET /api/auth/csrf` → `200`，说明 NextAuth 在这一版上正常起着。
 - **顺带废掉两条 known_warning**（两条原文都写着「另立 CR 处理后删除本条」，本 CR 就是那条）：
   CR-20260929-health-logging ③ 的「`railway.json` 未被读取、健康检查没拦在部署前」与「Railway 上 `build` 为空」
   已由本 CR 的 ①②③ 分别消除，已从 `test-results.json` 删除。

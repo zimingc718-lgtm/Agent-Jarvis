@@ -161,9 +161,18 @@ at Object.start (src/lib/chat.ts:784)
   - **日志面板**：`railway logs --deployment 090b220f-874b-4e07-9fdf-1a40d775bb27` 里有
     `[INFO]  ts="2026-10-12T14:09:06.808Z" event="server.start" build="" node="v24.21.0" pid=25 env="production"`
     ——结构化日志在线上这一版里是活的，所以 `chat.turn_abandoned` 一旦发生就会落到同一个面板。
-  - **公网的①②尚未走，原因不是忘了**：`src/app/api/chat/stream/route.ts` 第一步就是
-    `requireUserId(await getServerSession(authOptions))`；线上 `NEXTAUTH_URL` 是公网 https 域名且未设
-    `JARVIS_SINGLE_ADMIN_ID`，免登录路径按 `src/lib/auth-guard.ts:102-113` 被明确拒绝。
+  - **公网的①②尚未走，原因已由实测确认（不再只是读代码）**：2026-10-12 23:18Z 对公网域名实打实地探过，
+    ④ 那一遍需要的三条路由在没有会话时**全部 401**，每一步都走不通：
+    `POST /api/chat/stream` → `401 {"message":"Authentication required."}`（在开流之前就被拒，没有任何写入）；
+    `GET /api/conversations/recent` → `401`；`GET /api/conversations/<id>/messages` → `401`。
+    对照之下免登录的 `/api/health` 与 `/api/auth/csrf` 同时各回 `200`，所以 401 是身份守卫的判定，不是服务故障。
+    代码侧的原因照旧：`src/app/api/chat/stream/route.ts` 第一步即
+    `requireUserId(await getServerSession(authOptions))`，而线上 `NEXTAUTH_URL` 是公网 https 域名且未设
+    `JARVIS_SINGLE_ADMIN_ID`，`src/lib/auth-guard.ts:102-113` 因此明确拒绝单管理员模式。
+  - **结构化日志在当前这一版上是活的**（所以 owner 走完那一遍，放弃行一定会落到面板）：
+    当前部署 `19d96f14` 的日志里有
+    `[INFO]  ts="2026-10-12T23:02:41.374Z" event="server.start" build="14cf39d85dec8816640b2d8baf1f8b946a273e03" … env="production"`，
+    且该部署至今 `chat.turn_failed` 与 `route.failed` 各 0 行。
     所以公网那一遍必须由持有该 Google 身份的 owner 在浏览器里做一次（发一条消息、回复流到一半刷新或关面板，
     再回到该会话看是否带「已停止」标记，并紧接着再发一条看是否立刻开始）。
     **已登记为人工发现项**（`test-results.json` 的 `known_warnings`，`check: manual`），
