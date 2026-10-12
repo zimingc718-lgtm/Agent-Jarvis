@@ -534,6 +534,9 @@ export async function runChatTurn(input: RunChatTurnInput): Promise<ReadableStre
     estimateFallback: () => estimateMessagesTokens(assembled),
     onFinal: input.onFinal,
     onSettled: releaseTurn,
+    // DEC-510 ①: a reader that let go gets the same treatment as the stop button — the turn
+    // stops spending at its next step and keeps what it already produced.
+    onCancel: () => turnController.abort(),
   });
 }
 
@@ -727,13 +730,64 @@ function createStreamingResponse(input: {
   onFinal?: (finalText: string, status: string, conversationId: string, toolsUsed: string[]) => ChatDelta[];
   /** Runs once the stream has closed, however it ended — the turn's in-flight slot is released here (DEC-420 ②). */
   onSettled?: () => void;
+  /** The consumer let go. Aborts the turn so it stops spending and winds down (DEC-510 ①). */
+  onCancel?: () => void;
 }): ReadableStream<Uint8Array> {
+  /**
+   * DEC-510 ①: the consumer can let go at any moment — `handleStop` aborts its fetch, a
+   * reload or a navigation drops the connection, and a proxy may cut it. The controller is
+   * then already closed while this source is still mid-turn, so the next `enqueue` throws.
+   *
+   * The measured failure (EV-2026-10-06-chat-stream-disconnect §1): `closed` used to be set
+   * only in this source's own `finally`, so a cancel went unnoticed and `emit` threw from
+   * inside the tool loop — which skipped `agent-loop`'s own `stopped` branch (no assistant
+   * row at all), threw a second time on the `catch`'s `send`, and a third time on
+   * `controller.close()`, taking `onSettled` with it. The leaked in-flight slot then made
+   * the next send in that conversation wait out `SUPERSEDE_WAIT_MS` — 15.1 s measured.
+   *
+   * So `closed` lives out here and is set from three places: `cancel`, a refused `enqueue`,
+   * and the normal end of the turn. Everything downstream becomes a no-op rather than a throw.
+   */
+  let closed = false;
+  let abandoned = false;
+  let settled = false;
+  const settle = () => {
+    if (settled) {
+      return;
+    }
+    settled = true;
+    input.onSettled?.();
+  };
+  /**
+   * One line per abandoned turn, from whichever path noticed first. It is `info`, not
+   * `error`: a reader walking away is not a failure, and logging it as a `TypeError` with a
+   * stack is exactly what made a disconnect indistinguishable from a provider fault.
+   */
+  const noteAbandoned = (noticedAt: "cancel" | "enqueue") => {
+    closed = true;
+    if (abandoned) {
+      return;
+    }
+    abandoned = true;
+    logEvent("info", "chat.turn_abandoned", {
+      conversationId: input.conversationId,
+      messageId: input.messageId,
+      noticedAt,
+    });
+  };
+
   return new ReadableStream<Uint8Array>({
     async start(controller) {
-      let closed = false;
       const send = (delta: ChatDelta) => {
-        if (!closed) {
+        if (closed) {
+          return;
+        }
+        try {
           controller.enqueue(encoder.encode(formatSse(delta)));
+        } catch {
+          // The consumer is gone and did not say so through `cancel`. Stop writing; the turn
+          // still winds down its own way, so the partial reply lands as `stopped`.
+          noteAbandoned("enqueue");
         }
       };
 
@@ -838,18 +892,37 @@ function createStreamingResponse(input: {
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : "Provider stream failed.";
-        logEvent("error", "chat.turn_failed", {
-          conversationId: input.conversationId,
-          messageId: input.messageId,
-          stage: "stream",
-          ...errorFields(error),
-        });
+        // An abandoned turn is not a failure and already has its own `info` line; logging it
+        // here again as an error is what sent whoever read the log after the user's four
+        // silent sends chasing a `TypeError` instead of a disconnect.
+        if (!abandoned) {
+          logEvent("error", "chat.turn_failed", {
+            conversationId: input.conversationId,
+            messageId: input.messageId,
+            stage: "stream",
+            ...errorFields(error),
+          });
+        }
         send({ type: "error", message });
       } finally {
         closed = true;
-        controller.close();
-        input.onSettled?.();
+        try {
+          controller.close();
+        } catch {
+          // Already closed by the consumer's own cancel — nothing left to close.
+        }
+        settle();
       }
+    },
+    /**
+     * The consumer let go. Abort the turn (DEC-420 ② already wires the signal through the
+     * loop, so it stops spending and persists what it produced as `stopped`) and mark the
+     * stream closed so `start`'s remaining sends become no-ops. The in-flight slot is NOT
+     * released here: `start` is still running and releases it in its own `finally`.
+     */
+    cancel() {
+      noteAbandoned("cancel");
+      input.onCancel?.();
     },
   });
 }
