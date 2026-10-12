@@ -16,7 +16,8 @@
     "project/06_changes/CR-20260912-entity-pending.md",
     "project/06_changes/CR-20260912-display-stage.md",
     "project/06_changes/CR-20260912-r1-signoff-marker.md",
-    "project/06_changes/CR-20260913-real-entry-ledger.md"
+    "project/06_changes/CR-20260913-real-entry-ledger.md",
+    "project/06_changes/CR-20261006-chat-stream-disconnect.md"
   ],
   "change_records": [
     "project/06_changes/CR-20260908-floating-llm-chat.md",
@@ -80,7 +81,8 @@
     "CR-20260923-orphan-tool-results",
     "CR-20260925-write-approval-action-log",
     "CR-20260927-architecture-doc",
-    "CR-20260927-reply-language"
+    "CR-20260927-reply-language",
+    "CR-20261006-chat-stream-disconnect"
   ],
   "tests": [
     {
@@ -1805,6 +1807,24 @@
       "date": "2026-09-29",
       "entry": "assistant",
       "notes": "日志落点 3 例（REQ-NF-063 ②③，DEC-490 ②④，TASK-610）。runChatTurn 抛错时 /api/chat/stream 返 500、响应体 requestId 与 route.failed 行一致、错误消息里的 sk-… 已打码、无 body 键；工具抛错留 tool.failed（工具名、callId、conversationId、错误消息），不含参数与用户消息；唤醒（关着）与巡检（无来源）各留 wake.outcome / sweep.outcome，无 text / message、只有类别与计数。"
+    },
+    {
+      "id": "TEST-630",
+      "result": "PASS",
+      "command": "npx vitest run tests/chat-stream-disconnect.test.ts",
+      "real_entry": false,
+      "date": "2026-10-06",
+      "entry": "assistant",
+      "notes": "客户端中途断开 4 例（REQ-F-005、REQ-NF-063 ②、DEC-510、TASK-630）：①读到第一个 delta 后 reader.cancel()，该会话落库为 [user:first/complete, assistant:\"part one\"/stopped]（修复前只有 user 一行，助手行不落库）；②紧接着同一会话再发一条，整次发送 < 2000 ms 且拿到 event: done（修复前实测 15100 ms）；③该次断开只留一条 level:\"info\" 的 chat.turn_abandoned（noticedAt:\"cancel\"），chat.turn_failed 零条；④provider 生成器中途抛错时仍留一条 level:\"error\" 的 chat.turn_failed（stage:\"stream\"）且无放弃行。4/4 通过，4.9 s。"
+    },
+    {
+      "id": "TEST-631",
+      "result": "PASS",
+      "command": "npx vitest run tests/chat-stream-disconnect.test.ts",
+      "real_entry": true,
+      "date": "2026-10-06",
+      "entry": "user",
+      "notes": "真实入口（REQ-F-005、REQ-NF-063 ②、TASK-630）：2026-10-06 在用户本机生产构建上（删 .next-prod 后 build:local + serve:local，server.start build=90072cf、node v24.11.0、env=production、pid 38728），经真实 HTTP 路由与真实 DeepSeek Provider（deepseek-chat）执行。①POST /api/chat/stream 收到真实 delta（首段「流」）后 abort 连接，GET /api/conversations/<id>/messages 读回 [user:complete, assistant:\"流\"/stopped]——已生成部分带 stopped 落库，修复前此行根本不存在；②同一会话紧接着再发一条，整轮 1749 ms 跑完并拿到 event: done（修复前实测 15100 ms 空等）；③.data/server.log 对两次断开各有一条 level:info 的 chat.turn_abandoned（noticedAt:cancel，conversationId e9a3257b… 与 28d28970… 与请求一致），全文件 chat.turn_failed 零条。④公网部署待合入 main 推送后补记。局限：修复尚未提交，故 build 等于 HEAD 这条常规新鲜度核对在此不足以证明跑的是新代码——证明来自行为本身（chat.turn_abandoned 只存在于本 CR 的代码里）；界面上的行内「已停止」标记由 FloatingChat.tsx:1348-1349 按 message.status===\"stopped\" 渲染，本次核对的是它所依据的库内状态，未经浏览器目视。"
     }
   ],
   "executed_commands": [
@@ -2115,7 +2135,8 @@
     "printf <含标题与表格的 Markdown> | python scripts/documents_to_html.py --render  (退出码 0，输出含 <h1> 与 <table>)",
     "npx vitest run tests/module-graph.test.ts tests/document-format.test.ts  (OK 32 例，lib→tools 新边修正后)",
     "curl /api/documents/raw?id=<真实 PDF>（排版技能已选中）  (43s，HTTP 200，h1/h2/h3 11/26/20，tables 21，keptVerbatim 0；二次 5.5s 命中缓存)",
-    "npx vitest run tests/skill-tools-register.test.ts tests/tool-suites.test.ts  (OK 21 例)"
+    "npx vitest run tests/skill-tools-register.test.ts tests/tool-suites.test.ts  (OK 21 例)",
+    "npx vitest run tests/chat-stream-disconnect.test.ts  (OK 4 例)"
   ],
   "known_warnings": [
     {
@@ -2253,6 +2274,16 @@
       "text": "TEST-250 的 CP-3（输出截断自动续写）与 CP-4（本轮累计触阈停止调工具）未在真实入口触发：前者需构造一次真实的 finish_reason=length 截断，后者需一轮累计逼近 921,600 tokens。已按人工发现项登记，不以单测冒充真实入口覆盖。",
       "check": "manual",
       "reviewed_at": "2026-09-13"
+    },
+    {
+      "text": "npm run test:smoke 在 main 上就已经是红的，与 CR-20261006-chat-stream-disconnect 无关——已把本 CR 唯一的源码改动 git stash 掉复验，报错一字不差。因果链已查实（2026-10-11）：smoke 自己拉起的 next dev 编译 /instrumentation 失败，dev 模式把这个编译错误挂在每个请求上，于是 GET / 的 500 正文里 err 就是 {\"name\":\"ModuleBuildError\",\"source\":\"server\",\"message\":\"Module build failed: UnhandledSchemeError: Reading from \\\"node:crypto\\\" is not handled by plugins\"}，scripts/smoke.mjs 的 waitForApp 只看 response.ok 所以 45 s 后超时退出、把正文丢掉。根因不是 node: 这个 scheme：把 src/lib/log.ts 的三个 node: 前缀临时去掉后，报错变成 Module not found: Can't resolve 'fs'，import trace 为 ./src/instrumentation.ts——真正的问题是 instrumentation 被打进了一个没有 node 内置模块的目标包，而 register() 里 NEXT_RUNTIME !== \"nodejs\" 的守卫只拦执行、拦不住打包（.next-smoke/server/ 下确实落了 _instrument_src_lib_log_ts.js）。node 侧运行时是好的：server.start 那行照样写进了 .data/server.log，生产构建（build:local + serve:local）也不受影响。CI 按 DEC-480 ① 不跑 smoke，所以此前没被拦住。待另立 CR 处理打包边界，顺带把 waitForApp 改成失败时打出响应正文——这次就是它把证据藏了起来。",
+      "check": "manual",
+      "reviewed_at": "2026-10-11"
+    },
+    {
+      "text": "tests/floating-chat.test.tsx > skill intake (TEST-044) ④ a registration receipt that excludes files says so 在 main 上确定性地撞 20 s testTimeout —— **不是满负载抖动**（2026-10-11 二分推翻了先前的判断）。实测：机器空闲、只跑这一个文件（47 例）时 ④ 红在 28638 ms、其余 46 例全过；`-t \"新对话|does not hydrate|skill intake\"`（16 例）与 `-t \"request-level error|mid-stream failure|skill intake\"`（15 例）各自都红，而 `-t \"skill intake\"`（14 例）、`-t \"collapse panel|skill intake\"`（21 例）、`-t \"status light|light is 'off'|re-probes|skill intake\"`（17 例）、`-t \"shows a bottom input|carries no provider|keeps separate assistant|Stop aborts|skill intake\"`（18 例）全绿——例数多的绿、例数少的红，与负载无关；缩到两例 `-t \"request-level error|a registration receipt that excludes\"` 则 365 ms 全绿，所以没有单一污染源，是「走会话结束 / 错误路径的用例」与 skill intake 块的组合才触发。21–28 s 是挂住而非断言不符（断言不符会在 waitFor 的 1 s 后报）。线索：那四例都写 sessionStorage 的 jarvis:chat-session-ended 或走 describeSendFailure，而用例之间没有清理 sessionStorage / vi.stubGlobal(\"fetch\")。与 CR-20261006-chat-stream-disconnect 无关：该文件不 import 本 CR 唯一改动的 src/lib/chat.ts。后果：npx vitest run 整体当前拿不到一次全绿。待另立 CR 定位泄漏的那份状态并加清理，不要用提高该用例超时的方式糊过去。",
+      "check": "manual",
+      "reviewed_at": "2026-10-11"
     }
   ]
 }
