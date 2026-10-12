@@ -27,17 +27,35 @@ CR-20260929-health-logging 合入 main（`a92128e`）后，Railway 部署 `0d9c1
 
 `npx vitest run`（全量，2026-09-30 本机）：116 文件 / 996 例全部通过（含此前在全量负载下超时过的 floating-chat ④ 与 language-toggle ②）；托管 runner：推送 `87b3821` 后 GitHub Actions run 36773361345（https://github.com/zimingc718-lgtm/Agent-Jarvis/actions/runs/36773361345）六步全绿，1 分 33 秒，含 `build:verify`
 
-## 4. 真实入口（2026-09-30 已执行①④，②③待闭环推送后补记）
+## 4. 真实入口（2026-09-30 执行①④；②于 2026-10-12 补记成立；③待本 CR 合入部署后补记）
 
 - 环境: 真实 Railway 服务 `agent-jarvis`（`b18a7c15…`，环境 production）与用户运行中的本机生产构建（HEAD `1775beb`）——不是测试桩
 - ① 20:22:08Z `serviceInstanceUpdate(serviceId, environmentId, input:{healthcheckPath:"/api/health", healthcheckTimeout:120})` → `true`；20:22:09Z 读回 `serviceInstance { healthcheckPath healthcheckTimeout }` = `/api/health` / `120`（此前两者都是 `null`）。第一次调用失败过：PowerShell 5.1 把单引号字符串里的双引号原样丢给 node 前会剥掉，JSON 变量成了 `{healthcheckPath:/api/health,…}`，Railway 回「Problem processing request」；内层双引号写成 `\"` 后成功——记入 [[railway-deployment]]。
 - ④ 本机重建重启后不带会话 `GET http://localhost:3000/api/health` → 200：`{"ok":true,"storage":"ok","build":"1775beb85050e585d0d3013cd0c538abcafa69d8","uptimeSeconds":5,"timestamp":"2026-09-30T20:31:29.337Z"}`，`build` 等于 `git rev-parse HEAD`（git 可用时行为不变）。
-- ②③ 合入 main 推送后：读该次部署的 `meta.serviceManifest.deploy.healthcheckPath` 应为 `/api/health` 且部署 SUCCESS；公网 `GET /api/health` 的 `build` 应等于所部署提交——闭环推送后补记于此。
+- **② 2026-10-12 补记：成立。** 服务设置确实进了部署清单——不需要等本 CR 合并，CR-20261006-chat-stream-disconnect
+  推送产生的两次真实部署就能核：
+  - deployment `090b220f-874b-4e07-9fdf-1a40d775bb27`（main `21ca6b6`）与 `9e597e86-a0bf-4b6d-be9f-7b42ab2051c8`
+    （main `33c9582`，`status=SUCCESS`）的 `meta.serviceManifest.deploy.healthcheckPath` 均为 `/api/health`、
+    `healthcheckTimeout` 均为 `120`；采集命令 `railway status --json`（采集者：协调会话，2026-10-12）。
+    此前 2026-09-30 的部署 `0d9c1fc4` 读到的是 `null`——差别正是本 CR ① 那一次 `serviceInstanceUpdate`。
+  - 同一次部署的 `meta.fileServiceManifest` 仍是 `{}`：**仓库根的 `railway.json` 一个字段都没进清单**，
+    而此刻它还在仓库里（本 CR 的删除尚未合入 main）。DEC-500 ① 的前提因此在一次新部署上重新成立。
+  - **一处要说准**：同一次部署的日志里 Railway 确实对该文件发了弃用警告——
+    `warning: Config as Code (railway.json / railway.toml) is deprecated. Prefer Infrastructure as Code
+    (.railway/railway.ts) … Existing files keep working until 2026-12-01`。
+    所以准确的说法是「被看见，但没有被采纳进该次部署的清单」，不是「平台完全无视这个文件」。
+    删掉它的理由不变：留着只会让人以为健康检查是由仓库文件配置的，而清单显示它不是。
+    平台给出的 2026-12-01 期限也说明这条路本来就要废。
+- **③ 仍待本 CR 合入后的部署**：公网 `GET /api/health` 的 `build` 要等于所部署提交，而回退到
+  `RAILWAY_GIT_COMMIT_SHA` 的代码就在本 CR 里。反向印证：2026-10-12 14:10:02Z 对未含本 CR 的 `21ca6b6`
+  部署探 `/api/health` 得 `200 {"ok":true,"storage":"ok","build":"","uptimeSeconds":55,…}`——`build` 仍为空，
+  与「无 git 的 Railpack 构建里 `buildSha()` 取不到值」这一诊断一致。
 
-据此 R4 矩阵 CP-1 四列由 CONDITIONAL 转 APPROVED（以 ①④ 为据；②③ 为部署侧核对，闭环推送后补记）；`test-results.json` TEST-621 `PASS`、`real_entry: true`、`entry: user`。
+据此 R4 矩阵 CP-1 四列由 CONDITIONAL 转 APPROVED（以 ①②④ 为据；③ 要等本 CR 自己的代码上线）；`test-results.json` TEST-621 `PASS`、`real_entry: true`、`entry: user`。
 
 ## 5. 局限（如实登记）
 
 - 服务设置不在仓库里：换服务、换项目、或有人在仪表盘改动，`healthcheckPath` 可能又变回空——每次部署后读部署清单才知道（同「等 CI」）。
 - `RAILWAY_GIT_COMMIT_SHA` 是 Railway 私有约定；换平台要再加一个回退。
 - 本 CR 不处理「Wait for CI」——那是用户的仪表盘动作，known_warning 保留。
+- `railway.json` 的措辞已按实测收紧（见 §4 ②）：被平台看见并警告，但没进部署清单。本 CR 不迁 `.railway/railway.ts`——平台给的期限是 2026-12-01，等有第二个设置要管再迁（DEC-500 选项 A 的理由不变）。
