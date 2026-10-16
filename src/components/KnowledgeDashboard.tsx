@@ -83,11 +83,36 @@ export type HistoryEntry = { at: string; url: string; change: string };
  */
 const GENERAL_ENTITY = "__通用__";
 
-const PARAM_STATE_LABEL: Record<ParamState, MessageKey> = {
-  unknown: "board.paramState.undetermined",
-  meets: "board.paramState.met",
-  unmet: "board.paramState.unmet",
-};
+/** 展开态默认显示的消息条数（CR-20261016-board-card-info-first CP-2，用户 2026-10-16 定「5 条
+ *  加查看全部」）。其余条目不丢，收在「查看全部」后面；接口那侧的上限仍是 MAX_HISTORY_READ。 */
+const HISTORY_PREVIEW = 5;
+
+/* PARAM_STATE_LABEL / NEXT_PARAM_STATE / PARAM_STATE_CLASS 随技术参数区一并删除
+   （CR-20261016-board-card-info-first CP-3）——`noUnusedLocals` 当场报了这三处，不留死代码。
+   `ParamState` 本身保留：数据模型未动，`IndustrySpecComparison` 与 `CompetitorBoard` 仍在用。 */
+
+/**
+ * 一条消息显示成什么（CR-20261016-board-card-info-first CP-4，用户 2026-10-16
+ * 「最新消息，直接显示标题」）。
+ *
+ * `sources.ts#describeChange` 把采集到的变化写成 `新增 N 行，移除 M 行：<首个新增行>`，
+ * 而那个「首个新增行」在实践中就是页面的标题（实测：`新增 2 行：2026 云栖大会`、
+ * `新增 23 行，移除 20 行：Smarter is Greener 越智慧 越永续`）。用户要看的是标题，
+ * 不是行数。
+ *
+ * 剥前缀在渲染侧做，不动已经落盘的 JSONL——这样**历史条目立即生效**，不需要迁移。
+ * 冒号后面没东西时（纯行数，或 `页面有变化` 这类兜底文案）原样显示：那已经是全部信息了，
+ * 把它吞掉会让一条真实发生过的变化在界面上消失。
+ */
+export function messageTitle(change: string): string {
+  const marker = "：";
+  const at = change.indexOf(marker);
+  if (at < 0) {
+    return change;
+  }
+  const title = change.slice(at + marker.length).trim();
+  return title || change;
+}
 
 /** 有出处、但那份出处没有被逐字核对过（REQ-F-180 ⑥）。 */
 function isInferred(entity: DashboardEntity, field: string): boolean {
@@ -105,13 +130,6 @@ function InferredTag() {
     </span>
   );
 }
-/** Clicking cycles through the three; there is no fourth state to hide in. */
-const NEXT_PARAM_STATE: Record<ParamState, ParamState> = { unknown: "meets", meets: "unmet", unmet: "unknown" };
-const PARAM_STATE_CLASS: Record<ParamState, string> = {
-  unknown: "text-muted-foreground",
-  meets: "text-emerald-700 dark:text-emerald-500",
-  unmet: "text-destructive",
-};
 
 export type DashboardProposal = {
   id: string;
@@ -293,6 +311,9 @@ export function KnowledgeDashboard({
    *  full history on every unrelated update. */
   const [history, setHistory] = useState<Record<string, HistoryEntry[]>>({});
   const [historyBusy, setHistoryBusy] = useState<string | null>(null);
+  /** 展开态默认只给最近 HISTORY_PREVIEW 条，其余藏在「查看全部」后面
+   *  （CR-20261016-board-card-info-first CP-2）。按对象记，一张卡展开不影响另一张。 */
+  const [showAllHistory, setShowAllHistory] = useState<Record<string, boolean>>({});
   /** Per-kind: is that lane's `+` tile expanded into the new-entity form right now. */
   const [addOpenKind, setAddOpenKind] = useState<Partial<Record<DashboardEntity["kind"], boolean>>>({});
   const [sweep, setSweep] = useState<SweepState>(EMPTY_SWEEP);
@@ -524,7 +545,7 @@ export function KnowledgeDashboard({
           </span>
           {entity.summary ? <span className="truncate text-xs text-muted-foreground">{entity.summary}</span> : null}
           <span className={`flex items-center gap-1 text-xs ${entity.unread ? "text-foreground" : "text-muted-foreground"}`}>
-            <span className="truncate">{entity.change || t("board.noChanges")}</span>
+            <span className="truncate">{entity.change ? messageTitle(entity.change) : t("board.noChanges")}</span>
             {isInferred(entity, "change") ? <InferredTag /> : null}
           </span>
           <span className={`flex items-center gap-1.5 text-xs ${HEALTH_COLOR[entity.health]}`}>
@@ -537,118 +558,59 @@ export function KnowledgeDashboard({
         {open ? (
           <div className="knowledge-dashboard__detail mt-2 flex flex-col gap-2 border-t border-border pt-2">
             {/* 新消息清单：点击进源链接（CR-20260918-change-history-and-sources CP-1）。折叠态
-                的单行 entity.change 保持不动（快速一瞥），这里是打开卡片后的完整列表。 */}
+                的单行仍是「最新一条」的快速一瞥，这里是打开卡片后的完整列表。两处都只显示标题
+                （CP-4）——行数统计仍然留在落盘的 `change` 里，只是不再占界面。 */}
             <p className="text-xs font-medium text-muted-foreground">{t("board.recentMessages")}</p>
             {historyBusy === entity.name ? (
               <p className="text-xs text-muted-foreground">{t("common.loadingShort")}</p>
             ) : (history[entity.name]?.length ?? 0) === 0 ? (
               <p className="text-xs text-muted-foreground">{t("board.noChangesCollected")}</p>
             ) : (
-              <ul className="knowledge-dashboard__history flex flex-col gap-1">
-                {history[entity.name]!.map((item, index) => (
-                  <li className="flex items-start gap-2 text-xs" key={`${item.at}-${index}`}>
-                    <span className="shrink-0 text-muted-foreground">{formatWhen(item.at, locale)}</span>
-                    <a
-                      className="min-w-0 flex-1 truncate text-primary underline underline-offset-2"
-                      href={item.url}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      {item.change}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <ul className="knowledge-dashboard__history flex flex-col gap-1">
+                  {(showAllHistory[entity.name]
+                    ? history[entity.name]!
+                    : history[entity.name]!.slice(0, HISTORY_PREVIEW)
+                  ).map((item, index) => (
+                    <li className="flex items-start gap-2 text-xs" key={`${item.at}-${index}`}>
+                      <span className="shrink-0 text-muted-foreground">{formatWhen(item.at, locale)}</span>
+                      <a
+                        className="min-w-0 flex-1 truncate text-primary underline underline-offset-2"
+                        href={item.url}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        {messageTitle(item.change)}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+                {/* 条数超过一屏就把其余收到这一步后面——信息不丢，但展开第一眼是信息而不是长列表
+                    （CR-20261016-board-card-info-first CP-2）。接口默认仍返回至多 200 条，
+                    所以「查看全部」展开的是已经取回来的那些，不再发请求。 */}
+                {history[entity.name]!.length > HISTORY_PREVIEW ? (
+                  <button
+                    aria-expanded={Boolean(showAllHistory[entity.name])}
+                    className="knowledge-dashboard__history-all self-start rounded px-1 text-xs text-primary underline underline-offset-2"
+                    onClick={() =>
+                      setShowAllHistory((current) => ({ ...current, [entity.name]: !current[entity.name] }))
+                    }
+                    type="button"
+                  >
+                    {showAllHistory[entity.name]
+                      ? t("board.showFewerMessages")
+                      : t("board.showAllMessages", { count: history[entity.name]!.length })}
+                  </button>
+                ) : null}
+              </>
             )}
-            <p className="text-xs font-medium text-muted-foreground">{t("board.paramsHeading")}</p>
-            {(entity.params?.length ?? 0) === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                {t("board.paramsEmpty")}
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-1">
-                {entity.params.map((param) => (
-                  <li className="flex items-center gap-2 text-xs" key={param.name}>
-                    <span className="min-w-0 flex-1 truncate">
-                      {param.name} = {param.value || t("board.noValue")}
-                    </span>
-                    {/* 推断项必须一眼可辨（REQ-F-180 ⑥）。没有标记的才是核对过原文的那一类，
-                        所以标记打在「没验证过」这一侧——沉默永远意味着更弱的那个断言。 */}
-                    {isInferred(entity, param.name) ? <InferredTag /> : null}
-                    {/* Only a person sets this: no source page says whether WE meet it. */}
-                    <button
-                      aria-label={t("board.paramToggleAria", { entity: entity.title, param: param.name, state: t(PARAM_STATE_LABEL[param.status]) })}
-                      className={`knowledge-dashboard__param-status shrink-0 rounded px-1 underline underline-offset-2 disabled:opacity-50 ${PARAM_STATE_CLASS[param.status]}`}
-                      disabled={busy === `param:${entity.name}`}
-                      onClick={() =>
-                        void run(
-                          `param:${entity.name}`,
-                          t("board.paramMarked", { param: param.name, state: t(PARAM_STATE_LABEL[NEXT_PARAM_STATE[param.status]]) }),
-                          "PATCH",
-                          `/api/entities/${encodeURIComponent(entity.name)}`,
-                          { action: "paramStatus", param: param.name, status: NEXT_PARAM_STATE[param.status] }
-                        )
-                      }
-                      type="button"
-                    >
-                      {t("board.ours", { state: t(PARAM_STATE_LABEL[param.status]) })}
-                    </button>
-                    <button
-                      aria-label={t("board.deleteParamAria", { entity: entity.title, param: param.name })}
-                      className="knowledge-dashboard__remove-param shrink-0 rounded px-1 text-destructive underline underline-offset-2 disabled:opacity-50"
-                      disabled={busy === `param:${entity.name}`}
-                      onClick={() =>
-                        void run(`param:${entity.name}`, t("board.paramDeleted"), "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
-                          action: "removeParam",
-                          param: param.name,
-                        })
-                      }
-                      type="button"
-                    >
-                      {t("common.delete")}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <form
-              className="flex items-center gap-2 text-xs"
-              onSubmit={(event) => {
-                event.preventDefault();
-                const form = event.currentTarget;
-                const nameInput = form.elements.namedItem("param") as HTMLInputElement | null;
-                const valueInput = form.elements.namedItem("value") as HTMLInputElement | null;
-                const paramName = nameInput?.value.trim();
-                if (!paramName) {
-                  return;
-                }
-                void run(`param:${entity.name}`, t("board.paramWritten"), "PATCH", `/api/entities/${encodeURIComponent(entity.name)}`, {
-                  action: "setParam",
-                  param: paramName,
-                  value: valueInput?.value.trim() ?? "",
-                });
-                nameInput!.value = "";
-                if (valueInput) {
-                  valueInput.value = "";
-                }
-              }}
-            >
-              <input
-                aria-label={t("board.addRequirementAria", { entity: entity.title })}
-                className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1"
-                name="param"
-                placeholder={t("board.requirementNamePlaceholder")}
-              />
-              <input
-                aria-label={t("board.requirementValueAria", { entity: entity.title })}
-                className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1"
-                name="value"
-                placeholder={t("board.requirementValuePlaceholder")}
-              />
-              <button className="shrink-0 rounded px-1 underline underline-offset-2" type="submit">
-                {t("board.write")}
-              </button>
-            </form>
+            {/* 技术参数与要求整段从卡片上移除（CR-20261016-board-card-info-first CP-3，
+                用户 2026-10-16「不要技术参数与要求」）。展开态只留信息：消息列表 + 容量 + 采集源。
+
+                能力去向如实记在这里：**看**仍然有两处——`IndustrySpecComparison`（行业技术要求
+                对比）与 `CompetitorBoard`（友商对比）都按 `params` 渲染，数据模型一行未动；
+                **改**（我方状态切换 / 删参数 / 手填一条）此前只在这张卡上，移除后界面上没有了，
+                仍可经对话让 Jarvis 写（`paramStatus` 路由与工具都保留，未删）。 */}
             {entity.capacity ? (
               <p className="flex items-center gap-1 text-xs text-muted-foreground">
                 {t("board.capacity", { value: entity.capacity })}
@@ -753,16 +715,10 @@ export function KnowledgeDashboard({
                 ) : null}
               </DialogContent>
             </Dialog>
-            {/* The card hands off to the chat rather than growing a second app inside it. */}
-            {onAsk ? (
-              <button
-                className="knowledge-dashboard__ask self-start rounded px-1 text-xs text-primary underline underline-offset-2"
-                onClick={() => onAsk(t("board.askAboutPrefix", { entity: entity.title }))}
-                type="button"
-              >
-                {t("board.askJarvis")}
-              </button>
-            ) : null}
+            {/* 卡片正面不再提供「问 Jarvis 关于这个对象」按钮（CR-20261016-board-card-info-first
+                CP-1，用户 2026-10-16 裁定「删按钮，改需求」）。REQ-F-071 ③ 的禁令不变——工具与技能的
+                调用仍然不在卡内执行；预填进对话框的那条通路保留在采集源弹窗的「自动配置采集源」，
+                所以 onAsk 这个 prop 仍在用，不删。 */}
             {/* Deleting the whole card is heavier than removing one param or source, so it
                 sits behind the same expand step as those, plus a confirm — not on the
                 collapsed header where a stray click could reach it. */}

@@ -157,18 +157,61 @@ describe("KnowledgeDashboard", () => {
     await waitFor(() => expect(screen.getByText("友商 A")).toBeInTheDocument());
     fireEvent.click(screen.getByText("友商 A").closest("button")!);
 
-    const link = await screen.findByRole("link", { name: "新增 1 行：发布新固件" });
+    // CR-20261016-board-card-info-first CP-4（用户「最新消息，直接显示标题」）：显示的是
+    // describeChange 冒号后面的那一段（实践中就是页面标题），行数前缀不再出现在界面上。
+    const link = await screen.findByRole("link", { name: "发布新固件" });
     expect(link).toHaveAttribute("href", "https://a.example/news/1");
     expect(link).toHaveAttribute("target", "_blank");
+    expect(screen.queryByText(/新增 1 行/)).not.toBeInTheDocument();
   });
 
-  it("⑥ 卡片把问题交给对话框，不在卡里执行", async () => {
+  // CR-20261016-board-card-info-first CP-2（用户 2026-10-16 定「5 条加查看全部」）：展开第一眼
+  // 只有 5 条，其余不丢，收在「查看全部」后面。接口那侧上限不变，所以展开的是已取回的那些。
+  it("⑤d 消息列表默认 5 条，「查看全部」展开其余且可收回", async () => {
+    const seven = Array.from({ length: 7 }, (_, i) => ({
+      at: `2026-09-${18 - i}T10:00:00.000Z`,
+      url: `https://a.example/news/${i + 1}`,
+      change: `第 ${i + 1} 条变化`,
+    }));
+    render(
+      <KnowledgeDashboard
+        loadBoard={async () => board}
+        loadOverview={async () => overview}
+        act={noop}
+        loadHistory={async (name) => (name === "友商-a" ? seven : [])}
+      />
+    );
+    await waitFor(() => expect(screen.getByText("友商 A")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("友商 A").closest("button")!);
+
+    expect(await screen.findByRole("link", { name: "第 5 条变化" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "第 6 条变化" })).not.toBeInTheDocument();
+
+    const toggle = screen.getByRole("button", { name: "查看全部（7）" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(toggle);
+    expect(await screen.findByRole("link", { name: "第 7 条变化" })).toBeInTheDocument();
+
+    const collapse = screen.getByRole("button", { name: "只看最近 5 条" });
+    expect(collapse).toHaveAttribute("aria-expanded", "true");
+    fireEvent.click(collapse);
+    expect(screen.queryByRole("link", { name: "第 6 条变化" })).not.toBeInTheDocument();
+  });
+
+  // CR-20261016-board-card-info-first CP-1（用户 2026-10-16「删按钮，改需求」）：卡片正面不再
+  // 提供「问 Jarvis 关于这个对象」，展开态以信息展示为主。REQ-F-071 ③ 改写后的禁令仍然成立——
+  // 卡内不执行工具与技能；预填进对话框的通路只剩采集源弹窗的「自动配置来源」，由上面的 ⑤b 钉住。
+  it("⑥ 卡片正面不再有「问 Jarvis 关于这个对象」按钮", async () => {
     const onAsk = vi.fn();
     render(<KnowledgeDashboard loadBoard={async () => board} loadOverview={async () => overview} act={noop} onAsk={onAsk} />);
     await waitFor(() => expect(screen.getByText("TSO A")).toBeInTheDocument());
     fireEvent.click(screen.getByText("TSO A").closest("button")!);
-    fireEvent.click(await screen.findByText("问 Jarvis 关于这个对象"));
-    expect(onAsk).toHaveBeenCalledWith("关于「TSO A」，");
+
+    // 展开态确实渲染完了，再断言按钮不存在——否则这条断言可能只是因为还没渲染而通过。
+    // 锚点用「最近消息」：CP-3 之后参数段不在了，不能再拿它当锚。
+    expect(await screen.findByText("最近消息")).toBeInTheDocument();
+    expect(screen.queryByText("问 Jarvis 关于这个对象")).not.toBeInTheDocument();
+    expect(onAsk).not.toHaveBeenCalled();
   });
 
   it("⑦ 待采纳区同时列出新对象与字段修改，采纳各走各的路由", async () => {
@@ -384,7 +427,11 @@ describe("KnowledgeDashboard", () => {
     expect(screen.queryByText("可用 1.2 GW")).not.toBeInTheDocument();
   });
 
-  it("⑮ 展开后能看参数、切换我方状态、删除、写一条新的；状态只走 paramStatus", async () => {
+  // CR-20261016-board-card-info-first CP-3（用户 2026-10-16「不要技术参数与要求」）：整段从
+  // 卡片移除。**看**仍在 IndustrySpecComparison 与 CompetitorBoard（数据模型未动）；**改**
+  // （我方状态 / 删参数 / 手填一条）界面上没有了，仍可经对话让 Jarvis 写——路由与工具都保留。
+  // 这条用例从「能看能改」翻成「卡片上不再有，且不会误发这三个写请求」。
+  it("⑮ 技术参数与要求整段不在卡片上，且展开不发任何参数写请求", async () => {
     const act = vi.fn(async () => ({ ok: true }));
     const withParams: DashboardData = {
       ...board,
@@ -410,32 +457,33 @@ describe("KnowledgeDashboard", () => {
       />
     );
     fireEvent.click(await screen.findByText("TSO P"));
-    expect(await screen.findByText("LVRT 持续时间 = 150 ms")).toBeInTheDocument();
+    expect(await screen.findByText("最近消息")).toBeInTheDocument();
 
-    // unknown → meets on the first click; a person decides this, never a tool.
-    fireEvent.click(screen.getByRole("button", { name: /我方未判定，点击切换/ }));
-    await waitFor(() =>
-      expect(act).toHaveBeenCalledWith("PATCH", "/api/entities/tso-p", {
-        action: "paramStatus",
-        param: "LVRT 持续时间",
-        status: "meets",
-      })
-    );
+    expect(screen.queryByText("技术参数与要求")).not.toBeInTheDocument();
+    expect(screen.queryByText("LVRT 持续时间 = 150 ms")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /我方未判定，点击切换/ })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("为 TSO P 添加技术要求")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "删除 TSO P 的参数 LVRT 持续时间" })).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("为 TSO P 添加技术要求"), { target: { value: "谐波" } });
-    fireEvent.change(screen.getByLabelText("TSO P 的要求取值"), { target: { value: "3%" } });
-    fireEvent.click(screen.getByRole("button", { name: "写入" }));
-    await waitFor(() =>
-      expect(act).toHaveBeenLastCalledWith("PATCH", "/api/entities/tso-p", { action: "setParam", param: "谐波", value: "3%" })
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "删除 TSO P 的参数 LVRT 持续时间" }));
-    await waitFor(() =>
-      expect(act).toHaveBeenLastCalledWith("PATCH", "/api/entities/tso-p", { action: "removeParam", param: "LVRT 持续时间" })
-    );
+    // 展开本身只会打 seen，不应该捎带任何参数写操作。`act` 的 mock 没声明形参，calls 的元素
+    // 因此是空元组，直接按下标取会被 TS2493 拦下——这里显式放宽成 unknown[][] 再读第三个参数。
+    const paramWrites = (act.mock.calls as unknown as unknown[][]).filter((call) => {
+      const body = call[2];
+      if (typeof body !== "object" || body === null) {
+        return false;
+      }
+      return ["paramStatus", "setParam", "removeParam"].includes((body as { action?: string }).action ?? "");
+    });
+    expect(paramWrites).toEqual([]);
   });
 
-  it("⑯ 推断项与有据可查项在卡片上不得长得一样（REQ-F-180 ⑥）", async () => {
+  // CR-20261016-board-card-info-first CP-3 之后，参数不再出现在卡片上，所以「参数的推断标记」
+  // 在卡片上无从比较。**如实登记的缺口**：IndustrySpecComparison 与 CompetitorBoard 都不标推断，
+  // 因此参数级的推断标记目前在整个界面上没有落点——REQ-F-180 ⑥ 对 params 的那一半待另立 CR 补。
+  // 这条用例因此改为守住缺口不被悄悄扩大：卡片上一个参数都不渲染，就不可能出现**没有标记的**
+  // 推断参数；谁日后把参数加回卡片，这条会红，提醒他同时带上标记。
+  // 卡片仍在渲染的字段（change / capacity / nextDate）的推断标记由下面的 ⑰ 守着。
+  it("⑯ 卡片上不渲染任何参数——不会出现没有推断标记的推断参数（REQ-F-180 ⑥ 的缺口登记）", async () => {
     const withBasis: DashboardData = {
       ...board,
       entities: [
@@ -465,10 +513,10 @@ describe("KnowledgeDashboard", () => {
       />
     );
     fireEvent.click(await screen.findByText("TSO P"));
-    const checked = (await screen.findByText(/核对过的 =/)).closest("li");
-    const unchecked = (await screen.findByText(/没核对的 =/)).closest("li");
-    expect(unchecked?.textContent).toContain("推断");
-    expect(checked?.textContent).not.toContain("推断");
+    expect(await screen.findByText("最近消息")).toBeInTheDocument();
+
+    expect(screen.queryByText(/核对过的 =/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/没核对的 =/)).not.toBeInTheDocument();
   });
 
   it("⑰ 白名单字段同样要分辨：有出处没核对的标推断，用户自己填的不标", async () => {
